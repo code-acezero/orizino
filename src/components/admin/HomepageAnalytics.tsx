@@ -8,6 +8,7 @@ import { useState, useMemo, useCallback } from "react";
 import { Eye, MousePointerClick, Clock, TrendingUp, BarChart3, Target, Users, Download } from "lucide-react";
 import { useRealtimeVisitors } from "@/hooks/use-realtime-visitors";
 import { Button } from "@/components/ui/button";
+import LiveActivityFeed from "./LiveActivityFeed";
 
 const timeRanges = [
   { value: "24h", label: "Last 24 Hours", hours: 24 },
