@@ -343,9 +343,10 @@ const AdminHome = () => {
               {sales.length === 0 && <p className="text-center text-muted-foreground py-8">No sale sections added. Click "Add Sale" to create one.</p>}
 
               {sales.map((sale, idx) => (
-                <div key={sale.id} className="border border-border rounded-2xl p-4 space-y-4 bg-secondary/10">
+                <div key={sale.id} {...getSaleDragProps(idx)} className={`border border-border rounded-2xl p-4 space-y-4 bg-secondary/10 cursor-grab active:cursor-grabbing transition-colors ${saleOverIdx === idx && saleDragIdx !== idx ? "border-primary bg-primary/10" : ""}`}>
                   <div className="flex items-center justify-between">
                     <h4 className="font-semibold text-foreground flex items-center gap-2">
+                      <GripVertical className="w-4 h-4 text-muted-foreground shrink-0" />
                       {sale.custom_icon_url ? <img src={sale.custom_icon_url} className="w-6 h-6 object-contain" alt="" /> : <span className="text-xl">{sale.icon}</span>}
                       Sale #{idx + 1}: {sale.title || "Untitled"}
                     </h4>
