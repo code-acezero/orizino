@@ -26,14 +26,21 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ productId }) => {
   const { data: hasDeliveredOrder, isLoading: checkingEligibility } = useQuery({
     queryKey: ["review-eligibility", user?.id, productId],
     queryFn: async () => {
-      const { data } = await supabase
+      // Check orders with status 'delivered' then verify order_items contain this product
+      const { data: deliveredOrders } = await supabase
         .from("orders")
-        .select("id, order_items!inner(product_id)")
+        .select("id")
         .eq("user_id", user!.id)
-        .eq("status", "delivered")
-        .eq("order_items.product_id" as any, productId)
+        .eq("status", "delivered");
+      if (!deliveredOrders || deliveredOrders.length === 0) return false;
+      const orderIds = deliveredOrders.map((o) => o.id);
+      const { data: items } = await supabase
+        .from("order_items")
+        .select("id")
+        .in("order_id", orderIds)
+        .eq("product_id", productId)
         .limit(1);
-      return (data && data.length > 0) || false;
+      return (items && items.length > 0) || false;
     },
     enabled: !!user,
   });
