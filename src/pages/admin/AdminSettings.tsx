@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
 import { ALL_CURRENCIES, type CurrencyConfig } from "@/contexts/CurrencyContext";
-import { DollarSign, Globe, Check } from "lucide-react";
+import { DollarSign, Globe, Check, RefreshCw, Clock, Zap } from "lucide-react";
 
 const themes = [
   { id: "default", label: "Cyber Emerald", color: "160 84% 45%" },
