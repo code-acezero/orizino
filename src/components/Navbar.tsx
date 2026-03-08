@@ -55,16 +55,7 @@ const Navbar: React.FC = () => {
   const parentCategories = dbCategories.filter((c) => !c.parent_id);
   const getChildren = (parentId: string) => dbCategories.filter((c) => c.parent_id === parentId);
 
-  const { data: unreadCount } = useQuery({
-    queryKey: ["unread-notifications", user?.id],
-    queryFn: async () => {
-      const { count } = await supabase.from("notifications").select("*", { count: "exact", head: true })
-        .or(`user_id.eq.${user!.id},user_id.is.null`).eq("is_read", false);
-      return count || 0;
-    },
-    enabled: !!user,
-    refetchInterval: 30000,
-  });
+  // unreadCount query removed - handled by NotificationBell component
 
   // Close category dropdown when clicking outside
   useEffect(() => {
