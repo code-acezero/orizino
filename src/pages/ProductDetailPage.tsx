@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Star, Shield, Truck, RotateCcw, Package } from "lucide-react";
+import { Star, Shield, Truck, RotateCcw, Package, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/lib/app-toast";
@@ -20,6 +20,7 @@ import StickyAddToCart from "@/components/product/StickyAddToCart";
 import VariantSelector from "@/components/product/VariantSelector";
 import VariantComparison from "@/components/product/VariantComparison";
 import NotifyWhenAvailable from "@/components/product/NotifyWhenAvailable";
+import { Badge } from "@/components/ui/badge";
 
 type LayoutStyle = "minimal" | "premium" | "editorial";
 
@@ -361,6 +362,26 @@ const ProductDetailPage: React.FC = () => {
                     />
                    )}
 
+                  {/* Selected variant badge */}
+                  {(selectedSize || selectedColor) && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs text-muted-foreground">Selected:</span>
+                      {selectedSize && (
+                        <Badge variant="secondary" className="gap-1 pl-2.5 pr-1.5 py-1">
+                          Size: {selectedSize}
+                          <button onClick={() => setSelectedSize(null)} className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-3 h-3" /></button>
+                        </Badge>
+                      )}
+                      {selectedColor && (
+                        <Badge variant="secondary" className="gap-1.5 pl-2 pr-1.5 py-1">
+                          <span className="w-3 h-3 rounded-full border border-border/50 inline-block shrink-0" style={{ backgroundColor: selectedColor.toLowerCase() }} />
+                          {selectedColor}
+                          <button onClick={() => setSelectedColor(null)} className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-3 h-3" /></button>
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+
                   {hasVariants && product && (
                     <VariantComparison
                       productId={product.id}
@@ -449,6 +470,26 @@ const ProductDetailPage: React.FC = () => {
                     onColorChange={setSelectedColor}
                     layout={layout}
                   />
+                )}
+
+                {/* Selected variant badge */}
+                {(selectedSize || selectedColor) && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-muted-foreground">Selected:</span>
+                    {selectedSize && (
+                      <Badge variant="secondary" className="gap-1 pl-2.5 pr-1.5 py-1">
+                        Size: {selectedSize}
+                        <button onClick={() => setSelectedSize(null)} className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-3 h-3" /></button>
+                      </Badge>
+                    )}
+                    {selectedColor && (
+                      <Badge variant="secondary" className="gap-1.5 pl-2 pr-1.5 py-1">
+                        <span className="w-3 h-3 rounded-full border border-border/50 inline-block shrink-0" style={{ backgroundColor: selectedColor.toLowerCase() }} />
+                        {selectedColor}
+                        <button onClick={() => setSelectedColor(null)} className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-3 h-3" /></button>
+                      </Badge>
+                    )}
+                  </div>
                 )}
 
                 {hasVariants && product && (
