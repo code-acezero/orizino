@@ -19,6 +19,7 @@ import CurrencyWidget from "@/components/product/CurrencyWidget";
 import StickyAddToCart from "@/components/product/StickyAddToCart";
 import VariantSelector from "@/components/product/VariantSelector";
 import VariantComparison from "@/components/product/VariantComparison";
+import NotifyWhenAvailable from "@/components/product/NotifyWhenAvailable";
 
 type LayoutStyle = "minimal" | "premium" | "editorial";
 
@@ -358,6 +359,14 @@ const ProductDetailPage: React.FC = () => {
                     onAddToCart={addToCart} onBuyNow={buyNow} onToggleWishlist={toggleWishlist}
                     addingToCart={addingToCart} inStock={effectiveStock > 0} layout="editorial"
                   />
+
+                  {effectiveStock === 0 && (
+                    <NotifyWhenAvailable
+                      productId={product.id}
+                      variantId={selectedVariant?.id}
+                      variantLabel={[selectedSize, selectedColor].filter(Boolean).join(" / ") || undefined}
+                    />
+                  )}
                 </div>
               </div>
             </div>
@@ -439,6 +448,14 @@ const ProductDetailPage: React.FC = () => {
                   onAddToCart={addToCart} onBuyNow={buyNow} onToggleWishlist={toggleWishlist}
                   addingToCart={addingToCart} inStock={effectiveStock > 0} layout={layout}
                 />
+
+                {effectiveStock === 0 && (
+                  <NotifyWhenAvailable
+                    productId={product.id}
+                    variantId={selectedVariant?.id}
+                    variantLabel={[selectedSize, selectedColor].filter(Boolean).join(" / ") || undefined}
+                  />
+                )}
 
                 {/* Trust badges (premium only) */}
                 {!isMinimal && (

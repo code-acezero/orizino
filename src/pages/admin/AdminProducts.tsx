@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Search, X, LayoutTemplate, Upload, Loader2, ImagePlus } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, X, LayoutTemplate, Upload, Loader2, ImagePlus, Bell } from "lucide-react";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -309,6 +309,17 @@ const AdminProducts = () => {
       }
       toast.success("Variants saved"); loadVariants(editing.id);
     } catch (e: any) { toast.error(e.message); }
+  };
+
+  const notifyRestockSubscribers = async () => {
+    if (!editing?.id) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("notify-restock", {
+        body: { product_id: editing.id },
+      });
+      if (error) throw error;
+      toast.success(data?.message || "Notifications sent");
+    } catch (e: any) { toast.error("Failed: " + e.message); }
   };
 
   const generateVariants = () => {
@@ -789,7 +800,12 @@ const AdminProducts = () => {
                           <p className="text-xs text-muted-foreground">
                             Total stock: <span className="font-bold text-foreground">{variants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0)}</span> units across {variants.length} variants
                           </p>
-                          <Button type="button" size="sm" onClick={saveVariants}>Save Variants</Button>
+                          <div className="flex gap-2">
+                            <Button type="button" size="sm" variant="outline" onClick={notifyRestockSubscribers} className="gap-1">
+                              <Bell className="w-3 h-3" /> Notify Subscribers
+                            </Button>
+                            <Button type="button" size="sm" onClick={saveVariants}>Save Variants</Button>
+                          </div>
                         </div>
                         </div>
                       </div>
