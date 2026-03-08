@@ -1,16 +1,22 @@
 import { useMemo, useState } from "react";
+import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Globe, MapPin, Trophy, TrendingUp } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Globe, MapPin, Trophy, TrendingUp, CalendarIcon } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { cn } from "@/lib/utils";
 
 interface GeoBreakdownProps {
   analyticsData: any[];
 }
 
 const GeoBreakdown: React.FC<GeoBreakdownProps> = ({ analyticsData }) => {
-  const [leaderboardPeriod, setLeaderboardPeriod] = useState<7 | 30 | 90>(30);
+  const [leaderboardPeriod, setLeaderboardPeriod] = useState<7 | 30 | 90 | "custom">(30);
+  const [customFrom, setCustomFrom] = useState<Date | undefined>();
+  const [customTo, setCustomTo] = useState<Date | undefined>();
 
   // Filter data based on selected period
   const filteredAnalyticsForLeaderboard = useMemo(() => {
