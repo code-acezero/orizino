@@ -516,7 +516,9 @@ const HomePage: React.FC = () => {
           
           return (
             <React.Fragment key={section.id}>
-              {renderSection(section.id)}
+              <TrackedSection sectionId={section.id}>
+                {renderSection(section.id)}
+              </TrackedSection>
               {sectionSaleMap[section.id] && salesByPos(sectionSaleMap[section.id]).map(renderSaleBanner)}
               {idx < sectionOrder.length - 1 && divider}
             </React.Fragment>
