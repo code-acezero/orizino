@@ -128,12 +128,24 @@ const spacingMap: Record<string, string> = {
   "8": "gap-8", "12": "gap-12", "16": "gap-16", "20": "gap-20", "24": "gap-24",
 };
 
-const defaultSectionOrder = [
+interface SectionConfig {
+  id: string;
+  label: string;
+  icon: string;
+  visible: boolean;
+  title?: string;
+  subtitle?: string;
+  product_count?: number;
+  columns?: number;
+  view_all_link?: string;
+}
+
+const defaultSectionOrder: SectionConfig[] = [
   { id: "slider", label: "Showcase Slider", icon: "🎠", visible: true },
-  { id: "categories", label: "Category Grid", icon: "📂", visible: true },
-  { id: "category-sections", label: "Category Product Sections", icon: "📦", visible: true },
-  { id: "featured", label: "Featured Products", icon: "⭐", visible: true },
-  { id: "arrivals", label: "New Arrivals", icon: "✨", visible: true },
+  { id: "categories", label: "Category Grid", icon: "📂", visible: true, title: "Shop by Category" },
+  { id: "category-sections", label: "Category Product Sections", icon: "📦", visible: true, product_count: 8, columns: 4 },
+  { id: "featured", label: "Featured Products", icon: "⭐", visible: true, title: "Featured Products", subtitle: "Handpicked just for you", product_count: 8, columns: 4, view_all_link: "/shop" },
+  { id: "arrivals", label: "New Arrivals", icon: "✨", visible: true, title: "New Arrivals", subtitle: "Fresh drops just landed", product_count: 8, columns: 4, view_all_link: "/shop" },
 ];
 
 const HomePage: React.FC = () => {
