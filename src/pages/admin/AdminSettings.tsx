@@ -5,14 +5,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import ImageUpload from "@/components/ImageUpload";
+
+const themes = [
+  { id: "default", label: "Cyber Emerald", color: "160 84% 45%" },
+  { id: "ocean", label: "Ocean Blue", color: "200 90% 50%" },
+  { id: "sunset", label: "Sunset Orange", color: "25 95% 55%" },
+  { id: "rose", label: "Rose Pink", color: "340 82% 55%" },
+];
 
 const defaultSettings = {
   site_name: "Zero Marketplace",
   site_description: "Your premium online marketplace",
   logo_url: "",
+  site_icon_url: "",
   currency: "USD",
   shipping_fee: "5.00",
+  site_theme: "default",
+  site_mode: "dark",
 };
 
 const AdminSettings = () => {
@@ -31,10 +43,19 @@ const AdminSettings = () => {
   useEffect(() => {
     if (settings) {
       const map: Record<string, any> = {};
-      settings.forEach((s) => { map[s.key] = typeof s.value === "object" && s.value !== null ? (s.value as any).value ?? s.value : s.value; });
+      settings.forEach((s) => {
+        map[s.key] = typeof s.value === "object" && s.value !== null ? (s.value as any).value ?? s.value : s.value;
+      });
       setForm((prev) => ({ ...prev, ...map }));
     }
   }, [settings]);
+
+  // Apply site theme/mode from settings
+  useEffect(() => {
+    document.documentElement.classList.toggle("light", form.site_mode === "light");
+    document.documentElement.className = document.documentElement.className.replace(/theme-\w+/g, "");
+    if (form.site_theme !== "default") document.documentElement.classList.add(`theme-${form.site_theme}`);
+  }, [form.site_theme, form.site_mode]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -48,7 +69,12 @@ const AdminSettings = () => {
         }
       }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-settings"] }); toast.success("Settings saved"); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-settings"] });
+      qc.invalidateQueries({ queryKey: ["site-settings-nav"] });
+      qc.invalidateQueries({ queryKey: ["site-settings"] });
+      toast.success("Settings saved");
+    },
     onError: (e) => toast.error(e.message),
   });
 
@@ -56,21 +82,99 @@ const AdminSettings = () => {
     <div className="space-y-6">
       <h1 className="text-3xl font-display font-bold">Site Settings</h1>
 
-      <Card className="glass max-w-lg">
-        <CardHeader><CardTitle>General</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          <div><Label>Site Name</Label><Input value={form.site_name} onChange={(e) => setForm({ ...form, site_name: e.target.value })} /></div>
-          <div><Label>Description</Label><Input value={form.site_description} onChange={(e) => setForm({ ...form, site_description: e.target.value })} /></div>
-          <div><Label>Logo URL</Label><Input value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} /></div>
-          <div className="grid grid-cols-2 gap-4">
-            <div><Label>Currency</Label><Input value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} /></div>
-            <div><Label>Default Shipping Fee</Label><Input type="number" value={form.shipping_fee} onChange={(e) => setForm({ ...form, shipping_fee: e.target.value })} /></div>
-          </div>
-          <Button className="w-full" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
-            {saveMutation.isPending ? "Saving..." : "Save Settings"}
-          </Button>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="general" className="max-w-2xl">
+        <TabsList>
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="branding">Branding</TabsTrigger>
+          <TabsTrigger value="theme">Site Theme</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="general">
+          <Card className="glass">
+            <CardHeader><CardTitle>General Settings</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div><Label>Site Name</Label><Input value={form.site_name} onChange={(e) => setForm({ ...form, site_name: e.target.value })} /></div>
+              <div><Label>Description</Label><Input value={form.site_description} onChange={(e) => setForm({ ...form, site_description: e.target.value })} /></div>
+              <div className="grid grid-cols-2 gap-4">
+                <div><Label>Currency</Label><Input value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} /></div>
+                <div><Label>Default Shipping Fee</Label><Input type="number" value={form.shipping_fee} onChange={(e) => setForm({ ...form, shipping_fee: e.target.value })} /></div>
+              </div>
+              <Button className="w-full" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+                {saveMutation.isPending ? "Saving..." : "Save Settings"}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="branding">
+          <Card className="glass">
+            <CardHeader><CardTitle>Branding</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>Site Logo</Label>
+                <ImageUpload bucket="banners" folder="branding" value={form.logo_url} onUploaded={(url) => setForm({ ...form, logo_url: url })} />
+              </div>
+              <div>
+                <Label>Site Icon / Favicon</Label>
+                <ImageUpload bucket="banners" folder="branding" value={form.site_icon_url} onUploaded={(url) => setForm({ ...form, site_icon_url: url })} />
+              </div>
+              <Button className="w-full" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+                {saveMutation.isPending ? "Saving..." : "Save Branding"}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="theme">
+          <Card className="glass">
+            <CardHeader><CardTitle>Site-wide Theme</CardTitle></CardHeader>
+            <CardContent className="space-y-6">
+              <p className="text-sm text-muted-foreground">This theme applies to the entire site (excluding category pages which use their own accent colors).</p>
+
+              {/* Mode */}
+              <div>
+                <Label className="mb-2 block">Mode</Label>
+                <div className="flex gap-2">
+                  {["dark", "light"].map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => setForm({ ...form, site_mode: m })}
+                      className={`flex-1 px-4 py-3 rounded-xl border text-sm font-medium transition-all capitalize ${
+                        form.site_mode === m ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/30 text-muted-foreground"
+                      }`}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Color Theme */}
+              <div>
+                <Label className="mb-2 block">Color Theme</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {themes.map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setForm({ ...form, site_theme: t.id })}
+                      className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                        form.site_theme === t.id ? "border-primary bg-primary/10" : "border-border hover:border-primary/30"
+                      }`}
+                    >
+                      <div className="w-6 h-6 rounded-full" style={{ background: `hsl(${t.color})` }} />
+                      <span className="text-sm">{t.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <Button className="w-full" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+                {saveMutation.isPending ? "Saving..." : "Save Theme"}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

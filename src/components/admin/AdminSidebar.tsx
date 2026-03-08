@@ -9,6 +9,9 @@ import {
   Settings,
   ArrowLeft,
   MessageSquare,
+  Layers,
+  Home,
+  Megaphone,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -35,8 +38,11 @@ const mainItems = [
 ];
 
 const contentItems = [
-  { title: "Reviews", url: "/admin/reviews", icon: Star },
+  { title: "Home Page", url: "/admin/home", icon: Home },
+  { title: "Showcase", url: "/admin/showcase", icon: Layers },
   { title: "Banners", url: "/admin/banners", icon: Image },
+  { title: "Reviews", url: "/admin/reviews", icon: Star },
+  { title: "Announcements", url: "/admin/announcements", icon: Megaphone },
   { title: "Requests", url: "/admin/requests", icon: MessageSquare },
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ];

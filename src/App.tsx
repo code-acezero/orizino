@@ -28,7 +28,11 @@ import AdminReviews from "./pages/admin/AdminReviews";
 import AdminBanners from "./pages/admin/AdminBanners";
 import AdminRequests from "./pages/admin/AdminRequests";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminShowcase from "./pages/admin/AdminShowcase";
+import AdminHome from "./pages/admin/AdminHome";
+import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
 import NotFound from "./pages/NotFound";
+import SiteThemeProvider from "./components/SiteThemeProvider";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +43,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <SiteThemeProvider />
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/home" element={<HomePage />} />
@@ -78,6 +83,9 @@ const App = () => (
               <Route path="banners" element={<AdminBanners />} />
               <Route path="requests" element={<AdminRequests />} />
               <Route path="settings" element={<AdminSettings />} />
+              <Route path="showcase" element={<AdminShowcase />} />
+              <Route path="home" element={<AdminHome />} />
+              <Route path="announcements" element={<AdminAnnouncements />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
