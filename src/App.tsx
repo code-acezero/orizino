@@ -45,6 +45,7 @@ const App = () => (
             <Route path="/auth" element={<Navigate to="/home" replace />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/shop" element={<ShopPage />} />
+            <Route path="/categories/:slug" element={<CategoryPage />} />
             <Route path="/product/:slug" element={<ProductDetailPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
