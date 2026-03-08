@@ -158,8 +158,9 @@ const ProductDetailPage: React.FC = () => {
         <Breadcrumbs
           items={[
             { label: "Home", href: "/home" },
-            ...(product.categories
-              ? [{ label: (product.categories as any).name, href: `/categories/${(product.categories as any).slug}` }]
+            ...(parentCategory ? [{ label: parentCategory.name, href: `/categories/${parentCategory.slug}` }] : []),
+            ...(productCat
+              ? [{ label: productCat.name, href: `/categories/${productCat.slug}` }]
               : []),
             { label: product.name },
           ]}
