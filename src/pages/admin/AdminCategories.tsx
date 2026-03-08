@@ -487,7 +487,29 @@ const AdminCategories = () => {
                             </TableCell>
                             <TableCell className="text-right tabular-nums">{row.productCount}</TableCell>
                             <TableCell className="text-right tabular-nums">{row.orderCount}</TableCell>
-                            <TableCell className="text-right tabular-nums font-medium">{formatPrice(row.revenue)}</TableCell>
+                            <TableCell className="text-right tabular-nums font-medium">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <span>{formatPrice(row.revenue)}</span>
+                                {dateRange !== "all" && (() => {
+                                  const prev = row.prevRevenue;
+                                  if (prev === 0 && row.revenue === 0) return null;
+                                  if (prev === 0) return (
+                                    <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-500">
+                                      <TrendingUp className="w-3 h-3" /> New
+                                    </span>
+                                  );
+                                  const pct = ((row.revenue - prev) / prev) * 100;
+                                  const isUp = pct > 0;
+                                  const isFlat = Math.abs(pct) < 0.5;
+                                  return (
+                                    <span className={`inline-flex items-center gap-0.5 text-[10px] font-semibold ${isFlat ? "text-muted-foreground" : isUp ? "text-emerald-500" : "text-destructive"}`}>
+                                      {isFlat ? <Minus className="w-3 h-3" /> : isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                                      {isFlat ? "0%" : `${isUp ? "+" : ""}${pct.toFixed(1)}%`}
+                                    </span>
+                                  );
+                                })()}
+                              </div>
+                            </TableCell>
                             <TableCell className="text-right p-1">
                               {(() => {
                                 const data = sparklineData.get(row.id) || [];
