@@ -487,7 +487,7 @@ const AdminDashboard = () => {
                 <Filter className="w-4 h-4 text-primary" />
                 Sales Conversion Funnel
               </CardTitle>
-              <CardDescription>Last 30 days: Visitors → Cart → Checkout → Completed</CardDescription>
+              <CardDescription>{dateRange.label}: Visitors → Cart → Checkout → Completed</CardDescription>
             </div>
           </div>
         </CardHeader>
