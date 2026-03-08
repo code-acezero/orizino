@@ -76,9 +76,10 @@ export const useCategorySeoMeta = (category: Category | undefined) => {
     // Open Graph
     setMeta("og:title", title, "property");
     setMeta("og:description", description, "property");
-    if (category.image_url) {
-      setMeta("og:image", category.image_url, "property");
-    }
+    const ogImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-image?type=category&slug=${encodeURIComponent(category.slug)}`;
+    setMeta("og:image", ogImageUrl, "property");
+    setMeta("og:image:width", "1200", "property");
+    setMeta("og:image:height", "630", "property");
     setMeta("og:type", "website", "property");
 
     // Canonical URL
