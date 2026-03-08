@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
+import { subDays, startOfDay } from "date-fns";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, ChevronRight, Check, X, FolderTree, Search, Eye, EyeOff, Star, GripVertical, BarChart3, ChevronDown, ChevronUp, Package, ShoppingCart, DollarSign, ArrowUpDown, Download } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronRight, Check, X, FolderTree, Search, Eye, EyeOff, Star, GripVertical, BarChart3, ChevronDown, ChevronUp, Package, ShoppingCart, DollarSign, ArrowUpDown, Download, CalendarDays } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
@@ -30,6 +31,7 @@ const AdminCategories = () => {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [sortBy, setSortBy] = useState<"name" | "products" | "orders" | "revenue">("revenue");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [dateRange, setDateRange] = useState<"7d" | "30d" | "90d" | "all">("all");
   const { formatPrice } = useCurrency();
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ["admin-categories"],
@@ -56,11 +58,25 @@ const AdminCategories = () => {
   const { data: orderItems = [] } = useQuery({
     queryKey: ["category-analytics-orders"],
     queryFn: async () => {
-      const { data } = await supabase.from("order_items").select("product_id, quantity, total_price").limit(5000);
+      const { data } = await supabase.from("order_items").select("product_id, quantity, total_price, order_id, orders!inner(created_at)").limit(5000);
       return data || [];
     },
     staleTime: 60_000,
   });
+
+  const dateFilterStart = useMemo(() => {
+    if (dateRange === "all") return null;
+    const days = dateRange === "7d" ? 7 : dateRange === "30d" ? 30 : 90;
+    return startOfDay(subDays(new Date(), days)).toISOString();
+  }, [dateRange]);
+
+  const filteredOrderItems = useMemo(() => {
+    if (!dateFilterStart) return orderItems;
+    return orderItems.filter((oi: any) => {
+      const orderDate = oi.orders?.created_at;
+      return orderDate && orderDate >= dateFilterStart;
+    });
+  }, [orderItems, dateFilterStart]);
 
   const categoryAnalytics = useMemo(() => {
     const prodCatMap = new Map<string, string>();
@@ -72,7 +88,7 @@ const AdminCategories = () => {
       entry.productCount++;
       map.set(p.category_id, entry);
     });
-    orderItems.forEach((oi: any) => {
+    filteredOrderItems.forEach((oi: any) => {
       const catId = prodCatMap.get(oi.product_id);
       if (!catId) return;
       const entry = map.get(catId) || { productCount: 0, orderCount: 0, revenue: 0 };
@@ -81,7 +97,7 @@ const AdminCategories = () => {
       map.set(catId, entry);
     });
     return map;
-  }, [products, orderItems]);
+  }, [products, filteredOrderItems]);
 
   const analyticsRows = useMemo(() => {
     const rows = parentCategories.map((c) => {
@@ -311,6 +327,22 @@ const AdminCategories = () => {
               className="overflow-hidden"
             >
               <div className="px-4 pb-4 space-y-4">
+                {/* Date Range Filter */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                  {(["7d", "30d", "90d", "all"] as const).map((range) => (
+                    <Button
+                      key={range}
+                      variant={dateRange === range ? "default" : "outline"}
+                      size="sm"
+                      className="h-7 text-xs px-3"
+                      onClick={() => setDateRange(range)}
+                    >
+                      {range === "7d" ? "Last 7 days" : range === "30d" ? "Last 30 days" : range === "90d" ? "Last 90 days" : "All time"}
+                    </Button>
+                  ))}
+                </div>
+
                 {/* Revenue Bar Chart */}
                 {analyticsRows.some((r) => r.revenue > 0) && (
                   <div className="h-48">
