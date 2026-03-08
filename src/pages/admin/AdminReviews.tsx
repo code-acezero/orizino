@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,6 +10,7 @@ import { format } from "date-fns";
 
 const AdminReviews = () => {
   const qc = useQueryClient();
+  const [filterStatus, setFilterStatus] = useState("all");
 
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ["admin-reviews"],
@@ -37,9 +39,58 @@ const AdminReviews = () => {
     onError: (e) => toast.error(e.message),
   });
 
+  const statusCounts = {
+    approved: reviews.filter((r: any) => r.is_approved).length,
+    pending: reviews.filter((r: any) => !r.is_approved).length,
+  };
+
+  const filtered = filterStatus === "all"
+    ? reviews
+    : filterStatus === "approved"
+      ? reviews.filter((r: any) => r.is_approved)
+      : reviews.filter((r: any) => !r.is_approved);
+
+  const ratingCounts: Record<string, number> = {};
+  reviews.forEach((r: any) => {
+    const key = `${r.rating}★`;
+    ratingCounts[key] = (ratingCounts[key] || 0) + 1;
+  });
+
+  const filters = [
+    { value: "all", label: "All" },
+    { value: "pending", label: "Pending" },
+    { value: "approved", label: "Approved" },
+  ];
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-display font-bold">Reviews</h1>
+
+      <div className="flex flex-wrap gap-2">
+        {filters.map((f) => {
+          const count = f.value === "all" ? reviews.length : (statusCounts[f.value as keyof typeof statusCounts] || 0);
+          const isActive = filterStatus === f.value;
+          return (
+            <button
+              key={f.value}
+              onClick={() => setFilterStatus(f.value)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                isActive
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border/50 text-muted-foreground hover:bg-secondary/50 hover:border-primary/30"
+              }`}
+            >
+              {f.label}
+              <span className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-semibold ${
+                isActive ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+              }`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       <div className="rounded-lg border border-border overflow-hidden">
         <Table>
           <TableHeader>
@@ -55,7 +106,7 @@ const AdminReviews = () => {
           <TableBody>
             {isLoading ? (
               <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
-            ) : reviews.map((r: any) => (
+            ) : filtered.map((r: any) => (
               <TableRow key={r.id}>
                 <TableCell className="font-medium">{r.products?.name ?? "—"}</TableCell>
                 <TableCell><div className="flex items-center gap-1"><Star className="h-3 w-3 fill-primary text-primary" />{r.rating}</div></TableCell>
