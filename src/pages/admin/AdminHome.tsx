@@ -204,18 +204,14 @@ const AdminHome = () => {
     { id: "category-sections", label: "Category Product Sections", icon: "📦", visible: true, title: "", subtitle: "", product_count: 8, columns: 4, view_all_link: "" },
     { id: "featured", label: "Featured Products", icon: "⭐", visible: true, title: "Featured Products", subtitle: "Handpicked just for you", product_count: 8, columns: 4, view_all_link: "/shop" },
     { id: "arrivals", label: "New Arrivals", icon: "✨", visible: true, title: "New Arrivals", subtitle: "Fresh drops just landed", product_count: 8, columns: 4, view_all_link: "/shop" },
-    { id: "featured-categories", label: "Featured Categories", icon: "🏷️", visible: true, title: "", subtitle: "", product_count: 0, columns: 0, view_all_link: "" },
-    { id: "featured-products", label: "Featured Products Selection", icon: "🌟", visible: true, title: "", subtitle: "", product_count: 0, columns: 0, view_all_link: "" },
   ];
 
-  const sectionSettingsConfig: Record<string, { hasTitle: boolean; hasSubtitle: boolean; hasProductCount: boolean; hasColumns: boolean; hasViewAllLink: boolean; hasFeaturedToggle: string }> = {
-    slider: { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: "" },
-    categories: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: false, hasFeaturedToggle: "" },
-    "category-sections": { hasTitle: false, hasSubtitle: false, hasProductCount: true, hasColumns: true, hasViewAllLink: false, hasFeaturedToggle: "" },
-    featured: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true, hasFeaturedToggle: "" },
-    arrivals: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true, hasFeaturedToggle: "" },
-    "featured-categories": { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: "categories" },
-    "featured-products": { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: "products" },
+  const sectionSettingsConfig: Record<string, { hasTitle: boolean; hasSubtitle: boolean; hasProductCount: boolean; hasColumns: boolean; hasViewAllLink: boolean }> = {
+    slider: { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false },
+    categories: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: false },
+    "category-sections": { hasTitle: false, hasSubtitle: false, hasProductCount: true, hasColumns: true, hasViewAllLink: false },
+    featured: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true },
+    arrivals: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true },
   };
 
   const [catSections, setCatSections] = useState<{ category_id: string; sort_order: number; product_count: number }[]>([]);
