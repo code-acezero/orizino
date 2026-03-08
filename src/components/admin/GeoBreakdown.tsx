@@ -1,6 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Globe, MapPin, Trophy, TrendingUp } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
@@ -9,6 +10,15 @@ interface GeoBreakdownProps {
 }
 
 const GeoBreakdown: React.FC<GeoBreakdownProps> = ({ analyticsData }) => {
+  const [leaderboardPeriod, setLeaderboardPeriod] = useState<7 | 30 | 90>(30);
+
+  // Filter data based on selected period
+  const filteredAnalyticsForLeaderboard = useMemo(() => {
+    const now = Date.now();
+    const cutoff = now - leaderboardPeriod * 24 * 60 * 60 * 1000;
+    return analyticsData.filter((e) => new Date(e.created_at).getTime() >= cutoff);
+  }, [analyticsData, leaderboardPeriod]);
+
   const geo = useMemo(() => {
     const countryMap: Record<string, { count: number; code: string; cities: Record<string, number> }> = {};
     let geoTracked = 0;
