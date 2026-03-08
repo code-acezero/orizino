@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
 import { ALL_CURRENCIES, type CurrencyConfig } from "@/contexts/CurrencyContext";
-import { DollarSign, Globe, Check, RefreshCw, Clock, Zap, PaintBucket, Search } from "lucide-react";
+import { DollarSign, Globe, Check, RefreshCw, Clock, Zap, PaintBucket, Search, LayoutTemplate } from "lucide-react";
 import SiteCustomizer from "@/components/admin/SiteCustomizer";
 import AdminSeoSettings from "@/components/admin/AdminSeoSettings";
 import { Textarea } from "@/components/ui/textarea";
@@ -59,6 +59,7 @@ const defaultSettings: Record<string, any> = {
   terms_url: "",
   privacy_url: "",
   refund_policy_url: "",
+  product_page_layout: "premium",
 };
 
 const defaultCurrencyConfig: CurrencyConfig = {
@@ -214,6 +215,9 @@ const AdminSettings = () => {
           </TabsTrigger>
           <TabsTrigger value="currency" className="flex items-center gap-1">
             <DollarSign className="w-3.5 h-3.5" /> Currency
+          </TabsTrigger>
+          <TabsTrigger value="product-page" className="flex items-center gap-1">
+            <LayoutTemplate className="w-3.5 h-3.5" /> Product Page
           </TabsTrigger>
         </TabsList>
 
@@ -555,6 +559,46 @@ const AdminSettings = () => {
 
             <Button className="w-full" onClick={() => saveCurrencyConfig.mutate()} disabled={saveCurrencyConfig.isPending}>
               {saveCurrencyConfig.isPending ? "Saving..." : "Save Currency Settings"}
+            </Button>
+          </div>
+        </TabsContent>
+
+        {/* ── Product Page Layout ── */}
+        <TabsContent value="product-page">
+          <div className="space-y-6 max-w-3xl">
+            <Card className="glass">
+              <CardHeader>
+                <CardTitle>Product Page Layout</CardTitle>
+                <CardDescription>Choose the visual style for product detail pages.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {([
+                    { id: "minimal", label: "Apple-Style Minimal", desc: "Clean whitespace, large typography, no glass effects" },
+                    { id: "premium", label: "Premium E-Commerce", desc: "Glassmorphism, gradient accents, trust badges, micro-interactions" },
+                    { id: "editorial", label: "Editorial / Magazine", desc: "Full-width imagery, asymmetric layout, storytelling format" },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.id}
+                      onClick={() => setForm((p) => ({ ...p, product_page_layout: opt.id }))}
+                      className={`text-left p-4 rounded-2xl border-2 transition-all ${
+                        form.product_page_layout === opt.id
+                          ? "border-primary bg-primary/10"
+                          : "border-border/50 hover:border-primary/30"
+                      }`}
+                    >
+                      <p className="font-semibold text-foreground text-sm">{opt.label}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{opt.desc}</p>
+                      {form.product_page_layout === opt.id && (
+                        <Badge variant="default" className="mt-2">Active</Badge>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            <Button className="w-full" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+              {saveMutation.isPending ? "Saving..." : "Save Product Page Settings"}
             </Button>
           </div>
         </TabsContent>
