@@ -156,15 +156,19 @@ const CheckoutPage: React.FC = () => {
               <div className="space-y-3 max-h-60 overflow-y-auto">
                 {cartItems?.map((item) => {
                   const product = item.products as any;
+                  const variant = (item as any).product_variants as any;
                   if (!product) return null;
+                  const price = variant?.price_override ?? product.price;
+                  const variantLabel = [variant?.size, variant?.color].filter(Boolean).join(" / ");
                   return (
                     <div key={item.id} className="flex gap-3">
                       <img src={product.thumbnail || "/placeholder.svg"} alt="" className="w-12 h-12 rounded-xl object-cover" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-foreground line-clamp-1">{product.name}</p>
+                        {variantLabel && <p className="text-xs text-muted-foreground">{variantLabel}</p>}
                         <p className="text-xs text-muted-foreground">x{item.quantity}</p>
                       </div>
-                      <span className="text-sm font-medium text-foreground">{formatPrice(product.price * item.quantity)}</span>
+                      <span className="text-sm font-medium text-foreground">{formatPrice(price * item.quantity)}</span>
                     </div>
                   );
                 })}
