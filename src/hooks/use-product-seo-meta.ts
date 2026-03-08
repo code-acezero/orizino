@@ -79,9 +79,10 @@ export const useProductSeoMeta = (product: Product | undefined) => {
     // Open Graph
     setMeta("og:title", title, "property");
     setMeta("og:description", description, "property");
-    if (product.thumbnail) {
-      setMeta("og:image", product.thumbnail, "property");
-    }
+    const ogImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-image?type=product&slug=${encodeURIComponent(product.slug)}`;
+    setMeta("og:image", ogImageUrl, "property");
+    setMeta("og:image:width", "1200", "property");
+    setMeta("og:image:height", "630", "property");
     setMeta("og:type", "product", "property");
 
     // Canonical URL
