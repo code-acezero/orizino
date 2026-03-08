@@ -17,6 +17,7 @@ import ProductTabs from "@/components/product/ProductTabs";
 import ProductActions from "@/components/product/ProductActions";
 import CurrencyWidget from "@/components/product/CurrencyWidget";
 import StickyAddToCart from "@/components/product/StickyAddToCart";
+import VariantSelector from "@/components/product/VariantSelector";
 
 type LayoutStyle = "minimal" | "premium" | "editorial";
 
@@ -28,6 +29,8 @@ const ProductDetailPage: React.FC = () => {
 
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
   // Fetch product page layout setting
   const { data: layoutStyle } = useQuery<LayoutStyle>({
