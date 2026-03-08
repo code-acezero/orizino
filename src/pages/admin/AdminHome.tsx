@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/app-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, GripVertical, Tag, Clock, Sparkles, Image, Bell, Layout, Layers, ChevronDown, ChevronUp, Settings2, Palette, Sun, Moon } from "lucide-react";
+import { Plus, Trash2, GripVertical, Tag, Clock, Sparkles, Image, Bell, Layout, Layers, ChevronDown, ChevronUp, Settings2, Palette, Sun, Moon, Star, Search, FolderOpen } from "lucide-react";
 import { useDragReorder } from "@/hooks/use-drag-reorder";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
