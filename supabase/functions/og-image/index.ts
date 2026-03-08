@@ -19,27 +19,16 @@ async function ensureWasm() {
   wasmInitialized = true;
 }
 
-// Fetch fonts from Google Fonts (reliable direct TTF URLs)
+// Fetch fonts - use Noto Sans TTF from Google Fonts (satori needs ttf/woff, not woff2)
 let fontData: ArrayBuffer | null = null;
 async function getFont(): Promise<ArrayBuffer> {
   if (fontData) return fontData;
   const res = await fetch(
-    "https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZ9hiA.woff2"
+    "https://raw.githubusercontent.com/google/fonts/main/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf"
   );
   if (!res.ok) throw new Error(`Font fetch failed: ${res.status}`);
   fontData = await res.arrayBuffer();
   return fontData;
-}
-
-let boldFontData: ArrayBuffer | null = null;
-async function getBoldFont(): Promise<ArrayBuffer> {
-  if (boldFontData) return boldFontData;
-  const res = await fetch(
-    "https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYAZ9hiA.woff2"
-  );
-  if (!res.ok) throw new Error(`Bold font fetch failed: ${res.status}`);
-  boldFontData = await res.arrayBuffer();
-  return boldFontData;
 }
 
 function truncate(str: string, max: number): string {
