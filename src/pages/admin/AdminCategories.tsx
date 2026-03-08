@@ -170,6 +170,12 @@ const AdminCategories = () => {
                 return (
                   <tbody key={c.id}>
                     <TableRow>
+                      <TableCell className="w-12">
+                        <Checkbox
+                          checked={selected.has(c.id)}
+                          onCheckedChange={() => toggleSelect(c.id)}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium flex items-center gap-2">
                         {c.icon_url ? (
                           <img src={c.icon_url} alt="" className="w-6 h-6 rounded object-contain" />
