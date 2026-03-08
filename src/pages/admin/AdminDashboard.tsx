@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Package, ShoppingCart, Users, DollarSign, TrendingUp, TrendingDown,
   Star, ArrowRight, Clock, CheckCircle2, XCircle, Truck, Eye,
-  BarChart3, Activity, Layers, Filter, AlertTriangle,
+  BarChart3, Activity, Layers, Filter, AlertTriangle, Globe, ExternalLink,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import DeviceBrowserBreakdown from "@/components/admin/DeviceBrowserBreakdown";
@@ -784,6 +784,30 @@ const AdminDashboard = () => {
               {(!topProducts || topProducts.length === 0) && (
                 <p className="text-sm text-muted-foreground text-center py-4">No products yet</p>
               )}
+            </CardContent>
+          </Card>
+
+          {/* SEO Sitemap Quick Link */}
+          <Card className="glass hover:border-primary/30 transition-colors">
+            <CardContent className="pt-5 pb-4 px-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <Globe className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">Sitemap.xml</p>
+                  <p className="text-xs text-muted-foreground">Auto-generated from products & categories</p>
+                </div>
+                <a
+                  href={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-sitemap`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                    Preview <ExternalLink className="w-3 h-3" />
+                  </Button>
+                </a>
+              </div>
             </CardContent>
           </Card>
         </div>
