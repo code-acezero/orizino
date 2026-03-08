@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useCategorySeoMeta } from "@/hooks/use-category-seo-meta";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
