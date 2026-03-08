@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -19,8 +19,9 @@ import {
   Plus, Pencil, Trash2, Send, Bell, X, Megaphone, Tag,
   AlertTriangle, Info, Zap, Clock, MousePointerClick, ScrollText,
   ArrowDown, Maximize, PanelBottom, SlidersHorizontal, Eye, Copy,
-  MessageSquare, Activity, Calendar,
+  MessageSquare, Activity, Calendar, GripVertical,
 } from "lucide-react";
+import { useDragReorder } from "@/hooks/use-drag-reorder";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 
@@ -346,6 +347,48 @@ const AdminAnnouncements = () => {
     },
   });
 
+  /* ── Notification order (persisted in site_settings) ── */
+  const { data: savedOrder } = useQuery({
+    queryKey: ["notification-order"],
+    queryFn: async () => {
+      const { data } = await supabase.from("site_settings").select("value").eq("key", "notification_order").maybeSingle();
+      return (data?.value as string[]) || [];
+    },
+  });
+
+  const orderedNotifications = useMemo(() => {
+    if (!savedOrder || savedOrder.length === 0) return notifications;
+    const orderMap = new Map(savedOrder.map((id: string, i: number) => [id, i]));
+    const sorted = [...notifications].sort((a: any, b: any) => {
+      const ai = orderMap.has(a.id) ? orderMap.get(a.id)! : 9999;
+      const bi = orderMap.has(b.id) ? orderMap.get(b.id)! : 9999;
+      return ai - bi;
+    });
+    return sorted;
+  }, [notifications, savedOrder]);
+
+  const saveNotifOrder = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from("site_settings").upsert(
+        { key: "notification_order", value: ids as any },
+        { onConflict: "key" }
+      );
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["notification-order"] });
+      toast.success("Order saved");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const handleNotifReorder = (reordered: any[]) => {
+    const ids = reordered.map((n: any) => n.id);
+    saveNotifOrder.mutate(ids);
+  };
+
+  const { dragIndex: notifDragIndex, overIndex: notifOverIndex, getDragProps: getNotifDragProps } = useDragReorder(orderedNotifications, handleNotifReorder);
+
   const sendNotification = useMutation({
     mutationFn: async () => {
       const payload: any = {
@@ -532,22 +575,23 @@ const AdminAnnouncements = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 <AnimatePresence mode="popLayout">
-                  {notifications.map((n: any, idx: number) => {
+                  {orderedNotifications.map((n: any, idx: number) => {
                     const prio = priorityConfig[n.priority] || priorityConfig.normal;
                     const PrioIcon = prio.icon;
                     const iconEmoji = notifIcons.find(i => i.value === n.icon)?.label.split(" ")[0] || "";
+                    const isDragging = notifDragIndex === idx;
+                    const isOver = notifOverIndex === idx;
                     return (
-                      <motion.div
+                      <div
                         key={n.id}
-                        layout
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.25, delay: idx * 0.03 }}
+                        {...getNotifDragProps(idx)}
+                        className={`cursor-grab active:cursor-grabbing transition-all ${isDragging ? "opacity-50 scale-95" : ""} ${isOver ? "ring-2 ring-primary/40 rounded-xl" : ""}`}
                       >
                         <Card className="glass group hover:border-primary/20 transition-all">
                           <CardContent className="p-4 space-y-3">
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex items-start gap-2.5">
+                                <GripVertical className="w-4 h-4 text-muted-foreground/40 mt-0.5 shrink-0 hover:text-muted-foreground transition-colors" />
                                 {n.icon && <span className="text-lg mt-0.5">{iconEmoji}</span>}
                                 <div>
                                   <h3 className="text-sm font-display font-semibold leading-tight">{n.title}</h3>
@@ -595,7 +639,7 @@ const AdminAnnouncements = () => {
                             </div>
                           </CardContent>
                         </Card>
-                      </motion.div>
+                      </div>
                     );
                   })}
                 </AnimatePresence>
