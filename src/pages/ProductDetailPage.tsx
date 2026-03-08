@@ -19,6 +19,7 @@ import CurrencyWidget from "@/components/product/CurrencyWidget";
 import StickyAddToCart from "@/components/product/StickyAddToCart";
 import VariantSelector from "@/components/product/VariantSelector";
 import VariantComparison from "@/components/product/VariantComparison";
+import NotifyWhenAvailable from "@/components/product/NotifyWhenAvailable";
 
 type LayoutStyle = "minimal" | "premium" | "editorial";
 
