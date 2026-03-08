@@ -1,9 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Globe, MapPin } from "lucide-react";
+import { Globe, MapPin, Trophy, TrendingUp } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import VisitorWorldMap from "./VisitorWorldMap";
 
 interface GeoBreakdownProps {
   analyticsData: any[];
@@ -55,9 +54,61 @@ const GeoBreakdown: React.FC<GeoBreakdownProps> = ({ analyticsData }) => {
 
   const maxCount = Math.max(...geo.countries.map((c) => c.count), 1);
 
+  const top5 = geo.countries.slice(0, 5);
+  const totalVisitors = geo.countries.reduce((sum, c) => sum + c.count, 0);
+
   return (
     <div className="space-y-6">
-
+      {/* Top Countries Leaderboard */}
+      <Card className="glass">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-primary" />
+            Top Countries
+            {totalVisitors > 0 && (
+              <Badge variant="secondary" className="text-xs ml-auto">
+                <TrendingUp className="w-3 h-3 mr-1" />
+                {totalVisitors} total
+              </Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {top5.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              {top5.map((country, i) => {
+                const pct = totalVisitors > 0 ? Math.round((country.count / totalVisitors) * 100) : 0;
+                const medals = ["🥇", "🥈", "🥉"];
+                return (
+                  <div
+                    key={country.name}
+                    className={`relative flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${
+                      i === 0
+                        ? "border-primary/30 bg-primary/5"
+                        : "border-border/40 bg-secondary/10"
+                    }`}
+                  >
+                    <span className="text-2xl leading-none">{countryFlag(country.code)}</span>
+                    <span className="text-xs font-semibold text-foreground text-center truncate w-full">
+                      {i < 3 ? medals[i] + " " : ""}{country.name}
+                    </span>
+                    <span className="text-lg font-bold text-primary">{country.count}</span>
+                    <div className="w-full h-1 rounded-full bg-secondary/50 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-primary transition-all"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">{pct}%</span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">No geographic data yet</p>
+          )}
+        </CardContent>
+      </Card>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Country Chart */}
         <Card className="glass">
