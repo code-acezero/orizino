@@ -96,6 +96,8 @@ const CategoryGrid: React.FC = () => {
                   >
                     {cat.icon_url ? (
                       <img src={cat.icon_url} alt={cat.name} className="w-8 h-8 object-contain" />
+                    ) : fallbackIcons[cat.slug] ? (
+                      <img src={fallbackIcons[cat.slug]} alt={cat.name} className="w-8 h-8 object-contain" />
                     ) : cat.icon ? (
                       <span className="text-2xl">{cat.icon}</span>
                     ) : (
