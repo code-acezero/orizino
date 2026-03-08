@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -11,6 +12,7 @@ type Profile = Tables<"profiles">;
 
 const AdminUsers = () => {
   const qc = useQueryClient();
+  const [filterRole, setFilterRole] = useState("all");
 
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ["admin-profiles"],
@@ -43,9 +45,49 @@ const AdminUsers = () => {
 
   const getUserRole = (userId: string) => roles.find((r) => r.user_id === userId)?.role ?? "user";
 
+  const roleCounts = profiles.reduce<Record<string, number>>((acc, p) => {
+    const role = getUserRole(p.id);
+    acc[role] = (acc[role] || 0) + 1;
+    return acc;
+  }, {});
+
+  const filtered = filterRole === "all" ? profiles : profiles.filter((p) => getUserRole(p.id) === filterRole);
+
+  const roleFilters = [
+    { value: "all", label: "All" },
+    { value: "user", label: "User" },
+    { value: "moderator", label: "Moderator" },
+    { value: "admin", label: "Admin" },
+  ];
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-display font-bold">Users</h1>
+
+      <div className="flex flex-wrap gap-2">
+        {roleFilters.map((f) => {
+          const count = f.value === "all" ? profiles.length : (roleCounts[f.value] || 0);
+          const isActive = filterRole === f.value;
+          return (
+            <button
+              key={f.value}
+              onClick={() => setFilterRole(f.value)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                isActive
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border/50 text-muted-foreground hover:bg-secondary/50 hover:border-primary/30"
+              }`}
+            >
+              {f.label}
+              <span className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-semibold ${
+                isActive ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+              }`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
 
       <div className="rounded-lg border border-border overflow-hidden">
         <Table>
@@ -60,7 +102,7 @@ const AdminUsers = () => {
           <TableBody>
             {isLoading ? (
               <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
-            ) : profiles.map((p) => (
+            ) : filtered.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.full_name || "—"}</TableCell>
                 <TableCell>{p.phone || "—"}</TableCell>
