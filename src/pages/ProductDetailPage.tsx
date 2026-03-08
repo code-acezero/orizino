@@ -129,7 +129,7 @@ const ProductDetailPage: React.FC = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("product_variants")
-        .select("id, size, color, stock_quantity, price_override, is_active")
+        .select("id, size, color, stock_quantity, price_override, is_active, image_url")
         .eq("product_id", product!.id)
         .eq("is_active", true)
         .order("sort_order");
@@ -156,7 +156,14 @@ const ProductDetailPage: React.FC = () => {
     : null;
   const effectivePrice = selectedVariant?.price_override ?? product?.price ?? 0;
 
-  const images = product?.images?.length ? product.images : [product?.thumbnail || "/placeholder.svg"];
+  // Build images: if a color is selected and variants have images for that color, show those first
+  const baseImages = product?.images?.length ? product.images : [product?.thumbnail || "/placeholder.svg"];
+  const variantImages = selectedColor
+    ? variants
+        .filter((v) => v.color === selectedColor && (v as any).image_url)
+        .map((v) => (v as any).image_url as string)
+    : [];
+  const images = variantImages.length > 0 ? [...variantImages, ...baseImages] : baseImages;
   const discount = product?.compare_at_price
     ? Math.round(((product.compare_at_price - product.price) / product.compare_at_price) * 100)
     : 0;
@@ -285,7 +292,7 @@ const ProductDetailPage: React.FC = () => {
         {isEditorial && (
           <div className="space-y-12">
             {/* Full-width hero image */}
-            <ImageGallery images={images} productName={product.name} discount={discount} layout="editorial" />
+            <ImageGallery key={selectedColor || "default"} images={images} productName={product.name} discount={discount} layout="editorial" />
 
             {/* Content below */}
             <div className="grid md:grid-cols-5 gap-10">
@@ -350,7 +357,7 @@ const ProductDetailPage: React.FC = () => {
         {!isEditorial && (
           <>
             <div className="grid md:grid-cols-2 gap-10">
-              <ImageGallery images={images} productName={product.name} discount={discount} layout={layout} />
+              <ImageGallery key={selectedColor || "default"} images={images} productName={product.name} discount={discount} layout={layout} />
 
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                 {productCat && (
