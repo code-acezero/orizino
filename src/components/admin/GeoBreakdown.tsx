@@ -184,6 +184,8 @@ const GeoBreakdown: React.FC<GeoBreakdownProps> = ({ analyticsData }) => {
           )}
         </CardContent>
       </Card>
+      {/* Period Comparison */}
+      <CountryComparison analyticsData={analyticsData} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Country Chart */}
         <Card className="glass">
