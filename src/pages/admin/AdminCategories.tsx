@@ -129,6 +129,12 @@ const AdminCategories = () => {
   }, [products, filteredOrderItems]);
 
   const analyticsRows = useMemo(() => {
+    const childToParent = new Map<string, string>();
+    parentCategories.forEach((p) => {
+      getChildren(p.id).forEach((ch) => childToParent.set(ch.id, p.id));
+    });
+    const resolveParent = (catId: string) => childToParent.get(catId) || catId;
+
     const rows = parentCategories.map((c) => {
       const children = getChildren(c.id);
       const allIds = [c.id, ...children.map((ch) => ch.id)];
@@ -140,7 +146,11 @@ const AdminCategories = () => {
         },
         { productCount: 0, orderCount: 0, revenue: 0 }
       );
-      return { id: c.id, name: c.name, icon: c.icon, icon_url: c.icon_url, accent_color: c.accent_color, ...stats };
+      const prevRev = allIds.reduce((sum, id) => {
+        const parentId = resolveParent(id);
+        return sum + (prevRevenueMap.get(id) || 0);
+      }, 0);
+      return { id: c.id, name: c.name, icon: c.icon, icon_url: c.icon_url, accent_color: c.accent_color, ...stats, prevRevenue: prevRev };
     });
     rows.sort((a, b) => {
       const key = sortBy === "name" ? "name" : sortBy === "products" ? "productCount" : sortBy === "orders" ? "orderCount" : "revenue";
@@ -148,7 +158,7 @@ const AdminCategories = () => {
       return sortDir === "asc" ? (a as any)[key] - (b as any)[key] : (b as any)[key] - (a as any)[key];
     });
     return rows;
-  }, [parentCategories, categoryAnalytics, sortBy, sortDir, categories]);
+  }, [parentCategories, categoryAnalytics, prevRevenueMap, sortBy, sortDir, categories]);
 
   // Build daily sparkline data per parent category
   const sparklineData = useMemo(() => {
