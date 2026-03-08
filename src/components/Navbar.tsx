@@ -24,6 +24,19 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
+  const { data: dbCategories = [] } = useQuery({
+    queryKey: ["nav-categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("categories").select("id, name, slug, parent_id").eq("is_active", true).order("sort_order");
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const parentCategories = dbCategories.filter((c) => !c.parent_id);
+  const getChildren = (parentId: string) => dbCategories.filter((c) => c.parent_id === parentId);
+
   const { data: unreadCount } = useQuery({
     queryKey: ["unread-notifications", user?.id],
     queryFn: async () => {
