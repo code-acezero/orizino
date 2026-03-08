@@ -45,7 +45,7 @@ const CheckoutPage: React.FC = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("cart_items")
-        .select("*, products(id, name, price, thumbnail)")
+        .select("*, products(id, name, price, thumbnail), product_variants(id, size, color, price_override)")
         .eq("user_id", user!.id);
       return data || [];
     },
