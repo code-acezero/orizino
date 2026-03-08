@@ -128,7 +128,13 @@ const spacingMap: Record<string, string> = {
   "8": "gap-8", "12": "gap-12", "16": "gap-16", "20": "gap-20", "24": "gap-24",
 };
 
-const defaultSectionOrder = ["slider", "categories", "category-sections", "featured", "arrivals"];
+const defaultSectionOrder = [
+  { id: "slider", label: "Showcase Slider", icon: "🎠", visible: true },
+  { id: "categories", label: "Category Grid", icon: "📂", visible: true },
+  { id: "category-sections", label: "Category Product Sections", icon: "📦", visible: true },
+  { id: "featured", label: "Featured Products", icon: "⭐", visible: true },
+  { id: "arrivals", label: "New Arrivals", icon: "✨", visible: true },
+];
 
 const HomePage: React.FC = () => {
   const { data: featuredProducts = [], isLoading } = useQuery({
