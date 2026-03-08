@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { subDays, startOfDay } from "date-fns";
+import { subDays, startOfDay, format as fmtDate, eachDayOfInterval } from "date-fns";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
