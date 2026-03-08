@@ -21,6 +21,7 @@ import {
   AlertTriangle, Info, Zap, Clock, MousePointerClick, ScrollText,
   ArrowDown, Maximize, PanelBottom, SlidersHorizontal, Eye,
 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 
 /* ── Constants ── */
