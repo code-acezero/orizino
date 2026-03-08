@@ -147,7 +147,7 @@ const HomePage: React.FC = () => {
       return result;
     },
     enabled: saleProductSources.length > 0,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
   });
 
   const renderSaleBanner = (sale: SaleConfig) => {
