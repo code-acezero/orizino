@@ -13,7 +13,7 @@ import Footer from "@/components/Footer";
 const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { user } = useAuth();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, currency, setCurrency, enabledCurrencies, config } = useCurrency();
   
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
