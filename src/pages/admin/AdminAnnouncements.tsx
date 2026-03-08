@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import ImageUpload from "@/components/ImageUpload";
-import { toast } from "sonner";
+import { toast } from "@/lib/app-toast";
 import { Plus, Pencil, Trash2, Send, Bell } from "lucide-react";
 
 const AdminAnnouncements = () => {

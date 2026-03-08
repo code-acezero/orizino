@@ -3,11 +3,11 @@ import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Lock, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/lib/app-toast";
 
 const ResetPasswordPage: React.FC = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);

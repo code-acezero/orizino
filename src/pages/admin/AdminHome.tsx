@@ -8,11 +8,60 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
+import { toast } from "@/lib/app-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, GripVertical, Zap } from "lucide-react";
+import { Plus, Trash2, GripVertical, Zap, Tag, Clock, Sparkles } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import ImageUpload from "@/components/ImageUpload";
+
+interface SaleConfig {
+  id: string;
+  enabled: boolean;
+  title: string;
+  subtitle: string;
+  icon: string;
+  color: string;
+  button_text: string;
+  button_link: string;
+  position: string;
+  starts_at: string;
+  ends_at: string;
+  show_products: boolean;
+  product_source: string;
+  product_count: number;
+  sort_order: number;
+}
+
+const defaultSale = (): SaleConfig => ({
+  id: crypto.randomUUID(),
+  enabled: true,
+  title: "Sale Live!",
+  subtitle: "Limited time offer",
+  icon: "⚡",
+  color: "280 70% 55%",
+  button_text: "Shop Now",
+  button_link: "/shop",
+  position: "after-featured",
+  starts_at: "",
+  ends_at: "",
+  show_products: false,
+  product_source: "",
+  product_count: 4,
+  sort_order: 0,
+});
+
+const iconOptions = ["⚡", "🔥", "💎", "🎯", "🏷️", "💥", "🌟", "❄️", "🎁", "🛒"];
+const colorOptions = [
+  { label: "Primary", value: "var(--primary)" },
+  { label: "Purple", value: "280 70% 55%" },
+  { label: "Red", value: "0 85% 55%" },
+  { label: "Orange", value: "25 95% 55%" },
+  { label: "Gold", value: "45 90% 50%" },
+  { label: "Green", value: "160 84% 45%" },
+  { label: "Blue", value: "200 90% 50%" },
+  { label: "Pink", value: "340 82% 55%" },
+];
 
 const AdminHome = () => {
   const qc = useQueryClient();
@@ -45,24 +94,29 @@ const AdminHome = () => {
     },
   });
 
-  // Flash sale settings
-  const { data: flashSaleRow } = useQuery({
-    queryKey: ["admin-flash-sale"],
+  // Sales config (multi-sale)
+  const { data: salesRow } = useQuery({
+    queryKey: ["admin-sales-config"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("site_settings").select("*").eq("key", "flash_sale_config").maybeSingle();
+      const { data, error } = await supabase.from("site_settings").select("*").eq("key", "home_sales_config").maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // New arrivals config
+  const { data: arrivalsRow } = useQuery({
+    queryKey: ["admin-new-arrivals"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("site_settings").select("*").eq("key", "home_new_arrivals").maybeSingle();
       if (error) throw error;
       return data;
     },
   });
 
   const [catSections, setCatSections] = useState<{ category_id: string; sort_order: number; product_count: number }[]>([]);
-  const [flashSale, setFlashSale] = useState({
-    enabled: true,
-    title: "Flash Sale Live!",
-    subtitle: "Up to 70% off on selected items. Limited time only.",
-    button_text: "Shop Flash Sale",
-    button_link: "/shop",
-  });
+  const [sales, setSales] = useState<SaleConfig[]>([]);
+  const [newArrivals, setNewArrivals] = useState({ enabled: true, title: "New Arrivals", subtitle: "Fresh drops just landed", product_count: 8 });
 
   useEffect(() => {
     if (settingsRow?.value) {
@@ -73,22 +127,29 @@ const AdminHome = () => {
   }, [settingsRow]);
 
   useEffect(() => {
-    if (flashSaleRow?.value) {
-      const val = flashSaleRow.value as any;
+    if (salesRow?.value) {
+      const val = salesRow.value as any;
       const config = val?.value ?? val;
-      if (config && typeof config === "object") setFlashSale((prev) => ({ ...prev, ...config }));
+      if (Array.isArray(config)) setSales(config);
     }
-  }, [flashSaleRow]);
+  }, [salesRow]);
 
+  useEffect(() => {
+    if (arrivalsRow?.value) {
+      const val = arrivalsRow.value as any;
+      const config = val?.value ?? val;
+      if (config && typeof config === "object") setNewArrivals((prev) => ({ ...prev, ...config }));
+    }
+  }, [arrivalsRow]);
+
+  // Mutations
   const saveCatSections = useMutation({
     mutationFn: async (sections: typeof catSections) => {
       const jsonValue = { value: sections } as any;
       if (settingsRow) {
-        const { error } = await supabase.from("site_settings").update({ value: jsonValue }).eq("id", settingsRow.id);
-        if (error) throw error;
+        await supabase.from("site_settings").update({ value: jsonValue }).eq("id", settingsRow.id);
       } else {
-        const { error } = await supabase.from("site_settings").insert({ key: "home_category_sections", value: jsonValue });
-        if (error) throw error;
+        await supabase.from("site_settings").insert({ key: "home_category_sections", value: jsonValue });
       }
     },
     onSuccess: () => {
@@ -99,21 +160,36 @@ const AdminHome = () => {
     onError: (e) => toast.error(e.message),
   });
 
-  const saveFlashSale = useMutation({
+  const saveSales = useMutation({
     mutationFn: async () => {
-      const jsonValue = { value: flashSale } as any;
-      if (flashSaleRow) {
-        const { error } = await supabase.from("site_settings").update({ value: jsonValue }).eq("id", flashSaleRow.id);
-        if (error) throw error;
+      const jsonValue = { value: sales } as any;
+      if (salesRow) {
+        await supabase.from("site_settings").update({ value: jsonValue }).eq("id", salesRow.id);
       } else {
-        const { error } = await supabase.from("site_settings").insert({ key: "flash_sale_config", value: jsonValue });
-        if (error) throw error;
+        await supabase.from("site_settings").insert({ key: "home_sales_config", value: jsonValue });
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["admin-flash-sale"] });
-      qc.invalidateQueries({ queryKey: ["flash-sale-config"] });
-      toast.success("Flash sale settings saved");
+      qc.invalidateQueries({ queryKey: ["admin-sales-config"] });
+      qc.invalidateQueries({ queryKey: ["home-sales-config"] });
+      toast.success("Sale sections saved");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const saveNewArrivals = useMutation({
+    mutationFn: async () => {
+      const jsonValue = { value: newArrivals } as any;
+      if (arrivalsRow) {
+        await supabase.from("site_settings").update({ value: jsonValue }).eq("id", arrivalsRow.id);
+      } else {
+        await supabase.from("site_settings").insert({ key: "home_new_arrivals", value: jsonValue });
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-new-arrivals"] });
+      qc.invalidateQueries({ queryKey: ["home-new-arrivals"] });
+      toast.success("New arrivals settings saved");
     },
     onError: (e) => toast.error(e.message),
   });
@@ -122,9 +198,7 @@ const AdminHome = () => {
     setCatSections([...catSections, { category_id: "", sort_order: catSections.length, product_count: 8 }]);
   };
 
-  const removeSection = (index: number) => {
-    setCatSections(catSections.filter((_, i) => i !== index));
-  };
+  const removeSection = (index: number) => setCatSections(catSections.filter((_, i) => i !== index));
 
   const updateSection = (index: number, field: string, value: any) => {
     const updated = [...catSections];
@@ -132,10 +206,15 @@ const AdminHome = () => {
     setCatSections(updated);
   };
 
+  const addSale = () => setSales([...sales, defaultSale()]);
+  const removeSale = (id: string) => setSales(sales.filter((s) => s.id !== id));
+  const updateSale = (id: string, field: string, value: any) => {
+    setSales(sales.map((s) => (s.id === id ? { ...s, [field]: value } : s)));
+  };
+
   const toggleCatFeatured = useMutation({
     mutationFn: async ({ id, is_featured }: { id: string; is_featured: boolean }) => {
-      const { error } = await supabase.from("categories").update({ is_featured }).eq("id", id);
-      if (error) throw error;
+      await supabase.from("categories").update({ is_featured }).eq("id", id);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-home-categories"] });
@@ -145,16 +224,14 @@ const AdminHome = () => {
 
   const updateCatOrder = useMutation({
     mutationFn: async ({ id, sort_order }: { id: string; sort_order: number }) => {
-      const { error } = await supabase.from("categories").update({ sort_order }).eq("id", id);
-      if (error) throw error;
+      await supabase.from("categories").update({ sort_order }).eq("id", id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-home-categories"] }),
   });
 
   const toggleProdFeatured = useMutation({
     mutationFn: async ({ id, is_featured }: { id: string; is_featured: boolean }) => {
-      const { error } = await supabase.from("products").update({ is_featured }).eq("id", id);
-      if (error) throw error;
+      await supabase.from("products").update({ is_featured }).eq("id", id);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-home-products"] });
@@ -170,9 +247,10 @@ const AdminHome = () => {
       <h1 className="text-3xl font-display font-bold">Home Page Management</h1>
 
       <Tabs defaultValue="cat-sections">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="cat-sections">Category Sections</TabsTrigger>
-          <TabsTrigger value="flash-sale">Flash Sale</TabsTrigger>
+          <TabsTrigger value="sales">Sales</TabsTrigger>
+          <TabsTrigger value="new-arrivals">New Arrivals</TabsTrigger>
           <TabsTrigger value="categories">Featured Categories</TabsTrigger>
           <TabsTrigger value="products">Featured Products</TabsTrigger>
         </TabsList>
@@ -184,9 +262,7 @@ const AdminHome = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Home Category Product Sections</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Choose which categories display their products on the home page and in what order.
-                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">Choose which categories display their products on the home page.</p>
                 </div>
                 <Button onClick={addSection} size="sm" disabled={availableCategories.length === 0}>
                   <Plus className="w-4 h-4 mr-1" />Add Section
@@ -195,7 +271,7 @@ const AdminHome = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               {catSections.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">No category sections added yet. Click "Add Section" to show a category's products on the home page.</p>
+                <p className="text-center text-muted-foreground py-8">No category sections added yet.</p>
               )}
               {catSections.map((section, index) => (
                 <div key={index} className="flex items-center gap-3 p-3 rounded-xl border border-border bg-secondary/20">
@@ -234,68 +310,212 @@ const AdminHome = () => {
           </Card>
         </TabsContent>
 
-        {/* Flash Sale */}
-        <TabsContent value="flash-sale">
+        {/* Sales (multi) */}
+        <TabsContent value="sales">
+          <Card className="glass">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
+                    <Tag className="w-5 h-5 text-accent" />
+                  </div>
+                  <div>
+                    <CardTitle>Sale Banners</CardTitle>
+                    <p className="text-sm text-muted-foreground">Add multiple customizable sale sections to the home page.</p>
+                  </div>
+                </div>
+                <Button onClick={addSale} size="sm"><Plus className="w-4 h-4 mr-1" />Add Sale</Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {sales.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">No sale sections added. Click "Add Sale" to create one.</p>
+              )}
+
+              {sales.map((sale, idx) => (
+                <div key={sale.id} className="border border-border rounded-2xl p-4 space-y-4 bg-secondary/10">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-foreground flex items-center gap-2">
+                      <span className="text-xl">{sale.icon}</span>
+                      Sale #{idx + 1}: {sale.title || "Untitled"}
+                    </h4>
+                    <div className="flex items-center gap-2">
+                      <Switch checked={sale.enabled} onCheckedChange={(v) => updateSale(sale.id, "enabled", v)} />
+                      <Button size="icon" variant="ghost" onClick={() => removeSale(sale.id)}>
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Title</Label>
+                      <Input value={sale.title} onChange={(e) => updateSale(sale.id, "title", e.target.value)} />
+                    </div>
+                    <div>
+                      <Label>Subtitle</Label>
+                      <Input value={sale.subtitle} onChange={(e) => updateSale(sale.id, "subtitle", e.target.value)} />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div>
+                      <Label>Icon</Label>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {iconOptions.map((ic) => (
+                          <button
+                            key={ic}
+                            onClick={() => updateSale(sale.id, "icon", ic)}
+                            className={`w-8 h-8 rounded-lg text-lg flex items-center justify-center border transition-all ${sale.icon === ic ? "border-primary bg-primary/10" : "border-border hover:border-primary/30"}`}
+                          >
+                            {ic}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Color</Label>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {colorOptions.map((c) => (
+                          <button
+                            key={c.value}
+                            onClick={() => updateSale(sale.id, "color", c.value)}
+                            className={`w-6 h-6 rounded-full border-2 transition-all ${sale.color === c.value ? "border-foreground scale-110" : "border-transparent"}`}
+                            style={{ background: c.value.startsWith("var") ? `hsl(var(--primary))` : `hsl(${c.value})` }}
+                            title={c.label}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Sort Order</Label>
+                      <Input type="number" value={sale.sort_order} onChange={(e) => updateSale(sale.id, "sort_order", Number(e.target.value))} />
+                    </div>
+                    <div>
+                      <Label>Position</Label>
+                      <Select value={sale.position} onValueChange={(v) => updateSale(sale.id, "position", v)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="after-categories">After Categories</SelectItem>
+                          <SelectItem value="after-featured">After Featured</SelectItem>
+                          <SelectItem value="bottom">Bottom</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Button Text</Label>
+                      <Input value={sale.button_text} onChange={(e) => updateSale(sale.id, "button_text", e.target.value)} />
+                    </div>
+                    <div>
+                      <Label>Button Link</Label>
+                      <Input value={sale.button_link} onChange={(e) => updateSale(sale.id, "button_link", e.target.value)} />
+                    </div>
+                  </div>
+
+                  {/* Time limits */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="flex items-center gap-1"><Clock className="w-3 h-3" /> Starts At (optional)</Label>
+                      <Input type="datetime-local" value={sale.starts_at} onChange={(e) => updateSale(sale.id, "starts_at", e.target.value)} />
+                    </div>
+                    <div>
+                      <Label className="flex items-center gap-1"><Clock className="w-3 h-3" /> Ends At (optional)</Label>
+                      <Input type="datetime-local" value={sale.ends_at} onChange={(e) => updateSale(sale.id, "ends_at", e.target.value)} />
+                    </div>
+                  </div>
+
+                  {/* Product row */}
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Switch checked={sale.show_products} onCheckedChange={(v) => updateSale(sale.id, "show_products", v)} />
+                      <Label>Show product row</Label>
+                    </div>
+                    {sale.show_products && (
+                      <>
+                        <div className="flex-1">
+                          <Select value={sale.product_source} onValueChange={(v) => updateSale(sale.id, "product_source", v)}>
+                            <SelectTrigger><SelectValue placeholder="Select source" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="featured">Featured Products</SelectItem>
+                              <SelectItem value="latest">Latest Products</SelectItem>
+                              {categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="w-20">
+                          <Input type="number" value={sale.product_count} onChange={(e) => updateSale(sale.id, "product_count", Number(e.target.value))} min={1} max={12} />
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Preview */}
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-2 block">Preview</Label>
+                    <div className="glass-strong rounded-2xl p-5 relative overflow-hidden">
+                      <div className="absolute inset-0 opacity-20" style={{ background: sale.color.startsWith("var") ? `hsl(var(--primary))` : `linear-gradient(135deg, hsl(${sale.color}), hsl(${sale.color} / 0.6))` }} />
+                      <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">{sale.icon}</span>
+                          <div>
+                            <h4 className="text-lg font-bold font-display text-foreground">{sale.title || "Sale"}</h4>
+                            <p className="text-sm text-muted-foreground">{sale.subtitle || "Limited time"}</p>
+                          </div>
+                        </div>
+                        <span className="btn-pill font-semibold px-6 py-2 text-sm text-accent-foreground" style={{ background: sale.color.startsWith("var") ? `hsl(var(--primary))` : `hsl(${sale.color})` }}>
+                          {sale.button_text || "Shop Now"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {sales.length > 0 && (
+                <Button className="w-full" onClick={() => saveSales.mutate()} disabled={saveSales.isPending}>
+                  {saveSales.isPending ? "Saving..." : "Save All Sales"}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* New Arrivals */}
+        <TabsContent value="new-arrivals">
           <Card className="glass">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-accent" />
+                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <CardTitle>Flash Sale Banner</CardTitle>
-                  <p className="text-sm text-muted-foreground">Customize the flash sale section on the home page.</p>
+                  <CardTitle>New Arrivals Section</CardTitle>
+                  <p className="text-sm text-muted-foreground">Show the latest added products on the home page.</p>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label>Show Flash Sale Banner</Label>
-                <Switch checked={flashSale.enabled} onCheckedChange={(v) => setFlashSale({ ...flashSale, enabled: v })} />
+                <Label>Show New Arrivals</Label>
+                <Switch checked={newArrivals.enabled} onCheckedChange={(v) => setNewArrivals({ ...newArrivals, enabled: v })} />
               </div>
               <div>
                 <Label>Title</Label>
-                <Input value={flashSale.title} onChange={(e) => setFlashSale({ ...flashSale, title: e.target.value })} />
+                <Input value={newArrivals.title} onChange={(e) => setNewArrivals({ ...newArrivals, title: e.target.value })} />
               </div>
               <div>
-                <Label>Subtitle / Description</Label>
-                <Textarea value={flashSale.subtitle} onChange={(e) => setFlashSale({ ...flashSale, subtitle: e.target.value })} rows={2} />
+                <Label>Subtitle</Label>
+                <Input value={newArrivals.subtitle} onChange={(e) => setNewArrivals({ ...newArrivals, subtitle: e.target.value })} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Button Text</Label>
-                  <Input value={flashSale.button_text} onChange={(e) => setFlashSale({ ...flashSale, button_text: e.target.value })} />
-                </div>
-                <div>
-                  <Label>Button Link</Label>
-                  <Input value={flashSale.button_link} onChange={(e) => setFlashSale({ ...flashSale, button_link: e.target.value })} />
-                </div>
+              <div>
+                <Label>Number of Products</Label>
+                <Input type="number" value={newArrivals.product_count} onChange={(e) => setNewArrivals({ ...newArrivals, product_count: Number(e.target.value) })} min={1} max={20} />
               </div>
-
-              {/* Preview */}
-              <div className="mt-4">
-                <Label className="mb-2 block text-xs text-muted-foreground">Preview</Label>
-                <div className="glass-strong rounded-2xl p-6 relative overflow-hidden">
-                  <div className="absolute inset-0 opacity-20" style={{ background: "var(--gradient-accent)" }} />
-                  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
-                        <Zap className="w-5 h-5 text-accent" />
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-bold font-display text-foreground">{flashSale.title || "Flash Sale"}</h4>
-                        <p className="text-sm text-muted-foreground">{flashSale.subtitle || "Limited time offer"}</p>
-                      </div>
-                    </div>
-                    <span className="btn-pill bg-gradient-accent text-accent-foreground font-semibold px-6 py-2 text-sm">
-                      {flashSale.button_text || "Shop Now"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <Button className="w-full" onClick={() => saveFlashSale.mutate()} disabled={saveFlashSale.isPending}>
-                {saveFlashSale.isPending ? "Saving..." : "Save Flash Sale Settings"}
+              <Button className="w-full" onClick={() => saveNewArrivals.mutate()} disabled={saveNewArrivals.isPending}>
+                {saveNewArrivals.isPending ? "Saving..." : "Save New Arrivals"}
               </Button>
             </CardContent>
           </Card>
@@ -305,7 +525,7 @@ const AdminHome = () => {
           <Card className="glass">
             <CardHeader>
               <CardTitle>Categories on Home Page</CardTitle>
-              <p className="text-sm text-muted-foreground">Toggle which categories appear in the "Shop by Category" section and set their display order.</p>
+              <p className="text-sm text-muted-foreground">Toggle which categories appear in the "Shop by Category" section.</p>
             </CardHeader>
             <CardContent className="p-0">
               <Table>

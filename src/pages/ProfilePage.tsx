@@ -5,14 +5,14 @@ import { User, Phone, MapPin, Save, LogOut, ShoppingCart, Package, Star, Bell, S
 import ImageUpload from "@/components/ImageUpload";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/lib/app-toast";
 import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const ProfilePage: React.FC = () => {
   const { user, signOut } = useAuth();
-  const { toast } = useToast();
+  
   const [loading, setLoading] = useState(false);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");

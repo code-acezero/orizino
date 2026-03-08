@@ -4,13 +4,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/lib/app-toast";
 
 type AuthMode = "login" | "signup" | "forgot";
 
 const AuthPage: React.FC = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

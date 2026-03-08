@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Moon, Sun, Palette, Bell, Globe, Shield, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/lib/app-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -20,7 +20,7 @@ const themes = [
 
 const SettingsPage: React.FC = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  
   const [mode, setMode] = useState<"dark" | "light">("dark");
   const [theme, setTheme] = useState("default");
   const [notifications, setNotifications] = useState(true);

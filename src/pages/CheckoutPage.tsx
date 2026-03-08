@@ -5,13 +5,13 @@ import { motion } from "framer-motion";
 import { MapPin, CreditCard, Truck, Check, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/lib/app-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const CheckoutPage: React.FC = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [address, setAddress] = useState({ full_name: "", phone: "", street: "", city: "", state: "", zip: "", country: "" });
