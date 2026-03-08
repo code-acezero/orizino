@@ -65,9 +65,18 @@ const getEventDescription = (event: FeedEvent) => {
   }
 };
 
+const filterOptions = [
+  { value: "all", label: "All Events" },
+  { value: "page_view", label: "Page Views" },
+  { value: "section_view", label: "Section Views" },
+  { value: "section_engagement", label: "Engagement" },
+  { value: "click", label: "Clicks" },
+];
+
 const LiveActivityFeed = () => {
   const [events, setEvents] = useState<FeedEvent[]>([]);
   const [isLive, setIsLive] = useState(true);
+  const [filter, setFilter] = useState("all");
   const initialLoadDone = useRef(false);
 
   // Fetch recent events on mount
@@ -136,6 +145,8 @@ const LiveActivityFeed = () => {
     return sessionColors.current[sessionId];
   };
 
+  const filteredEvents = filter === "all" ? events : events.filter(e => e.event_type === filter);
+
   return (
     <Card className="glass">
       <CardHeader className="pb-3">
@@ -155,17 +166,32 @@ const LiveActivityFeed = () => {
             <span className="text-muted-foreground">{isLive ? "Live" : "Paused"}</span>
           </button>
         </div>
+        <div className="flex flex-wrap gap-1.5 mt-3">
+          {filterOptions.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setFilter(opt.value)}
+              className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                filter === opt.value
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "border-border/50 text-muted-foreground hover:bg-secondary/30"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[360px] pr-2">
-          {events.length === 0 ? (
+          {filteredEvents.length === 0 ? (
             <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">
-              No recent activity. Visit the homepage to generate events.
+              {events.length === 0 ? "No recent activity. Visit the homepage to generate events." : "No events match this filter."}
             </div>
           ) : (
             <div className="space-y-1">
               <AnimatePresence initial={false}>
-                {events.map((event) => {
+                {filteredEvents.map((event) => {
                   const cfg = eventConfig[event.event_type] || eventConfig.page_view;
                   const Icon = cfg.icon;
                   return (
