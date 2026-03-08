@@ -159,8 +159,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
             )}
           </AnimatePresence>
 
-          {/* Liquid loupe magnifier — desktop hover OR mobile long-press */}
-          {((!isMobile && isZooming) || (isMobile && longPressZoom)) && (
+          {/* Liquid loupe magnifier — desktop only */}
+          {!isMobile && isZooming && (
             <motion.div
               className="absolute pointer-events-none z-10"
               initial={{ scale: 0, opacity: 0 }}
