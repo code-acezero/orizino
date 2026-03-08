@@ -11,6 +11,7 @@ import Footer from "@/components/Footer";
 
 const CartPage: React.FC = () => {
   const { user } = useAuth();
+  const { formatPrice } = useCurrency();
   const queryClient = useQueryClient();
 
   const { data: cartItems, isLoading } = useQuery({
