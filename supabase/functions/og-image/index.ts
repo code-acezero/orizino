@@ -24,7 +24,7 @@ let fontData: ArrayBuffer | null = null;
 async function getFont(): Promise<ArrayBuffer> {
   if (fontData) return fontData;
   const res = await fetch(
-    "https://github.com/rsms/inter/raw/master/docs/font-files/Inter-Regular.woff"
+    "https://cdn.jsdelivr.net/gh/rsms/inter@v4.0/docs/font-files/Inter-Regular.woff"
   );
   if (!res.ok) throw new Error(`Font fetch failed: ${res.status}`);
   fontData = await res.arrayBuffer();
