@@ -26,7 +26,7 @@ const ProductDetailPage: React.FC = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("products")
-        .select("*, categories(name, slug)")
+        .select("*, categories(name, slug, parent_id)")
         .eq("slug", slug!)
         .eq("is_active", true)
         .single();
