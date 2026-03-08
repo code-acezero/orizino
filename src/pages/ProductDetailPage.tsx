@@ -349,8 +349,8 @@ const ProductDetailPage: React.FC = () => {
                 </div>
               ))}
             </div>
-          </section>
-        )}
+          )}
+        </section>
 
         {/* Related Products */}
         {relatedProducts && relatedProducts.length > 0 && (
