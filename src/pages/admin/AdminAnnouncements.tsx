@@ -434,6 +434,46 @@ const AdminAnnouncements = () => {
     },
   });
 
+  /* ── Popup order (persisted in site_settings) ── */
+  const { data: savedPopupOrder } = useQuery({
+    queryKey: ["popup-order"],
+    queryFn: async () => {
+      const { data } = await supabase.from("site_settings").select("value").eq("key", "popup_order").maybeSingle();
+      return (data?.value as string[]) || [];
+    },
+  });
+
+  const orderedPopups = useMemo(() => {
+    if (!savedPopupOrder || savedPopupOrder.length === 0) return popups;
+    const orderMap = new Map(savedPopupOrder.map((id: string, i: number) => [id, i]));
+    return [...popups].sort((a: any, b: any) => {
+      const ai = orderMap.has(a.id) ? orderMap.get(a.id)! : 9999;
+      const bi = orderMap.has(b.id) ? orderMap.get(b.id)! : 9999;
+      return ai - bi;
+    });
+  }, [popups, savedPopupOrder]);
+
+  const savePopupOrder = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from("site_settings").upsert(
+        { key: "popup_order", value: ids as any },
+        { onConflict: "key" }
+      );
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["popup-order"] });
+      toast.success("Popup order saved");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const handlePopupReorder = (reordered: any[]) => {
+    savePopupOrder.mutate(reordered.map((p: any) => p.id));
+  };
+
+  const { dragIndex: popupDragIndex, overIndex: popupOverIndex, getDragProps: getPopupDragProps } = useDragReorder(orderedPopups, handlePopupReorder);
+
   const savePopup = useMutation({
     mutationFn: async (popup: any) => {
       const { id, created_at, ...rest } = popup;
@@ -668,76 +708,84 @@ const AdminAnnouncements = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 <AnimatePresence mode="popLayout">
-                  {popups.map((p: any, idx: number) => (
-                    <motion.div
-                      key={p.id}
-                      layout
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.25, delay: idx * 0.03 }}
-                    >
-                      <Card className={`glass group transition-all hover:border-primary/30 ${p.is_active ? "" : "opacity-50"}`}>
-                        <CardContent className="p-0">
-                          {/* Image preview */}
-                          {p.image_url ? (
-                            <div className="h-28 overflow-hidden rounded-t-xl">
-                              <img src={p.image_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                            </div>
-                          ) : (
-                            <div className="h-20 rounded-t-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
-                              <Maximize className="w-6 h-6 text-muted-foreground/20" />
-                            </div>
-                          )}
-
-                          <div className="p-4 space-y-3">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <h3 className="font-display font-semibold text-sm">{p.title}</h3>
-                                {p.message && <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{p.message}</p>}
+                  {orderedPopups.map((p: any, idx: number) => {
+                    const isDragging = popupDragIndex === idx;
+                    const isOver = popupOverIndex === idx;
+                    return (
+                      <div
+                        key={p.id}
+                        {...getPopupDragProps(idx)}
+                        className={`cursor-grab active:cursor-grabbing transition-all ${isDragging ? "opacity-50 scale-95" : ""} ${isOver ? "ring-2 ring-primary/40 rounded-xl" : ""}`}
+                      >
+                        <Card className={`glass group transition-all hover:border-primary/30 ${p.is_active ? "" : "opacity-50"}`}>
+                          <CardContent className="p-0">
+                            {/* Image preview */}
+                            {p.image_url ? (
+                              <div className="h-28 overflow-hidden rounded-t-xl relative">
+                                <img src={p.image_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                <div className="absolute top-2 left-2">
+                                  <GripVertical className="w-4 h-4 text-white/60 drop-shadow hover:text-white transition-colors" />
+                                </div>
                               </div>
-                              <Badge variant={p.is_active ? "default" : "outline"} className="text-[10px] shrink-0 ml-2">
-                                {p.is_active ? "Active" : "Inactive"}
-                              </Badge>
-                            </div>
+                            ) : (
+                              <div className="h-20 rounded-t-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center relative">
+                                <Maximize className="w-6 h-6 text-muted-foreground/20" />
+                                <div className="absolute top-2 left-2">
+                                  <GripVertical className="w-4 h-4 text-muted-foreground/40 hover:text-muted-foreground transition-colors" />
+                                </div>
+                              </div>
+                            )}
 
-                            <div className="flex flex-wrap gap-1">
-                              <Badge variant="outline" className="text-[10px]">{p.display_type || "popup"}</Badge>
-                              <Badge variant="outline" className="text-[10px]">{p.position || "center"}</Badge>
-                              <Badge variant="outline" className="text-[10px]">{p.trigger_type || "timer"}</Badge>
-                              <Badge variant="outline" className="text-[10px]">{p.animation_style || "scale"}</Badge>
-                            </div>
+                            <div className="p-4 space-y-3">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <h3 className="font-display font-semibold text-sm">{p.title}</h3>
+                                  {p.message && <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{p.message}</p>}
+                                </div>
+                                <Badge variant={p.is_active ? "default" : "outline"} className="text-[10px] shrink-0 ml-2">
+                                  {p.is_active ? "Active" : "Inactive"}
+                                </Badge>
+                              </div>
 
-                            <div className="flex gap-1 pt-1">
-                              <Button size="sm" variant="ghost" className="flex-1 h-8 text-xs gap-1" onClick={() => openPopupEdit(p)}>
-                                <Pencil className="w-3 h-3" /> Edit
-                              </Button>
-                              <Button size="sm" variant="ghost" className="h-8" onClick={() => setPreviewPopup(p)} title="Preview">
-                                <Eye className="w-3.5 h-3.5 text-primary" />
-                              </Button>
-                              <Button size="sm" variant="ghost" className="h-8" onClick={() => duplicatePopup(p)} title="Duplicate">
-                                <Copy className="w-3.5 h-3.5" />
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button size="sm" variant="ghost" className="h-8"><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete popup?</AlertDialogTitle>
-                                    <AlertDialogDescription>This will permanently delete "{p.title}".</AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deletePopup.mutate(p.id)}>Delete</AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
+                              <div className="flex flex-wrap gap-1">
+                                <Badge variant="outline" className="text-[10px]">{p.display_type || "popup"}</Badge>
+                                <Badge variant="outline" className="text-[10px]">{p.position || "center"}</Badge>
+                                <Badge variant="outline" className="text-[10px]">{p.trigger_type || "timer"}</Badge>
+                                <Badge variant="outline" className="text-[10px]">{p.animation_style || "scale"}</Badge>
+                              </div>
+
+                              <div className="flex gap-1 pt-1">
+                                <Button size="sm" variant="ghost" className="flex-1 h-8 text-xs gap-1" onClick={() => openPopupEdit(p)}>
+                                  <Pencil className="w-3 h-3" /> Edit
+                                </Button>
+                                <Button size="sm" variant="ghost" className="h-8" onClick={() => setPreviewPopup(p)} title="Preview">
+                                  <Eye className="w-3.5 h-3.5 text-primary" />
+                                </Button>
+                                <Button size="sm" variant="ghost" className="h-8" onClick={() => duplicatePopup(p)} title="Duplicate">
+                                  <Copy className="w-3.5 h-3.5" />
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button size="sm" variant="ghost" className="h-8"><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete popup?</AlertDialogTitle>
+                                      <AlertDialogDescription>This will permanently delete "{p.title}".</AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deletePopup.mutate(p.id)}>Delete</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
+                          </CardContent>
+                        </Card>
+                      </div>
+                    );
+                  })}
                 </AnimatePresence>
               </div>
             )}
