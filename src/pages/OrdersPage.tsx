@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 
 const statusColors: Record<string, string> = {
   pending: "bg-yellow-500/20 text-yellow-400",
@@ -18,6 +19,7 @@ const statusColors: Record<string, string> = {
 };
 
 const OrdersPage: React.FC = () => {
+  useSeoMeta("orders", "My Orders | Ace Marketplace");
   const { user } = useAuth();
   const { formatPrice } = useCurrency();
 

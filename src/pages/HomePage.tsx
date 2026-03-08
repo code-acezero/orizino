@@ -13,6 +13,7 @@ import SalePopup from "@/components/SalePopup";
 import LiveVisitorCounter from "@/components/LiveVisitorCounter";
 import { Sparkles } from "lucide-react";
 import { usePageViewTracker, useSectionTracker, trackClick } from "@/hooks/use-analytics";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 
 interface SaleConfig {
   id: string;
@@ -157,6 +158,7 @@ const TrackedSection: React.FC<{ sectionId: string; children: React.ReactNode }>
 };
 
 const HomePage: React.FC = () => {
+  useSeoMeta("home", "Home | Ace Marketplace");
   usePageViewTracker("/home");
   const { data: featuredProducts = [], isLoading } = useQuery({
     queryKey: ["featured-products"],

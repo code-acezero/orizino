@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, ShoppingBag, Shield, Truck, Sparkles } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 
 const features = [
   { icon: Truck, title: "Free Shipping", desc: "On orders over $50" },
@@ -12,6 +13,7 @@ const features = [
 ];
 
 const LandingPage: React.FC = () => {
+  useSeoMeta("landing", "Welcome | Ace Marketplace");
   return (
     <div className="min-h-screen">
       {/* Hero */}

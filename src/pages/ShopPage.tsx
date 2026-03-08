@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 
 import catElectronics from "@/assets/icons/cat-electronics.png";
 import catFashion from "@/assets/icons/cat-fashion.png";
@@ -33,6 +34,7 @@ const sortOptions = [
 ];
 
 const ShopPage: React.FC = () => {
+  useSeoMeta("shop", "Shop | Ace Marketplace");
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [sort, setSort] = useState(searchParams.get("sort") || "newest");
