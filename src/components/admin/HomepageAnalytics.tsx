@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, CartesianGrid } from "recharts";
-import { useState, useMemo } from "react";
-import { Eye, MousePointerClick, Clock, TrendingUp, BarChart3, Target, Users } from "lucide-react";
+import { useState, useMemo, useCallback } from "react";
+import { Eye, MousePointerClick, Clock, TrendingUp, BarChart3, Target, Users, Download } from "lucide-react";
 import { useRealtimeVisitors } from "@/hooks/use-realtime-visitors";
+import { Button } from "@/components/ui/button";
 
 const timeRanges = [
   { value: "24h", label: "Last 24 Hours", hours: 24 },
