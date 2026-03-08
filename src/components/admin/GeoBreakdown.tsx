@@ -72,16 +72,31 @@ const GeoBreakdown: React.FC<GeoBreakdownProps> = ({ analyticsData }) => {
       {/* Top Countries Leaderboard */}
       <Card className="glass">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-primary" />
-            Top Countries
-            {totalVisitors > 0 && (
-              <Badge variant="secondary" className="text-xs ml-auto">
-                <TrendingUp className="w-3 h-3 mr-1" />
-                {totalVisitors} total
-              </Badge>
-            )}
-          </CardTitle>
+          <div className="flex items-center justify-between mb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-primary" />
+              Top Countries
+              {totalVisitors > 0 && (
+                <Badge variant="secondary" className="text-xs ml-auto">
+                  <TrendingUp className="w-3 h-3 mr-1" />
+                  {totalVisitors} total
+                </Badge>
+              )}
+            </CardTitle>
+          </div>
+          <div className="flex gap-2">
+            {[7, 30, 90].map((period) => (
+              <Button
+                key={period}
+                variant={leaderboardPeriod === period ? "default" : "outline"}
+                size="sm"
+                onClick={() => setLeaderboardPeriod(period as 7 | 30 | 90)}
+                className="text-xs"
+              >
+                {period}d
+              </Button>
+            ))}
+          </div>
         </CardHeader>
         <CardContent>
           {top5.length > 0 ? (
