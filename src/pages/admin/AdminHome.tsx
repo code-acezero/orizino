@@ -176,10 +176,28 @@ const AdminHome = () => {
     },
   });
 
+  const { data: sectionOrderRow } = useQuery({
+    queryKey: ["admin-section-order"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("site_settings").select("*").eq("key", "home_section_order").maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const defaultSectionOrder = [
+    { id: "slider", label: "Showcase Slider", icon: "🎠" },
+    { id: "categories", label: "Category Grid", icon: "📂" },
+    { id: "category-sections", label: "Category Product Sections", icon: "📦" },
+    { id: "featured", label: "Featured Products", icon: "⭐" },
+    { id: "arrivals", label: "New Arrivals", icon: "✨" },
+  ];
+
   const [catSections, setCatSections] = useState<{ category_id: string; sort_order: number; product_count: number }[]>([]);
   const [sales, setSales] = useState<SaleConfig[]>([]);
   const [newArrivals, setNewArrivals] = useState({ enabled: true, title: "New Arrivals", subtitle: "Fresh drops just landed", product_count: 8 });
   const [layoutConfig, setLayoutConfig] = useState<LayoutConfig>({ ...defaultLayoutConfig });
+  const [sectionOrder, setSectionOrder] = useState(defaultSectionOrder);
 
   useEffect(() => {
     if (settingsRow?.value) {
