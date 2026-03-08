@@ -65,9 +65,18 @@ const getEventDescription = (event: FeedEvent) => {
   }
 };
 
+const filterOptions = [
+  { value: "all", label: "All Events" },
+  { value: "page_view", label: "Page Views" },
+  { value: "section_view", label: "Section Views" },
+  { value: "section_engagement", label: "Engagement" },
+  { value: "click", label: "Clicks" },
+];
+
 const LiveActivityFeed = () => {
   const [events, setEvents] = useState<FeedEvent[]>([]);
   const [isLive, setIsLive] = useState(true);
+  const [filter, setFilter] = useState("all");
   const initialLoadDone = useRef(false);
 
   // Fetch recent events on mount
