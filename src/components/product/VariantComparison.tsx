@@ -43,7 +43,7 @@ const getColorHex = (name: string): string =>
 const MAX_COMPARE = 4;
 
 const VariantComparison: React.FC<VariantComparisonProps> = ({
-  productId, basePrice, compareAtPrice, productName, productThumbnail,
+  productId, basePrice, compareAtPrice, productName, productThumbnail, onAddToCart,
 }) => {
   const { formatPrice } = useCurrency();
   const [isOpen, setIsOpen] = useState(false);
