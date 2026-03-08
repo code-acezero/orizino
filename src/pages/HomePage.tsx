@@ -491,7 +491,7 @@ const HomePage: React.FC = () => {
             </div>
             {layout.section_title_align === "center" && (
               <div className="text-center mt-6">
-                <a href={arrivalsLink} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+                <a href={arrivalsLink} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors" onClick={() => trackClick("view_all", "arrivals", "/home")}>View All</a>
               </div>
             )}
           </section>
