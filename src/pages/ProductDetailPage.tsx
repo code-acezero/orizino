@@ -341,16 +341,27 @@ const ProductDetailPage: React.FC = () => {
                   )}
                 </div>
 
-                <CurrencyWidget price={product.price} />
+                <CurrencyWidget price={effectivePrice} />
 
                 {product.short_description && (
                   <p className={`${isMinimal ? "text-muted-foreground text-base" : "text-muted-foreground"}`}>{product.short_description}</p>
                 )}
 
+                {hasVariants && (
+                  <VariantSelector
+                    productId={product.id}
+                    selectedSize={selectedSize}
+                    selectedColor={selectedColor}
+                    onSizeChange={setSelectedSize}
+                    onColorChange={setSelectedColor}
+                    layout={layout}
+                  />
+                )}
+
                 <ProductActions
-                  quantity={quantity} setQuantity={setQuantity} maxQuantity={product.stock_quantity}
+                  quantity={quantity} setQuantity={setQuantity} maxQuantity={effectiveStock}
                   onAddToCart={addToCart} onBuyNow={buyNow} onToggleWishlist={toggleWishlist}
-                  addingToCart={addingToCart} inStock={product.stock_quantity > 0} layout={layout}
+                  addingToCart={addingToCart} inStock={effectiveStock > 0} layout={layout}
                 />
 
                 {/* Trust badges (premium only) */}
