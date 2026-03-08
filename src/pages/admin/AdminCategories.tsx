@@ -287,6 +287,16 @@ const AdminCategories = () => {
               <span className="flex items-center gap-1"><Package className="w-3.5 h-3.5" /> {products.length} products</span>
               <span className="flex items-center gap-1"><ShoppingCart className="w-3.5 h-3.5" /> {orderItems.length} items sold</span>
             </div>
+            {showAnalytics && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs h-7"
+                onClick={(e) => { e.stopPropagation(); exportCsv(); }}
+              >
+                <Download className="w-3.5 h-3.5" /> Export CSV
+              </Button>
+            )}
             {showAnalytics ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
           </div>
         </button>
