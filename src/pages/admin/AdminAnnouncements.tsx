@@ -519,10 +519,22 @@ const AdminAnnouncements = () => {
                           <TableCell className="text-muted-foreground text-xs">
                             {format(new Date(n.created_at), "MMM dd, yyyy")}
                           </TableCell>
-                          <TableCell>
-                            <Button size="icon" variant="ghost" onClick={() => deleteNotification.mutate(n.id)}>
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
+                           <TableCell>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="icon" variant="ghost"><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete announcement?</AlertDialogTitle>
+                                  <AlertDialogDescription>This will permanently delete "{n.title}". This action cannot be undone.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deleteNotification.mutate(n.id)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </TableCell>
                         </TableRow>
                       );
