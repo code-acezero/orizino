@@ -20,7 +20,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
   const [ripplePos, setRipplePos] = useState({ x: 0, y: 0 });
   const [pinchScale, setPinchScale] = useState(1);
   const [pinchOrigin, setPinchOrigin] = useState({ x: 50, y: 50 });
-  const [longPressZoom, setLongPressZoom] = useState(false);
   const pinchStartDist = useRef(0);
   const pinchStartScale = useRef(1);
   const swipeStartX = useRef(0);
@@ -28,7 +27,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
   const isSwiping = useRef(false);
   const lightboxImgRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLDivElement>(null);
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMobile = useIsMobile();
 
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -103,50 +101,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
   const isMinimal = layout === "minimal";
   const isEditorial = layout === "editorial";
 
-  // Mobile: long-press to activate magnifier on main image
-  const handleMainTouchStart = useCallback((e: React.TouchEvent) => {
-    if (!isMobile || e.touches.length !== 1) return;
-    const touch = e.touches[0];
-    const rect = imgRef.current?.getBoundingClientRect();
-    if (rect) {
-      const x = touch.clientX - rect.left;
-      const y = touch.clientY - rect.top;
-      setMousePos({ x, y });
-      setZoomPos({ x: (x / rect.width) * 100, y: (y / rect.height) * 100 });
-    }
-    longPressTimer.current = setTimeout(() => {
-      setLongPressZoom(true);
-      setRipplePos({ x: mousePos.x, y: mousePos.y });
-      setShowRipple(true);
-      setTimeout(() => setShowRipple(false), 600);
-    }, 400);
-  }, [isMobile, mousePos]);
-
-  const handleMainTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isMobile || e.touches.length !== 1) return;
-    if (longPressTimer.current && !longPressZoom) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-    if (!longPressZoom) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    const rect = imgRef.current?.getBoundingClientRect();
-    if (rect) {
-      const x = touch.clientX - rect.left;
-      const y = touch.clientY - rect.top;
-      setMousePos({ x, y });
-      setZoomPos({ x: (x / rect.width) * 100, y: (y / rect.height) * 100 });
-    }
-  }, [isMobile, longPressZoom]);
-
-  const handleMainTouchEnd = useCallback(() => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-    setLongPressZoom(false);
-  }, []);
 
   return (
     <>
@@ -176,12 +130,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
               }
             },
           } : {})}
-          {...(isMobile ? {
-            onTouchStart: handleMainTouchStart,
-            onTouchMove: handleMainTouchMove,
-            onTouchEnd: handleMainTouchEnd,
-          } : {})}
-          onClick={() => { if (!longPressZoom) setLightboxOpen(true); }}
+          onClick={() => setLightboxOpen(true)}
         >
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.img
@@ -210,8 +159,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
             )}
           </AnimatePresence>
 
-          {/* Liquid loupe magnifier — desktop hover OR mobile long-press */}
-          {((!isMobile && isZooming) || (isMobile && longPressZoom)) && (
+          {/* Liquid loupe magnifier — desktop only */}
+          {!isMobile && isZooming && (
             <motion.div
               className="absolute pointer-events-none z-10"
               initial={{ scale: 0, opacity: 0 }}
@@ -252,12 +201,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
             </div>
           )}
 
-          {/* Mobile long-press hint */}
-          {isMobile && longPressZoom && (
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 glass rounded-full px-3 py-1">
-              <span className="text-[10px] text-muted-foreground font-medium">Drag to inspect</span>
-            </div>
-          )}
 
           {/* Zoom indicator */}
           <div className="absolute bottom-4 right-4 glass rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
