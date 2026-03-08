@@ -274,12 +274,23 @@ const ProductDetailPage: React.FC = () => {
                     )}
                   </div>
 
-                  <CurrencyWidget price={product.price} />
+                  <CurrencyWidget price={effectivePrice} />
+
+                  {hasVariants && product && (
+                    <VariantSelector
+                      productId={product.id}
+                      selectedSize={selectedSize}
+                      selectedColor={selectedColor}
+                      onSizeChange={setSelectedSize}
+                      onColorChange={setSelectedColor}
+                      layout="editorial"
+                    />
+                  )}
 
                   <ProductActions
-                    quantity={quantity} setQuantity={setQuantity} maxQuantity={product.stock_quantity}
+                    quantity={quantity} setQuantity={setQuantity} maxQuantity={effectiveStock}
                     onAddToCart={addToCart} onBuyNow={buyNow} onToggleWishlist={toggleWishlist}
-                    addingToCart={addingToCart} inStock={product.stock_quantity > 0} layout="editorial"
+                    addingToCart={addingToCart} inStock={effectiveStock > 0} layout="editorial"
                   />
                 </div>
               </div>
