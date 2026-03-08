@@ -447,6 +447,53 @@ export type Database = {
         }
         Relationships: []
       }
+      product_variants: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          price_override: number | null
+          product_id: string
+          size: string | null
+          sku: string | null
+          sort_order: number
+          stock_quantity: number
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          price_override?: number | null
+          product_id: string
+          size?: string | null
+          sku?: string | null
+          sort_order?: number
+          stock_quantity?: number
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          price_override?: number | null
+          product_id?: string
+          size?: string | null
+          sku?: string | null
+          sort_order?: number
+          stock_quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           avg_rating: number | null
