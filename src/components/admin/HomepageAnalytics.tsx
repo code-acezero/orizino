@@ -167,12 +167,14 @@ const HomepageAnalytics = () => {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[
           { label: "Page Views", value: stats.totalPageViews, icon: Eye, color: "text-blue-400" },
           { label: "Unique Visitors", value: stats.uniqueSessions, icon: MousePointerClick, color: "text-emerald-400" },
           { label: "Section Impressions", value: stats.totalSectionViews, icon: TrendingUp, color: "text-violet-400" },
           { label: "Avg Sections/Visit", value: stats.avgSectionsPerView, icon: Clock, color: "text-amber-400" },
+          { label: "Total Clicks", value: stats.totalClicks, icon: Target, color: "text-rose-400" },
+          { label: "Click Rate", value: `${stats.clickRate}%`, icon: BarChart3, color: "text-cyan-400" },
         ].map((stat) => (
           <Card key={stat.label} className="glass">
             <CardContent className="p-4">
