@@ -35,11 +35,14 @@ declare module "react-simple-maps" {
       pressed?: React.CSSProperties;
     };
     onMouseEnter?: (event: React.MouseEvent) => void;
+    onMouseMove?: (event: React.MouseEvent) => void;
     onMouseLeave?: (event: React.MouseEvent) => void;
+    onClick?: (event: React.MouseEvent) => void;
     className?: string;
     fill?: string;
     stroke?: string;
     strokeWidth?: number;
+    [key: string]: any;
   }
 
   export const ComposableMap: ComponentType<ComposableMapProps>;
