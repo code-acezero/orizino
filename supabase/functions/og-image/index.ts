@@ -19,12 +19,12 @@ async function ensureWasm() {
   wasmInitialized = true;
 }
 
-// Fetch fonts - use Noto Sans TTF from Google Fonts (satori needs ttf/woff, not woff2)
+// Fetch font - use Inter static TTF from GitHub
 let fontData: ArrayBuffer | null = null;
 async function getFont(): Promise<ArrayBuffer> {
   if (fontData) return fontData;
   const res = await fetch(
-    "https://raw.githubusercontent.com/google/fonts/main/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf"
+    "https://github.com/rsms/inter/raw/master/docs/font-files/Inter-Regular.woff"
   );
   if (!res.ok) throw new Error(`Font fetch failed: ${res.status}`);
   fontData = await res.arrayBuffer();
