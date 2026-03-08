@@ -18,6 +18,9 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
   const [pinchOrigin, setPinchOrigin] = useState({ x: 50, y: 50 });
   const pinchStartDist = useRef(0);
   const pinchStartScale = useRef(1);
+  const swipeStartX = useRef(0);
+  const swipeStartY = useRef(0);
+  const isSwiping = useRef(false);
   const lightboxImgRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLDivElement>(null);
 
