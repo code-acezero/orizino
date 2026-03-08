@@ -1,0 +1,271 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, CartesianGrid } from "recharts";
+import { useState, useMemo } from "react";
+import { Eye, MousePointerClick, Clock, TrendingUp, BarChart3 } from "lucide-react";
+
+const timeRanges = [
+  { value: "24h", label: "Last 24 Hours", hours: 24 },
+  { value: "7d", label: "Last 7 Days", hours: 168 },
+  { value: "30d", label: "Last 30 Days", hours: 720 },
+  { value: "all", label: "All Time", hours: 0 },
+];
+
+const sectionLabels: Record<string, string> = {
+  slider: "Showcase Slider",
+  categories: "Category Grid",
+  "category-sections": "Category Sections",
+  featured: "Featured Products",
+  arrivals: "New Arrivals",
+};
+
+const HomepageAnalytics = () => {
+  const [range, setRange] = useState("7d");
+  const rangeHours = timeRanges.find((r) => r.value === range)?.hours || 168;
+
+  const { data: analyticsData = [], isLoading } = useQuery({
+    queryKey: ["homepage-analytics", range],
+    queryFn: async () => {
+      let query = (supabase as any)
+        .from("page_analytics")
+        .select("*")
+        .eq("page", "/home")
+        .order("created_at", { ascending: false });
+
+      if (rangeHours > 0) {
+        const since = new Date(Date.now() - rangeHours * 60 * 60 * 1000).toISOString();
+        query = query.gte("created_at", since);
+      }
+
+      query = query.limit(5000);
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 30 * 1000,
+    refetchInterval: 60 * 1000,
+  });
+
+  const stats = useMemo(() => {
+    const pageViews = analyticsData.filter((e: any) => e.event_type === "page_view");
+    const sectionViews = analyticsData.filter((e: any) => e.event_type === "section_view");
+    const engagements = analyticsData.filter((e: any) => e.event_type === "section_engagement");
+    const uniqueSessions = new Set(analyticsData.map((e: any) => e.session_id)).size;
+
+    // Section engagement breakdown
+    const sectionStats: Record<string, { views: number; totalDuration: number; engagements: number }> = {};
+    sectionViews.forEach((e: any) => {
+      if (!e.section_id) return;
+      if (!sectionStats[e.section_id]) sectionStats[e.section_id] = { views: 0, totalDuration: 0, engagements: 0 };
+      sectionStats[e.section_id].views++;
+    });
+    engagements.forEach((e: any) => {
+      if (!e.section_id) return;
+      if (!sectionStats[e.section_id]) sectionStats[e.section_id] = { views: 0, totalDuration: 0, engagements: 0 };
+      sectionStats[e.section_id].totalDuration += e.duration_ms || 0;
+      sectionStats[e.section_id].engagements++;
+    });
+
+    const sectionBreakdown = Object.entries(sectionStats)
+      .map(([id, s]) => ({
+        id,
+        label: sectionLabels[id] || id,
+        views: s.views,
+        avgDuration: s.engagements > 0 ? Math.round(s.totalDuration / s.engagements / 1000) : 0,
+        totalDuration: Math.round(s.totalDuration / 1000),
+        engagements: s.engagements,
+      }))
+      .sort((a, b) => b.views - a.views);
+
+    // Time-series data for chart
+    const timeGrouping = rangeHours <= 24 ? "hour" : "day";
+    const timeMap: Record<string, number> = {};
+
+    pageViews.forEach((e: any) => {
+      const d = new Date(e.created_at);
+      const key =
+        timeGrouping === "hour"
+          ? `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:00`
+          : `${d.getMonth() + 1}/${d.getDate()}`;
+      timeMap[key] = (timeMap[key] || 0) + 1;
+    });
+
+    const timeSeries = Object.entries(timeMap)
+      .map(([label, views]) => ({ label, views }))
+      .reverse();
+
+    return {
+      totalPageViews: pageViews.length,
+      totalSectionViews: sectionViews.length,
+      uniqueSessions,
+      avgSectionsPerView: uniqueSessions > 0 ? (sectionViews.length / uniqueSessions).toFixed(1) : "0",
+      sectionBreakdown,
+      timeSeries,
+    };
+  }, [analyticsData, rangeHours]);
+
+  const maxSectionViews = Math.max(...stats.sectionBreakdown.map((s) => s.views), 1);
+
+  return (
+    <div className="space-y-6">
+      {/* Time Range Selector */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+            <BarChart3 className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-foreground">Homepage Analytics</h3>
+            <p className="text-xs text-muted-foreground">Track page views and section engagement metrics</p>
+          </div>
+        </div>
+        <Select value={range} onValueChange={setRange}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {timeRanges.map((r) => (
+              <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: "Page Views", value: stats.totalPageViews, icon: Eye, color: "text-blue-400" },
+          { label: "Unique Visitors", value: stats.uniqueSessions, icon: MousePointerClick, color: "text-emerald-400" },
+          { label: "Section Impressions", value: stats.totalSectionViews, icon: TrendingUp, color: "text-violet-400" },
+          { label: "Avg Sections/Visit", value: stats.avgSectionsPerView, icon: Clock, color: "text-amber-400" },
+        ].map((stat) => (
+          <Card key={stat.label} className="glass">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-secondary/50 flex items-center justify-center">
+                  <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                  <p className="text-xs text-muted-foreground">{stat.label}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Page Views Over Time */}
+      <Card className="glass">
+        <CardHeader>
+          <CardTitle className="text-lg">Page Views Over Time</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {stats.timeSeries.length > 0 ? (
+            <ResponsiveContainer width="100%" height={240}>
+              <AreaChart data={stats.timeSeries}>
+                <defs>
+                  <linearGradient id="viewsGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="label" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} allowDecimals={false} />
+                <Tooltip
+                  contentStyle={{
+                    background: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "12px",
+                    color: "hsl(var(--foreground))",
+                  }}
+                />
+                <Area type="monotone" dataKey="views" stroke="hsl(var(--primary))" fill="url(#viewsGradient)" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-[240px] text-muted-foreground text-sm">
+              {isLoading ? "Loading analytics data..." : "No page view data yet. Visit the homepage to generate data."}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Section Engagement */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="glass">
+          <CardHeader>
+            <CardTitle className="text-lg">Section Impressions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats.sectionBreakdown.length > 0 ? (
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={stats.sectionBreakdown} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis type="number" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} allowDecimals={false} />
+                  <YAxis dataKey="label" type="category" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} width={130} />
+                  <Tooltip
+                    contentStyle={{
+                      background: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "12px",
+                      color: "hsl(var(--foreground))",
+                    }}
+                  />
+                  <Bar dataKey="views" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[240px] text-muted-foreground text-sm">
+                No section data yet
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Section Engagement Table */}
+        <Card className="glass">
+          <CardHeader>
+            <CardTitle className="text-lg">Section Engagement Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats.sectionBreakdown.length > 0 ? (
+              <div className="space-y-3">
+                {stats.sectionBreakdown.map((section) => (
+                  <div key={section.id} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/20 border border-border/50">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">{section.label}</p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-xs text-muted-foreground">{section.views} views</span>
+                        <span className="text-xs text-muted-foreground">·</span>
+                        <span className="text-xs text-muted-foreground">{section.avgDuration}s avg time</span>
+                      </div>
+                      {/* Engagement bar */}
+                      <div className="mt-2 h-1.5 rounded-full bg-secondary/50 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-primary transition-all"
+                          style={{ width: `${(section.views / maxSectionViews) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                    <Badge variant="secondary" className="text-xs shrink-0">{section.engagements} engagements</Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-[240px] text-muted-foreground text-sm">
+                Scroll through the homepage to generate engagement data
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default HomepageAnalytics;
