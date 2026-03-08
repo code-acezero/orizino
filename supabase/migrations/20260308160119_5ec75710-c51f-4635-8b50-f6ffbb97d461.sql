@@ -1,0 +1,1 @@
+ALTER TABLE public.reviews ADD COLUMN images text[] DEFAULT '{}'::text[];
