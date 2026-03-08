@@ -144,6 +144,14 @@ const GeoBreakdown: React.FC<GeoBreakdownProps> = ({ analyticsData }) => {
                     <Calendar mode="single" selected={customTo} onSelect={setCustomTo} initialFocus className="p-3 pointer-events-auto" />
                   </PopoverContent>
                 </Popover>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs h-8 text-muted-foreground hover:text-foreground"
+                  onClick={() => { setCustomFrom(undefined); setCustomTo(undefined); setLeaderboardPeriod(30); }}
+                >
+                  Reset
+                </Button>
               </div>
             )}
           </div>
