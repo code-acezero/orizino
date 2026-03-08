@@ -291,94 +291,109 @@ const AdminSeoSettings = () => {
   }).length;
 
   return (
-    <div className="space-y-6">
-      {/* Global SEO Settings */}
-      <Card className="glass">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Globe className="w-5 h-5 text-primary" />
-            Global SEO Settings
-          </CardTitle>
-          <CardDescription>
-            Settings that apply site-wide. Individual pages can override these.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Title Suffix</Label>
-              <Input
-                value={globalSeo.site_title_suffix}
-                onChange={(e) => setGlobalSeo({ ...globalSeo, site_title_suffix: e.target.value })}
-                placeholder=" | Your Site Name"
-              />
-              <p className="text-[10px] text-muted-foreground">Appended to all page titles</p>
+    <Tabs defaultValue="settings" className="space-y-6">
+      <TabsList className="grid w-full grid-cols-2 max-w-md">
+        <TabsTrigger value="settings" className="gap-2">
+          <Globe className="w-4 h-4" /> SEO Settings
+        </TabsTrigger>
+        <TabsTrigger value="audit" className="gap-2">
+          <FileSearch className="w-4 h-4" /> SEO Audit
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="settings" className="space-y-6">
+        {/* Global SEO Settings */}
+        <Card className="glass">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="w-5 h-5 text-primary" />
+              Global SEO Settings
+            </CardTitle>
+            <CardDescription>
+              Settings that apply site-wide. Individual pages can override these.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Title Suffix</Label>
+                <Input
+                  value={globalSeo.site_title_suffix}
+                  onChange={(e) => setGlobalSeo({ ...globalSeo, site_title_suffix: e.target.value })}
+                  placeholder=" | Your Site Name"
+                />
+                <p className="text-[10px] text-muted-foreground">Appended to all page titles</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Default OG Image URL</Label>
+                <Input
+                  value={globalSeo.default_og_image}
+                  onChange={(e) => setGlobalSeo({ ...globalSeo, default_og_image: e.target.value })}
+                  placeholder="https://yoursite.com/og-image.jpg"
+                />
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Default OG Image URL</Label>
-              <Input
-                value={globalSeo.default_og_image}
-                onChange={(e) => setGlobalSeo({ ...globalSeo, default_og_image: e.target.value })}
-                placeholder="https://yoursite.com/og-image.jpg"
-              />
+
+            <Separator />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Google Analytics ID</Label>
+                <Input
+                  value={globalSeo.google_analytics_id}
+                  onChange={(e) => setGlobalSeo({ ...globalSeo, google_analytics_id: e.target.value })}
+                  placeholder="G-XXXXXXXXXX"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Search Console Verification</Label>
+                <Input
+                  value={globalSeo.google_search_console}
+                  onChange={(e) => setGlobalSeo({ ...globalSeo, google_search_console: e.target.value })}
+                  placeholder="Verification meta content"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Facebook Pixel ID</Label>
+                <Input
+                  value={globalSeo.facebook_pixel_id}
+                  onChange={(e) => setGlobalSeo({ ...globalSeo, facebook_pixel_id: e.target.value })}
+                  placeholder="XXXXXXXXXXXXXXX"
+                />
+              </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Per-Page SEO */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Search className="w-4 h-4 text-primary" />
+            <h3 className="font-semibold text-foreground">Page-Level SEO</h3>
+            <Badge variant="outline" className="text-[10px]">{configuredCount}/{seoPages.length} configured</Badge>
           </div>
-
-          <Separator />
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Google Analytics ID</Label>
-              <Input
-                value={globalSeo.google_analytics_id}
-                onChange={(e) => setGlobalSeo({ ...globalSeo, google_analytics_id: e.target.value })}
-                placeholder="G-XXXXXXXXXX"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Search Console Verification</Label>
-              <Input
-                value={globalSeo.google_search_console}
-                onChange={(e) => setGlobalSeo({ ...globalSeo, google_search_console: e.target.value })}
-                placeholder="Verification meta content"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Facebook Pixel ID</Label>
-              <Input
-                value={globalSeo.facebook_pixel_id}
-                onChange={(e) => setGlobalSeo({ ...globalSeo, facebook_pixel_id: e.target.value })}
-                placeholder="XXXXXXXXXXXXXXX"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Per-Page SEO */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Search className="w-4 h-4 text-primary" />
-          <h3 className="font-semibold text-foreground">Page-Level SEO</h3>
-          <Badge variant="outline" className="text-[10px]">{configuredCount}/{seoPages.length} configured</Badge>
         </div>
-      </div>
 
-      <div className="space-y-3">
-        {seoPages.map((page) => (
-          <SeoPageCard
-            key={page.id}
-            page={page}
-            seo={getPageSeo(page.id)}
-            onChange={(field, value) => updatePageSeo(page.id, field, value)}
-          />
-        ))}
-      </div>
+        <div className="space-y-3">
+          {seoPages.map((page) => (
+            <SeoPageCard
+              key={page.id}
+              page={page}
+              seo={getPageSeo(page.id)}
+              onChange={(field, value) => updatePageSeo(page.id, field, value)}
+            />
+          ))}
+        </div>
 
-      <Button className="w-full" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
-        {saveMutation.isPending ? "Saving..." : "Save All SEO Settings"}
-      </Button>
-    </div>
+        <Button className="w-full" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+          {saveMutation.isPending ? "Saving..." : "Save All SEO Settings"}
+        </Button>
+      </TabsContent>
+
+      <TabsContent value="audit">
+        <SeoAuditTool />
+      </TabsContent>
+    </Tabs>
   );
 };
 
