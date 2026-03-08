@@ -116,10 +116,6 @@ const Navbar: React.FC = () => {
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${location.pathname === "/home" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
                   Home
                 </Link>
-                <Link to="/shop"
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${location.pathname === "/shop" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
-                  Shop
-                </Link>
                 {/* Categories dropdown */}
                 <div className="relative" ref={catDropRef}>
                   <button
