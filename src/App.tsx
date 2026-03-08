@@ -13,6 +13,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import ShopPage from "./pages/ShopPage";
+import CategoryPage from "./pages/CategoryPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
