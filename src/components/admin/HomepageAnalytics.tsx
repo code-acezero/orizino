@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, CartesianGrid } from "recharts";
-import { useState, useMemo } from "react";
-import { Eye, MousePointerClick, Clock, TrendingUp, BarChart3, Target, Users } from "lucide-react";
+import { useState, useMemo, useCallback } from "react";
+import { Eye, MousePointerClick, Clock, TrendingUp, BarChart3, Target, Users, Download } from "lucide-react";
 import { useRealtimeVisitors } from "@/hooks/use-realtime-visitors";
+import { Button } from "@/components/ui/button";
 
 const timeRanges = [
   { value: "24h", label: "Last 24 Hours", hours: 24 },
@@ -143,10 +144,34 @@ const HomepageAnalytics = () => {
 
   const maxSectionViews = Math.max(...stats.sectionBreakdown.map((s) => s.views), 1);
 
+  const exportCSV = useCallback(() => {
+    const escapeCSV = (val: any) => {
+      const str = String(val ?? "");
+      return str.includes(",") || str.includes('"') || str.includes("\n")
+        ? `"${str.replace(/"/g, '""')}"`
+        : str;
+    };
+
+    const headers = ["event_type", "page", "section_id", "duration_ms", "session_id", "metadata", "created_at"];
+    const rows = analyticsData.map((row: any) =>
+      headers.map((h) => escapeCSV(h === "metadata" ? JSON.stringify(row[h]) : row[h])).join(",")
+    );
+
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const rangeLabel = timeRanges.find((r) => r.value === range)?.label?.replace(/\s+/g, "_") || range;
+    a.download = `homepage_analytics_${rangeLabel}_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [analyticsData, range]);
+
   return (
     <div className="space-y-6">
       {/* Time Range Selector */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
             <BarChart3 className="w-5 h-5 text-primary" />
@@ -165,16 +190,28 @@ const HomepageAnalytics = () => {
             <span className="text-xs text-muted-foreground">live</span>
           </div>
         </div>
-        <Select value={range} onValueChange={setRange}>
-          <SelectTrigger className="w-[160px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {timeRanges.map((r) => (
-              <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportCSV}
+            disabled={analyticsData.length === 0}
+            className="gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Export CSV
+          </Button>
+          <Select value={range} onValueChange={setRange}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {timeRanges.map((r) => (
+                <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Quick Stats */}
