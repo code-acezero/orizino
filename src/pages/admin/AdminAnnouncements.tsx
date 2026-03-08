@@ -136,6 +136,7 @@ const AdminAnnouncements = () => {
     priority: "normal", icon: "", scheduled_at: "", expires_at: "",
   });
   const [editingPopup, setEditingPopup] = useState<any>(null);
+  const [previewPopup, setPreviewPopup] = useState<any>(null);
 
   /* ── Notifications queries ── */
   const { data: notifications = [] } = useQuery({
