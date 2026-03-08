@@ -194,6 +194,7 @@ const ParallaxSlider: React.FC = () => {
                 <h1 className={`${titleClass} font-bold font-display mb-4 leading-tight text-foreground`}>{slide.title}</h1>
                 <p className="text-lg text-muted-foreground mb-8 max-w-lg">{slide.description}</p>
                 <motion.a href={slide.ctaLink} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                  onClick={() => trackClick("slider_cta", slide.id, "/home", { cta_text: slide.cta, cta_link: slide.ctaLink })}
                   className={`inline-flex items-center btn-pill font-semibold text-lg px-8 py-3 ${ctaClasses[cfg.cta_style] || ctaClasses.gradient}`}>
                   {slide.cta}
                 </motion.a>
