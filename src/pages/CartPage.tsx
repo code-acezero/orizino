@@ -99,7 +99,10 @@ const CartPage: React.FC = () => {
             <div className="lg:col-span-2 space-y-4">
               {cartItems.map((item) => {
                 const product = item.products as any;
+                const variant = (item as any).product_variants as any;
                 if (!product) return null;
+                const itemPrice = variant?.price_override ?? product.price;
+                const variantLabel = [variant?.size, variant?.color].filter(Boolean).join(" / ");
                 return (
                   <motion.div key={item.id} layout className="glass rounded-3xl p-4 flex gap-4">
                     <Link to={`/product/${product.slug}`} className="w-24 h-24 rounded-2xl overflow-hidden shrink-0">
@@ -107,15 +110,18 @@ const CartPage: React.FC = () => {
                     </Link>
                     <div className="flex-1 min-w-0">
                       <Link to={`/product/${product.slug}`} className="font-medium text-foreground hover:text-primary transition-colors line-clamp-1">{product.name}</Link>
+                      {variantLabel && (
+                        <p className="text-xs text-muted-foreground mt-0.5">{variantLabel}</p>
+                      )}
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="font-bold text-foreground">{formatPrice(product.price)}</span>
+                        <span className="font-bold text-foreground">{formatPrice(itemPrice)}</span>
                         {product.compare_at_price && <span className="text-sm text-muted-foreground line-through">{formatPrice(product.compare_at_price)}</span>}
                       </div>
                       <div className="flex items-center justify-between mt-3">
                         <div className="flex items-center gap-1 glass rounded-full px-1 py-0.5">
                           <button onClick={() => updateQty.mutate({ id: item.id, quantity: item.quantity - 1 })} className="p-1.5 rounded-full hover:bg-secondary/50"><Minus className="w-3 h-3" /></button>
                           <span className="w-6 text-center text-sm font-medium text-foreground">{item.quantity}</span>
-                          <button onClick={() => updateQty.mutate({ id: item.id, quantity: Math.min(product.stock_quantity, item.quantity + 1) })} className="p-1.5 rounded-full hover:bg-secondary/50"><Plus className="w-3 h-3" /></button>
+                          <button onClick={() => updateQty.mutate({ id: item.id, quantity: Math.min(variant?.stock_quantity ?? product.stock_quantity, item.quantity + 1) })} className="p-1.5 rounded-full hover:bg-secondary/50"><Plus className="w-3 h-3" /></button>
                         </div>
                         <button onClick={() => removeItem.mutate(item.id)} className="p-2 rounded-full text-muted-foreground hover:text-destructive hover:bg-secondary/50">
                           <Trash2 className="w-4 h-4" />
