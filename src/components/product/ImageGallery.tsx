@@ -14,6 +14,11 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const [isZooming, setIsZooming] = useState(false);
+  const [pinchScale, setPinchScale] = useState(1);
+  const [pinchOrigin, setPinchOrigin] = useState({ x: 50, y: 50 });
+  const pinchStartDist = useRef(0);
+  const pinchStartScale = useRef(1);
+  const lightboxImgRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLDivElement>(null);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
