@@ -12,6 +12,7 @@ import Footer from "@/components/Footer";
 
 const CheckoutPage: React.FC = () => {
   const { user } = useAuth();
+  const { formatPrice } = useCurrency();
   
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
