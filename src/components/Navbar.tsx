@@ -87,31 +87,36 @@ const Navbar: React.FC = () => {
                   Home
                 </Link>
 
-                {categories.map((cat) => (
-                  <div key={cat.slug} className="relative"
-                    onMouseEnter={() => setHoveredCat(cat.slug)}
-                    onMouseLeave={() => setHoveredCat(null)}>
-                    <Link to={`/shop?category=${cat.slug}`}
-                      className="btn-pill text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
-                      {cat.name}<ChevronDown className="w-3 h-3" />
-                    </Link>
-                    <AnimatePresence>
-                      {hoveredCat === cat.slug && (
-                        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
-                          transition={{ duration: 0.2 }} className="absolute top-full left-0 pt-2 w-48">
-                          <div className="glass-strong rounded-2xl p-2">
-                            {cat.subs.map((sub) => (
-                              <Link key={sub} to={`/shop?category=${cat.slug}&sub=${sub.toLowerCase()}`}
-                                className="block px-4 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
-                                {sub}
-                              </Link>
-                            ))}
-                          </div>
-                        </motion.div>
+                {parentCategories.map((cat) => {
+                  const children = getChildren(cat.id);
+                  return (
+                    <div key={cat.slug} className="relative"
+                      onMouseEnter={() => setHoveredCat(cat.slug)}
+                      onMouseLeave={() => setHoveredCat(null)}>
+                      <Link to={`/shop?category=${cat.slug}`}
+                        className="btn-pill text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
+                        {cat.name}{children.length > 0 && <ChevronDown className="w-3 h-3" />}
+                      </Link>
+                      {children.length > 0 && (
+                        <AnimatePresence>
+                          {hoveredCat === cat.slug && (
+                            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
+                              transition={{ duration: 0.2 }} className="absolute top-full left-0 pt-2 w-48">
+                              <div className="glass-strong rounded-2xl p-2">
+                                {children.map((sub) => (
+                                  <Link key={sub.id} to={`/shop?category=${sub.slug}`}
+                                    className="block px-4 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
+                                    {sub.name}
+                                  </Link>
+                                ))}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       )}
-                    </AnimatePresence>
-                  </div>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Actions */}
