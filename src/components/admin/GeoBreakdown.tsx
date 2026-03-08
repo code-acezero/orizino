@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Globe, MapPin, Trophy, TrendingUp, CalendarIcon } from "lucide-react";
+import CountryComparison from "./CountryComparison";
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { cn } from "@/lib/utils";
 
