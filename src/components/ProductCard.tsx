@@ -36,7 +36,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       transition={{ duration: 0.3 }}
       className={`group glass rounded-3xl overflow-hidden ${className}`}
     >
-      <Link to={`/product/${slug}`} className="block">
+      <Link to={`/product/${slug}`} className="block" onClick={() => trackClick("product_card", slug, window.location.pathname, { product_name: name })}>
         {/* Image */}
         <div className="relative aspect-square overflow-hidden bg-secondary/20">
           <img
