@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import { motion } from "framer-motion";
 
-interface ProductCardProps {
+export interface ProductCardProps {
   id: string;
   name: string;
   price: number;
@@ -12,6 +12,7 @@ interface ProductCardProps {
   avgRating?: number;
   reviewCount?: number;
   slug: string;
+  className?: string;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -22,6 +23,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   avgRating = 0,
   reviewCount = 0,
   slug,
+  className = "",
 }) => {
   const discount = compareAtPrice
     ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
@@ -31,7 +33,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     <motion.div
       whileHover={{ y: -4 }}
       transition={{ duration: 0.3 }}
-      className="group glass rounded-3xl overflow-hidden"
+      className={`group glass rounded-3xl overflow-hidden ${className}`}
     >
       <Link to={`/product/${slug}`} className="block">
         {/* Image */}

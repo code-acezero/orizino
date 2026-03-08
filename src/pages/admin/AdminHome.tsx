@@ -10,10 +10,49 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/app-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, GripVertical, Tag, Clock, Sparkles, Image, Bell } from "lucide-react";
+import { Plus, Trash2, GripVertical, Tag, Clock, Sparkles, Image, Bell, Layout } from "lucide-react";
 import { useDragReorder } from "@/hooks/use-drag-reorder";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import ImageUpload from "@/components/ImageUpload";
+
+interface LayoutConfig {
+  section_spacing: string;
+  container_max_width: string;
+  section_animation: string;
+  animation_delay: number;
+  show_section_dividers: boolean;
+  divider_style: string;
+  featured_bg: string;
+  arrivals_bg: string;
+  categories_bg: string;
+  featured_columns: number;
+  arrivals_columns: number;
+  card_style: string;
+  section_title_size: string;
+  section_title_align: string;
+  page_bg: string;
+  page_bg_pattern: string;
+}
+
+const defaultLayoutConfig: LayoutConfig = {
+  section_spacing: "16",
+  container_max_width: "1440px",
+  section_animation: "fade-up",
+  animation_delay: 0.05,
+  show_section_dividers: false,
+  divider_style: "line",
+  featured_bg: "none",
+  arrivals_bg: "none",
+  categories_bg: "none",
+  featured_columns: 4,
+  arrivals_columns: 4,
+  card_style: "default",
+  section_title_size: "3xl",
+  section_title_align: "left",
+  page_bg: "none",
+  page_bg_pattern: "none",
+};
 
 interface SaleConfig {
   id: string;
@@ -128,9 +167,19 @@ const AdminHome = () => {
     },
   });
 
+  const { data: layoutRow } = useQuery({
+    queryKey: ["admin-home-layout"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("site_settings").select("*").eq("key", "home_layout_config").maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const [catSections, setCatSections] = useState<{ category_id: string; sort_order: number; product_count: number }[]>([]);
   const [sales, setSales] = useState<SaleConfig[]>([]);
   const [newArrivals, setNewArrivals] = useState({ enabled: true, title: "New Arrivals", subtitle: "Fresh drops just landed", product_count: 8 });
+  const [layoutConfig, setLayoutConfig] = useState<LayoutConfig>({ ...defaultLayoutConfig });
 
   useEffect(() => {
     if (settingsRow?.value) {
@@ -155,6 +204,14 @@ const AdminHome = () => {
       if (config && typeof config === "object") setNewArrivals((prev) => ({ ...prev, ...config }));
     }
   }, [arrivalsRow]);
+
+  useEffect(() => {
+    if (layoutRow?.value) {
+      const val = layoutRow.value as any;
+      const config = val?.value ?? val;
+      if (config && typeof config === "object") setLayoutConfig((prev) => ({ ...prev, ...config }));
+    }
+  }, [layoutRow]);
 
   const saveCatSections = useMutation({
     mutationFn: async (sections: typeof catSections) => {
@@ -203,6 +260,23 @@ const AdminHome = () => {
       qc.invalidateQueries({ queryKey: ["admin-new-arrivals"] });
       qc.invalidateQueries({ queryKey: ["home-new-arrivals"] });
       toast.success("New arrivals settings saved");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const saveLayout = useMutation({
+    mutationFn: async () => {
+      const jsonValue = { value: layoutConfig } as any;
+      if (layoutRow) {
+        await supabase.from("site_settings").update({ value: jsonValue }).eq("id", layoutRow.id);
+      } else {
+        await supabase.from("site_settings").insert({ key: "home_layout_config", value: jsonValue });
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-home-layout"] });
+      qc.invalidateQueries({ queryKey: ["home-layout-config"] });
+      toast.success("Layout settings saved");
     },
     onError: (e) => toast.error(e.message),
   });
@@ -286,6 +360,7 @@ const AdminHome = () => {
           <TabsTrigger value="cat-sections">Category Sections</TabsTrigger>
           <TabsTrigger value="sales">Sales</TabsTrigger>
           <TabsTrigger value="new-arrivals">New Arrivals</TabsTrigger>
+          <TabsTrigger value="layout">Layout & Style</TabsTrigger>
           <TabsTrigger value="categories">Featured Categories</TabsTrigger>
           <TabsTrigger value="products">Featured Products</TabsTrigger>
         </TabsList>
@@ -603,6 +678,193 @@ const AdminHome = () => {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Layout & Style */}
+        <TabsContent value="layout">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Spacing & Container */}
+            <Card className="glass">
+              <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Layout className="w-5 h-5" /> Spacing & Container</CardTitle></CardHeader>
+              <CardContent className="space-y-5">
+                <div>
+                  <Label>Section Spacing (Tailwind gap): {layoutConfig.section_spacing}</Label>
+                  <Select value={layoutConfig.section_spacing} onValueChange={(v) => setLayoutConfig({ ...layoutConfig, section_spacing: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="8">Compact (8 / 2rem)</SelectItem>
+                      <SelectItem value="12">Normal (12 / 3rem)</SelectItem>
+                      <SelectItem value="16">Spacious (16 / 4rem)</SelectItem>
+                      <SelectItem value="20">Wide (20 / 5rem)</SelectItem>
+                      <SelectItem value="24">Extra Wide (24 / 6rem)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Container Max Width</Label>
+                  <Select value={layoutConfig.container_max_width} onValueChange={(v) => setLayoutConfig({ ...layoutConfig, container_max_width: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1200px">Narrow (1200px)</SelectItem>
+                      <SelectItem value="1440px">Default (1440px)</SelectItem>
+                      <SelectItem value="1600px">Wide (1600px)</SelectItem>
+                      <SelectItem value="100%">Full Width</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>Section Dividers</Label>
+                  <Switch checked={layoutConfig.show_section_dividers} onCheckedChange={(v) => setLayoutConfig({ ...layoutConfig, show_section_dividers: v })} />
+                </div>
+                {layoutConfig.show_section_dividers && (
+                  <div>
+                    <Label>Divider Style</Label>
+                    <Select value={layoutConfig.divider_style} onValueChange={(v) => setLayoutConfig({ ...layoutConfig, divider_style: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="line">Thin Line</SelectItem>
+                        <SelectItem value="dashed">Dashed</SelectItem>
+                        <SelectItem value="gradient">Gradient Fade</SelectItem>
+                        <SelectItem value="dots">Dotted</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Animations */}
+            <Card className="glass">
+              <CardHeader><CardTitle className="text-lg">Animations</CardTitle></CardHeader>
+              <CardContent className="space-y-5">
+                <div>
+                  <Label>Section Entrance Animation</Label>
+                  <Select value={layoutConfig.section_animation} onValueChange={(v) => setLayoutConfig({ ...layoutConfig, section_animation: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="fade-up">Fade Up</SelectItem>
+                      <SelectItem value="fade-in">Fade In</SelectItem>
+                      <SelectItem value="scale-up">Scale Up</SelectItem>
+                      <SelectItem value="slide-left">Slide from Left</SelectItem>
+                      <SelectItem value="slide-right">Slide from Right</SelectItem>
+                      <SelectItem value="stagger">Stagger Children</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Animation Stagger Delay: {layoutConfig.animation_delay}s</Label>
+                  <Slider value={[layoutConfig.animation_delay]} onValueChange={([v]) => setLayoutConfig({ ...layoutConfig, animation_delay: v })} min={0} max={0.2} step={0.01} className="mt-2" />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Section Backgrounds */}
+            <Card className="glass">
+              <CardHeader><CardTitle className="text-lg">Section Backgrounds</CardTitle></CardHeader>
+              <CardContent className="space-y-5">
+                {[
+                  { key: "categories_bg" as const, label: "Categories Section" },
+                  { key: "featured_bg" as const, label: "Featured Products Section" },
+                  { key: "arrivals_bg" as const, label: "New Arrivals Section" },
+                ].map(({ key, label }) => (
+                  <div key={key}>
+                    <Label>{label}</Label>
+                    <Select value={layoutConfig[key]} onValueChange={(v) => setLayoutConfig({ ...layoutConfig, [key]: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Transparent</SelectItem>
+                        <SelectItem value="subtle">Subtle Tint</SelectItem>
+                        <SelectItem value="glass">Glassmorphism</SelectItem>
+                        <SelectItem value="primary-tint">Primary Color Tint</SelectItem>
+                        <SelectItem value="gradient">Gradient</SelectItem>
+                        <SelectItem value="dark">Dark Panel</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
+                <div>
+                  <Label>Page Background Pattern</Label>
+                  <Select value={layoutConfig.page_bg_pattern} onValueChange={(v) => setLayoutConfig({ ...layoutConfig, page_bg_pattern: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="dots">Dots</SelectItem>
+                      <SelectItem value="grid">Grid</SelectItem>
+                      <SelectItem value="diagonal">Diagonal Lines</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Grid & Typography */}
+            <Card className="glass">
+              <CardHeader><CardTitle className="text-lg">Grid & Typography</CardTitle></CardHeader>
+              <CardContent className="space-y-5">
+                <div>
+                  <Label>Featured Products Columns (desktop)</Label>
+                  <Select value={String(layoutConfig.featured_columns)} onValueChange={(v) => setLayoutConfig({ ...layoutConfig, featured_columns: Number(v) })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3">3 Columns</SelectItem>
+                      <SelectItem value="4">4 Columns</SelectItem>
+                      <SelectItem value="5">5 Columns</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>New Arrivals Columns (desktop)</Label>
+                  <Select value={String(layoutConfig.arrivals_columns)} onValueChange={(v) => setLayoutConfig({ ...layoutConfig, arrivals_columns: Number(v) })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3">3 Columns</SelectItem>
+                      <SelectItem value="4">4 Columns</SelectItem>
+                      <SelectItem value="5">5 Columns</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Section Title Size</Label>
+                  <Select value={layoutConfig.section_title_size} onValueChange={(v) => setLayoutConfig({ ...layoutConfig, section_title_size: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="2xl">Small (2xl)</SelectItem>
+                      <SelectItem value="3xl">Medium (3xl)</SelectItem>
+                      <SelectItem value="4xl">Large (4xl)</SelectItem>
+                      <SelectItem value="5xl">Extra Large (5xl)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Section Title Alignment</Label>
+                  <Select value={layoutConfig.section_title_align} onValueChange={(v) => setLayoutConfig({ ...layoutConfig, section_title_align: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="left">Left</SelectItem>
+                      <SelectItem value="center">Center</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Product Card Style</Label>
+                  <Select value={layoutConfig.card_style} onValueChange={(v) => setLayoutConfig({ ...layoutConfig, card_style: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="default">Default</SelectItem>
+                      <SelectItem value="minimal">Minimal</SelectItem>
+                      <SelectItem value="bordered">Bordered</SelectItem>
+                      <SelectItem value="elevated">Elevated Shadow</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Button className="w-full mt-6" onClick={() => saveLayout.mutate()} disabled={saveLayout.isPending}>
+            {saveLayout.isPending ? "Saving..." : "Save Layout Settings"}
+          </Button>
         </TabsContent>
       </Tabs>
     </div>

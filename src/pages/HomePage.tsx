@@ -34,12 +34,98 @@ interface SaleConfig {
   trigger_popup: boolean;
 }
 
+interface LayoutConfig {
+  section_spacing: string;
+  container_max_width: string;
+  section_animation: string;
+  animation_delay: number;
+  show_section_dividers: boolean;
+  divider_style: string;
+  featured_bg: string;
+  arrivals_bg: string;
+  categories_bg: string;
+  featured_columns: number;
+  arrivals_columns: number;
+  card_style: string;
+  section_title_size: string;
+  section_title_align: string;
+  page_bg: string;
+  page_bg_pattern: string;
+}
+
+const defaultLayout: LayoutConfig = {
+  section_spacing: "16",
+  container_max_width: "1440px",
+  section_animation: "fade-up",
+  animation_delay: 0.05,
+  show_section_dividers: false,
+  divider_style: "line",
+  featured_bg: "none",
+  arrivals_bg: "none",
+  categories_bg: "none",
+  featured_columns: 4,
+  arrivals_columns: 4,
+  card_style: "default",
+  section_title_size: "3xl",
+  section_title_align: "left",
+  page_bg: "none",
+  page_bg_pattern: "none",
+};
+
 const isSaleActive = (sale: SaleConfig) => {
   if (!sale.enabled) return false;
   const now = new Date();
   if (sale.starts_at && new Date(sale.starts_at) > now) return false;
   if (sale.ends_at && new Date(sale.ends_at) < now) return false;
   return true;
+};
+
+const getSectionBgClass = (bg: string) => {
+  switch (bg) {
+    case "subtle": return "bg-secondary/30 rounded-3xl p-6 md:p-8";
+    case "glass": return "glass rounded-3xl p-6 md:p-8";
+    case "primary-tint": return "bg-primary/5 rounded-3xl p-6 md:p-8";
+    case "gradient": return "bg-gradient-to-br from-primary/5 to-accent/5 rounded-3xl p-6 md:p-8";
+    case "dark": return "bg-foreground/5 rounded-3xl p-6 md:p-8";
+    default: return "";
+  }
+};
+
+const getPatternStyle = (pattern: string): React.CSSProperties => {
+  switch (pattern) {
+    case "dots": return { backgroundImage: "radial-gradient(circle, hsl(var(--primary) / 0.07) 1px, transparent 1px)", backgroundSize: "20px 20px" };
+    case "grid": return { backgroundImage: "linear-gradient(hsl(var(--primary) / 0.04) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.04) 1px, transparent 1px)", backgroundSize: "40px 40px" };
+    case "diagonal": return { backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 10px, hsl(var(--primary) / 0.03) 10px, hsl(var(--primary) / 0.03) 11px)", backgroundSize: "15px 15px" };
+    default: return {};
+  }
+};
+
+const getDivider = (style: string) => {
+  switch (style) {
+    case "dashed": return <div className="border-t border-dashed border-border" />;
+    case "gradient": return <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />;
+    case "dots": return <div className="flex justify-center gap-1">{[...Array(5)].map((_, i) => <span key={i} className="w-1.5 h-1.5 rounded-full bg-border" />)}</div>;
+    default: return <div className="border-t border-border" />;
+  }
+};
+
+const getAnimationVariants = (animation: string) => {
+  switch (animation) {
+    case "fade-in": return { initial: { opacity: 0 }, whileInView: { opacity: 1 } };
+    case "scale-up": return { initial: { opacity: 0, scale: 0.95 }, whileInView: { opacity: 1, scale: 1 } };
+    case "slide-left": return { initial: { opacity: 0, x: -30 }, whileInView: { opacity: 1, x: 0 } };
+    case "slide-right": return { initial: { opacity: 0, x: 30 }, whileInView: { opacity: 1, x: 0 } };
+    case "none": return { initial: {}, whileInView: {} };
+    default: return { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 } };
+  }
+};
+
+const titleSizeMap: Record<string, string> = { "2xl": "text-2xl md:text-3xl", "3xl": "text-3xl md:text-4xl", "4xl": "text-4xl md:text-5xl", "5xl": "text-5xl md:text-6xl" };
+const colsMap: Record<number, string> = { 3: "lg:grid-cols-3", 4: "lg:grid-cols-4", 5: "lg:grid-cols-5" };
+const cardStyleMap: Record<string, string> = { default: "", minimal: "border-0 shadow-none", bordered: "border-2 border-border", elevated: "shadow-xl" };
+
+const spacingMap: Record<string, string> = {
+  "8": "gap-8", "12": "gap-12", "16": "gap-16", "20": "gap-20", "24": "gap-24",
 };
 
 const HomePage: React.FC = () => {
@@ -90,6 +176,25 @@ const HomePage: React.FC = () => {
     },
     staleTime: 30 * 1000,
   });
+
+  const { data: layoutConfigRaw } = useQuery({
+    queryKey: ["home-layout-config"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("site_settings").select("value").eq("key", "home_layout_config").maybeSingle();
+      if (error) throw error;
+      if (!data?.value) return defaultLayout;
+      const val = data.value as any;
+      const config = val?.value ?? val;
+      return { ...defaultLayout, ...config };
+    },
+    staleTime: 30 * 1000,
+  });
+
+  const layout = layoutConfigRaw || defaultLayout;
+  const anim = getAnimationVariants(layout.section_animation);
+  const titleSize = titleSizeMap[layout.section_title_size] || titleSizeMap["3xl"];
+  const titleAlign = layout.section_title_align === "center" ? "text-center justify-center" : "justify-between";
+  const cardExtra = cardStyleMap[layout.card_style] || "";
 
   const newArrivalsCount = newArrivalsConfig?.product_count || 8;
   const { data: newArrivals = [] } = useQuery({
@@ -158,7 +263,7 @@ const HomePage: React.FC = () => {
     const products = (saleProducts as Record<string, any[]>)[sale.id] || [];
 
     return (
-      <motion.section key={sale.id} initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}>
+      <motion.section key={sale.id} {...anim} viewport={{ once: true }}>
         <div
           className="glass-strong rounded-3xl p-8 md:p-12 relative overflow-hidden"
           style={sale.banner_image ? { backgroundImage: `url(${sale.banner_image})`, backgroundSize: "cover", backgroundPosition: "center" } : {}}
@@ -187,8 +292,8 @@ const HomePage: React.FC = () => {
         {sale.show_products && products.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
             {products.map((product: any, i: number) => (
-              <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}>
-                <ProductCard id={product.id} name={product.name} price={Number(product.price)} compareAtPrice={product.compare_at_price ? Number(product.compare_at_price) : undefined} thumbnail={product.thumbnail ?? undefined} avgRating={product.avg_rating ? Number(product.avg_rating) : undefined} reviewCount={product.review_count ?? undefined} slug={product.slug} />
+              <motion.div key={product.id} {...anim} viewport={{ once: true }} transition={{ delay: i * layout.animation_delay }}>
+                <ProductCard id={product.id} name={product.name} price={Number(product.price)} compareAtPrice={product.compare_at_price ? Number(product.compare_at_price) : undefined} thumbnail={product.thumbnail ?? undefined} avgRating={product.avg_rating ? Number(product.avg_rating) : undefined} reviewCount={product.review_count ?? undefined} slug={product.slug} className={cardExtra} />
               </motion.div>
             ))}
           </div>
@@ -201,100 +306,125 @@ const HomePage: React.FC = () => {
   const popupSales = salesConfig.filter((s: SaleConfig) => s.trigger_popup);
   const showNewArrivals = newArrivalsConfig?.enabled !== false && newArrivals.length > 0;
 
+  const divider = layout.show_section_dividers ? getDivider(layout.divider_style) : null;
+  const spacingClass = spacingMap[layout.section_spacing] || "gap-16";
+
   return (
-    <div className="min-h-screen pb-20 lg:pb-0">
+    <div className="min-h-screen pb-20 lg:pb-0" style={getPatternStyle(layout.page_bg_pattern)}>
       <Navbar />
       <HomePopup />
       {popupSales.map((sale: SaleConfig) => <SalePopup key={sale.id} sale={sale} />)}
 
-      <main className="container mx-auto px-4 pt-6 space-y-16">
+      <main className={`mx-auto px-4 pt-6 flex flex-col ${spacingClass}`} style={{ maxWidth: layout.container_max_width }}>
         <ParallaxSlider />
 
-        {/* Sales after slider */}
         {salesByPos("after-slider").map(renderSaleBanner)}
 
-        <CategoryGrid />
+        {divider}
 
-        {/* Sales after categories */}
+        <div className={getSectionBgClass(layout.categories_bg)}>
+          <CategoryGrid />
+        </div>
+
         {salesByPos("after-categories").map(renderSaleBanner)}
 
-        {/* Category Product Sections */}
+        {divider}
+
         {(catSectionsConfig || []).map((section: any) => {
           const cat = sectionCategories.find((c) => c.id === section.category_id);
           const products = (sectionProducts as Record<string, any[]>)[section.category_id] || [];
           if (!cat || products.length === 0) return null;
           return (
             <section key={section.category_id}>
-              <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="flex items-center justify-between mb-8">
-                <div>
-                  <h2 className="text-3xl md:text-4xl font-bold font-display text-foreground">{cat.name}</h2>
+              <motion.div {...anim} viewport={{ once: true }} className={`flex items-center ${titleAlign} mb-8`}>
+                <div className={layout.section_title_align === "center" ? "text-center" : ""}>
+                  <h2 className={`${titleSize} font-bold font-display text-foreground`}>{cat.name}</h2>
                   <p className="text-muted-foreground mt-1">Explore our {cat.name.toLowerCase()} collection</p>
                 </div>
-                <a href={`/categories/${cat.slug}`} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+                {layout.section_title_align !== "center" && (
+                  <a href={`/categories/${cat.slug}`} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+                )}
               </motion.div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className={`grid grid-cols-2 md:grid-cols-3 ${colsMap[layout.featured_columns] || "lg:grid-cols-4"} gap-4`}>
                 {products.map((product: any, i: number) => (
-                  <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}>
-                    <ProductCard id={product.id} name={product.name} price={Number(product.price)} compareAtPrice={product.compare_at_price ? Number(product.compare_at_price) : undefined} thumbnail={product.thumbnail ?? undefined} avgRating={product.avg_rating ? Number(product.avg_rating) : undefined} reviewCount={product.review_count ?? undefined} slug={product.slug} />
+                  <motion.div key={product.id} {...anim} viewport={{ once: true }} transition={{ delay: i * layout.animation_delay }}>
+                    <ProductCard id={product.id} name={product.name} price={Number(product.price)} compareAtPrice={product.compare_at_price ? Number(product.compare_at_price) : undefined} thumbnail={product.thumbnail ?? undefined} avgRating={product.avg_rating ? Number(product.avg_rating) : undefined} reviewCount={product.review_count ?? undefined} slug={product.slug} className={cardExtra} />
                   </motion.div>
                 ))}
               </div>
+              {layout.section_title_align === "center" && (
+                <div className="text-center mt-6">
+                  <a href={`/categories/${cat.slug}`} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+                </div>
+              )}
             </section>
           );
         })}
 
-        {/* Featured Products */}
+        {divider}
+
         {(isLoading || featuredProducts.length > 0) && (
-          <section>
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-3xl md:text-4xl font-bold font-display text-foreground">Featured Products</h2>
+          <section className={getSectionBgClass(layout.featured_bg)}>
+            <motion.div {...anim} viewport={{ once: true }} className={`flex items-center ${titleAlign} mb-8`}>
+              <div className={layout.section_title_align === "center" ? "text-center" : ""}>
+                <h2 className={`${titleSize} font-bold font-display text-foreground`}>Featured Products</h2>
                 <p className="text-muted-foreground mt-1">Handpicked just for you</p>
               </div>
-              <a href="/shop" className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+              {layout.section_title_align !== "center" && (
+                <a href="/shop" className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+              )}
             </motion.div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className={`grid grid-cols-2 md:grid-cols-3 ${colsMap[layout.featured_columns] || "lg:grid-cols-4"} gap-4`}>
               {isLoading
                 ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="aspect-[3/4] rounded-3xl bg-secondary/30 animate-pulse" />)
                 : featuredProducts.map((product, i) => (
-                    <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}>
-                      <ProductCard id={product.id} name={product.name} price={Number(product.price)} compareAtPrice={product.compare_at_price ? Number(product.compare_at_price) : undefined} thumbnail={product.thumbnail ?? undefined} avgRating={product.avg_rating ? Number(product.avg_rating) : undefined} reviewCount={product.review_count ?? undefined} slug={product.slug} />
+                    <motion.div key={product.id} {...anim} viewport={{ once: true }} transition={{ delay: i * layout.animation_delay }}>
+                      <ProductCard id={product.id} name={product.name} price={Number(product.price)} compareAtPrice={product.compare_at_price ? Number(product.compare_at_price) : undefined} thumbnail={product.thumbnail ?? undefined} avgRating={product.avg_rating ? Number(product.avg_rating) : undefined} reviewCount={product.review_count ?? undefined} slug={product.slug} className={cardExtra} />
                     </motion.div>
                   ))}
             </div>
+            {layout.section_title_align === "center" && (
+              <div className="text-center mt-6">
+                <a href="/shop" className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+              </div>
+            )}
           </section>
         )}
 
-        {/* Sales after featured */}
         {salesByPos("after-featured").map(renderSaleBanner)}
 
-        {/* New Arrivals */}
+        {divider}
+
         {showNewArrivals && (
-          <section>
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
+          <section className={getSectionBgClass(layout.arrivals_bg)}>
+            <motion.div {...anim} viewport={{ once: true }} className={`flex items-center ${titleAlign} mb-8`}>
+              <div className={`flex items-center gap-3 ${layout.section_title_align === "center" ? "justify-center" : ""}`}>
                 <Sparkles className="w-7 h-7 text-primary" />
-                <div>
-                  <h2 className="text-3xl md:text-4xl font-bold font-display text-foreground">{newArrivalsConfig?.title || "New Arrivals"}</h2>
+                <div className={layout.section_title_align === "center" ? "text-center" : ""}>
+                  <h2 className={`${titleSize} font-bold font-display text-foreground`}>{newArrivalsConfig?.title || "New Arrivals"}</h2>
                   <p className="text-muted-foreground mt-1">{newArrivalsConfig?.subtitle || "Fresh drops just landed"}</p>
                 </div>
               </div>
-              <a href="/shop" className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+              {layout.section_title_align !== "center" && (
+                <a href="/shop" className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+              )}
             </motion.div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className={`grid grid-cols-2 md:grid-cols-3 ${colsMap[layout.arrivals_columns] || "lg:grid-cols-4"} gap-4`}>
               {newArrivals.map((product, i) => (
-                <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}>
-                  <ProductCard id={product.id} name={product.name} price={Number(product.price)} compareAtPrice={product.compare_at_price ? Number(product.compare_at_price) : undefined} thumbnail={product.thumbnail ?? undefined} avgRating={product.avg_rating ? Number(product.avg_rating) : undefined} reviewCount={product.review_count ?? undefined} slug={product.slug} />
+                <motion.div key={product.id} {...anim} viewport={{ once: true }} transition={{ delay: i * layout.animation_delay }}>
+                  <ProductCard id={product.id} name={product.name} price={Number(product.price)} compareAtPrice={product.compare_at_price ? Number(product.compare_at_price) : undefined} thumbnail={product.thumbnail ?? undefined} avgRating={product.avg_rating ? Number(product.avg_rating) : undefined} reviewCount={product.review_count ?? undefined} slug={product.slug} className={cardExtra} />
                 </motion.div>
               ))}
             </div>
+            {layout.section_title_align === "center" && (
+              <div className="text-center mt-6">
+                <a href="/shop" className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+              </div>
+            )}
           </section>
         )}
 
-        {/* Sales after arrivals */}
         {salesByPos("after-arrivals").map(renderSaleBanner)}
-
-        {/* Sales at bottom */}
         {salesByPos("bottom").map(renderSaleBanner)}
       </main>
 
