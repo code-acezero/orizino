@@ -57,8 +57,6 @@ const GeoBreakdown: React.FC<GeoBreakdownProps> = ({ analyticsData }) => {
 
   return (
     <div className="space-y-6">
-      {/* World Map */}
-      <VisitorWorldMap countryData={geo.countryCodeMap} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Country Chart */}
