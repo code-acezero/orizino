@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { Star, Send } from "lucide-react";
+import { Star, Send, PackageCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/lib/app-toast";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -22,7 +22,34 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ productId }) => {
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Check if user has a delivered order containing this product
+  const { data: hasDeliveredOrder, isLoading: checkingEligibility } = useQuery({
+    queryKey: ["review-eligibility", user?.id, productId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("orders")
+        .select("id, order_items!inner(product_id)")
+        .eq("user_id", user!.id)
+        .eq("status", "delivered")
+        .eq("order_items.product_id" as any, productId)
+        .limit(1);
+      return (data && data.length > 0) || false;
+    },
+    enabled: !!user,
+  });
+
   if (!user) return null;
+
+  if (checkingEligibility) return null;
+
+  if (!hasDeliveredOrder) {
+    return (
+      <div className="glass-strong rounded-3xl p-6 flex items-center gap-3 text-muted-foreground">
+        <PackageCheck className="w-5 h-5 shrink-0" />
+        <p className="text-sm">You can write a review after your order has been delivered.</p>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
