@@ -696,17 +696,32 @@ const AdminProducts = () => {
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <div className="grid grid-cols-[1fr_1fr_80px_80px_80px_1fr_40px] gap-2 px-2 text-xs font-medium text-muted-foreground">
-                          <span>Size</span><span>Color</span><span>SKU</span><span>Price ±</span><span>Stock</span><span>Image URL</span><span></span>
+                        <div className="grid grid-cols-[1fr_1fr_80px_80px_80px_60px_40px] gap-2 px-2 text-xs font-medium text-muted-foreground">
+                          <span>Size</span><span>Color</span><span>SKU</span><span>Price ±</span><span>Stock</span><span>Image</span><span></span>
                         </div>
                         {variants.map((v, i) => (
-                          <div key={i} className={`grid grid-cols-[1fr_1fr_80px_80px_80px_1fr_40px] gap-2 items-center p-2 rounded-lg border transition-all ${v.is_active ? "border-border bg-secondary/10" : "border-border/40 bg-muted/20 opacity-60"}`}>
+                          <div key={i} className={`grid grid-cols-[1fr_1fr_80px_80px_80px_60px_40px] gap-2 items-center p-2 rounded-lg border transition-all ${v.is_active ? "border-border bg-secondary/10" : "border-border/40 bg-muted/20 opacity-60"}`}>
                             <Input value={v.size || ""} onChange={(e) => updateVariant(i, "size", e.target.value)} placeholder="Size" className="h-8 text-sm" />
                             <Input value={v.color || ""} onChange={(e) => updateVariant(i, "color", e.target.value)} placeholder="Color" className="h-8 text-sm" />
                             <Input value={v.sku || ""} onChange={(e) => updateVariant(i, "sku", e.target.value)} placeholder="SKU" className="h-8 text-xs" />
                             <Input type="number" value={v.price_override ?? ""} onChange={(e) => updateVariant(i, "price_override", e.target.value ? +e.target.value : null)} placeholder="—" className="h-8 text-sm" />
                             <Input type="number" value={v.stock_quantity} onChange={(e) => updateVariant(i, "stock_quantity", +e.target.value)} className="h-8 text-sm" />
-                            <Input value={(v as any).image_url || ""} onChange={(e) => updateVariant(i, "image_url", e.target.value)} placeholder="https://..." className="h-8 text-xs" />
+                            <div className="flex items-center justify-center">
+                              {v.image_url ? (
+                                <div className="relative group w-10 h-10">
+                                  <img src={v.image_url} alt="Variant" className="w-10 h-10 object-cover rounded border border-border" />
+                                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center gap-0.5">
+                                    <button type="button" onClick={() => variantImageRefs.current[i]?.click()} className="p-0.5 rounded-full bg-primary text-primary-foreground"><Upload className="w-3 h-3" /></button>
+                                    <button type="button" onClick={() => updateVariant(i, "image_url", "")} className="p-0.5 rounded-full bg-destructive text-destructive-foreground"><X className="w-3 h-3" /></button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button type="button" onClick={() => variantImageRefs.current[i]?.click()} className="w-10 h-10 border border-dashed border-border rounded flex items-center justify-center text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors">
+                                  <Upload className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                              <input ref={(el) => { if (el) variantImageRefs.current[i] = el; }} type="file" accept="image/*" className="hidden" onChange={(e) => { handleVariantImageUpload(i, e.target.files?.[0]); e.target.value = ""; }} />
+                            </div>
                             <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeVariant(i)}>
                               <X className="w-3.5 h-3.5 text-destructive" />
                             </Button>
