@@ -68,6 +68,27 @@ const CountryComparison: React.FC<CountryComparisonProps> = ({ analyticsData }) 
     return rows;
   }, [analyticsData, selected]);
 
+  const exportCSV = useCallback(() => {
+    if (!comparison.length) return;
+    const { label } = PERIOD_OPTIONS[selected];
+    
+    // Create CSV content
+    const headers = ["Country", "Country Code", "Current Period", "Previous Period", "Change %"];
+    const rows = comparison.map(row => 
+      [row.name, row.code, row.curr, row.prev, row.change].map(val => `"${val}"`).join(",")
+    );
+    
+    const csvContent = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `country-comparison-${label.replace(/\s+/g, '-')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [comparison, selected]);
+
   return (
     <Card className="glass">
       <CardHeader className="pb-3">
@@ -76,6 +97,10 @@ const CountryComparison: React.FC<CountryComparisonProps> = ({ analyticsData }) 
             <GitCompareArrows className="w-5 h-5 text-primary" />
             Period Comparison
           </CardTitle>
+          <Button variant="outline" size="sm" onClick={exportCSV} disabled={comparison.length === 0} className="h-8 text-xs">
+            <Download className="w-3.5 h-3.5 mr-1.5" />
+            Export CSV
+          </Button>
         </div>
         <div className="flex flex-wrap gap-2">
           {PERIOD_OPTIONS.map((opt, i) => (
