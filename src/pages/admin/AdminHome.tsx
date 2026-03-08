@@ -10,10 +10,49 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/app-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, GripVertical, Tag, Clock, Sparkles, Image, Bell } from "lucide-react";
+import { Plus, Trash2, GripVertical, Tag, Clock, Sparkles, Image, Bell, Layout } from "lucide-react";
 import { useDragReorder } from "@/hooks/use-drag-reorder";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import ImageUpload from "@/components/ImageUpload";
+
+interface LayoutConfig {
+  section_spacing: string;
+  container_max_width: string;
+  section_animation: string;
+  animation_delay: number;
+  show_section_dividers: boolean;
+  divider_style: string;
+  featured_bg: string;
+  arrivals_bg: string;
+  categories_bg: string;
+  featured_columns: number;
+  arrivals_columns: number;
+  card_style: string;
+  section_title_size: string;
+  section_title_align: string;
+  page_bg: string;
+  page_bg_pattern: string;
+}
+
+const defaultLayoutConfig: LayoutConfig = {
+  section_spacing: "16",
+  container_max_width: "1440px",
+  section_animation: "fade-up",
+  animation_delay: 0.05,
+  show_section_dividers: false,
+  divider_style: "line",
+  featured_bg: "none",
+  arrivals_bg: "none",
+  categories_bg: "none",
+  featured_columns: 4,
+  arrivals_columns: 4,
+  card_style: "default",
+  section_title_size: "3xl",
+  section_title_align: "left",
+  page_bg: "none",
+  page_bg_pattern: "none",
+};
 
 interface SaleConfig {
   id: string;
