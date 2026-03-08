@@ -363,7 +363,7 @@ const ProductDetailPage: React.FC = () => {
                 <ReviewCard
                   key={review.id}
                   review={review}
-                  isOwn={ownReviewIds?.includes(review.id) || false}
+                  isOwn={ownReviewIds.has(review.id) || false}
                   productId={product.id}
                 />
               ))}
