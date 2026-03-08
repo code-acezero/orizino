@@ -359,6 +359,14 @@ const ProductDetailPage: React.FC = () => {
                     onAddToCart={addToCart} onBuyNow={buyNow} onToggleWishlist={toggleWishlist}
                     addingToCart={addingToCart} inStock={effectiveStock > 0} layout="editorial"
                   />
+
+                  {effectiveStock === 0 && (
+                    <NotifyWhenAvailable
+                      productId={product.id}
+                      variantId={selectedVariant?.id}
+                      variantLabel={[selectedSize, selectedColor].filter(Boolean).join(" / ") || undefined}
+                    />
+                  )}
                 </div>
               </div>
             </div>
