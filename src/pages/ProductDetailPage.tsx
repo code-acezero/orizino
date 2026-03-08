@@ -123,6 +123,39 @@ const ProductDetailPage: React.FC = () => {
     enabled: !!product?.category_id && !!product?.id,
   });
 
+  // Fetch variants for stock-aware selection
+  const { data: variants = [] } = useQuery({
+    queryKey: ["product-variants", product?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("product_variants")
+        .select("id, size, color, stock_quantity, price_override, is_active")
+        .eq("product_id", product!.id)
+        .eq("is_active", true)
+        .order("sort_order");
+      return data || [];
+    },
+    enabled: !!product?.id,
+  });
+
+  const hasVariants = variants.length > 0;
+  const effectiveStock = hasVariants
+    ? (() => {
+        const match = variants.find(
+          (v) => (!selectedSize || v.size === selectedSize) && (!selectedColor || v.color === selectedColor)
+        );
+        if (selectedSize || selectedColor) return match?.stock_quantity ?? 0;
+        return variants.reduce((sum, v) => sum + v.stock_quantity, 0);
+      })()
+    : product?.stock_quantity ?? 0;
+
+  const selectedVariant = hasVariants
+    ? variants.find(
+        (v) => (!selectedSize || v.size === selectedSize) && (!selectedColor || v.color === selectedColor)
+      )
+    : null;
+  const effectivePrice = selectedVariant?.price_override ?? product?.price ?? 0;
+
   const images = product?.images?.length ? product.images : [product?.thumbnail || "/placeholder.svg"];
   const discount = product?.compare_at_price
     ? Math.round(((product.compare_at_price - product.price) / product.compare_at_price) * 100)
