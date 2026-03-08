@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Search, X, LayoutTemplate, Upload } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, X, LayoutTemplate, Upload, Loader2, ImagePlus } from "lucide-react";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -226,17 +226,51 @@ const AdminProducts = () => {
   // --- Variants ---
   const [variants, setVariants] = useState<any[]>([]);
   const [variantsLoading, setVariantsLoading] = useState(false);
+  const [bulkUploading, setBulkUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const variantImageRefs = useRef<Record<number, HTMLInputElement>>({});
+  const bulkInputRef = useRef<HTMLInputElement>(null);
 
-  const handleVariantImageUpload = async (idx: number, file?: File | null) => {
-    if (!file) return;
+  const uploadSingleFile = async (file: File): Promise<string | null> => {
     const ext = file.name.split(".").pop();
     const path = `variants/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const { error } = await supabase.storage.from("products").upload(path, file, { cacheControl: "3600", upsert: false });
-    if (error) { toast.error("Upload failed: " + error.message); return; }
+    if (error) return null;
     const { data: urlData } = supabase.storage.from("products").getPublicUrl(path);
-    updateVariant(idx, "image_url", urlData.publicUrl);
+    return urlData.publicUrl;
+  };
+
+  const handleVariantImageUpload = async (idx: number, file?: File | null) => {
+    if (!file) return;
+    const url = await uploadSingleFile(file);
+    if (!url) { toast.error("Upload failed"); return; }
+    updateVariant(idx, "image_url", url);
     toast.success("Variant image uploaded");
+  };
+
+  const handleBulkImageUpload = async (files: FileList | File[]) => {
+    const fileArr = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (fileArr.length === 0) return;
+
+    // Find variants without images, assign in order
+    const emptyIndices = variants.map((v, i) => (!v.image_url ? i : -1)).filter((i) => i >= 0);
+    const assignCount = Math.min(fileArr.length, emptyIndices.length || fileArr.length);
+
+    setBulkUploading(true);
+    let uploaded = 0;
+    for (let f = 0; f < fileArr.length; f++) {
+      const url = await uploadSingleFile(fileArr[f]);
+      if (url) {
+        const targetIdx = emptyIndices.length > 0 ? emptyIndices[f] : f;
+        if (targetIdx !== undefined && targetIdx < variants.length) {
+          updateVariant(targetIdx, "image_url", url);
+          uploaded++;
+        }
+      }
+    }
+    setBulkUploading(false);
+    if (uploaded > 0) toast.success(`Uploaded ${uploaded} image${uploaded > 1 ? "s" : ""} to variants`);
+    else toast.error("No images could be uploaded");
   };
 
   const loadVariants = async (productId: string) => {
@@ -695,7 +729,30 @@ const AdminProducts = () => {
                         <p className="text-xs text-muted-foreground mt-1">Add sizes/colors in Attributes tab, then click "Auto-Generate" to create all combinations.</p>
                       </div>
                     ) : (
-                      <div className="space-y-2">
+                      <div className="space-y-3">
+                        {/* Bulk drag-and-drop upload zone */}
+                        <div
+                          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                          onDragLeave={() => setDragOver(false)}
+                          onDrop={(e) => { e.preventDefault(); setDragOver(false); handleBulkImageUpload(e.dataTransfer.files); }}
+                          onClick={() => bulkInputRef.current?.click()}
+                          className={`border-2 border-dashed rounded-xl p-4 flex items-center justify-center gap-3 cursor-pointer transition-all ${dragOver ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
+                        >
+                          {bulkUploading ? (
+                            <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                          ) : (
+                            <ImagePlus className="w-5 h-5 text-muted-foreground" />
+                          )}
+                          <div>
+                            <p className="text-sm font-medium text-foreground">
+                              {bulkUploading ? "Uploading..." : "Drop images here to bulk-assign to variants"}
+                            </p>
+                            <p className="text-xs text-muted-foreground">Images are assigned in order to variants without images</p>
+                          </div>
+                          <input ref={bulkInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => { if (e.target.files) handleBulkImageUpload(e.target.files); e.target.value = ""; }} />
+                        </div>
+
+                        <div className="space-y-2">
                         <div className="grid grid-cols-[1fr_1fr_80px_80px_80px_60px_40px] gap-2 px-2 text-xs font-medium text-muted-foreground">
                           <span>Size</span><span>Color</span><span>SKU</span><span>Price ±</span><span>Stock</span><span>Image</span><span></span>
                         </div>
@@ -733,6 +790,7 @@ const AdminProducts = () => {
                             Total stock: <span className="font-bold text-foreground">{variants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0)}</span> units across {variants.length} variants
                           </p>
                           <Button type="button" size="sm" onClick={saveVariants}>Save Variants</Button>
+                        </div>
                         </div>
                       </div>
                     )}
