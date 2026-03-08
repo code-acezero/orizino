@@ -222,7 +222,13 @@ const AdminCategories = () => {
                     </TableRow>
                     {children.map((sub) => (
                       <TableRow key={sub.id} className="bg-secondary/10">
-                        <TableCell className="font-medium pl-8 flex items-center gap-2">
+                        <TableCell className="w-12">
+                          <Checkbox
+                            checked={selected.has(sub.id)}
+                            onCheckedChange={() => toggleSelect(sub.id)}
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium pl-4 flex items-center gap-2">
                           <ChevronRight className="w-3 h-3 text-muted-foreground" />
                           {sub.icon_url ? (
                             <img src={sub.icon_url} alt="" className="w-5 h-5 rounded object-contain" />
