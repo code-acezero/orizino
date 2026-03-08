@@ -650,6 +650,11 @@ const AdminHome = () => {
           </div>
         </TabsContent>
 
+        {/* Analytics */}
+        <TabsContent value="analytics">
+          <HomepageAnalytics />
+        </TabsContent>
+
         {/* Section Order */}
         <TabsContent value="section-order">
           <Card className="glass">
