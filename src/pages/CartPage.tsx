@@ -65,7 +65,9 @@ const CartPage: React.FC = () => {
 
   const subtotal = cartItems?.reduce((sum, item) => {
     const product = item.products as any;
-    return sum + (product?.price || 0) * item.quantity;
+    const variant = (item as any).product_variants as any;
+    const price = variant?.price_override ?? product?.price ?? 0;
+    return sum + price * item.quantity;
   }, 0) || 0;
 
   const shippingFee = subtotal >= 50 ? 0 : 5.99;
