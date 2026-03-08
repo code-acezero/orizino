@@ -434,6 +434,46 @@ const AdminAnnouncements = () => {
     },
   });
 
+  /* ── Popup order (persisted in site_settings) ── */
+  const { data: savedPopupOrder } = useQuery({
+    queryKey: ["popup-order"],
+    queryFn: async () => {
+      const { data } = await supabase.from("site_settings").select("value").eq("key", "popup_order").maybeSingle();
+      return (data?.value as string[]) || [];
+    },
+  });
+
+  const orderedPopups = useMemo(() => {
+    if (!savedPopupOrder || savedPopupOrder.length === 0) return popups;
+    const orderMap = new Map(savedPopupOrder.map((id: string, i: number) => [id, i]));
+    return [...popups].sort((a: any, b: any) => {
+      const ai = orderMap.has(a.id) ? orderMap.get(a.id)! : 9999;
+      const bi = orderMap.has(b.id) ? orderMap.get(b.id)! : 9999;
+      return ai - bi;
+    });
+  }, [popups, savedPopupOrder]);
+
+  const savePopupOrder = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from("site_settings").upsert(
+        { key: "popup_order", value: ids as any },
+        { onConflict: "key" }
+      );
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["popup-order"] });
+      toast.success("Popup order saved");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const handlePopupReorder = (reordered: any[]) => {
+    savePopupOrder.mutate(reordered.map((p: any) => p.id));
+  };
+
+  const { dragIndex: popupDragIndex, overIndex: popupOverIndex, getDragProps: getPopupDragProps } = useDragReorder(orderedPopups, handlePopupReorder);
+
   const savePopup = useMutation({
     mutationFn: async (popup: any) => {
       const { id, created_at, ...rest } = popup;
