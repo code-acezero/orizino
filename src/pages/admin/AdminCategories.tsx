@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, ChevronRight, Check, X, FolderTree, Search, Eye, EyeOff, Star, GripVertical, BarChart3, ChevronDown, ChevronUp, Package, ShoppingCart, DollarSign, ArrowUpDown, Download, CalendarDays } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronRight, Check, X, FolderTree, Search, Eye, EyeOff, Star, GripVertical, BarChart3, ChevronDown, ChevronUp, Package, ShoppingCart, DollarSign, ArrowUpDown, Download, CalendarDays, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
@@ -78,6 +78,35 @@ const AdminCategories = () => {
     });
   }, [orderItems, dateFilterStart]);
 
+  // Previous period order items (for % change calculation)
+  const prevPeriodFilterStart = useMemo(() => {
+    if (dateRange === "all") return null;
+    const days = dateRange === "7d" ? 7 : dateRange === "30d" ? 30 : 90;
+    return startOfDay(subDays(new Date(), days * 2)).toISOString();
+  }, [dateRange]);
+
+  const prevFilteredOrderItems = useMemo(() => {
+    if (!dateFilterStart || !prevPeriodFilterStart) return [];
+    return orderItems.filter((oi: any) => {
+      const d = oi.orders?.created_at;
+      return d && d >= prevPeriodFilterStart && d < dateFilterStart;
+    });
+  }, [orderItems, dateFilterStart, prevPeriodFilterStart]);
+
+  const buildRevenueMap = (items: any[]) => {
+    const prodCatMap = new Map<string, string>();
+    products.forEach((p: any) => { if (p.category_id) prodCatMap.set(p.id, p.category_id); });
+    const map = new Map<string, number>();
+    items.forEach((oi: any) => {
+      const catId = prodCatMap.get(oi.product_id);
+      if (!catId) return;
+      map.set(catId, (map.get(catId) || 0) + (Number(oi.total_price) || 0));
+    });
+    return map;
+  };
+
+  const prevRevenueMap = useMemo(() => buildRevenueMap(prevFilteredOrderItems), [products, prevFilteredOrderItems]);
+
   const categoryAnalytics = useMemo(() => {
     const prodCatMap = new Map<string, string>();
     products.forEach((p: any) => { if (p.category_id) prodCatMap.set(p.id, p.category_id); });
@@ -100,6 +129,12 @@ const AdminCategories = () => {
   }, [products, filteredOrderItems]);
 
   const analyticsRows = useMemo(() => {
+    const childToParent = new Map<string, string>();
+    parentCategories.forEach((p) => {
+      getChildren(p.id).forEach((ch) => childToParent.set(ch.id, p.id));
+    });
+    const resolveParent = (catId: string) => childToParent.get(catId) || catId;
+
     const rows = parentCategories.map((c) => {
       const children = getChildren(c.id);
       const allIds = [c.id, ...children.map((ch) => ch.id)];
@@ -111,7 +146,11 @@ const AdminCategories = () => {
         },
         { productCount: 0, orderCount: 0, revenue: 0 }
       );
-      return { id: c.id, name: c.name, icon: c.icon, icon_url: c.icon_url, accent_color: c.accent_color, ...stats };
+      const prevRev = allIds.reduce((sum, id) => {
+        const parentId = resolveParent(id);
+        return sum + (prevRevenueMap.get(id) || 0);
+      }, 0);
+      return { id: c.id, name: c.name, icon: c.icon, icon_url: c.icon_url, accent_color: c.accent_color, ...stats, prevRevenue: prevRev };
     });
     rows.sort((a, b) => {
       const key = sortBy === "name" ? "name" : sortBy === "products" ? "productCount" : sortBy === "orders" ? "orderCount" : "revenue";
@@ -119,7 +158,7 @@ const AdminCategories = () => {
       return sortDir === "asc" ? (a as any)[key] - (b as any)[key] : (b as any)[key] - (a as any)[key];
     });
     return rows;
-  }, [parentCategories, categoryAnalytics, sortBy, sortDir, categories]);
+  }, [parentCategories, categoryAnalytics, prevRevenueMap, sortBy, sortDir, categories]);
 
   // Build daily sparkline data per parent category
   const sparklineData = useMemo(() => {
@@ -448,7 +487,29 @@ const AdminCategories = () => {
                             </TableCell>
                             <TableCell className="text-right tabular-nums">{row.productCount}</TableCell>
                             <TableCell className="text-right tabular-nums">{row.orderCount}</TableCell>
-                            <TableCell className="text-right tabular-nums font-medium">{formatPrice(row.revenue)}</TableCell>
+                            <TableCell className="text-right tabular-nums font-medium">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <span>{formatPrice(row.revenue)}</span>
+                                {dateRange !== "all" && (() => {
+                                  const prev = row.prevRevenue;
+                                  if (prev === 0 && row.revenue === 0) return null;
+                                  if (prev === 0) return (
+                                    <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-500">
+                                      <TrendingUp className="w-3 h-3" /> New
+                                    </span>
+                                  );
+                                  const pct = ((row.revenue - prev) / prev) * 100;
+                                  const isUp = pct > 0;
+                                  const isFlat = Math.abs(pct) < 0.5;
+                                  return (
+                                    <span className={`inline-flex items-center gap-0.5 text-[10px] font-semibold ${isFlat ? "text-muted-foreground" : isUp ? "text-emerald-500" : "text-destructive"}`}>
+                                      {isFlat ? <Minus className="w-3 h-3" /> : isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                                      {isFlat ? "0%" : `${isUp ? "+" : ""}${pct.toFixed(1)}%`}
+                                    </span>
+                                  );
+                                })()}
+                              </div>
+                            </TableCell>
                             <TableCell className="text-right p-1">
                               {(() => {
                                 const data = sparklineData.get(row.id) || [];
