@@ -27,6 +27,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   slug,
   className = "",
 }) => {
+  const { formatPrice } = useCurrency();
   const discount = compareAtPrice
     ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
     : 0;
