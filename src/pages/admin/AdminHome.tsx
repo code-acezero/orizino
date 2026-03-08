@@ -448,7 +448,25 @@ const AdminHome = () => {
                     <p className="font-medium text-foreground">{section.label}</p>
                     <p className="text-xs text-muted-foreground">Position {idx + 1}</p>
                   </div>
-                  <Badge variant="outline" className="text-xs">{section.id}</Badge>
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-end gap-1">
+                      <Label htmlFor={`visible-${section.id}`} className="text-xs font-medium">
+                        {(section as any).visible ? "Visible" : "Hidden"}
+                      </Label>
+                      <Switch
+                        id={`visible-${section.id}`}
+                        checked={(section as any).visible !== false}
+                        onCheckedChange={(checked) => {
+                          setSectionOrder(
+                            sectionOrder.map((s) =>
+                              s.id === section.id ? { ...s, visible: checked } : s
+                            )
+                          );
+                        }}
+                      />
+                    </div>
+                    <Badge variant="outline" className="text-xs">{section.id}</Badge>
+                  </div>
                 </div>
               ))}
               <Button className="w-full mt-4" onClick={() => saveSectionOrder.mutate()} disabled={saveSectionOrder.isPending}>
