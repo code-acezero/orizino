@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { trackClick } from "@/hooks/use-analytics";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 export interface ProductCardProps {
   id: string;
