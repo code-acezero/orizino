@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
+import { useDragReorder } from "@/hooks/use-drag-reorder";
 
 const AdminCategories = () => {
   const qc = useQueryClient();
