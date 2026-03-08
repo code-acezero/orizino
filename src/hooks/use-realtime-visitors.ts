@@ -6,11 +6,12 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
  * Hook that uses Supabase Realtime Presence to track and return
  * the number of users currently viewing a given page.
  */
-export const useRealtimeVisitors = (page = "/home") => {
+export const useRealtimeVisitors = (page: string | null = "/home") => {
   const [count, setCount] = useState(0);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
   useEffect(() => {
+    if (!page) return;
     const channelName = `presence:${page.replace(/\//g, "_")}`;
     const sessionId =
       sessionStorage.getItem("analytics_session_id") || crypto.randomUUID();
