@@ -711,6 +711,9 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
+          {/* Device & Browser Breakdown */}
+          <DeviceBrowserBreakdown />
+
           {/* Quick Actions */}
           <Card className="glass">
             <CardHeader className="pb-3">
