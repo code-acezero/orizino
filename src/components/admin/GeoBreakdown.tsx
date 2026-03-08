@@ -60,7 +60,7 @@ const GeoBreakdown: React.FC<GeoBreakdownProps> = ({ analyticsData }) => {
     });
 
     return { countries, chartData, geoTracked, countryCodeMap };
-  }, [analyticsData]);
+  }, [filteredAnalyticsForLeaderboard]);
 
   const maxCount = Math.max(...geo.countries.map((c) => c.count), 1);
 
