@@ -14,7 +14,10 @@ const Footer: React.FC = () => {
     queryFn: async () => {
       const { data } = await supabase.from("site_settings").select("key, value").in("key", ["site_name"]);
       const map: Record<string, any> = {};
-      data?.forEach((s) => (map[s.key] = s.value));
+      data?.forEach((s) => {
+        const val = s.value;
+        map[s.key] = typeof val === "object" && val !== null ? (val as any).value ?? val : val;
+      });
       return map;
     },
     staleTime: 10 * 60 * 1000,
