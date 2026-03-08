@@ -15,6 +15,7 @@ import { useDragReorder } from "@/hooks/use-drag-reorder";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import ImageUpload from "@/components/ImageUpload";
+import LayoutPreview from "@/components/admin/LayoutPreview";
 
 interface LayoutConfig {
   section_spacing: string;
