@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, ChevronRight, Check, X, FolderTree, Search, Eye, EyeOff, Star, GripVertical, BarChart3, ChevronDown, ChevronUp, Package, ShoppingCart, DollarSign, ArrowUpDown } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronRight, Check, X, FolderTree, Search, Eye, EyeOff, Star, GripVertical, BarChart3, ChevronDown, ChevronUp, Package, ShoppingCart, DollarSign, ArrowUpDown, Download } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
@@ -109,6 +109,19 @@ const AdminCategories = () => {
     if (sortBy === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortBy(col); setSortDir("desc"); }
   };
+
+  const exportCsv = useCallback(() => {
+    const header = "Category,Products,Orders,Revenue\n";
+    const rows = analyticsRows.map((r) => `"${r.name.replace(/"/g, '""')}",${r.productCount},${r.orderCount},${r.revenue.toFixed(2)}`).join("\n");
+    const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `category-analytics-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("CSV exported");
+  }, [analyticsRows]);
 
   const CHART_COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(262 83% 58%)", "hsl(330 81% 60%)", "hsl(200 95% 50%)", "hsl(150 60% 45%)", "hsl(40 95% 55%)", "hsl(0 72% 51%)"];
 
@@ -274,6 +287,16 @@ const AdminCategories = () => {
               <span className="flex items-center gap-1"><Package className="w-3.5 h-3.5" /> {products.length} products</span>
               <span className="flex items-center gap-1"><ShoppingCart className="w-3.5 h-3.5" /> {orderItems.length} items sold</span>
             </div>
+            {showAnalytics && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs h-7"
+                onClick={(e) => { e.stopPropagation(); exportCsv(); }}
+              >
+                <Download className="w-3.5 h-3.5" /> Export CSV
+              </Button>
+            )}
             {showAnalytics ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
           </div>
         </button>
