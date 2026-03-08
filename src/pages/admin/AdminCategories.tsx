@@ -109,6 +109,27 @@ const AdminCategories = () => {
     else setSelected(new Set(categories.map((c) => c.id)));
   };
 
+  // Drag-and-drop reorder
+  const reorderMutation = useMutation({
+    mutationFn: async (reordered: typeof parentCategories) => {
+      const updates = reordered.map((cat, i) =>
+        supabase.from("categories").update({ sort_order: i }).eq("id", cat.id)
+      );
+      await Promise.all(updates);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-categories"] });
+      toast.success("Order saved");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const handleReorder = useCallback((reordered: typeof parentCategories) => {
+    reorderMutation.mutate(reordered);
+  }, [reorderMutation]);
+
+  const { dragIndex, overIndex, getDragProps } = useDragReorder(filteredParents, handleReorder);
+
   const openEdit = (cat?: any) => {
     setEditing(
       cat
