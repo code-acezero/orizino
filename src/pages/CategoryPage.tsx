@@ -42,6 +42,9 @@ const CategoryPage: React.FC = () => {
     enabled: !!slug,
   });
 
+  // Apply SEO metadata for category page
+  useCategorySeoMeta(category);
+
   // Fetch subcategories
   const { data: subcategories = [] } = useQuery({
     queryKey: ["subcategories", category?.id],
