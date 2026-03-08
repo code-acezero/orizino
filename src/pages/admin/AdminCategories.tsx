@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,16 +9,18 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, ChevronRight, Check, X, FolderTree, Search, Eye, EyeOff, Star, GripVertical } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronRight, Check, X, FolderTree, Search, Eye, EyeOff, Star, GripVertical, BarChart3, ChevronDown, ChevronUp, Package, ShoppingCart, DollarSign, ArrowUpDown } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AnimatePresence, motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDragReorder } from "@/hooks/use-drag-reorder";
-
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from "recharts";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 const AdminCategories = () => {
   const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
