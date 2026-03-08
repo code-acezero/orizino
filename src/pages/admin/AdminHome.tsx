@@ -207,6 +207,7 @@ const AdminHome = () => {
   const [newArrivals, setNewArrivals] = useState({ enabled: true, title: "New Arrivals", subtitle: "Fresh drops just landed", product_count: 8 });
   const [layoutConfig, setLayoutConfig] = useState<LayoutConfig>({ ...defaultLayoutConfig });
   const [sectionOrder, setSectionOrder] = useState(defaultSectionOrder);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   useEffect(() => {
     if (settingsRow?.value) {
