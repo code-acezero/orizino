@@ -562,16 +562,17 @@ const AdminHome = () => {
           <Card className="glass">
             <CardHeader>
               <CardTitle>Products on Home Page</CardTitle>
-              <p className="text-sm text-muted-foreground">Toggle which products appear in the "Featured Products" section.</p>
+              <p className="text-sm text-muted-foreground">Toggle which products appear in the "Featured Products" section. Drag to reorder.</p>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader><TableRow>
-                  <TableHead>Image</TableHead><TableHead>Name</TableHead><TableHead>Price</TableHead><TableHead>Featured</TableHead><TableHead>Status</TableHead>
+                  <TableHead className="w-8"></TableHead><TableHead>Image</TableHead><TableHead>Name</TableHead><TableHead>Price</TableHead><TableHead>Featured</TableHead><TableHead>Status</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
-                  {products.map((prod) => (
-                    <TableRow key={prod.id}>
+                  {localProducts.map((prod, idx) => (
+                    <TableRow key={prod.id} {...getFeatProdDragProps(idx)} className={`cursor-grab active:cursor-grabbing transition-colors ${featProdOverIdx === idx && featProdDragIdx !== idx ? "bg-primary/10" : ""}`}>
+                      <TableCell><GripVertical className="w-4 h-4 text-muted-foreground" /></TableCell>
                       <TableCell>{prod.thumbnail && <img src={prod.thumbnail} alt="" className="w-10 h-10 object-cover rounded-lg" />}</TableCell>
                       <TableCell className="font-medium">{prod.name}</TableCell>
                       <TableCell>${Number(prod.price).toFixed(2)}</TableCell>
