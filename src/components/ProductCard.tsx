@@ -90,10 +90,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <span className="text-xs text-muted-foreground ml-1">({reviewCount})</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-bold text-foreground">${price.toFixed(2)}</span>
+            <span className="font-bold text-foreground">{formatPrice(price)}</span>
             {compareAtPrice && (
               <span className="text-sm text-muted-foreground line-through">
-                ${compareAtPrice.toFixed(2)}
+                {formatPrice(compareAtPrice)}
               </span>
             )}
           </div>
