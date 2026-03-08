@@ -499,7 +499,7 @@ const AdminHome = () => {
         <TabsList className="flex-wrap">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="section-order">Section Order</TabsTrigger>
+          <TabsTrigger value="section-order">Section Reorder</TabsTrigger>
           <TabsTrigger value="cat-sections">Category Sections</TabsTrigger>
           <TabsTrigger value="sales">Sales</TabsTrigger>
           <TabsTrigger value="new-arrivals">New Arrivals</TabsTrigger>
@@ -679,7 +679,7 @@ const AdminHome = () => {
         <TabsContent value="section-order">
           <Tabs value={sectionSubTab} onValueChange={setSectionSubTab}>
             <TabsList className="mb-4">
-              <TabsTrigger value="order">Section Order</TabsTrigger>
+              <TabsTrigger value="order">Display Sections</TabsTrigger>
               <TabsTrigger value="feat-categories">Featured Categories</TabsTrigger>
               <TabsTrigger value="feat-products">Featured Products</TabsTrigger>
             </TabsList>

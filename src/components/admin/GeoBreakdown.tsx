@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Globe, MapPin, Trophy, TrendingUp, CalendarIcon } from "lucide-react";
+import CountryComparison from "./CountryComparison";
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { cn } from "@/lib/utils";
 
@@ -183,6 +184,8 @@ const GeoBreakdown: React.FC<GeoBreakdownProps> = ({ analyticsData }) => {
           )}
         </CardContent>
       </Card>
+      {/* Period Comparison */}
+      <CountryComparison analyticsData={analyticsData} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Country Chart */}
         <Card className="glass">
