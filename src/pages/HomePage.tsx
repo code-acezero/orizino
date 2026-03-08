@@ -128,12 +128,24 @@ const spacingMap: Record<string, string> = {
   "8": "gap-8", "12": "gap-12", "16": "gap-16", "20": "gap-20", "24": "gap-24",
 };
 
-const defaultSectionOrder = [
+interface SectionConfig {
+  id: string;
+  label: string;
+  icon: string;
+  visible: boolean;
+  title?: string;
+  subtitle?: string;
+  product_count?: number;
+  columns?: number;
+  view_all_link?: string;
+}
+
+const defaultSectionOrder: SectionConfig[] = [
   { id: "slider", label: "Showcase Slider", icon: "🎠", visible: true },
-  { id: "categories", label: "Category Grid", icon: "📂", visible: true },
-  { id: "category-sections", label: "Category Product Sections", icon: "📦", visible: true },
-  { id: "featured", label: "Featured Products", icon: "⭐", visible: true },
-  { id: "arrivals", label: "New Arrivals", icon: "✨", visible: true },
+  { id: "categories", label: "Category Grid", icon: "📂", visible: true, title: "Shop by Category" },
+  { id: "category-sections", label: "Category Product Sections", icon: "📦", visible: true, product_count: 8, columns: 4 },
+  { id: "featured", label: "Featured Products", icon: "⭐", visible: true, title: "Featured Products", subtitle: "Handpicked just for you", product_count: 8, columns: 4, view_all_link: "/shop" },
+  { id: "arrivals", label: "New Arrivals", icon: "✨", visible: true, title: "New Arrivals", subtitle: "Fresh drops just landed", product_count: 8, columns: 4, view_all_link: "/shop" },
 ];
 
 const HomePage: React.FC = () => {
@@ -226,7 +238,10 @@ const HomePage: React.FC = () => {
     staleTime: 30 * 1000,
   });
 
-  const sectionOrder = sectionOrderConfig || defaultSectionOrder;
+  const sectionOrder: SectionConfig[] = (sectionOrderConfig || defaultSectionOrder) as SectionConfig[];
+
+  // Helper to get section config by ID
+  const getSectionCfg = (id: string): SectionConfig => sectionOrder.find((s) => s.id === id) || defaultSectionOrder.find((s) => s.id === id) || { id, label: id, icon: "", visible: true };
 
   const layout = layoutConfigRaw || defaultLayout;
   const anim = getAnimationVariants(layout.section_animation);
@@ -234,7 +249,8 @@ const HomePage: React.FC = () => {
   const titleAlign = layout.section_title_align === "center" ? "text-center justify-center" : "justify-between";
   const cardExtra = cardStyleMap[layout.card_style] || "";
 
-  const newArrivalsCount = newArrivalsConfig?.product_count || 8;
+  const arrivalsCfg = getSectionCfg("arrivals");
+  const newArrivalsCount = arrivalsCfg.product_count || newArrivalsConfig?.product_count || 8;
   const { data: newArrivals = [] } = useQuery({
     queryKey: ["new-arrival-products", newArrivalsCount],
     queryFn: async () => {
@@ -356,6 +372,10 @@ const HomePage: React.FC = () => {
   };
 
   const renderSection = (sectionId: string) => {
+    const cfg = getSectionCfg(sectionId);
+    const sectionCols = cfg.columns ? colsMap[cfg.columns] || "lg:grid-cols-4" : colsMap[layout.featured_columns] || "lg:grid-cols-4";
+    const viewAllLink = cfg.view_all_link || "/shop";
+
     switch (sectionId) {
       case "slider":
         return <ParallaxSlider key="slider" />;
@@ -383,7 +403,7 @@ const HomePage: React.FC = () => {
                   <a href={`/categories/${cat.slug}`} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
                 )}
               </motion.div>
-              <div className={`grid grid-cols-2 md:grid-cols-3 ${colsMap[layout.featured_columns] || "lg:grid-cols-4"} gap-4`}>
+              <div className={`grid grid-cols-2 md:grid-cols-3 ${sectionCols} gap-4`}>
                 {products.map((product: any, i: number) => (
                   <motion.div key={product.id} {...anim} viewport={{ once: true }} transition={{ delay: i * layout.animation_delay }}>
                     <ProductCard id={product.id} name={product.name} price={Number(product.price)} compareAtPrice={product.compare_at_price ? Number(product.compare_at_price) : undefined} thumbnail={product.thumbnail ?? undefined} avgRating={product.avg_rating ? Number(product.avg_rating) : undefined} reviewCount={product.review_count ?? undefined} slug={product.slug} className={cardExtra} />
@@ -399,23 +419,26 @@ const HomePage: React.FC = () => {
           );
         });
 
-      case "featured":
+      case "featured": {
+        const featuredTitle = cfg.title || "Featured Products";
+        const featuredSubtitle = cfg.subtitle || "Handpicked just for you";
+        const featuredLink = cfg.view_all_link || "/shop";
         if (!isLoading && featuredProducts.length === 0) return null;
         return (
           <section key="featured" className={getSectionBgClass(layout.featured_bg)}>
             <motion.div {...anim} viewport={{ once: true }} className={`flex items-center ${titleAlign} mb-8`}>
               <div className={layout.section_title_align === "center" ? "text-center" : ""}>
-                <h2 className={`${titleSize} font-bold font-display text-foreground`}>Featured Products</h2>
-                <p className="text-muted-foreground mt-1">Handpicked just for you</p>
+                <h2 className={`${titleSize} font-bold font-display text-foreground`}>{featuredTitle}</h2>
+                {featuredSubtitle && <p className="text-muted-foreground mt-1">{featuredSubtitle}</p>}
               </div>
               {layout.section_title_align !== "center" && (
-                <a href="/shop" className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+                <a href={featuredLink} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
               )}
             </motion.div>
-            <div className={`grid grid-cols-2 md:grid-cols-3 ${colsMap[layout.featured_columns] || "lg:grid-cols-4"} gap-4`}>
+            <div className={`grid grid-cols-2 md:grid-cols-3 ${sectionCols} gap-4`}>
               {isLoading
-                ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="aspect-[3/4] rounded-3xl bg-secondary/30 animate-pulse" />)
-                : featuredProducts.map((product, i) => (
+                ? Array.from({ length: cfg.product_count || 8 }).map((_, i) => <div key={i} className="aspect-[3/4] rounded-3xl bg-secondary/30 animate-pulse" />)
+                : featuredProducts.slice(0, cfg.product_count || 8).map((product, i) => (
                     <motion.div key={product.id} {...anim} viewport={{ once: true }} transition={{ delay: i * layout.animation_delay }}>
                       <ProductCard id={product.id} name={product.name} price={Number(product.price)} compareAtPrice={product.compare_at_price ? Number(product.compare_at_price) : undefined} thumbnail={product.thumbnail ?? undefined} avgRating={product.avg_rating ? Number(product.avg_rating) : undefined} reviewCount={product.review_count ?? undefined} slug={product.slug} className={cardExtra} />
                     </motion.div>
@@ -423,13 +446,18 @@ const HomePage: React.FC = () => {
             </div>
             {layout.section_title_align === "center" && (
               <div className="text-center mt-6">
-                <a href="/shop" className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+                <a href={featuredLink} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
               </div>
             )}
           </section>
         );
+      }
 
-      case "arrivals":
+      case "arrivals": {
+        const arrivalsTitle = cfg.title || newArrivalsConfig?.title || "New Arrivals";
+        const arrivalsSubtitle = cfg.subtitle || newArrivalsConfig?.subtitle || "Fresh drops just landed";
+        const arrivalsLink = cfg.view_all_link || "/shop";
+        const arrivalsCols = cfg.columns ? colsMap[cfg.columns] || "lg:grid-cols-4" : colsMap[layout.arrivals_columns] || "lg:grid-cols-4";
         if (!showNewArrivals) return null;
         return (
           <section key="arrivals" className={getSectionBgClass(layout.arrivals_bg)}>
@@ -437,15 +465,15 @@ const HomePage: React.FC = () => {
               <div className={`flex items-center gap-3 ${layout.section_title_align === "center" ? "justify-center" : ""}`}>
                 <Sparkles className="w-7 h-7 text-primary" />
                 <div className={layout.section_title_align === "center" ? "text-center" : ""}>
-                  <h2 className={`${titleSize} font-bold font-display text-foreground`}>{newArrivalsConfig?.title || "New Arrivals"}</h2>
-                  <p className="text-muted-foreground mt-1">{newArrivalsConfig?.subtitle || "Fresh drops just landed"}</p>
+                  <h2 className={`${titleSize} font-bold font-display text-foreground`}>{arrivalsTitle}</h2>
+                  {arrivalsSubtitle && <p className="text-muted-foreground mt-1">{arrivalsSubtitle}</p>}
                 </div>
               </div>
               {layout.section_title_align !== "center" && (
-                <a href="/shop" className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+                <a href={arrivalsLink} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
               )}
             </motion.div>
-            <div className={`grid grid-cols-2 md:grid-cols-3 ${colsMap[layout.arrivals_columns] || "lg:grid-cols-4"} gap-4`}>
+            <div className={`grid grid-cols-2 md:grid-cols-3 ${arrivalsCols} gap-4`}>
               {newArrivals.map((product, i) => (
                 <motion.div key={product.id} {...anim} viewport={{ once: true }} transition={{ delay: i * layout.animation_delay }}>
                   <ProductCard id={product.id} name={product.name} price={Number(product.price)} compareAtPrice={product.compare_at_price ? Number(product.compare_at_price) : undefined} thumbnail={product.thumbnail ?? undefined} avgRating={product.avg_rating ? Number(product.avg_rating) : undefined} reviewCount={product.review_count ?? undefined} slug={product.slug} className={cardExtra} />
@@ -454,11 +482,12 @@ const HomePage: React.FC = () => {
             </div>
             {layout.section_title_align === "center" && (
               <div className="text-center mt-6">
-                <a href="/shop" className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+                <a href={arrivalsLink} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
               </div>
             )}
           </section>
         );
+      }
 
       default:
         return null;
