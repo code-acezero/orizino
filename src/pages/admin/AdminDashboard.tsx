@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Package, ShoppingCart, Users, DollarSign, TrendingUp, TrendingDown,
   Star, ArrowRight, Clock, CheckCircle2, XCircle, Truck, Eye,
-  BarChart3, Activity, Layers, Filter, AlertTriangle,
+  BarChart3, Activity, Layers, Filter, AlertTriangle, Globe, ExternalLink,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import DeviceBrowserBreakdown from "@/components/admin/DeviceBrowserBreakdown";
