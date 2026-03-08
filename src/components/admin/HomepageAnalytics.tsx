@@ -53,6 +53,7 @@ const HomepageAnalytics = () => {
     const pageViews = analyticsData.filter((e: any) => e.event_type === "page_view");
     const sectionViews = analyticsData.filter((e: any) => e.event_type === "section_view");
     const engagements = analyticsData.filter((e: any) => e.event_type === "section_engagement");
+    const clicks = analyticsData.filter((e: any) => e.event_type === "click");
     const uniqueSessions = new Set(analyticsData.map((e: any) => e.session_id)).size;
 
     // Section engagement breakdown
@@ -80,6 +81,34 @@ const HomepageAnalytics = () => {
       }))
       .sort((a, b) => b.views - a.views);
 
+    // Click breakdown
+    const clickLabels: Record<string, string> = {
+      product_card: "Product Card Clicks",
+      slider_cta: "Slider CTA Clicks",
+      sale_cta: "Sale Banner CTA Clicks",
+      view_all: "View All Clicks",
+    };
+    const clickStats: Record<string, { count: number; targets: Record<string, number> }> = {};
+    clicks.forEach((e: any) => {
+      const clickType = e.metadata?.click_type || e.section_id || "unknown";
+      if (!clickStats[clickType]) clickStats[clickType] = { count: 0, targets: {} };
+      clickStats[clickType].count++;
+      const targetId = e.metadata?.target_id || "unknown";
+      clickStats[clickType].targets[targetId] = (clickStats[clickType].targets[targetId] || 0) + 1;
+    });
+
+    const clickBreakdown = Object.entries(clickStats)
+      .map(([type, s]) => ({
+        type,
+        label: clickLabels[type] || type,
+        count: s.count,
+        topTargets: Object.entries(s.targets).sort((a, b) => b[1] - a[1]).slice(0, 5),
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    const totalClicks = clicks.length;
+    const clickRate = pageViews.length > 0 ? ((totalClicks / pageViews.length) * 100).toFixed(1) : "0";
+
     // Time-series data for chart
     const timeGrouping = rangeHours <= 24 ? "hour" : "day";
     const timeMap: Record<string, number> = {};
@@ -104,6 +133,9 @@ const HomepageAnalytics = () => {
       avgSectionsPerView: uniqueSessions > 0 ? (sectionViews.length / uniqueSessions).toFixed(1) : "0",
       sectionBreakdown,
       timeSeries,
+      totalClicks,
+      clickRate,
+      clickBreakdown,
     };
   }, [analyticsData, rangeHours]);
 
