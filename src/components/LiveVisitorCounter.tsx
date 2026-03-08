@@ -16,6 +16,7 @@ const LiveVisitorCounter: React.FC<LiveVisitorCounterProps> = ({
   variant = "floating",
 }) => {
   const { user } = useAuth();
+
   const { data: isAdmin } = useQuery({
     queryKey: ["user-role", user?.id],
     queryFn: async () => {
@@ -28,7 +29,7 @@ const LiveVisitorCounter: React.FC<LiveVisitorCounterProps> = ({
     enabled: !!user,
   });
 
-  const count = useRealtimeVisitors(page);
+  const count = useRealtimeVisitors(isAdmin ? page : null);
 
   if (!isAdmin) return null;
 
