@@ -81,12 +81,12 @@ const AdminProducts = () => {
 
   const [pageLayout, setPageLayout] = useState("premium");
 
-  useState(() => {
+  useEffect(() => {
     if (layoutSettingsRow?.value) {
       const val = layoutSettingsRow.value as any;
       setPageLayout(val?.value ?? val ?? "premium");
     }
-  });
+  }, [layoutSettingsRow]);
 
   const saveLayoutMutation = useMutation({
     mutationFn: async () => {
