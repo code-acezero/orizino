@@ -2,32 +2,27 @@ import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-const applyTheme = (mode: string, theme: string) => {
-  const html = document.documentElement;
-  // Remove old theme/mode classes
-  html.classList.remove("light");
-  html.className = html.className.replace(/\btheme-\w+/g, "").trim();
-  
-  if (mode === "light") html.classList.add("light");
-  if (theme && theme !== "default") html.classList.add(`theme-${theme}`);
-};
-
 const SiteThemeProvider = () => {
   const qc = useQueryClient();
 
   const { data: siteSettings } = useQuery({
     queryKey: ["site-settings"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("site_settings")
         .select("key, value")
         .in("key", ["site_theme", "site_mode"]);
+      if (error) {
+        console.error("[SiteThemeProvider] Query error:", error);
+        return null;
+      }
       const map: Record<string, string> = {};
       data?.forEach((s) => {
         const val = s.value;
         const resolved = typeof val === "object" && val !== null ? (val as any).value ?? val : val;
         map[s.key] = String(resolved ?? "");
       });
+      console.log("[SiteThemeProvider] Fetched settings:", map);
       return map;
     },
     staleTime: 5 * 1000,
@@ -40,7 +35,27 @@ const SiteThemeProvider = () => {
     if (!siteSettings) return;
     const mode = siteSettings.site_mode || "dark";
     const theme = siteSettings.site_theme || "default";
-    applyTheme(mode, theme);
+    
+    const html = document.documentElement;
+    
+    // Remove all theme-* classes
+    const currentClasses = Array.from(html.classList);
+    currentClasses.forEach(cls => {
+      if (cls.startsWith("theme-")) html.classList.remove(cls);
+    });
+    html.classList.remove("light", "dark");
+    
+    // Apply mode
+    if (mode === "light") {
+      html.classList.add("light");
+    }
+    
+    // Apply theme
+    if (theme && theme !== "default") {
+      html.classList.add(`theme-${theme}`);
+    }
+    
+    console.log("[SiteThemeProvider] Applied theme:", theme, "mode:", mode, "classes:", html.className);
   }, [siteSettings]);
 
   // Listen for realtime changes to site_settings and invalidate ALL related queries
@@ -51,6 +66,7 @@ const SiteThemeProvider = () => {
         "postgres_changes",
         { event: "*", schema: "public", table: "site_settings" },
         () => {
+          console.log("[SiteThemeProvider] Realtime update detected");
           // Invalidate theme queries
           qc.invalidateQueries({ queryKey: ["site-settings"] });
           qc.invalidateQueries({ queryKey: ["site-settings-nav"] });
@@ -62,7 +78,6 @@ const SiteThemeProvider = () => {
           qc.invalidateQueries({ queryKey: ["sale-products"] });
           qc.invalidateQueries({ queryKey: ["home-section-products"] });
           qc.invalidateQueries({ queryKey: ["home-section-categories"] });
-          // Showcase config
           qc.invalidateQueries({ queryKey: ["showcase-config"] });
         }
       )
