@@ -210,6 +210,42 @@ const Navbar: React.FC = () => {
 
               {/* Right: Actions */}
               <div className="flex items-center gap-1 shrink-0 ml-auto lg:ml-0">
+                {/* Currency selector */}
+                {enabledCurrencies.length > 1 && (
+                  <div className="relative hidden lg:block">
+                    <button
+                      onClick={() => setCurrencyOpen(!currencyOpen)}
+                      className="px-2.5 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all border border-border/50"
+                    >
+                      {enabledCurrencies.find(c => c.code === currency)?.symbol || currency} {currency}
+                    </button>
+                    <AnimatePresence>
+                      {currencyOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 8 }}
+                          className="absolute top-full right-0 pt-2 z-50"
+                        >
+                          <div className="glass-strong rounded-2xl p-1.5 shadow-lg border border-border/50 min-w-[140px]">
+                            {enabledCurrencies.map((c) => (
+                              <button
+                                key={c.code}
+                                onClick={() => { setCurrency(c.code); setCurrencyOpen(false); }}
+                                className={`flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm transition-colors ${
+                                  currency === c.code ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                                }`}
+                              >
+                                <span className="font-display">{c.symbol}</span>
+                                <span>{c.code}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
                 <Link to="/wishlist" className="hidden lg:flex p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all">
                   <Heart className="w-5 h-5" />
                 </Link>
