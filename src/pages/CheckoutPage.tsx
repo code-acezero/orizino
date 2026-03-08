@@ -45,14 +45,18 @@ const CheckoutPage: React.FC = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("cart_items")
-        .select("*, products(id, name, price, thumbnail)")
+        .select("*, products(id, name, price, thumbnail), product_variants(id, size, color, price_override)")
         .eq("user_id", user!.id);
       return data || [];
     },
     enabled: !!user,
   });
 
-  const subtotal = cartItems?.reduce((sum, item) => sum + ((item.products as any)?.price || 0) * item.quantity, 0) || 0;
+  const subtotal = cartItems?.reduce((sum, item) => {
+    const variant = (item as any).product_variants as any;
+    const price = variant?.price_override ?? (item.products as any)?.price ?? 0;
+    return sum + price * item.quantity;
+  }, 0) || 0;
   const shippingFee = subtotal >= 50 ? 0 : 5.99;
   const total = subtotal + shippingFee;
 
@@ -152,15 +156,19 @@ const CheckoutPage: React.FC = () => {
               <div className="space-y-3 max-h-60 overflow-y-auto">
                 {cartItems?.map((item) => {
                   const product = item.products as any;
+                  const variant = (item as any).product_variants as any;
                   if (!product) return null;
+                  const price = variant?.price_override ?? product.price;
+                  const variantLabel = [variant?.size, variant?.color].filter(Boolean).join(" / ");
                   return (
                     <div key={item.id} className="flex gap-3">
                       <img src={product.thumbnail || "/placeholder.svg"} alt="" className="w-12 h-12 rounded-xl object-cover" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-foreground line-clamp-1">{product.name}</p>
+                        {variantLabel && <p className="text-xs text-muted-foreground">{variantLabel}</p>}
                         <p className="text-xs text-muted-foreground">x{item.quantity}</p>
                       </div>
-                      <span className="text-sm font-medium text-foreground">{formatPrice(product.price * item.quantity)}</span>
+                      <span className="text-sm font-medium text-foreground">{formatPrice(price * item.quantity)}</span>
                     </div>
                   );
                 })}
