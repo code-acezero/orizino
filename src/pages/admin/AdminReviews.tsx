@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const AdminReviews = () => {
   const qc = useQueryClient();
   const [filterStatus, setFilterStatus] = useState("all");
+  const [lightboxImg, setLightboxImg] = useState<string | null>(null);
 
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ["admin-reviews"],
