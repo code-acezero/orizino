@@ -679,7 +679,7 @@ const AdminHome = () => {
         <TabsContent value="section-order">
           <Tabs value={sectionSubTab} onValueChange={setSectionSubTab}>
             <TabsList className="mb-4">
-              <TabsTrigger value="order">Section Order</TabsTrigger>
+              <TabsTrigger value="order">Display Sections</TabsTrigger>
               <TabsTrigger value="feat-categories">Featured Categories</TabsTrigger>
               <TabsTrigger value="feat-products">Featured Products</TabsTrigger>
             </TabsList>
