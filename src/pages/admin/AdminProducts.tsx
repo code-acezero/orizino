@@ -401,6 +401,7 @@ const AdminProducts = () => {
               <TabsList className="w-full flex-wrap">
                 <TabsTrigger value="general" className="flex-1">General</TabsTrigger>
                 <TabsTrigger value="attributes" className="flex-1">Attributes</TabsTrigger>
+                <TabsTrigger value="variants" className="flex-1">Variants{variants.length > 0 ? ` (${variants.length})` : ""}</TabsTrigger>
                 <TabsTrigger value="media" className="flex-1">Media</TabsTrigger>
                 <TabsTrigger value="seo" className="flex-1">SEO</TabsTrigger>
               </TabsList>
