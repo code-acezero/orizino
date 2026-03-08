@@ -20,6 +20,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
   const [ripplePos, setRipplePos] = useState({ x: 0, y: 0 });
   const [pinchScale, setPinchScale] = useState(1);
   const [pinchOrigin, setPinchOrigin] = useState({ x: 50, y: 50 });
+  const [longPressZoom, setLongPressZoom] = useState(false);
   const pinchStartDist = useRef(0);
   const pinchStartScale = useRef(1);
   const swipeStartX = useRef(0);
@@ -27,6 +28,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
   const isSwiping = useRef(false);
   const lightboxImgRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLDivElement>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isMobile = useIsMobile();
 
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
