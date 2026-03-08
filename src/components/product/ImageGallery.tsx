@@ -27,7 +27,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
   const isSwiping = useRef(false);
   const lightboxImgRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLDivElement>(null);
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMobile = useIsMobile();
 
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
