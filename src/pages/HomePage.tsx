@@ -10,6 +10,7 @@ import Footer from "@/components/Footer";
 import HomePopup from "@/components/HomePopup";
 import SaleCountdown from "@/components/SaleCountdown";
 import SalePopup from "@/components/SalePopup";
+import LiveVisitorCounter from "@/components/LiveVisitorCounter";
 import { Sparkles } from "lucide-react";
 import { usePageViewTracker, useSectionTracker, trackClick } from "@/hooks/use-analytics";
 
