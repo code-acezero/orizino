@@ -3,8 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { cn } from "@/lib/utils";
-import { Check, X, ArrowLeftRight, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, X, ArrowLeftRight, ChevronDown, ChevronUp, ShoppingCart, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Variant {
@@ -24,6 +25,7 @@ interface VariantComparisonProps {
   compareAtPrice?: number | null;
   productName: string;
   productThumbnail?: string | null;
+  onAddToCart?: (variantId: string, variantLabel: string) => Promise<void>;
 }
 
 const COLOR_MAP: Record<string, string> = {
@@ -41,11 +43,12 @@ const getColorHex = (name: string): string =>
 const MAX_COMPARE = 4;
 
 const VariantComparison: React.FC<VariantComparisonProps> = ({
-  productId, basePrice, compareAtPrice, productName, productThumbnail,
+  productId, basePrice, compareAtPrice, productName, productThumbnail, onAddToCart,
 }) => {
   const { formatPrice } = useCurrency();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [addingToCartId, setAddingToCartId] = useState<string | null>(null);
 
   const { data: variants = [] } = useQuery<Variant[]>({
     queryKey: ["product-variants-compare", productId],
@@ -267,8 +270,39 @@ const VariantComparison: React.FC<VariantComparisonProps> = ({
                     </tbody>
                   </table>
                 </div>
-              )}
+                      )}
 
+                      {/* Add to Cart row */}
+                      {onAddToCart && (
+                        <tr>
+                          <td className="py-3 pr-4 text-xs text-muted-foreground font-medium">Action</td>
+                          {compared.map((v) => {
+                            const isAdding = addingToCartId === v.id;
+                            const label = getLabel(v);
+                            return (
+                              <td key={v.id} className="py-3 px-2 text-center">
+                                <Button
+                                  size="sm"
+                                  disabled={v.stock_quantity === 0 || isAdding}
+                                  onClick={async () => {
+                                    setAddingToCartId(v.id);
+                                    await onAddToCart(v.id, label);
+                                    setAddingToCartId(null);
+                                  }}
+                                  className="gap-1.5 text-xs w-full"
+                                >
+                                  {isAdding ? (
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                  ) : (
+                                    <ShoppingCart className="w-3 h-3" />
+                                  )}
+                                  {v.stock_quantity === 0 ? "Sold Out" : "Add to Cart"}
+                                </Button>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      )}
               {compared.length < 2 && (
                 <p className="text-center text-xs text-muted-foreground py-4">
                   Select at least 2 variants above to see a side-by-side comparison

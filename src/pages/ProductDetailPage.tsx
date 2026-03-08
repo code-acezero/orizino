@@ -196,6 +196,23 @@ const ProductDetailPage: React.FC = () => {
     toast({ title: "Added to cart!", description: `${product.name}${variantLabel ? ` (${variantLabel})` : ""} x${quantity}` });
   };
 
+  const addVariantToCart = async (variantId: string, variantLabel: string) => {
+    if (!user) {
+      toast({ title: "Please sign in", description: "You need to be logged in to add items to cart.", variant: "destructive" });
+      return;
+    }
+    if (!product) return;
+    const query = supabase
+      .from("cart_items").select("id, quantity").eq("user_id", user.id).eq("product_id", product.id).eq("variant_id", variantId);
+    const { data: existing } = await query.maybeSingle();
+    if (existing) {
+      await supabase.from("cart_items").update({ quantity: existing.quantity + 1 }).eq("id", existing.id);
+    } else {
+      await supabase.from("cart_items").insert({ user_id: user.id, product_id: product.id, quantity: 1, variant_id: variantId } as any);
+    }
+    toast({ title: "Added to cart!", description: `${product.name}${variantLabel ? ` (${variantLabel})` : ""} x1` });
+  };
+
   const buyNow = async () => {
     if (!user) {
       toast({ title: "Please sign in", variant: "destructive" });
@@ -351,6 +368,7 @@ const ProductDetailPage: React.FC = () => {
                       compareAtPrice={product.compare_at_price}
                       productName={product.name}
                       productThumbnail={product.thumbnail}
+                      onAddToCart={addVariantToCart}
                     />
                   )}
 
@@ -440,6 +458,7 @@ const ProductDetailPage: React.FC = () => {
                     compareAtPrice={product.compare_at_price}
                     productName={product.name}
                     productThumbnail={product.thumbnail}
+                    onAddToCart={addVariantToCart}
                   />
                 )}
 
