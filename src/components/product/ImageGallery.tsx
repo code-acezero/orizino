@@ -45,12 +45,19 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
           onMouseMove={handleMouseMove}
           onClick={() => setLightboxOpen(true)}
         >
-          <img
-            src={images[selected]}
-            alt={productName}
-            className="w-full h-full object-cover transition-transform duration-300"
-            style={isZooming ? { transform: "scale(2)", transformOrigin: `${zoomPos.x}% ${zoomPos.y}%` } : undefined}
-          />
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.img
+              key={selected}
+              src={images[selected]}
+              alt={productName}
+              initial={{ opacity: 0, x: 80 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -80 }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="w-full h-full object-cover absolute inset-0"
+              style={isZooming ? { transform: "scale(2)", transformOrigin: `${zoomPos.x}% ${zoomPos.y}%` } : undefined}
+            />
+          </AnimatePresence>
 
           {/* Zoom indicator */}
           <div className="absolute bottom-4 right-4 glass rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
