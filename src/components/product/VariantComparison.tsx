@@ -270,8 +270,39 @@ const VariantComparison: React.FC<VariantComparisonProps> = ({
                     </tbody>
                   </table>
                 </div>
-              )}
+                      )}
 
+                      {/* Add to Cart row */}
+                      {onAddToCart && (
+                        <tr>
+                          <td className="py-3 pr-4 text-xs text-muted-foreground font-medium">Action</td>
+                          {compared.map((v) => {
+                            const isAdding = addingToCartId === v.id;
+                            const label = getLabel(v);
+                            return (
+                              <td key={v.id} className="py-3 px-2 text-center">
+                                <Button
+                                  size="sm"
+                                  disabled={v.stock_quantity === 0 || isAdding}
+                                  onClick={async () => {
+                                    setAddingToCartId(v.id);
+                                    await onAddToCart(v.id, label);
+                                    setAddingToCartId(null);
+                                  }}
+                                  className="gap-1.5 text-xs w-full"
+                                >
+                                  {isAdding ? (
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                  ) : (
+                                    <ShoppingCart className="w-3 h-3" />
+                                  )}
+                                  {v.stock_quantity === 0 ? "Sold Out" : "Add to Cart"}
+                                </Button>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      )}
               {compared.length < 2 && (
                 <p className="text-center text-xs text-muted-foreground py-4">
                   Select at least 2 variants above to see a side-by-side comparison
