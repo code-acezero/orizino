@@ -5,6 +5,7 @@ import {
   Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, LogOut, Settings, LayoutGrid,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AuthModal from "@/components/AuthModal";
