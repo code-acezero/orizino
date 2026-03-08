@@ -629,6 +629,13 @@ const AdminAnnouncements = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* ── FULL PREVIEW OVERLAY ── */}
+      <AnimatePresence>
+        {previewPopup && (
+          <FullPopupPreview popup={previewPopup} onClose={() => setPreviewPopup(null)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
