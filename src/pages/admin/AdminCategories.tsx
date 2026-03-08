@@ -78,6 +78,35 @@ const AdminCategories = () => {
     });
   }, [orderItems, dateFilterStart]);
 
+  // Previous period order items (for % change calculation)
+  const prevPeriodFilterStart = useMemo(() => {
+    if (dateRange === "all") return null;
+    const days = dateRange === "7d" ? 7 : dateRange === "30d" ? 30 : 90;
+    return startOfDay(subDays(new Date(), days * 2)).toISOString();
+  }, [dateRange]);
+
+  const prevFilteredOrderItems = useMemo(() => {
+    if (!dateFilterStart || !prevPeriodFilterStart) return [];
+    return orderItems.filter((oi: any) => {
+      const d = oi.orders?.created_at;
+      return d && d >= prevPeriodFilterStart && d < dateFilterStart;
+    });
+  }, [orderItems, dateFilterStart, prevPeriodFilterStart]);
+
+  const buildRevenueMap = (items: any[]) => {
+    const prodCatMap = new Map<string, string>();
+    products.forEach((p: any) => { if (p.category_id) prodCatMap.set(p.id, p.category_id); });
+    const map = new Map<string, number>();
+    items.forEach((oi: any) => {
+      const catId = prodCatMap.get(oi.product_id);
+      if (!catId) return;
+      map.set(catId, (map.get(catId) || 0) + (Number(oi.total_price) || 0));
+    });
+    return map;
+  };
+
+  const prevRevenueMap = useMemo(() => buildRevenueMap(prevFilteredOrderItems), [products, prevFilteredOrderItems]);
+
   const categoryAnalytics = useMemo(() => {
     const prodCatMap = new Map<string, string>();
     products.forEach((p: any) => { if (p.category_id) prodCatMap.set(p.id, p.category_id); });
