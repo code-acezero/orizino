@@ -791,6 +791,90 @@ const AdminHome = () => {
                             </div>
                           )}
                         </div>
+
+                        {/* Featured Categories inline management */}
+                        {settingsCfg.hasFeaturedToggle === "categories" && (
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-3 gap-2">
+                              <div className="p-2 rounded-lg bg-secondary/30 border border-border/50 text-center">
+                                <p className="text-lg font-bold text-foreground">{localCategories.length}</p>
+                                <p className="text-[9px] text-muted-foreground">Total</p>
+                              </div>
+                              <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-center">
+                                <p className="text-lg font-bold text-primary">{localCategories.filter(c => c.is_featured).length}</p>
+                                <p className="text-[9px] text-muted-foreground">Featured</p>
+                              </div>
+                              <div className="p-2 rounded-lg bg-secondary/30 border border-border/50 text-center">
+                                <p className="text-lg font-bold text-muted-foreground">{localCategories.filter(c => !c.is_featured).length}</p>
+                                <p className="text-[9px] text-muted-foreground">Hidden</p>
+                              </div>
+                            </div>
+                            <div className="relative">
+                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                              <Input value={featCatSearch} onChange={(e) => setFeatCatSearch(e.target.value)} placeholder="Search categories..." className="pl-8 h-8 text-xs" />
+                            </div>
+                            <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                              {localCategories
+                                .filter(cat => !featCatSearch || cat.name.toLowerCase().includes(featCatSearch.toLowerCase()))
+                                .map((cat, catIdx) => (
+                                  <div key={cat.id} {...getFeatCatDragProps(catIdx)} className={`flex items-center gap-2.5 p-2 rounded-lg border transition-all cursor-grab active:cursor-grabbing ${featCatDragIdx === catIdx ? "opacity-50 scale-95" : featCatOverIdx === catIdx ? "ring-2 ring-primary/40 bg-primary/5" : cat.is_featured ? "border-primary/20 bg-primary/5" : "border-border/30 bg-secondary/10"}`}>
+                                    <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
+                                    <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">{catIdx + 1}</div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-medium text-foreground truncate">{cat.name}</p>
+                                    </div>
+                                    <Badge variant={cat.is_featured ? "default" : "outline"} className="text-[9px] shrink-0">{cat.is_featured ? "Featured" : "Hidden"}</Badge>
+                                    <Switch checked={cat.is_featured} onCheckedChange={(v) => toggleCatFeatured.mutate({ id: cat.id, is_featured: v })} className="scale-75" />
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Featured Products inline management */}
+                        {settingsCfg.hasFeaturedToggle === "products" && (
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-3 gap-2">
+                              <div className="p-2 rounded-lg bg-secondary/30 border border-border/50 text-center">
+                                <p className="text-lg font-bold text-foreground">{localProducts.length}</p>
+                                <p className="text-[9px] text-muted-foreground">Total</p>
+                              </div>
+                              <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-center">
+                                <p className="text-lg font-bold text-primary">{localProducts.filter(p => p.is_featured).length}</p>
+                                <p className="text-[9px] text-muted-foreground">Featured</p>
+                              </div>
+                              <div className="p-2 rounded-lg bg-secondary/30 border border-border/50 text-center">
+                                <p className="text-lg font-bold text-muted-foreground">{localProducts.filter(p => !p.is_featured).length}</p>
+                                <p className="text-[9px] text-muted-foreground">Not Featured</p>
+                              </div>
+                            </div>
+                            <div className="relative">
+                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                              <Input value={featProdSearch} onChange={(e) => setFeatProdSearch(e.target.value)} placeholder="Search products..." className="pl-8 h-8 text-xs" />
+                            </div>
+                            <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                              {localProducts
+                                .filter(prod => !featProdSearch || prod.name.toLowerCase().includes(featProdSearch.toLowerCase()))
+                                .map((prod, prodIdx) => (
+                                  <div key={prod.id} {...getFeatProdDragProps(prodIdx)} className={`flex items-center gap-2.5 p-2 rounded-lg border transition-all cursor-grab active:cursor-grabbing ${featProdDragIdx === prodIdx ? "opacity-50 scale-95" : featProdOverIdx === prodIdx ? "ring-2 ring-primary/40 bg-primary/5" : prod.is_featured ? "border-primary/20 bg-primary/5" : "border-border/30 bg-secondary/10"}`}>
+                                    <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
+                                    <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">{prodIdx + 1}</div>
+                                    {prod.thumbnail ? (
+                                      <img src={prod.thumbnail} alt="" className="w-7 h-7 object-cover rounded border border-border/30 shrink-0" />
+                                    ) : (
+                                      <div className="w-7 h-7 rounded bg-secondary/40 flex items-center justify-center shrink-0"><Star className="w-3 h-3 text-muted-foreground/30" /></div>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-medium text-foreground truncate">{prod.name}</p>
+                                      <p className="text-[9px] text-muted-foreground">${Number(prod.price).toFixed(2)}</p>
+                                    </div>
+                                    <Badge variant={prod.is_featured ? "default" : "outline"} className="text-[9px] shrink-0">{prod.is_featured ? "Featured" : "No"}</Badge>
+                                    <Switch checked={prod.is_featured} onCheckedChange={(v) => toggleProdFeatured.mutate({ id: prod.id, is_featured: v })} className="scale-75" />
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
