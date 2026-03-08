@@ -20,10 +20,18 @@ const GeoBreakdown: React.FC<GeoBreakdownProps> = ({ analyticsData }) => {
 
   // Filter data based on selected period
   const filteredAnalyticsForLeaderboard = useMemo(() => {
+    if (leaderboardPeriod === "custom") {
+      return analyticsData.filter((e) => {
+        const t = new Date(e.created_at).getTime();
+        if (customFrom && t < customFrom.getTime()) return false;
+        if (customTo && t > customTo.getTime() + 86400000) return false;
+        return true;
+      });
+    }
     const now = Date.now();
     const cutoff = now - leaderboardPeriod * 24 * 60 * 60 * 1000;
     return analyticsData.filter((e) => new Date(e.created_at).getTime() >= cutoff);
-  }, [analyticsData, leaderboardPeriod]);
+  }, [analyticsData, leaderboardPeriod, customFrom, customTo]);
 
   const geo = useMemo(() => {
     const countryMap: Record<string, { count: number; code: string; cities: Record<string, number> }> = {};
