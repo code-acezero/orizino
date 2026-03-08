@@ -14,7 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import ImageUpload from "@/components/ImageUpload";
 import { toast } from "@/lib/app-toast";
-import { Plus, Pencil, Trash2, Settings2, Layers } from "lucide-react";
+import { Plus, Pencil, Trash2, Settings2, Layers, GripVertical } from "lucide-react";
+import { useDragReorder } from "@/hooks/use-drag-reorder";
 
 interface ShowcaseConfig {
   autoplay_speed: number;
