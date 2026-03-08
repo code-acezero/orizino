@@ -25,6 +25,7 @@ interface VariantComparisonProps {
   compareAtPrice?: number | null;
   productName: string;
   productThumbnail?: string | null;
+  onAddToCart?: (variantId: string, variantLabel: string) => Promise<void>;
 }
 
 const COLOR_MAP: Record<string, string> = {
