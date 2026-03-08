@@ -282,6 +282,36 @@ const AdminSettings = () => {
               </CardContent>
             </Card>
 
+            {/* Live Exchange Rates */}
+            <Card className="glass border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Zap className="w-5 h-5 text-primary" /> Live Exchange Rates</CardTitle>
+                <CardDescription>
+                  Fetch live rates from open.er-api.com (free, no API key). Rates are relative to {currencyConfig.default_currency}.
+                  {(currencyConfig as any).rates_last_updated && (
+                    <span className="flex items-center gap-1 mt-1 text-primary">
+                      <Clock className="w-3 h-3" />
+                      Last updated: {new Date((currencyConfig as any).rates_last_updated).toLocaleString()}
+                    </span>
+                  )}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => fetchRatesMutation.mutate()}
+                  disabled={fetchRatesMutation.isPending || currencyConfig.enabled_currencies.length <= 1}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${fetchRatesMutation.isPending ? "animate-spin" : ""}`} />
+                  {fetchRatesMutation.isPending ? "Fetching live rates..." : "Fetch Live Rates"}
+                </Button>
+                {currencyConfig.enabled_currencies.length <= 1 && (
+                  <p className="text-xs text-muted-foreground mt-2">Enable at least 2 currencies to fetch exchange rates.</p>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Enabled Currencies */}
             <Card className="glass">
               <CardHeader>
