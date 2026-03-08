@@ -4,11 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
@@ -19,7 +18,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Pencil, Trash2, Send, Bell, X, Megaphone, Tag,
   AlertTriangle, Info, Zap, Clock, MousePointerClick, ScrollText,
-  ArrowDown, Maximize, PanelBottom, SlidersHorizontal, Eye,
+  ArrowDown, Maximize, PanelBottom, SlidersHorizontal, Eye, Copy,
+  MessageSquare, Activity, Calendar,
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
@@ -50,7 +50,7 @@ const notifIcons = [
 
 const popupPositions = [
   { value: "center", label: "Center", desc: "Centered modal" },
-  { value: "bottom-center", label: "Bottom Center", desc: "Bottom slide-up bar" },
+  { value: "bottom-center", label: "Bottom Center", desc: "Bottom slide-up" },
   { value: "bottom-right", label: "Bottom Right", desc: "Corner notification" },
   { value: "top-center", label: "Top Center", desc: "Top banner" },
   { value: "fullscreen", label: "Fullscreen", desc: "Full overlay" },
@@ -68,7 +68,7 @@ const popupAnimations = [
 const popupTriggers = [
   { value: "timer", label: "Timer Delay", icon: Clock, desc: "Show after X seconds" },
   { value: "scroll", label: "Scroll %", icon: ScrollText, desc: "Show when user scrolls X%" },
-  { value: "exit", label: "Exit Intent", icon: MousePointerClick, desc: "Show when user moves to leave" },
+  { value: "exit", label: "Exit Intent", icon: MousePointerClick, desc: "Show on exit intent" },
   { value: "immediate", label: "Immediate", icon: Zap, desc: "Show instantly" },
 ];
 
@@ -114,14 +114,14 @@ const PopupPreview = ({ popup }: { popup: any }) => {
   };
 
   const anim = getMiniAnimation(popup.animation_style || "scale");
-
   const deviceWidth = device === "desktop" ? "100%" : device === "tablet" ? "65%" : "40%";
 
   return (
     <div className="space-y-2">
-      {/* Device toggle */}
       <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground font-medium">Preview</span>
+        <span className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
+          <Eye className="w-3.5 h-3.5" /> Live Preview
+        </span>
         <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-secondary/50">
           {(["desktop", "tablet", "mobile"] as const).map((d) => (
             <button
@@ -142,7 +142,7 @@ const PopupPreview = ({ popup }: { popup: any }) => {
           className="h-full rounded-lg border border-border/30 bg-background overflow-hidden flex flex-col transition-all duration-300"
           style={{ width: deviceWidth, maxWidth: "100%" }}
         >
-          {/* Simulated browser chrome */}
+          {/* Browser chrome */}
           <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-secondary/40 border-b border-border/30 shrink-0">
             <div className="flex gap-1">
               <span className="w-2 h-2 rounded-full bg-destructive/60" />
@@ -152,20 +152,12 @@ const PopupPreview = ({ popup }: { popup: any }) => {
             <div className="flex-1 mx-2 h-3.5 rounded-md bg-secondary/60 flex items-center px-1.5">
               <span className="text-[7px] text-muted-foreground">yoursite.com</span>
             </div>
-            <Badge variant="outline" className="text-[7px] h-3.5 px-1 border-primary/30 text-primary">Live</Badge>
           </div>
 
-          {/* Preview area */}
           <div className={`flex-1 flex ${positionClasses[popup.position || "center"] || positionClasses.center} p-2 relative`}>
             {popup.display_type !== "banner" && popup.display_type !== "slide-in" && (
-              <motion.div
-                key={`backdrop-${animKey}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="absolute inset-0 bg-background/30"
-              />
+              <motion.div key={`backdrop-${animKey}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-background/30" />
             )}
-
             <motion.div
               key={animKey}
               {...anim}
@@ -201,22 +193,13 @@ const PopupPreview = ({ popup }: { popup: any }) => {
             </motion.div>
           </div>
 
-          {/* Info badges */}
           <div className="px-2 py-1 flex items-center justify-between border-t border-border/20 shrink-0">
             <div className="flex gap-1">
               <Badge variant="outline" className="text-[7px] h-4 px-1">{popup.display_type || "popup"}</Badge>
               <Badge variant="outline" className="text-[7px] h-4 px-1">{popup.position || "center"}</Badge>
             </div>
-            <button
-              onClick={() => setAnimKey((k) => k + 1)}
-              className="text-[7px] text-primary hover:text-primary/80 transition-colors flex items-center gap-0.5"
-            >
-              <motion.span
-                key={`replay-${animKey}`}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 0.4 }}
-                className="inline-block"
-              >↻</motion.span>
+            <button onClick={() => setAnimKey((k) => k + 1)} className="text-[7px] text-primary hover:text-primary/80 transition-colors flex items-center gap-0.5">
+              <motion.span key={`replay-${animKey}`} animate={{ rotate: 360 }} transition={{ duration: 0.4 }} className="inline-block">↻</motion.span>
               Replay
             </button>
           </div>
@@ -226,7 +209,7 @@ const PopupPreview = ({ popup }: { popup: any }) => {
   );
 };
 
-/* ── Full-screen live preview (matches HomePopup rendering) ── */
+/* ── Full-screen live preview ── */
 const getPreviewAnimation = (style: string) => {
   switch (style) {
     case "slide-up": return { initial: { opacity: 0, y: 80 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: 80 } };
@@ -266,13 +249,9 @@ const getPreviewSize = (displayType: string): string => {
 };
 
 const FullPopupPreview = ({ popup, onClose }: { popup: any; onClose: () => void }) => {
-  const animStyle = popup.animation_style || "scale";
-  const position = popup.position || "center";
-  const displayType = popup.display_type || "popup";
-  const anim = getPreviewAnimation(animStyle);
-  const posClasses = getPreviewPosition(position, displayType);
-  const sizeClasses = getPreviewSize(displayType);
-  const hasBg = !!popup.bg_color;
+  const anim = getPreviewAnimation(popup.animation_style || "scale");
+  const posClasses = getPreviewPosition(popup.position || "center", popup.display_type || "popup");
+  const sizeClasses = getPreviewSize(popup.display_type || "popup");
 
   return (
     <motion.div
@@ -282,11 +261,10 @@ const FullPopupPreview = ({ popup, onClose }: { popup: any; onClose: () => void 
       className={`fixed inset-0 z-[200] flex p-4 ${posClasses}`}
       onClick={onClose}
     >
-      {displayType !== "banner" && displayType !== "slide-in" && (
+      {popup.display_type !== "banner" && popup.display_type !== "slide-in" && (
         <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
       )}
 
-      {/* Admin label */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[210] flex items-center gap-2">
         <Badge className="bg-primary/90 text-primary-foreground text-xs px-3 py-1">
           <Eye className="w-3 h-3 mr-1.5" /> Preview Mode
@@ -300,10 +278,10 @@ const FullPopupPreview = ({ popup, onClose }: { popup: any; onClose: () => void 
         {...anim}
         transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
         onClick={(e) => e.stopPropagation()}
-        className={`relative overflow-hidden shadow-2xl ${sizeClasses} ${hasBg ? "rounded-3xl" : "glass-strong rounded-3xl"}`}
+        className={`relative overflow-hidden shadow-2xl ${sizeClasses} ${popup.bg_color ? "rounded-3xl" : "glass-strong rounded-3xl"}`}
         style={{
           ...(popup.bg_color ? { backgroundColor: popup.bg_color } : {}),
-          perspective: animStyle === "flip" ? "800px" : undefined,
+          perspective: (popup.animation_style === "flip") ? "800px" : undefined,
         }}
       >
         <button
@@ -355,7 +333,7 @@ const AdminAnnouncements = () => {
   const [editingPopup, setEditingPopup] = useState<any>(null);
   const [previewPopup, setPreviewPopup] = useState<any>(null);
 
-  /* ── Notifications queries ── */
+  /* ── Queries ── */
   const { data: notifications = [] } = useQuery({
     queryKey: ["admin-notifications-list"],
     queryFn: async () => {
@@ -404,7 +382,6 @@ const AdminAnnouncements = () => {
     },
   });
 
-  /* ── Popups queries ── */
   const { data: popups = [] } = useQuery({
     queryKey: ["admin-popups"],
     queryFn: async () => {
@@ -462,9 +439,71 @@ const AdminAnnouncements = () => {
     setPopupDialog(true);
   };
 
+  const activePopups = popups.filter((p: any) => p.is_active);
+  const urgentNotifs = notifications.filter((n: any) => n.priority === "urgent");
+
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-display font-bold">Announcements & Popups</h1>
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+            <Megaphone className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-display font-bold">Announcements & Popups</h1>
+            <p className="text-xs text-muted-foreground">{notifications.length} announcements · {popups.length} popups</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <Card className="glass">
+          <CardContent className="p-3 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+              <Bell className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-lg font-bold">{notifications.length}</p>
+              <p className="text-[10px] text-muted-foreground">Announcements</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="glass">
+          <CardContent className="p-3 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center shrink-0">
+              <MessageSquare className="w-4 h-4 text-accent" />
+            </div>
+            <div>
+              <p className="text-lg font-bold">{popups.length}</p>
+              <p className="text-[10px] text-muted-foreground">Popups</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="glass">
+          <CardContent className="p-3 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+              <Activity className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-lg font-bold">{activePopups.length}</p>
+              <p className="text-[10px] text-muted-foreground">Active Popups</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="glass">
+          <CardContent className="p-3 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-destructive/15 flex items-center justify-center shrink-0">
+              <Zap className="w-4 h-4 text-destructive" />
+            </div>
+            <div>
+              <p className="text-lg font-bold">{urgentNotifs.length}</p>
+              <p className="text-[10px] text-muted-foreground">Urgent</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <Tabs defaultValue="announcements">
         <TabsList>
@@ -477,75 +516,91 @@ const AdminAnnouncements = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">{notifications.length} announcement{notifications.length !== 1 ? "s" : ""} sent</p>
-              <Button onClick={() => setNotifDialog(true)}><Send className="w-4 h-4 mr-2" />New Announcement</Button>
+              <Button onClick={() => setNotifDialog(true)} className="gap-2"><Send className="w-4 h-4" />New Announcement</Button>
             </div>
 
-            <Card className="glass">
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Message</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Priority</TableHead>
-                      <TableHead>Schedule</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {notifications.map((n: any) => {
-                      const prio = priorityConfig[n.priority] || priorityConfig.normal;
-                      const PrioIcon = prio.icon;
-                      return (
-                        <TableRow key={n.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              {n.icon && <span className="text-sm">{notifIcons.find(i => i.value === n.icon)?.label.split(" ")[0] || ""}</span>}
-                              <span className="font-medium">{n.title}</span>
+            {/* Announcement Cards */}
+            {notifications.length === 0 ? (
+              <Card className="glass">
+                <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                  <Bell className="w-10 h-10 text-muted-foreground mb-3" />
+                  <h3 className="font-semibold mb-1">No announcements yet</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Send your first announcement to all users.</p>
+                  <Button onClick={() => setNotifDialog(true)} className="gap-2"><Send className="h-4 w-4" /> New Announcement</Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <AnimatePresence mode="popLayout">
+                  {notifications.map((n: any, idx: number) => {
+                    const prio = priorityConfig[n.priority] || priorityConfig.normal;
+                    const PrioIcon = prio.icon;
+                    const iconEmoji = notifIcons.find(i => i.value === n.icon)?.label.split(" ")[0] || "";
+                    return (
+                      <motion.div
+                        key={n.id}
+                        layout
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.25, delay: idx * 0.03 }}
+                      >
+                        <Card className="glass group hover:border-primary/20 transition-all">
+                          <CardContent className="p-4 space-y-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-start gap-2.5">
+                                {n.icon && <span className="text-lg mt-0.5">{iconEmoji}</span>}
+                                <div>
+                                  <h3 className="text-sm font-display font-semibold leading-tight">{n.title}</h3>
+                                  {n.message && <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{n.message}</p>}
+                                </div>
+                              </div>
+                              <Badge variant="outline" className={`text-[10px] shrink-0 ${prio.color}`}>
+                                <PrioIcon className="w-2.5 h-2.5 mr-0.5" />{prio.label}
+                              </Badge>
                             </div>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground max-w-[180px] truncate">{n.message}</TableCell>
-                          <TableCell><Badge variant="outline">{n.type}</Badge></TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className={prio.color}>
-                              <PrioIcon className="w-3 h-3 mr-1" />{prio.label}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
-                            {n.scheduled_at ? format(new Date(n.scheduled_at), "MMM dd, HH:mm") : "Immediate"}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground text-xs">
-                            {format(new Date(n.created_at), "MMM dd, yyyy")}
-                          </TableCell>
-                           <TableCell>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button size="icon" variant="ghost"><Trash2 className="w-4 h-4 text-destructive" /></Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete announcement?</AlertDialogTitle>
-                                  <AlertDialogDescription>This will permanently delete "{n.title}". This action cannot be undone.</AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deleteNotification.mutate(n.id)}>Delete</AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                    {notifications.length === 0 && (
-                      <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No announcements sent yet</TableCell></TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <Badge variant="outline" className="text-[10px]">{n.type}</Badge>
+                              <Badge variant="outline" className="text-[10px] gap-1">
+                                <Calendar className="w-2.5 h-2.5" />
+                                {format(new Date(n.created_at), "MMM dd")}
+                              </Badge>
+                              {n.scheduled_at && (
+                                <Badge variant="outline" className="text-[10px] gap-1 text-primary">
+                                  <Clock className="w-2.5 h-2.5" />
+                                  {format(new Date(n.scheduled_at), "MMM dd, HH:mm")}
+                                </Badge>
+                              )}
+                              {n.link_url && <Badge variant="outline" className="text-[10px] text-primary">🔗 Linked</Badge>}
+                            </div>
+
+                            <div className="flex justify-end pt-1">
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button size="sm" variant="ghost" className="h-7 text-xs gap-1">
+                                    <Trash2 className="w-3 h-3 text-destructive" /> Delete
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete announcement?</AlertDialogTitle>
+                                    <AlertDialogDescription>This will permanently delete "{n.title}".</AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deleteNotification.mutate(n.id)}>Delete</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
+            )}
           </div>
         </TabsContent>
 
@@ -553,67 +608,95 @@ const AdminAnnouncements = () => {
         <TabsContent value="popups">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">{popups.length} popup{popups.length !== 1 ? "s" : ""} · {popups.filter((p: any) => p.is_active).length} active</p>
-              <Button onClick={() => openPopupEdit()}><Plus className="w-4 h-4 mr-2" />Add Popup</Button>
+              <p className="text-sm text-muted-foreground">{popups.length} popup{popups.length !== 1 ? "s" : ""} · {activePopups.length} active</p>
+              <Button onClick={() => openPopupEdit()} className="gap-2"><Plus className="w-4 h-4" />Add Popup</Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {popups.map((p: any) => (
-                <Card key={p.id} className={`glass transition-colors ${p.is_active ? "border-primary/20" : "opacity-60"}`}>
-                  <CardContent className="p-4 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-display font-semibold text-sm">{p.title}</h3>
-                        {p.message && <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{p.message}</p>}
-                      </div>
-                      <Badge variant={p.is_active ? "default" : "outline"} className="text-[10px] shrink-0 ml-2">
-                        {p.is_active ? "Active" : "Inactive"}
-                      </Badge>
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      <Badge variant="outline" className="text-[10px]">{p.display_type || "popup"}</Badge>
-                      <Badge variant="outline" className="text-[10px]">{p.position || "center"}</Badge>
-                      <Badge variant="outline" className="text-[10px]">{p.trigger_type || "timer"}</Badge>
-                      <Badge variant="outline" className="text-[10px]">{p.max_views}x views</Badge>
-                    </div>
-                    {p.image_url && (
-                      <img src={p.image_url} alt="" className="w-full h-24 object-cover rounded-lg" />
-                    )}
-                    <div className="flex gap-1 pt-1">
-                      <Button size="sm" variant="ghost" className="flex-1" onClick={() => openPopupEdit(p)}>
-                        <Pencil className="w-3 h-3 mr-1" /> Edit
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => setPreviewPopup(p)} title="Preview">
-                        <Eye className="w-3 h-3 text-primary" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => duplicatePopup(p)}>
-                        <Plus className="w-3 h-3" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="ghost"><Trash2 className="w-3 h-3 text-destructive" /></Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete popup?</AlertDialogTitle>
-                            <AlertDialogDescription>This will permanently delete "{p.title}". This action cannot be undone.</AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deletePopup.mutate(p.id)}>Delete</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {popups.length === 0 && (
-                <Card className="glass col-span-full">
-                  <CardContent className="py-12 text-center text-muted-foreground">No popups yet</CardContent>
-                </Card>
-              )}
-            </div>
+            {popups.length === 0 ? (
+              <Card className="glass">
+                <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                  <Maximize className="w-10 h-10 text-muted-foreground mb-3" />
+                  <h3 className="font-semibold mb-1">No popups yet</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Create popups to engage visitors with offers and announcements.</p>
+                  <Button onClick={() => openPopupEdit()} className="gap-2"><Plus className="h-4 w-4" /> Create Popup</Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <AnimatePresence mode="popLayout">
+                  {popups.map((p: any, idx: number) => (
+                    <motion.div
+                      key={p.id}
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25, delay: idx * 0.03 }}
+                    >
+                      <Card className={`glass group transition-all hover:border-primary/30 ${p.is_active ? "" : "opacity-50"}`}>
+                        <CardContent className="p-0">
+                          {/* Image preview */}
+                          {p.image_url ? (
+                            <div className="h-28 overflow-hidden rounded-t-xl">
+                              <img src={p.image_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                            </div>
+                          ) : (
+                            <div className="h-20 rounded-t-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+                              <Maximize className="w-6 h-6 text-muted-foreground/20" />
+                            </div>
+                          )}
+
+                          <div className="p-4 space-y-3">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h3 className="font-display font-semibold text-sm">{p.title}</h3>
+                                {p.message && <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{p.message}</p>}
+                              </div>
+                              <Badge variant={p.is_active ? "default" : "outline"} className="text-[10px] shrink-0 ml-2">
+                                {p.is_active ? "Active" : "Inactive"}
+                              </Badge>
+                            </div>
+
+                            <div className="flex flex-wrap gap-1">
+                              <Badge variant="outline" className="text-[10px]">{p.display_type || "popup"}</Badge>
+                              <Badge variant="outline" className="text-[10px]">{p.position || "center"}</Badge>
+                              <Badge variant="outline" className="text-[10px]">{p.trigger_type || "timer"}</Badge>
+                              <Badge variant="outline" className="text-[10px]">{p.animation_style || "scale"}</Badge>
+                            </div>
+
+                            <div className="flex gap-1 pt-1">
+                              <Button size="sm" variant="ghost" className="flex-1 h-8 text-xs gap-1" onClick={() => openPopupEdit(p)}>
+                                <Pencil className="w-3 h-3" /> Edit
+                              </Button>
+                              <Button size="sm" variant="ghost" className="h-8" onClick={() => setPreviewPopup(p)} title="Preview">
+                                <Eye className="w-3.5 h-3.5 text-primary" />
+                              </Button>
+                              <Button size="sm" variant="ghost" className="h-8" onClick={() => duplicatePopup(p)} title="Duplicate">
+                                <Copy className="w-3.5 h-3.5" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button size="sm" variant="ghost" className="h-8"><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete popup?</AlertDialogTitle>
+                                    <AlertDialogDescription>This will permanently delete "{p.title}".</AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deletePopup.mutate(p.id)}>Delete</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
           </div>
         </TabsContent>
       </Tabs>
@@ -627,7 +710,6 @@ const AdminAnnouncements = () => {
             <div><Label>Message</Label><Textarea value={notifForm.message} onChange={(e) => setNotifForm({ ...notifForm, message: e.target.value })} placeholder="Don't miss our biggest sale of the year..." /></div>
             <div><Label>Link URL (optional)</Label><Input value={notifForm.link_url} onChange={(e) => setNotifForm({ ...notifForm, link_url: e.target.value })} placeholder="/shop?sale=true" /></div>
 
-            {/* Type */}
             <div>
               <Label>Type</Label>
               <div className="flex gap-2 mt-1.5">
@@ -646,7 +728,6 @@ const AdminAnnouncements = () => {
               </div>
             </div>
 
-            {/* Priority */}
             <div>
               <Label>Priority</Label>
               <div className="flex gap-2 mt-1.5">
@@ -668,7 +749,6 @@ const AdminAnnouncements = () => {
               </div>
             </div>
 
-            {/* Icon */}
             <div>
               <Label>Icon</Label>
               <Select value={notifForm.icon || ""} onValueChange={(v) => setNotifForm({ ...notifForm, icon: v })}>
@@ -681,7 +761,6 @@ const AdminAnnouncements = () => {
               </Select>
             </div>
 
-            {/* Scheduling */}
             <Card className="border-border/50">
               <CardContent className="pt-4 space-y-3">
                 <div className="flex items-center gap-2">
@@ -727,7 +806,6 @@ const AdminAnnouncements = () => {
                   <div><Label>Button Text</Label><Input value={editingPopup.link_text || ""} onChange={(e) => setEditingPopup({ ...editingPopup, link_text: e.target.value })} /></div>
                 </div>
 
-                {/* Display & Position */}
                 <Card className="border-border/50">
                   <CardContent className="pt-4 space-y-3">
                     <Label className="font-medium flex items-center gap-2"><SlidersHorizontal className="w-4 h-4 text-primary" /> Display Settings</Label>
@@ -774,20 +852,13 @@ const AdminAnnouncements = () => {
                 </Card>
               </div>
 
-              {/* Right: More options + Preview */}
+              {/* Right: Preview + more options */}
               <div className="space-y-4">
-                {/* Mini Preview + Live Preview Button */}
                 <PopupPreview popup={editingPopup} />
-                <Button
-                  variant="outline"
-                  className="w-full gap-2"
-                  onClick={() => setPreviewPopup({ ...editingPopup })}
-                >
-                  <Eye className="w-4 h-4 text-primary" />
-                  Preview Live
+                <Button variant="outline" className="w-full gap-2" onClick={() => setPreviewPopup({ ...editingPopup })}>
+                  <Eye className="w-4 h-4 text-primary" /> Preview Live
                 </Button>
 
-                {/* Trigger */}
                 <Card className="border-border/50">
                   <CardContent className="pt-4 space-y-3">
                     <Label className="font-medium flex items-center gap-2"><MousePointerClick className="w-4 h-4 text-accent" /> Trigger</Label>
@@ -826,7 +897,6 @@ const AdminAnnouncements = () => {
                   </CardContent>
                 </Card>
 
-                {/* Colors */}
                 <Card className="border-border/50">
                   <CardContent className="pt-4 space-y-3">
                     <Label className="font-medium">Colors</Label>
@@ -834,22 +904,14 @@ const AdminAnnouncements = () => {
                       <div>
                         <Label className="text-xs text-muted-foreground">Background</Label>
                         <div className="flex gap-2 items-center">
-                          <Input
-                            value={editingPopup.bg_color || ""}
-                            onChange={(e) => setEditingPopup({ ...editingPopup, bg_color: e.target.value })}
-                            placeholder="Default"
-                          />
+                          <Input value={editingPopup.bg_color || ""} onChange={(e) => setEditingPopup({ ...editingPopup, bg_color: e.target.value })} placeholder="Default" />
                           {editingPopup.bg_color && <div className="w-7 h-7 rounded-lg border border-border shrink-0" style={{ backgroundColor: editingPopup.bg_color }} />}
                         </div>
                       </div>
                       <div>
                         <Label className="text-xs text-muted-foreground">Text Color</Label>
                         <div className="flex gap-2 items-center">
-                          <Input
-                            value={editingPopup.text_color || ""}
-                            onChange={(e) => setEditingPopup({ ...editingPopup, text_color: e.target.value })}
-                            placeholder="Default"
-                          />
+                          <Input value={editingPopup.text_color || ""} onChange={(e) => setEditingPopup({ ...editingPopup, text_color: e.target.value })} placeholder="Default" />
                           {editingPopup.text_color && <div className="w-7 h-7 rounded-lg border border-border shrink-0" style={{ backgroundColor: editingPopup.text_color }} />}
                         </div>
                       </div>
@@ -857,7 +919,6 @@ const AdminAnnouncements = () => {
                   </CardContent>
                 </Card>
 
-                {/* Frequency & Schedule */}
                 <div className="grid grid-cols-2 gap-3">
                   <div><Label>Max Views</Label><Input type="number" value={editingPopup.max_views} onChange={(e) => setEditingPopup({ ...editingPopup, max_views: Number(e.target.value) })} /></div>
                   <div><Label>Cooldown (hours)</Label><Input type="number" value={editingPopup.duration_hours} onChange={(e) => setEditingPopup({ ...editingPopup, duration_hours: Number(e.target.value) })} /></div>
