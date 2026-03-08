@@ -775,8 +775,8 @@ const AdminHome = () => {
 
         {/* Layout & Style */}
         <TabsContent value="layout">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Spacing & Container */}
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-6">
+           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="glass">
               <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Layout className="w-5 h-5" /> Spacing & Container</CardTitle></CardHeader>
               <CardContent className="space-y-5">
