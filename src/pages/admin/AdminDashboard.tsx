@@ -190,7 +190,22 @@ const AdminDashboard = () => {
     staleTime: 60_000,
   });
 
-  /* ── Revenue chart data (selected range) ── */
+  /* ── Low stock products ── */
+  const { data: lowStockProducts } = useQuery({
+    queryKey: ["admin-low-stock"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("id, name, thumbnail, price, stock_quantity")
+        .eq("is_active", true)
+        .lt("stock_quantity", 10)
+        .order("stock_quantity", { ascending: true })
+        .limit(10);
+      return data ?? [];
+    },
+    staleTime: 60_000,
+  });
+
   const revenueChart = useMemo(() => {
     if (!stats?.rangeOrders) return [];
     const days: Record<string, number> = {};
