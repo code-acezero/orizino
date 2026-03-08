@@ -128,7 +128,13 @@ const spacingMap: Record<string, string> = {
   "8": "gap-8", "12": "gap-12", "16": "gap-16", "20": "gap-20", "24": "gap-24",
 };
 
-const defaultSectionOrder = ["slider", "categories", "category-sections", "featured", "arrivals"];
+const defaultSectionOrder = [
+  { id: "slider", label: "Showcase Slider", icon: "🎠", visible: true },
+  { id: "categories", label: "Category Grid", icon: "📂", visible: true },
+  { id: "category-sections", label: "Category Product Sections", icon: "📦", visible: true },
+  { id: "featured", label: "Featured Products", icon: "⭐", visible: true },
+  { id: "arrivals", label: "New Arrivals", icon: "✨", visible: true },
+];
 
 const HomePage: React.FC = () => {
   const { data: featuredProducts = [], isLoading } = useQuery({
@@ -201,10 +207,19 @@ const HomePage: React.FC = () => {
       const val = data.value as any;
       const order = val?.value ?? val;
       if (Array.isArray(order)) {
-        const ids = order.map((o: any) => o.id || o).filter(Boolean);
+        // Handle both old string format and new object format with visibility
+        const normalizedOrder = order.map((item: any) => {
+          if (typeof item === "string") {
+            // Legacy format: convert string ID to object
+            return defaultSectionOrder.find((d) => d.id === item) || { id: item, visible: true };
+          }
+          // New format: merge with defaults to ensure all properties
+          const defaultSection = defaultSectionOrder.find((d) => d.id === item.id);
+          return defaultSection ? { ...defaultSection, ...item } : item;
+        });
         // Add any missing default sections
-        const missing = defaultSectionOrder.filter((d) => !ids.includes(d));
-        return [...ids, ...missing];
+        const missing = defaultSectionOrder.filter((d) => !normalizedOrder.some((o: any) => o.id === d.id));
+        return [...normalizedOrder, ...missing];
       }
       return defaultSectionOrder;
     },
@@ -457,13 +472,19 @@ const HomePage: React.FC = () => {
       {popupSales.map((sale: SaleConfig) => <SalePopup key={sale.id} sale={sale} />)}
 
       <main className={`mx-auto px-4 pt-6 flex flex-col ${spacingClass}`} style={{ maxWidth: layout.container_max_width }}>
-        {sectionOrder.map((sectionId, idx) => (
-          <React.Fragment key={sectionId}>
-            {renderSection(sectionId)}
-            {sectionSaleMap[sectionId] && salesByPos(sectionSaleMap[sectionId]).map(renderSaleBanner)}
-            {idx < sectionOrder.length - 1 && divider}
-          </React.Fragment>
-        ))}
+        {sectionOrder.map((section, idx) => {
+          // Check visibility (default to visible if not specified)
+          const isVisible = (section as any).visible !== false;
+          if (!isVisible) return null;
+          
+          return (
+            <React.Fragment key={section.id}>
+              {renderSection(section.id)}
+              {sectionSaleMap[section.id] && salesByPos(sectionSaleMap[section.id]).map(renderSaleBanner)}
+              {idx < sectionOrder.length - 1 && divider}
+            </React.Fragment>
+          );
+        })}
         {salesByPos("bottom").map(renderSaleBanner)}
       </main>
 
