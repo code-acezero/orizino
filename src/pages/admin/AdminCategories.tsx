@@ -10,16 +10,19 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, ChevronRight } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronRight, Check, X } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import { AnimatePresence, motion } from "framer-motion";
 
 const AdminCategories = () => {
   const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Record<string, any> | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ["admin-categories"],
@@ -67,6 +70,44 @@ const AdminCategories = () => {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const bulkAction = useMutation({
+    mutationFn: async ({ ids, action, status }: { ids: string[]; action: "delete" | "activate" | "deactivate"; status?: string }) => {
+      if (action === "delete") {
+        const { error } = await supabase.from("categories").delete().in("id", ids);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("categories").update({ is_active: action === "activate" }).in("id", ids);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-categories"] });
+      setSelected(new Set());
+      toast.success("Bulk action completed");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selected);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelected(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selected.size === categories.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(categories.map((c) => c.id)));
+    }
+  };
+
+  const someSelected = selected.size > 0;
+
   const openEdit = (cat?: any) => {
     setEditing(
       cat
@@ -98,6 +139,13 @@ const AdminCategories = () => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={selected.size === categories.length && categories.length > 0}
+                  onCheckedChange={toggleSelectAll}
+                  disabled={categories.length === 0}
+                />
+              </TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Slug</TableHead>
               <TableHead>Color</TableHead>
@@ -122,6 +170,12 @@ const AdminCategories = () => {
                 return (
                   <tbody key={c.id}>
                     <TableRow>
+                      <TableCell className="w-12">
+                        <Checkbox
+                          checked={selected.has(c.id)}
+                          onCheckedChange={() => toggleSelect(c.id)}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium flex items-center gap-2">
                         {c.icon_url ? (
                           <img src={c.icon_url} alt="" className="w-6 h-6 rounded object-contain" />
@@ -168,7 +222,13 @@ const AdminCategories = () => {
                     </TableRow>
                     {children.map((sub) => (
                       <TableRow key={sub.id} className="bg-secondary/10">
-                        <TableCell className="font-medium pl-8 flex items-center gap-2">
+                        <TableCell className="w-12">
+                          <Checkbox
+                            checked={selected.has(sub.id)}
+                            onCheckedChange={() => toggleSelect(sub.id)}
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium pl-4 flex items-center gap-2">
                           <ChevronRight className="w-3 h-3 text-muted-foreground" />
                           {sub.icon_url ? (
                             <img src={sub.icon_url} alt="" className="w-5 h-5 rounded object-contain" />
@@ -222,7 +282,86 @@ const AdminCategories = () => {
         </Table>
       </div>
 
-      {/* Edit/Add Dialog */}
+      {/* Floating Bulk Action Bar */}
+      <AnimatePresence>
+        {someSelected && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-background border border-border rounded-lg shadow-lg p-4 flex items-center gap-4 z-50"
+          >
+            <div className="text-sm font-medium text-muted-foreground">
+              {selected.size} selected
+            </div>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm">Activate</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Activate {selected.size} categories?</AlertDialogTitle>
+                  <AlertDialogDescription>This will mark {selected.size} {selected.size === 1 ? "category" : "categories"} as active and visible on the storefront.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction className="bg-primary" onClick={() => bulkAction.mutate({ ids: Array.from(selected), action: "activate" })} disabled={bulkAction.isPending}>
+                    {bulkAction.isPending ? "Activating..." : "Activate"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm">Deactivate</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Deactivate {selected.size} categories?</AlertDialogTitle>
+                  <AlertDialogDescription>This will mark {selected.size} {selected.size === 1 ? "category" : "categories"} as inactive and hide them from the storefront.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => bulkAction.mutate({ ids: Array.from(selected), action: "deactivate" })} disabled={bulkAction.isPending}>
+                    {bulkAction.isPending ? "Deactivating..." : "Deactivate"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">Delete</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete {selected.size} categories?</AlertDialogTitle>
+                  <AlertDialogDescription>This will permanently delete {selected.size} {selected.size === 1 ? "category" : "categories"}. This action cannot be undone.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => bulkAction.mutate({ ids: Array.from(selected), action: "delete" })} disabled={bulkAction.isPending}>
+                    {bulkAction.isPending ? "Deleting..." : "Delete"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSelected(new Set())}
+              className="ml-2"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
