@@ -128,6 +128,8 @@ const spacingMap: Record<string, string> = {
   "8": "gap-8", "12": "gap-12", "16": "gap-16", "20": "gap-20", "24": "gap-24",
 };
 
+const defaultSectionOrder = ["slider", "categories", "category-sections", "featured", "arrivals"];
+
 const HomePage: React.FC = () => {
   const { data: featuredProducts = [], isLoading } = useQuery({
     queryKey: ["featured-products"],
@@ -189,6 +191,27 @@ const HomePage: React.FC = () => {
     },
     staleTime: 30 * 1000,
   });
+
+  const { data: sectionOrderConfig } = useQuery({
+    queryKey: ["home-section-order"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("site_settings").select("value").eq("key", "home_section_order").maybeSingle();
+      if (error) throw error;
+      if (!data?.value) return defaultSectionOrder;
+      const val = data.value as any;
+      const order = val?.value ?? val;
+      if (Array.isArray(order)) {
+        const ids = order.map((o: any) => o.id || o).filter(Boolean);
+        // Add any missing default sections
+        const missing = defaultSectionOrder.filter((d) => !ids.includes(d));
+        return [...ids, ...missing];
+      }
+      return defaultSectionOrder;
+    },
+    staleTime: 30 * 1000,
+  });
+
+  const sectionOrder = sectionOrderConfig || defaultSectionOrder;
 
   const layout = layoutConfigRaw || defaultLayout;
   const anim = getAnimationVariants(layout.section_animation);
