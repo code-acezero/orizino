@@ -69,6 +69,42 @@ const AdminProducts = () => {
   const parentCategories = categories.filter((c) => !c.parent_id);
   const getChildren = (parentId: string) => categories.filter((c) => c.parent_id === parentId);
 
+  // Product page layout settings
+  const { data: layoutSettingsRow } = useQuery({
+    queryKey: ["admin-product-page-layout"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("site_settings").select("*").eq("key", "product_page_layout").maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const [pageLayout, setPageLayout] = useState("premium");
+
+  useState(() => {
+    if (layoutSettingsRow?.value) {
+      const val = layoutSettingsRow.value as any;
+      setPageLayout(val?.value ?? val ?? "premium");
+    }
+  });
+
+  const saveLayoutMutation = useMutation({
+    mutationFn: async () => {
+      const jsonValue = { value: pageLayout } as any;
+      if (layoutSettingsRow) {
+        await supabase.from("site_settings").update({ value: jsonValue }).eq("id", layoutSettingsRow.id);
+      } else {
+        await supabase.from("site_settings").insert({ key: "product_page_layout", value: jsonValue });
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-product-page-layout"] });
+      qc.invalidateQueries({ queryKey: ["admin-settings"] });
+      toast.success("Product page layout saved");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const saveMutation = useMutation({
     mutationFn: async (product: any) => {
       const slug = product.slug || product.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
