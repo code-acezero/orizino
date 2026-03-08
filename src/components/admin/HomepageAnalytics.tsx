@@ -9,6 +9,7 @@ import { Eye, MousePointerClick, Clock, TrendingUp, BarChart3, Target, Users, Do
 import { useRealtimeVisitors } from "@/hooks/use-realtime-visitors";
 import { Button } from "@/components/ui/button";
 import LiveActivityFeed from "./LiveActivityFeed";
+import GeoBreakdown from "./GeoBreakdown";
 
 const timeRanges = [
   { value: "24h", label: "Last 24 Hours", hours: 24 },
