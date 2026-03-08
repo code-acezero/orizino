@@ -90,10 +90,14 @@ export type Database = {
       }
       categories: {
         Row: {
+          accent_color: string | null
+          banner_type: string | null
+          banner_url: string | null
           created_at: string
           description: string | null
           flash_sale_ends_at: string | null
           icon: string | null
+          icon_url: string | null
           id: string
           image_url: string | null
           is_active: boolean
@@ -107,12 +111,17 @@ export type Database = {
           slug: string
           sort_order: number
           updated_at: string
+          youtube_url: string | null
         }
         Insert: {
+          accent_color?: string | null
+          banner_type?: string | null
+          banner_url?: string | null
           created_at?: string
           description?: string | null
           flash_sale_ends_at?: string | null
           icon?: string | null
+          icon_url?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -126,12 +135,17 @@ export type Database = {
           slug: string
           sort_order?: number
           updated_at?: string
+          youtube_url?: string | null
         }
         Update: {
+          accent_color?: string | null
+          banner_type?: string | null
+          banner_url?: string | null
           created_at?: string
           description?: string | null
           flash_sale_ends_at?: string | null
           icon?: string | null
+          icon_url?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -145,6 +159,7 @@ export type Database = {
           slug?: string
           sort_order?: number
           updated_at?: string
+          youtube_url?: string | null
         }
         Relationships: [
           {
