@@ -193,7 +193,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
                 transition={{ type: "spring", damping: 20, stiffness: 300 }}
                 style={{
                   backgroundImage: `url(${images[selected]})`,
-                  backgroundSize: `${imgRef.current?.offsetWidth ? imgRef.current.offsetWidth * 2.5 : 1000}px ${imgRef.current?.offsetHeight ? imgRef.current.offsetHeight * 2.5 : 1000}px`,
+                  backgroundSize: `${imgRef.current?.offsetWidth ? imgRef.current.offsetWidth * zoomPower : 1000}px ${imgRef.current?.offsetHeight ? imgRef.current.offsetHeight * zoomPower : 1000}px`,
                   backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
                   border: "3px solid hsl(var(--primary) / 0.4)",
                   boxShadow: "0 0 0 2px hsl(var(--background) / 0.6), 0 8px 32px hsl(var(--primary) / 0.2), inset 0 0 30px hsl(var(--primary) / 0.05)",
