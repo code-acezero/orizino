@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import { motion } from "framer-motion";
+import { trackClick } from "@/hooks/use-analytics";
 
 export interface ProductCardProps {
   id: string;
