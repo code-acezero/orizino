@@ -409,7 +409,7 @@ const HomePage: React.FC = () => {
                   <p className="text-muted-foreground mt-1">Explore our {cat.name.toLowerCase()} collection</p>
                 </div>
                 {layout.section_title_align !== "center" && (
-                  <a href={`/categories/${cat.slug}`} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+                  <a href={`/categories/${cat.slug}`} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors" onClick={() => trackClick("view_all", cat.slug, "/home", { section: "category" })}>View All</a>
                 )}
               </motion.div>
               <div className={`grid grid-cols-2 md:grid-cols-3 ${sectionCols} gap-4`}>
