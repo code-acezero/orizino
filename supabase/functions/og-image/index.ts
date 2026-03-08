@@ -19,25 +19,23 @@ async function ensureWasm() {
   wasmInitialized = true;
 }
 
-// Fetch a font for satori
+// Fetch font via Google Fonts CSS API (user-agent trick to get .ttf)
 let fontData: ArrayBuffer | null = null;
 async function getFont(): Promise<ArrayBuffer> {
   if (fontData) return fontData;
-  const res = await fetch(
-    "https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-400-normal.woff"
+  // Request CSS with old user-agent to get .ttf URL
+  const cssRes = await fetch(
+    "https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap",
+    { headers: { "User-Agent": "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; de-at) AppleWebKit/533.21.1 (KHTML, like Gecko) Version/5.0.5 Safari/533.21.1" } }
   );
-  fontData = await res.arrayBuffer();
+  const css = await cssRes.text();
+  // Extract first .ttf URL
+  const match = css.match(/url\((https:\/\/fonts\.gstatic\.com\/[^)]+\.ttf)\)/);
+  if (!match) throw new Error("Could not find TTF font URL in Google Fonts CSS");
+  const fontRes = await fetch(match[1]);
+  if (!fontRes.ok) throw new Error(`Font download failed: ${fontRes.status}`);
+  fontData = await fontRes.arrayBuffer();
   return fontData;
-}
-
-let boldFontData: ArrayBuffer | null = null;
-async function getBoldFont(): Promise<ArrayBuffer> {
-  if (boldFontData) return boldFontData;
-  const res = await fetch(
-    "https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-700-normal.woff"
-  );
-  boldFontData = await res.arrayBuffer();
-  return boldFontData;
 }
 
 function truncate(str: string, max: number): string {
@@ -576,10 +574,9 @@ Deno.serve(async (req) => {
       };
     }
 
-    // Initialize WASM and fetch fonts
-    const [font, boldFont] = await Promise.all([
+    // Initialize WASM and fetch font
+    const [font] = await Promise.all([
       getFont(),
-      getBoldFont(),
       ensureWasm(),
     ]);
 
@@ -594,8 +591,8 @@ Deno.serve(async (req) => {
       width: 1200,
       height: 630,
       fonts: [
-        { name: "Inter", data: font, weight: 400, style: "normal" },
-        { name: "Inter", data: boldFont, weight: 700, style: "normal" },
+        { name: "Inter", data: font, weight: 400, style: "normal" as const },
+        { name: "Inter", data: font, weight: 700, style: "normal" as const },
       ],
     });
 
