@@ -347,6 +347,32 @@ const ProductDetailPage: React.FC = () => {
             </div>
           </section>
         )}
+
+        {/* Related Products */}
+        {relatedProducts && relatedProducts.length > 0 && (
+          <section className="mt-16">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold font-display text-foreground">You May Also Like</h2>
+              {productCat && (
+                <Link to={`/categories/${productCat.slug}`} className="text-sm text-primary hover:underline">
+                  View all in {productCat.name} →
+                </Link>
+              )}
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {relatedProducts.map((p, i) => (
+                <motion.div
+                  key={p.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                >
+                  <ProductCard product={p} />
+                </motion.div>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
       <Footer />
     </div>
