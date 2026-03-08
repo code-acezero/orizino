@@ -167,9 +167,19 @@ const AdminHome = () => {
     },
   });
 
+  const { data: layoutRow } = useQuery({
+    queryKey: ["admin-home-layout"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("site_settings").select("*").eq("key", "home_layout_config").maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const [catSections, setCatSections] = useState<{ category_id: string; sort_order: number; product_count: number }[]>([]);
   const [sales, setSales] = useState<SaleConfig[]>([]);
   const [newArrivals, setNewArrivals] = useState({ enabled: true, title: "New Arrivals", subtitle: "Fresh drops just landed", product_count: 8 });
+  const [layoutConfig, setLayoutConfig] = useState<LayoutConfig>({ ...defaultLayoutConfig });
 
   useEffect(() => {
     if (settingsRow?.value) {
