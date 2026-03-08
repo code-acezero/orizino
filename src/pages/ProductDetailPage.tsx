@@ -67,6 +67,22 @@ const ProductDetailPage: React.FC = () => {
     enabled: !!product?.id,
   });
 
+  // Fetch related products from same category
+  const { data: relatedProducts } = useQuery({
+    queryKey: ["related-products", product?.category_id, product?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("*")
+        .eq("category_id", product!.category_id!)
+        .eq("is_active", true)
+        .neq("id", product!.id)
+        .order("avg_rating", { ascending: false })
+        .limit(4);
+      return data || [];
+    },
+    enabled: !!product?.category_id && !!product?.id,
+  });
   const images = product?.images?.length ? product.images : [product?.thumbnail || "/placeholder.svg"];
   const discount = product?.compare_at_price
     ? Math.round(((product.compare_at_price - product.price) / product.compare_at_price) * 100)
