@@ -18,7 +18,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
   const [lensSize, setLensSize] = useState(160);
   const [showRipple, setShowRipple] = useState(false);
   const [ripplePos, setRipplePos] = useState({ x: 0, y: 0 });
-  const [pinchScale, setPinchScale] = useState(1);
   const [pinchOrigin, setPinchOrigin] = useState({ x: 50, y: 50 });
   const [longPressZoom, setLongPressZoom] = useState(false);
   const pinchStartDist = useRef(0);
