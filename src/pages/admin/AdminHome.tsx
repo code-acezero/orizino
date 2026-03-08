@@ -622,12 +622,13 @@ const AdminHome = () => {
 
               {/* Layout Summary */}
               <Card className="glass">
-                <CardHeader>
+                <CardHeader className="cursor-pointer hover:bg-primary/5 rounded-t-xl transition-all" onClick={() => setActiveTab("layout")}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
                       <Layers className="w-5 h-5 text-primary" />
                     </div>
-                    <CardTitle className="text-lg">Layout Settings</CardTitle>
+                    <CardTitle className="text-lg flex-1">Layout Settings</CardTitle>
+                    <span className="text-xs text-primary font-medium">Edit →</span>
                   </div>
                 </CardHeader>
                 <CardContent>
