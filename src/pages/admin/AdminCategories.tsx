@@ -4,25 +4,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, ChevronRight, Check, X } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronRight, Check, X, FolderTree, Search, Eye, EyeOff, Star } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AnimatePresence, motion } from "framer-motion";
+import { Card, CardContent } from "@/components/ui/card";
 
 const AdminCategories = () => {
   const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Record<string, any> | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState("");
 
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ["admin-categories"],
@@ -35,6 +36,14 @@ const AdminCategories = () => {
 
   const parentCategories = categories.filter((c) => !c.parent_id);
   const getChildren = (parentId: string) => categories.filter((c) => c.parent_id === parentId);
+
+  // Filter by search
+  const filteredParents = parentCategories.filter((c) => {
+    const q = search.toLowerCase();
+    if (!q) return true;
+    const children = getChildren(c.id);
+    return c.name.toLowerCase().includes(q) || c.slug.toLowerCase().includes(q) || children.some((ch) => ch.name.toLowerCase().includes(q));
+  });
 
   const saveMutation = useMutation({
     mutationFn: async (cat: any) => {
@@ -71,7 +80,7 @@ const AdminCategories = () => {
   });
 
   const bulkAction = useMutation({
-    mutationFn: async ({ ids, action, status }: { ids: string[]; action: "delete" | "activate" | "deactivate"; status?: string }) => {
+    mutationFn: async ({ ids, action }: { ids: string[]; action: "delete" | "activate" | "deactivate" }) => {
       if (action === "delete") {
         const { error } = await supabase.from("categories").delete().in("id", ids);
         if (error) throw error;
@@ -89,24 +98,15 @@ const AdminCategories = () => {
   });
 
   const toggleSelect = (id: string) => {
-    const newSelected = new Set(selected);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
-      newSelected.add(id);
-    }
-    setSelected(newSelected);
+    const next = new Set(selected);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setSelected(next);
   };
 
   const toggleSelectAll = () => {
-    if (selected.size === categories.length) {
-      setSelected(new Set());
-    } else {
-      setSelected(new Set(categories.map((c) => c.id)));
-    }
+    if (selected.size === categories.length) setSelected(new Set());
+    else setSelected(new Set(categories.map((c) => c.id)));
   };
-
-  const someSelected = selected.size > 0;
 
   const openEdit = (cat?: any) => {
     setEditing(
@@ -126,91 +126,107 @@ const AdminCategories = () => {
     setEditing((prev) => (prev ? { ...prev, [field]: value } : null));
   };
 
+  const totalActive = categories.filter((c) => c.is_active).length;
+  const totalFeatured = categories.filter((c) => c.is_featured).length;
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-display font-bold">Categories</h1>
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+            <FolderTree className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-display font-bold">Categories</h1>
+            <p className="text-xs text-muted-foreground">{categories.length} total · {totalActive} active · {totalFeatured} featured</p>
+          </div>
+        </div>
         <Button onClick={() => openEdit()} className="gap-2">
           <Plus className="h-4 w-4" /> Add Category
         </Button>
       </div>
 
-      <div className="rounded-lg border border-border overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">
-                <Checkbox
-                  checked={selected.size === categories.length && categories.length > 0}
-                  onCheckedChange={toggleSelectAll}
-                  disabled={categories.length === 0}
-                />
-              </TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Slug</TableHead>
-              <TableHead>Color</TableHead>
-              <TableHead>Parent</TableHead>
-              <TableHead>Featured</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading...</TableCell>
-              </TableRow>
-            ) : categories.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No categories yet.</TableCell>
-              </TableRow>
-            ) : (
-              parentCategories.map((c) => {
-                const children = getChildren(c.id);
-                return (
-                  <tbody key={c.id}>
-                    <TableRow>
-                      <TableCell className="w-12">
-                        <Checkbox
-                          checked={selected.has(c.id)}
-                          onCheckedChange={() => toggleSelect(c.id)}
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium flex items-center gap-2">
+      {/* Search */}
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          placeholder="Search categories..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
+      {/* Category Cards Grid */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="glass animate-pulse h-40" />
+          ))}
+        </div>
+      ) : filteredParents.length === 0 ? (
+        <Card className="glass">
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <FolderTree className="w-10 h-10 text-muted-foreground mb-3" />
+            <p className="text-muted-foreground">{search ? "No categories match your search" : "No categories yet"}</p>
+            {!search && (
+              <Button variant="outline" className="mt-3 gap-2" onClick={() => openEdit()}>
+                <Plus className="w-4 h-4" /> Create your first category
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {filteredParents.map((c) => {
+            const children = getChildren(c.id);
+            return (
+              <motion.div
+                key={c.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <Card className={`glass group hover:border-primary/30 transition-all relative overflow-hidden ${selected.has(c.id) ? "ring-2 ring-primary/50 border-primary/40" : ""}`}>
+                  {/* Accent strip */}
+                  <div className="absolute top-0 left-0 right-0 h-1" style={{ background: c.accent_color || "hsl(var(--primary))" }} />
+
+                  <CardContent className="pt-5 pb-4 px-5">
+                    {/* Top row: checkbox + icon + name + actions */}
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        checked={selected.has(c.id)}
+                        onCheckedChange={() => toggleSelect(c.id)}
+                        className="mt-1"
+                      />
+                      <div className="w-10 h-10 rounded-xl bg-secondary/50 flex items-center justify-center shrink-0 overflow-hidden">
                         {c.icon_url ? (
-                          <img src={c.icon_url} alt="" className="w-6 h-6 rounded object-contain" />
+                          <img src={c.icon_url} alt="" className="w-full h-full object-contain" />
                         ) : c.icon ? (
-                          <span>{c.icon}</span>
-                        ) : null}
-                        {c.name}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{c.slug}</TableCell>
-                      <TableCell>
-                        <div className="w-6 h-6 rounded-full border border-border" style={{ background: c.accent_color || "#6366f1" }} />
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">—</TableCell>
-                      <TableCell>
-                        <Badge variant={c.is_featured ? "default" : "outline"}>
-                          {c.is_featured ? "Featured" : "No"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={c.is_active ? "default" : "secondary"}>
-                          {c.is_active ? "Active" : "Inactive"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right space-x-1">
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(c)}>
-                          <Pencil className="h-4 w-4" />
+                          <span className="text-lg">{c.icon}</span>
+                        ) : (
+                          <FolderTree className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">{c.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">/{c.slug}</p>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(c)}>
+                          <Pencil className="h-3.5 w-3.5" />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                            </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Delete category?</AlertDialogTitle>
-                              <AlertDialogDescription>This will permanently delete "{c.name}". This action cannot be undone.</AlertDialogDescription>
+                              <AlertDialogTitle>Delete "{c.name}"?</AlertDialogTitle>
+                              <AlertDialogDescription>This will permanently delete this category and cannot be undone.</AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -218,95 +234,116 @@ const AdminCategories = () => {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
-                      </TableCell>
-                    </TableRow>
-                    {children.map((sub) => (
-                      <TableRow key={sub.id} className="bg-secondary/10">
-                        <TableCell className="w-12">
-                          <Checkbox
-                            checked={selected.has(sub.id)}
-                            onCheckedChange={() => toggleSelect(sub.id)}
-                          />
-                        </TableCell>
-                        <TableCell className="font-medium pl-4 flex items-center gap-2">
-                          <ChevronRight className="w-3 h-3 text-muted-foreground" />
-                          {sub.icon_url ? (
-                            <img src={sub.icon_url} alt="" className="w-5 h-5 rounded object-contain" />
-                          ) : sub.icon ? (
-                            <span>{sub.icon}</span>
-                          ) : null}
-                          {sub.name}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">{sub.slug}</TableCell>
-                        <TableCell>
-                          <div className="w-5 h-5 rounded-full border border-border" style={{ background: sub.accent_color || "#6366f1" }} />
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-xs">{c.name}</TableCell>
-                        <TableCell>
-                          <Badge variant={sub.is_featured ? "default" : "outline"}>
-                            {sub.is_featured ? "Featured" : "No"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={sub.is_active ? "default" : "secondary"}>
-                            {sub.is_active ? "Active" : "Inactive"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right space-x-1">
-                          <Button variant="ghost" size="icon" onClick={() => openEdit(sub)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete subcategory?</AlertDialogTitle>
-                                <AlertDialogDescription>This will permanently delete "{sub.name}". This action cannot be undone.</AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deleteMutation.mutate(sub.id)}>Delete</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </tbody>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
+                      </div>
+                    </div>
+
+                    {/* Badges */}
+                    <div className="flex items-center gap-1.5 mt-3 flex-wrap">
+                      <Badge variant={c.is_active ? "default" : "secondary"} className="text-[10px] gap-1">
+                        {c.is_active ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                        {c.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                      {c.is_featured && (
+                        <Badge variant="outline" className="text-[10px] gap-1 text-amber-400 border-amber-500/30">
+                          <Star className="w-3 h-3 fill-amber-400" /> Featured
+                        </Badge>
+                      )}
+                      <div className="w-4 h-4 rounded-full border border-border shrink-0 ml-auto" style={{ background: c.accent_color || "#6366f1" }} />
+                    </div>
+
+                    {/* Description */}
+                    {c.description && (
+                      <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{c.description}</p>
+                    )}
+
+                    {/* Subcategories */}
+                    {children.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-border/50 space-y-1.5">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Subcategories ({children.length})</p>
+                        {children.map((sub) => (
+                          <div
+                            key={sub.id}
+                            className={`flex items-center gap-2 p-2 rounded-lg bg-secondary/20 hover:bg-secondary/40 transition-colors ${selected.has(sub.id) ? "ring-1 ring-primary/40" : ""}`}
+                          >
+                            <Checkbox
+                              checked={selected.has(sub.id)}
+                              onCheckedChange={() => toggleSelect(sub.id)}
+                              className="scale-90"
+                            />
+                            <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />
+                            {sub.icon_url ? (
+                              <img src={sub.icon_url} alt="" className="w-5 h-5 rounded object-contain shrink-0" />
+                            ) : sub.icon ? (
+                              <span className="text-sm">{sub.icon}</span>
+                            ) : null}
+                            <span className="text-xs font-medium text-foreground flex-1 truncate">{sub.name}</span>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <Badge variant={sub.is_active ? "default" : "secondary"} className="text-[9px] px-1.5 py-0">
+                                {sub.is_active ? "Active" : "Off"}
+                              </Badge>
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEdit(sub)}>
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                                    <Trash2 className="h-3 w-3 text-destructive" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete "{sub.name}"?</AlertDialogTitle>
+                                    <AlertDialogDescription>This will permanently delete this subcategory.</AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deleteMutation.mutate(sub.id)}>Delete</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Floating Bulk Action Bar */}
       <AnimatePresence>
-        {someSelected && (
+        {selected.size > 0 && (
           <motion.div
-            initial={{ y: 100, opacity: 0 }}
+            initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-background border border-border rounded-lg shadow-lg p-4 flex items-center gap-4 z-50"
+            exit={{ y: 80, opacity: 0 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 glass-strong border border-border rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-3 z-50"
           >
-            <div className="text-sm font-medium text-muted-foreground">
-              {selected.size} selected
-            </div>
+            <Checkbox
+              checked={selected.size === categories.length && categories.length > 0}
+              onCheckedChange={toggleSelectAll}
+            />
+            <span className="text-sm font-medium">{selected.size} selected</span>
+            <div className="w-px h-6 bg-border" />
 
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm">Activate</Button>
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <Eye className="w-3.5 h-3.5" /> Activate
+                </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Activate {selected.size} categories?</AlertDialogTitle>
-                  <AlertDialogDescription>This will mark {selected.size} {selected.size === 1 ? "category" : "categories"} as active and visible on the storefront.</AlertDialogDescription>
+                  <AlertDialogDescription>These categories will become visible on the storefront.</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction className="bg-primary" onClick={() => bulkAction.mutate({ ids: Array.from(selected), action: "activate" })} disabled={bulkAction.isPending}>
+                  <AlertDialogAction onClick={() => bulkAction.mutate({ ids: Array.from(selected), action: "activate" })} disabled={bulkAction.isPending}>
                     {bulkAction.isPending ? "Activating..." : "Activate"}
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -315,12 +352,14 @@ const AdminCategories = () => {
 
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm">Deactivate</Button>
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <EyeOff className="w-3.5 h-3.5" /> Deactivate
+                </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Deactivate {selected.size} categories?</AlertDialogTitle>
-                  <AlertDialogDescription>This will mark {selected.size} {selected.size === 1 ? "category" : "categories"} as inactive and hide them from the storefront.</AlertDialogDescription>
+                  <AlertDialogDescription>These categories will be hidden from the storefront.</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -333,12 +372,14 @@ const AdminCategories = () => {
 
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm">Delete</Button>
+                <Button variant="destructive" size="sm" className="gap-1.5">
+                  <Trash2 className="w-3.5 h-3.5" /> Delete
+                </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete {selected.size} categories?</AlertDialogTitle>
-                  <AlertDialogDescription>This will permanently delete {selected.size} {selected.size === 1 ? "category" : "categories"}. This action cannot be undone.</AlertDialogDescription>
+                  <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -349,19 +390,14 @@ const AdminCategories = () => {
               </AlertDialogContent>
             </AlertDialog>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSelected(new Set())}
-              className="ml-2"
-            >
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelected(new Set())}>
               <X className="h-4 w-4" />
             </Button>
           </motion.div>
         )}
       </AnimatePresence>
 
-
+      {/* Edit/Add Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
@@ -451,18 +487,14 @@ const AdminCategories = () => {
                       className="flex-1"
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">Used as theme accent on the category page</p>
                 </div>
                 <div>
                   <Label>Category Image</Label>
                   <ImageUpload bucket="banners" folder="categories" value={editing.image_url ?? ""} onUploaded={(url) => updateField("image_url", url)} />
                 </div>
-
-                {/* Banner Section */}
                 <div className="border-t border-border pt-4">
                   <Label className="text-base font-semibold">Category Banner</Label>
-                  <p className="text-xs text-muted-foreground mb-3">Shows at the top of the category page with a fading shadow overlay</p>
-
+                  <p className="text-xs text-muted-foreground mb-3">Shows at the top of the category page</p>
                   <div className="space-y-3">
                     <div>
                       <Label>Banner Type</Label>
@@ -470,35 +502,22 @@ const AdminCategories = () => {
                         value={editing.banner_type ?? "image"}
                         onValueChange={(v) => updateField("banner_type", v)}
                       >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="image">Image / GIF</SelectItem>
                           <SelectItem value="youtube">YouTube Video</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
-
                     {(editing.banner_type ?? "image") === "image" ? (
                       <div>
                         <Label>Banner Image / GIF</Label>
-                        <ImageUpload
-                          bucket="banners"
-                          folder="category-banners"
-                          value={editing.banner_url ?? ""}
-                          onUploaded={(url) => updateField("banner_url", url)}
-                          accept="image/*,.gif"
-                        />
+                        <ImageUpload bucket="banners" folder="category-banners" value={editing.banner_url ?? ""} onUploaded={(url) => updateField("banner_url", url)} accept="image/*,.gif" />
                       </div>
                     ) : (
                       <div>
                         <Label>YouTube URL</Label>
-                        <Input
-                          value={editing.youtube_url ?? ""}
-                          onChange={(e) => updateField("youtube_url", e.target.value)}
-                          placeholder="https://youtube.com/watch?v=..."
-                        />
+                        <Input value={editing.youtube_url ?? ""} onChange={(e) => updateField("youtube_url", e.target.value)} placeholder="https://youtube.com/watch?v=..." />
                       </div>
                     )}
                   </div>
