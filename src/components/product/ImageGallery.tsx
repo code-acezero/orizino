@@ -18,6 +18,9 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
   const [pinchOrigin, setPinchOrigin] = useState({ x: 50, y: 50 });
   const pinchStartDist = useRef(0);
   const pinchStartScale = useRef(1);
+  const swipeStartX = useRef(0);
+  const swipeStartY = useRef(0);
+  const isSwiping = useRef(false);
   const lightboxImgRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLDivElement>(null);
 
@@ -44,6 +47,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       e.preventDefault();
+      isSwiping.current = false;
       pinchStartDist.current = getTouchDist(e.touches);
       pinchStartScale.current = pinchScale;
       const rect = lightboxImgRef.current?.getBoundingClientRect();
@@ -55,21 +59,36 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
           y: ((cy - rect.top) / rect.height) * 100,
         });
       }
+    } else if (e.touches.length === 1 && pinchScale <= 1) {
+      swipeStartX.current = e.touches[0].clientX;
+      swipeStartY.current = e.touches[0].clientY;
+      isSwiping.current = true;
     }
   }, [pinchScale]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       e.preventDefault();
+      isSwiping.current = false;
       const dist = getTouchDist(e.touches);
       const newScale = Math.min(5, Math.max(1, pinchStartScale.current * (dist / pinchStartDist.current)));
       setPinchScale(newScale);
     }
   }, []);
 
-  const handleTouchEnd = useCallback(() => {
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     if (pinchScale < 1.1) setPinchScale(1);
-  }, [pinchScale]);
+
+    if (isSwiping.current && e.changedTouches.length === 1 && pinchScale <= 1) {
+      const dx = e.changedTouches[0].clientX - swipeStartX.current;
+      const dy = e.changedTouches[0].clientY - swipeStartY.current;
+      // Only swipe if horizontal movement is dominant and exceeds threshold
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        navigate(dx < 0 ? 1 : -1);
+      }
+    }
+    isSwiping.current = false;
+  }, [pinchScale, images.length]);
 
   const isMinimal = layout === "minimal";
   const isEditorial = layout === "editorial";
