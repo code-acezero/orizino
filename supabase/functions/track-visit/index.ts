@@ -98,12 +98,12 @@ Deno.serve(async (req) => {
     );
 
     const { error } = await supabase.from("page_analytics").insert({
-      event_type: event_type || "page_view",
-      page: page || "/home",
+      event_type: validatedEventType,
+      page,
       section_id: section_id || null,
       session_id: session_id || null,
-      duration_ms: duration_ms || 0,
-      metadata: { ...((metadata as Record<string, unknown>) || {}), ...geo, ip },
+      duration_ms: validatedDuration,
+      metadata: { ...validatedMetadata, ...geo, ip },
     });
 
     if (error) {
