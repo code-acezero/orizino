@@ -11,17 +11,32 @@ const getSessionId = () => {
   return id;
 };
 
-/** Track a page view event */
-export const trackPageView = async (page: string) => {
+/**
+ * Send an analytics event through the edge function for geo-enrichment.
+ * Falls back to direct insert if the edge function is unavailable.
+ */
+const trackViaEdge = async (payload: Record<string, any>) => {
   try {
-    await (supabase as any).from("page_analytics").insert({
-      event_type: "page_view",
-      page,
-      session_id: getSessionId(),
+    const { error } = await supabase.functions.invoke("track-visit", {
+      body: { ...payload, session_id: getSessionId() },
     });
+    if (error) throw error;
   } catch {
-    // silently fail — analytics should never break the app
+    // Fallback: direct insert without geo data
+    try {
+      await (supabase as any).from("page_analytics").insert({
+        ...payload,
+        session_id: getSessionId(),
+      });
+    } catch {
+      // silently fail — analytics should never break the app
+    }
   }
+};
+
+/** Track a page view event (geo-enriched via edge function) */
+export const trackPageView = async (page: string) => {
+  await trackViaEdge({ event_type: "page_view", page });
 };
 
 /** Track a section becoming visible (engagement) */
@@ -58,24 +73,19 @@ export const trackSectionDuration = async (
   }
 };
 
-/** Track a click event (CTA, product card, link, etc.) */
+/** Track a click event (CTA, product card, link, etc.) — geo-enriched */
 export const trackClick = async (
   clickType: string,
   targetId: string,
   page = "/home",
   metadata?: Record<string, any>
 ) => {
-  try {
-    await (supabase as any).from("page_analytics").insert({
-      event_type: "click",
-      page,
-      section_id: clickType,
-      session_id: getSessionId(),
-      metadata: { target_id: targetId, click_type: clickType, ...metadata },
-    });
-  } catch {
-    // silently fail
-  }
+  await trackViaEdge({
+    event_type: "click",
+    page,
+    section_id: clickType,
+    metadata: { target_id: targetId, click_type: clickType, ...metadata },
+  });
 };
 
 /**
