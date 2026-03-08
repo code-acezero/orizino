@@ -40,6 +40,9 @@ const AdminCategories = () => {
     },
   });
 
+  const parentCategories = categories.filter((c) => !c.parent_id);
+  const getChildren = (parentId: string) => categories.filter((c) => c.parent_id === parentId);
+
   // Analytics: fetch products + order_items with category info
   const { data: products = [] } = useQuery({
     queryKey: ["category-analytics-products"],
@@ -60,20 +63,15 @@ const AdminCategories = () => {
   });
 
   const categoryAnalytics = useMemo(() => {
-    // Build product→category map
     const prodCatMap = new Map<string, string>();
     products.forEach((p: any) => { if (p.category_id) prodCatMap.set(p.id, p.category_id); });
-
-    // Aggregate
     const map = new Map<string, { productCount: number; orderCount: number; revenue: number }>();
-    // Count products per category
     products.forEach((p: any) => {
       if (!p.category_id) return;
       const entry = map.get(p.category_id) || { productCount: 0, orderCount: 0, revenue: 0 };
       entry.productCount++;
       map.set(p.category_id, entry);
     });
-    // Count orders + revenue per category
     orderItems.forEach((oi: any) => {
       const catId = prodCatMap.get(oi.product_id);
       if (!catId) return;
@@ -87,7 +85,6 @@ const AdminCategories = () => {
 
   const analyticsRows = useMemo(() => {
     const rows = parentCategories.map((c) => {
-      // Sum parent + children stats
       const children = getChildren(c.id);
       const allIds = [c.id, ...children.map((ch) => ch.id)];
       const stats = allIds.reduce(
@@ -114,8 +111,6 @@ const AdminCategories = () => {
   };
 
   const CHART_COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(262 83% 58%)", "hsl(330 81% 60%)", "hsl(200 95% 50%)", "hsl(150 60% 45%)", "hsl(40 95% 55%)", "hsl(0 72% 51%)"];
-
-  const getChildren = (parentId: string) => categories.filter((c) => c.parent_id === parentId);
 
   // Filter by search
   const filteredParents = parentCategories.filter((c) => {
