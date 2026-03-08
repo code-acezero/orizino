@@ -33,7 +33,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     <motion.div
       whileHover={{ y: -4 }}
       transition={{ duration: 0.3 }}
-      className="group glass rounded-3xl overflow-hidden"
+      className={`group glass rounded-3xl overflow-hidden ${className}`}
     >
       <Link to={`/product/${slug}`} className="block">
         {/* Image */}
