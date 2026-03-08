@@ -432,7 +432,7 @@ const AdminCategories = () => {
                     <TableBody>
                       {analyticsRows.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={4} className="text-center text-muted-foreground py-8">No categories yet</TableCell>
+                          <TableCell colSpan={5} className="text-center text-muted-foreground py-8">No categories yet</TableCell>
                         </TableRow>
                       ) : (
                         analyticsRows.map((row, i) => (
