@@ -191,7 +191,7 @@ const LiveActivityFeed = () => {
           ) : (
             <div className="space-y-1">
               <AnimatePresence initial={false}>
-                {events.map((event) => {
+                {filteredEvents.map((event) => {
                   const cfg = eventConfig[event.event_type] || eventConfig.page_view;
                   const Icon = cfg.icon;
                   return (
