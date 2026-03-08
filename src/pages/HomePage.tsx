@@ -112,7 +112,7 @@ const HomePage: React.FC = () => {
       return data;
     },
     enabled: sectionCatIds.length > 0,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
   });
 
   const { data: sectionProducts = {} } = useQuery({
