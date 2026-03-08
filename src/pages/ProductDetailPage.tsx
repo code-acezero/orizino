@@ -20,6 +20,7 @@ import StickyAddToCart from "@/components/product/StickyAddToCart";
 import VariantSelector from "@/components/product/VariantSelector";
 import VariantComparison from "@/components/product/VariantComparison";
 import NotifyWhenAvailable from "@/components/product/NotifyWhenAvailable";
+import { Badge } from "@/components/ui/badge";
 
 type LayoutStyle = "minimal" | "premium" | "editorial";
 
