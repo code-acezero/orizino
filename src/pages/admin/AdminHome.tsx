@@ -660,227 +660,260 @@ const AdminHome = () => {
           <HomepageAnalytics />
         </TabsContent>
 
-        {/* Section Order */}
+        {/* Section Order with Sub-tabs */}
         <TabsContent value="section-order">
-          <Card className="glass">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                  <Layers className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle>Homepage Section Order</CardTitle>
-                  <p className="text-sm text-muted-foreground">Drag to rearrange the order of sections on the homepage. Sale banners appear relative to the sections they're assigned to.</p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {sectionOrder.map((section, idx) => {
-                const settingsCfg = sectionSettingsConfig[section.id] || { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: "" };
-                const hasSettings = settingsCfg.hasTitle || settingsCfg.hasSubtitle || settingsCfg.hasProductCount || settingsCfg.hasColumns || settingsCfg.hasViewAllLink || !!settingsCfg.hasFeaturedToggle;
-                const isExpanded = expandedSection === section.id;
+          <Tabs value={sectionSubTab} onValueChange={setSectionSubTab}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="order">Section Order</TabsTrigger>
+              <TabsTrigger value="feat-categories">Featured Categories</TabsTrigger>
+              <TabsTrigger value="feat-products">Featured Products</TabsTrigger>
+            </TabsList>
 
-                const updateSectionField = (field: string, value: any) => {
-                  setSectionOrder(sectionOrder.map((s) => s.id === section.id ? { ...s, [field]: value } : s));
-                };
-
-                return (
-                  <div key={section.id} className="rounded-xl border border-border bg-secondary/20 transition-all overflow-hidden">
-                    <div
-                      {...getSectionOrderDragProps(idx)}
-                      className={`flex items-center gap-4 p-4 cursor-grab active:cursor-grabbing transition-all ${secOverIdx === idx && secDragIdx !== idx ? "border-primary bg-primary/10 scale-[1.01]" : ""}`}
-                    >
-                      <GripVertical className="w-5 h-5 text-muted-foreground shrink-0" />
-                      <span className="text-2xl">{section.icon}</span>
-                      <div className="flex-1">
-                        <p className="font-medium text-foreground">{section.title || section.label}</p>
-                        <p className="text-xs text-muted-foreground">Position {idx + 1}{section.subtitle ? ` · ${section.subtitle}` : ""}</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        {hasSettings && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={(e) => { e.stopPropagation(); setExpandedSection(isExpanded ? null : section.id); }}
-                          >
-                            <Settings2 className={`w-4 h-4 transition-transform ${isExpanded ? "text-primary" : "text-muted-foreground"}`} />
-                          </Button>
-                        )}
-                        <div className="flex flex-col items-end gap-1">
-                          <Label htmlFor={`visible-${section.id}`} className="text-xs font-medium">
-                            {(section as any).visible !== false ? "Visible" : "Hidden"}
-                          </Label>
-                          <Switch
-                            id={`visible-${section.id}`}
-                            checked={(section as any).visible !== false}
-                            onCheckedChange={(checked) => updateSectionField("visible", checked)}
-                          />
-                        </div>
-                      </div>
+            {/* Sub-tab: Section Order */}
+            <TabsContent value="order">
+              <Card className="glass">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                      <Layers className="w-5 h-5 text-primary" />
                     </div>
+                    <div>
+                      <CardTitle>Homepage Section Order</CardTitle>
+                      <p className="text-sm text-muted-foreground">Drag to rearrange the order of sections on the homepage.</p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {sectionOrder.map((section, idx) => {
+                    const settingsCfg = sectionSettingsConfig[section.id] || { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false };
+                    const hasSettings = settingsCfg.hasTitle || settingsCfg.hasSubtitle || settingsCfg.hasProductCount || settingsCfg.hasColumns || settingsCfg.hasViewAllLink;
+                    const isExpanded = expandedSection === section.id;
 
-                    {isExpanded && hasSettings && (
-                      <div className="px-4 pb-4 pt-2 border-t border-border/50 space-y-4 bg-secondary/10">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {settingsCfg.hasTitle && (
-                            <div className="space-y-1.5">
-                              <Label className="text-xs">Section Title</Label>
-                              <Input
-                                value={section.title || ""}
-                                onChange={(e) => updateSectionField("title", e.target.value)}
-                                placeholder={section.label}
-                                className="h-9"
-                              />
-                            </div>
-                          )}
-                          {settingsCfg.hasSubtitle && (
-                            <div className="space-y-1.5">
-                              <Label className="text-xs">Subtitle</Label>
-                              <Input
-                                value={section.subtitle || ""}
-                                onChange={(e) => updateSectionField("subtitle", e.target.value)}
-                                placeholder="Optional subtitle"
-                                className="h-9"
-                              />
-                            </div>
-                          )}
-                          {settingsCfg.hasProductCount && (
-                            <div className="space-y-1.5">
-                              <Label className="text-xs">Product Count</Label>
-                              <Input
-                                type="number"
-                                min={1}
-                                max={24}
-                                value={section.product_count || 8}
-                                onChange={(e) => updateSectionField("product_count", parseInt(e.target.value) || 8)}
-                                className="h-9"
-                              />
-                            </div>
-                          )}
-                          {settingsCfg.hasColumns && (
-                            <div className="space-y-1.5">
-                              <Label className="text-xs">Columns (Desktop)</Label>
-                              <Select value={String(section.columns || 4)} onValueChange={(v) => updateSectionField("columns", parseInt(v))}>
-                                <SelectTrigger className="h-9">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="2">2 Columns</SelectItem>
-                                  <SelectItem value="3">3 Columns</SelectItem>
-                                  <SelectItem value="4">4 Columns</SelectItem>
-                                  <SelectItem value="5">5 Columns</SelectItem>
-                                  <SelectItem value="6">6 Columns</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          )}
-                          {settingsCfg.hasViewAllLink && (
-                            <div className="space-y-1.5 md:col-span-2">
-                              <Label className="text-xs">"View All" Link</Label>
-                              <Input
-                                value={section.view_all_link || ""}
-                                onChange={(e) => updateSectionField("view_all_link", e.target.value)}
-                                placeholder="/shop"
-                                className="h-9"
-                              />
-                            </div>
-                          )}
-                        </div>
+                    const updateSectionField = (field: string, value: any) => {
+                      setSectionOrder(sectionOrder.map((s) => s.id === section.id ? { ...s, [field]: value } : s));
+                    };
 
-                        {/* Featured Categories inline management */}
-                        {settingsCfg.hasFeaturedToggle === "categories" && (
-                          <div className="space-y-3">
-                            <div className="grid grid-cols-3 gap-2">
-                              <div className="p-2 rounded-lg bg-secondary/30 border border-border/50 text-center">
-                                <p className="text-lg font-bold text-foreground">{localCategories.length}</p>
-                                <p className="text-[9px] text-muted-foreground">Total</p>
-                              </div>
-                              <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-center">
-                                <p className="text-lg font-bold text-primary">{localCategories.filter(c => c.is_featured).length}</p>
-                                <p className="text-[9px] text-muted-foreground">Featured</p>
-                              </div>
-                              <div className="p-2 rounded-lg bg-secondary/30 border border-border/50 text-center">
-                                <p className="text-lg font-bold text-muted-foreground">{localCategories.filter(c => !c.is_featured).length}</p>
-                                <p className="text-[9px] text-muted-foreground">Hidden</p>
-                              </div>
-                            </div>
-                            <div className="relative">
-                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                              <Input value={featCatSearch} onChange={(e) => setFeatCatSearch(e.target.value)} placeholder="Search categories..." className="pl-8 h-8 text-xs" />
-                            </div>
-                            <div className="space-y-1.5 max-h-64 overflow-y-auto">
-                              {localCategories
-                                .filter(cat => !featCatSearch || cat.name.toLowerCase().includes(featCatSearch.toLowerCase()))
-                                .map((cat, catIdx) => (
-                                  <div key={cat.id} {...getFeatCatDragProps(catIdx)} className={`flex items-center gap-2.5 p-2 rounded-lg border transition-all cursor-grab active:cursor-grabbing ${featCatDragIdx === catIdx ? "opacity-50 scale-95" : featCatOverIdx === catIdx ? "ring-2 ring-primary/40 bg-primary/5" : cat.is_featured ? "border-primary/20 bg-primary/5" : "border-border/30 bg-secondary/10"}`}>
-                                    <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
-                                    <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">{catIdx + 1}</div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-xs font-medium text-foreground truncate">{cat.name}</p>
-                                    </div>
-                                    <Badge variant={cat.is_featured ? "default" : "outline"} className="text-[9px] shrink-0">{cat.is_featured ? "Featured" : "Hidden"}</Badge>
-                                    <Switch checked={cat.is_featured} onCheckedChange={(v) => toggleCatFeatured.mutate({ id: cat.id, is_featured: v })} className="scale-75" />
-                                  </div>
-                                ))}
+                    return (
+                      <div key={section.id} className="rounded-xl border border-border bg-secondary/20 transition-all overflow-hidden">
+                        <div
+                          {...getSectionOrderDragProps(idx)}
+                          className={`flex items-center gap-4 p-4 cursor-grab active:cursor-grabbing transition-all ${secOverIdx === idx && secDragIdx !== idx ? "border-primary bg-primary/10 scale-[1.01]" : ""}`}
+                        >
+                          <GripVertical className="w-5 h-5 text-muted-foreground shrink-0" />
+                          <span className="text-2xl">{section.icon}</span>
+                          <div className="flex-1">
+                            <p className="font-medium text-foreground">{section.title || section.label}</p>
+                            <p className="text-xs text-muted-foreground">Position {idx + 1}{section.subtitle ? ` · ${section.subtitle}` : ""}</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {hasSettings && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={(e) => { e.stopPropagation(); setExpandedSection(isExpanded ? null : section.id); }}
+                              >
+                                <Settings2 className={`w-4 h-4 transition-transform ${isExpanded ? "text-primary" : "text-muted-foreground"}`} />
+                              </Button>
+                            )}
+                            <div className="flex flex-col items-end gap-1">
+                              <Label htmlFor={`visible-${section.id}`} className="text-xs font-medium">
+                                {(section as any).visible !== false ? "Visible" : "Hidden"}
+                              </Label>
+                              <Switch
+                                id={`visible-${section.id}`}
+                                checked={(section as any).visible !== false}
+                                onCheckedChange={(checked) => updateSectionField("visible", checked)}
+                              />
                             </div>
                           </div>
-                        )}
+                        </div>
 
-                        {/* Featured Products inline management */}
-                        {settingsCfg.hasFeaturedToggle === "products" && (
-                          <div className="space-y-3">
-                            <div className="grid grid-cols-3 gap-2">
-                              <div className="p-2 rounded-lg bg-secondary/30 border border-border/50 text-center">
-                                <p className="text-lg font-bold text-foreground">{localProducts.length}</p>
-                                <p className="text-[9px] text-muted-foreground">Total</p>
-                              </div>
-                              <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-center">
-                                <p className="text-lg font-bold text-primary">{localProducts.filter(p => p.is_featured).length}</p>
-                                <p className="text-[9px] text-muted-foreground">Featured</p>
-                              </div>
-                              <div className="p-2 rounded-lg bg-secondary/30 border border-border/50 text-center">
-                                <p className="text-lg font-bold text-muted-foreground">{localProducts.filter(p => !p.is_featured).length}</p>
-                                <p className="text-[9px] text-muted-foreground">Not Featured</p>
-                              </div>
-                            </div>
-                            <div className="relative">
-                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                              <Input value={featProdSearch} onChange={(e) => setFeatProdSearch(e.target.value)} placeholder="Search products..." className="pl-8 h-8 text-xs" />
-                            </div>
-                            <div className="space-y-1.5 max-h-64 overflow-y-auto">
-                              {localProducts
-                                .filter(prod => !featProdSearch || prod.name.toLowerCase().includes(featProdSearch.toLowerCase()))
-                                .map((prod, prodIdx) => (
-                                  <div key={prod.id} {...getFeatProdDragProps(prodIdx)} className={`flex items-center gap-2.5 p-2 rounded-lg border transition-all cursor-grab active:cursor-grabbing ${featProdDragIdx === prodIdx ? "opacity-50 scale-95" : featProdOverIdx === prodIdx ? "ring-2 ring-primary/40 bg-primary/5" : prod.is_featured ? "border-primary/20 bg-primary/5" : "border-border/30 bg-secondary/10"}`}>
-                                    <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
-                                    <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">{prodIdx + 1}</div>
-                                    {prod.thumbnail ? (
-                                      <img src={prod.thumbnail} alt="" className="w-7 h-7 object-cover rounded border border-border/30 shrink-0" />
-                                    ) : (
-                                      <div className="w-7 h-7 rounded bg-secondary/40 flex items-center justify-center shrink-0"><Star className="w-3 h-3 text-muted-foreground/30" /></div>
-                                    )}
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-xs font-medium text-foreground truncate">{prod.name}</p>
-                                      <p className="text-[9px] text-muted-foreground">${Number(prod.price).toFixed(2)}</p>
-                                    </div>
-                                    <Badge variant={prod.is_featured ? "default" : "outline"} className="text-[9px] shrink-0">{prod.is_featured ? "Featured" : "No"}</Badge>
-                                    <Switch checked={prod.is_featured} onCheckedChange={(v) => toggleProdFeatured.mutate({ id: prod.id, is_featured: v })} className="scale-75" />
-                                  </div>
-                                ))}
+                        {isExpanded && hasSettings && (
+                          <div className="px-4 pb-4 pt-2 border-t border-border/50 space-y-4 bg-secondary/10">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {settingsCfg.hasTitle && (
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs">Section Title</Label>
+                                  <Input
+                                    value={section.title || ""}
+                                    onChange={(e) => updateSectionField("title", e.target.value)}
+                                    placeholder={section.label}
+                                    className="h-9"
+                                  />
+                                </div>
+                              )}
+                              {settingsCfg.hasSubtitle && (
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs">Subtitle</Label>
+                                  <Input
+                                    value={section.subtitle || ""}
+                                    onChange={(e) => updateSectionField("subtitle", e.target.value)}
+                                    placeholder="Optional subtitle"
+                                    className="h-9"
+                                  />
+                                </div>
+                              )}
+                              {settingsCfg.hasProductCount && (
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs">Product Count</Label>
+                                  <Input
+                                    type="number"
+                                    min={1}
+                                    max={24}
+                                    value={section.product_count || 8}
+                                    onChange={(e) => updateSectionField("product_count", parseInt(e.target.value) || 8)}
+                                    className="h-9"
+                                  />
+                                </div>
+                              )}
+                              {settingsCfg.hasColumns && (
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs">Columns (Desktop)</Label>
+                                  <Select value={String(section.columns || 4)} onValueChange={(v) => updateSectionField("columns", parseInt(v))}>
+                                    <SelectTrigger className="h-9">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="2">2 Columns</SelectItem>
+                                      <SelectItem value="3">3 Columns</SelectItem>
+                                      <SelectItem value="4">4 Columns</SelectItem>
+                                      <SelectItem value="5">5 Columns</SelectItem>
+                                      <SelectItem value="6">6 Columns</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              )}
+                              {settingsCfg.hasViewAllLink && (
+                                <div className="space-y-1.5 md:col-span-2">
+                                  <Label className="text-xs">"View All" Link</Label>
+                                  <Input
+                                    value={section.view_all_link || ""}
+                                    onChange={(e) => updateSectionField("view_all_link", e.target.value)}
+                                    placeholder="/shop"
+                                    className="h-9"
+                                  />
+                                </div>
+                              )}
                             </div>
                           </div>
                         )}
                       </div>
-                    )}
+                    );
+                  })}
+                  <Button className="w-full mt-4" onClick={() => saveSectionOrder.mutate()} disabled={saveSectionOrder.isPending}>
+                    {saveSectionOrder.isPending ? "Saving..." : "Save Section Order"}
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Sub-tab: Featured Categories */}
+            <TabsContent value="feat-categories">
+              <Card className="glass">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">🏷️</div>
+                    <div>
+                      <CardTitle>Featured Categories</CardTitle>
+                      <p className="text-sm text-muted-foreground">Toggle and reorder which categories are featured on the homepage.</p>
+                    </div>
                   </div>
-                );
-              })}
-              <Button className="w-full mt-4" onClick={() => saveSectionOrder.mutate()} disabled={saveSectionOrder.isPending}>
-                {saveSectionOrder.isPending ? "Saving..." : "Save Section Order"}
-              </Button>
-            </CardContent>
-          </Card>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="p-3 rounded-lg bg-secondary/30 border border-border/50 text-center">
+                      <p className="text-2xl font-bold text-foreground">{localCategories.length}</p>
+                      <p className="text-xs text-muted-foreground">Total</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-center">
+                      <p className="text-2xl font-bold text-primary">{localCategories.filter(c => c.is_featured).length}</p>
+                      <p className="text-xs text-muted-foreground">Featured</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-secondary/30 border border-border/50 text-center">
+                      <p className="text-2xl font-bold text-muted-foreground">{localCategories.filter(c => !c.is_featured).length}</p>
+                      <p className="text-xs text-muted-foreground">Hidden</p>
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input value={featCatSearch} onChange={(e) => setFeatCatSearch(e.target.value)} placeholder="Search categories..." className="pl-9" />
+                  </div>
+                  <div className="space-y-2">
+                    {localCategories
+                      .filter(cat => !featCatSearch || cat.name.toLowerCase().includes(featCatSearch.toLowerCase()))
+                      .map((cat, catIdx) => (
+                        <div key={cat.id} {...getFeatCatDragProps(catIdx)} className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-grab active:cursor-grabbing ${featCatDragIdx === catIdx ? "opacity-50 scale-95" : featCatOverIdx === catIdx ? "ring-2 ring-primary/40 bg-primary/5" : cat.is_featured ? "border-primary/20 bg-primary/5" : "border-border/30 bg-secondary/10"}`}>
+                          <GripVertical className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                          <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">{catIdx + 1}</div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{cat.name}</p>
+                          </div>
+                          <Badge variant={cat.is_featured ? "default" : "outline"} className="text-[10px] shrink-0">{cat.is_featured ? "Featured" : "Hidden"}</Badge>
+                          <Switch checked={cat.is_featured} onCheckedChange={(v) => toggleCatFeatured.mutate({ id: cat.id, is_featured: v })} />
+                        </div>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Sub-tab: Featured Products */}
+            <TabsContent value="feat-products">
+              <Card className="glass">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">🌟</div>
+                    <div>
+                      <CardTitle>Featured Products</CardTitle>
+                      <p className="text-sm text-muted-foreground">Toggle and reorder which products are featured on the homepage.</p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="p-3 rounded-lg bg-secondary/30 border border-border/50 text-center">
+                      <p className="text-2xl font-bold text-foreground">{localProducts.length}</p>
+                      <p className="text-xs text-muted-foreground">Total</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-center">
+                      <p className="text-2xl font-bold text-primary">{localProducts.filter(p => p.is_featured).length}</p>
+                      <p className="text-xs text-muted-foreground">Featured</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-secondary/30 border border-border/50 text-center">
+                      <p className="text-2xl font-bold text-muted-foreground">{localProducts.filter(p => !p.is_featured).length}</p>
+                      <p className="text-xs text-muted-foreground">Not Featured</p>
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input value={featProdSearch} onChange={(e) => setFeatProdSearch(e.target.value)} placeholder="Search products..." className="pl-9" />
+                  </div>
+                  <div className="space-y-2">
+                    {localProducts
+                      .filter(prod => !featProdSearch || prod.name.toLowerCase().includes(featProdSearch.toLowerCase()))
+                      .map((prod, prodIdx) => (
+                        <div key={prod.id} {...getFeatProdDragProps(prodIdx)} className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-grab active:cursor-grabbing ${featProdDragIdx === prodIdx ? "opacity-50 scale-95" : featProdOverIdx === prodIdx ? "ring-2 ring-primary/40 bg-primary/5" : prod.is_featured ? "border-primary/20 bg-primary/5" : "border-border/30 bg-secondary/10"}`}>
+                          <GripVertical className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                          <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">{prodIdx + 1}</div>
+                          {prod.thumbnail ? (
+                            <img src={prod.thumbnail} alt="" className="w-8 h-8 object-cover rounded-lg border border-border/30 shrink-0" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-lg bg-secondary/40 flex items-center justify-center shrink-0"><Star className="w-3.5 h-3.5 text-muted-foreground/30" /></div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{prod.name}</p>
+                            <p className="text-xs text-muted-foreground">${Number(prod.price).toFixed(2)}</p>
+                          </div>
+                          <Badge variant={prod.is_featured ? "default" : "outline"} className="text-[10px] shrink-0">{prod.is_featured ? "Featured" : "No"}</Badge>
+                          <Switch checked={prod.is_featured} onCheckedChange={(v) => toggleProdFeatured.mutate({ id: prod.id, is_featured: v })} />
+                        </div>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         {/* Category Sections */}
