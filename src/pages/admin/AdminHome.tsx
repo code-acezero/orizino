@@ -785,8 +785,8 @@ const AdminHome = () => {
                             </div>
                           )}
                         </div>
+                      </div>
                     )}
-                  </div>
                 );
               })}
               <Button className="w-full mt-4" onClick={() => saveSectionOrder.mutate()} disabled={saveSectionOrder.isPending}>
