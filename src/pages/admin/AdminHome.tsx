@@ -204,14 +204,18 @@ const AdminHome = () => {
     { id: "category-sections", label: "Category Product Sections", icon: "📦", visible: true, title: "", subtitle: "", product_count: 8, columns: 4, view_all_link: "" },
     { id: "featured", label: "Featured Products", icon: "⭐", visible: true, title: "Featured Products", subtitle: "Handpicked just for you", product_count: 8, columns: 4, view_all_link: "/shop" },
     { id: "arrivals", label: "New Arrivals", icon: "✨", visible: true, title: "New Arrivals", subtitle: "Fresh drops just landed", product_count: 8, columns: 4, view_all_link: "/shop" },
+    { id: "featured-categories", label: "Featured Categories", icon: "🏷️", visible: true, title: "", subtitle: "", product_count: 0, columns: 0, view_all_link: "" },
+    { id: "featured-products", label: "Featured Products Selection", icon: "🌟", visible: true, title: "", subtitle: "", product_count: 0, columns: 0, view_all_link: "" },
   ];
 
-  const sectionSettingsConfig: Record<string, { hasTitle: boolean; hasSubtitle: boolean; hasProductCount: boolean; hasColumns: boolean; hasViewAllLink: boolean; hasFeaturedToggle: boolean }> = {
-    slider: { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: false },
-    categories: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: false, hasFeaturedToggle: true },
-    "category-sections": { hasTitle: false, hasSubtitle: false, hasProductCount: true, hasColumns: true, hasViewAllLink: false, hasFeaturedToggle: false },
-    featured: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true, hasFeaturedToggle: true },
-    arrivals: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true, hasFeaturedToggle: false },
+  const sectionSettingsConfig: Record<string, { hasTitle: boolean; hasSubtitle: boolean; hasProductCount: boolean; hasColumns: boolean; hasViewAllLink: boolean; hasFeaturedToggle: string }> = {
+    slider: { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: "" },
+    categories: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: false, hasFeaturedToggle: "" },
+    "category-sections": { hasTitle: false, hasSubtitle: false, hasProductCount: true, hasColumns: true, hasViewAllLink: false, hasFeaturedToggle: "" },
+    featured: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true, hasFeaturedToggle: "" },
+    arrivals: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true, hasFeaturedToggle: "" },
+    "featured-categories": { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: "categories" },
+    "featured-products": { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: "products" },
   };
 
   const [catSections, setCatSections] = useState<{ category_id: string; sort_order: number; product_count: number }[]>([]);
@@ -674,7 +678,7 @@ const AdminHome = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               {sectionOrder.map((section, idx) => {
-                const settingsCfg = sectionSettingsConfig[section.id] || { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: false };
+                const settingsCfg = sectionSettingsConfig[section.id] || { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: "" };
                 const hasSettings = Object.values(settingsCfg).some(Boolean);
                 const isExpanded = expandedSection === section.id;
 
@@ -786,9 +790,9 @@ const AdminHome = () => {
                           )}
                         </div>
 
-                        {/* Featured toggle for categories/products */}
-                        {settingsCfg.hasFeaturedToggle && section.id === "categories" && (
-                          <div className="mt-4 border-t border-border/30 pt-4">
+                        {/* Featured Categories toggle */}
+                        {settingsCfg.hasFeaturedToggle === "categories" && (
+                          <div className="mt-4">
                             <Label className="text-xs font-semibold mb-2 block">Featured Categories</Label>
                             <p className="text-xs text-muted-foreground mb-3">Toggle which categories appear in the "Shop by Category" section.</p>
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
@@ -806,8 +810,9 @@ const AdminHome = () => {
                           </div>
                         )}
 
-                        {settingsCfg.hasFeaturedToggle && section.id === "featured" && (
-                          <div className="mt-4 border-t border-border/30 pt-4">
+                        {/* Featured Products toggle */}
+                        {settingsCfg.hasFeaturedToggle === "products" && (
+                          <div className="mt-4">
                             <Label className="text-xs font-semibold mb-2 block">Featured Products</Label>
                             <p className="text-xs text-muted-foreground mb-3">Toggle which products appear in the "Featured Products" section.</p>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-64 overflow-y-auto">
@@ -855,9 +860,13 @@ const AdminHome = () => {
             <CardContent className="space-y-3">
               {catSections.length === 0 && <p className="text-center text-muted-foreground py-8">No category sections added yet.</p>}
               {catSections.map((section, index) => (
-                <div key={index} {...getCatDragProps(index)} className={`flex items-center gap-3 p-3 rounded-xl border border-border bg-secondary/20 cursor-grab active:cursor-grabbing transition-colors ${catOverIdx === index && catDragIdx !== index ? "border-primary bg-primary/10" : ""}`}>
-                  <GripVertical className="w-4 h-4 text-muted-foreground shrink-0" />
-                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div key={index} {...getCatDragProps(index)} className={`rounded-xl border border-border bg-secondary/20 cursor-grab active:cursor-grabbing transition-colors p-4 ${catOverIdx === index && catDragIdx !== index ? "border-primary bg-primary/10" : ""}`}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <GripVertical className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <span className="text-sm font-medium text-foreground flex-1">{section.category_id ? getCatName(section.category_id) : "Select a category"}</span>
+                    <Button size="icon" variant="ghost" onClick={() => removeSection(index)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                       <Label className="text-xs">Category</Label>
                       <Select value={section.category_id} onValueChange={(v) => updateSection(index, "category_id", v)}>
@@ -877,7 +886,6 @@ const AdminHome = () => {
                       <Input type="number" value={section.product_count} onChange={(e) => updateSection(index, "product_count", Number(e.target.value))} min={1} max={20} />
                     </div>
                   </div>
-                  <Button size="icon" variant="ghost" onClick={() => removeSection(index)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                 </div>
               ))}
               {catSections.length > 0 && (
