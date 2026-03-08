@@ -799,6 +799,166 @@ const AdminHome = () => {
           </Card>
         </TabsContent>
 
+        {/* Category Sections */}
+        <TabsContent value="cat-sections">
+          <Card className="glass">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Home Category Product Sections</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">Choose which categories display their products on the home page.</p>
+                </div>
+                <Button onClick={addSection} size="sm" disabled={availableCategories.length === 0}>
+                  <Plus className="w-4 h-4 mr-1" />Add Section
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {catSections.length === 0 && <p className="text-center text-muted-foreground py-8">No category sections added yet.</p>}
+              {catSections.map((section, index) => (
+                <div key={index} {...getCatDragProps(index)} className={`rounded-xl border border-border bg-secondary/20 cursor-grab active:cursor-grabbing transition-colors p-4 ${catOverIdx === index && catDragIdx !== index ? "border-primary bg-primary/10" : ""}`}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <GripVertical className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <span className="text-sm font-medium text-foreground flex-1">{section.category_id ? getCatName(section.category_id) : "Select a category"}</span>
+                    <Button size="icon" variant="ghost" onClick={() => removeSection(index)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <Label className="text-xs">Category</Label>
+                      <Select value={section.category_id} onValueChange={(v) => updateSection(index, "category_id", v)}>
+                        <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                        <SelectContent>
+                          {section.category_id && <SelectItem value={section.category_id}>{getCatName(section.category_id)}</SelectItem>}
+                          {availableCategories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Position</Label>
+                      <Input type="number" value={section.sort_order} onChange={(e) => updateSection(index, "sort_order", Number(e.target.value))} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Products to Show</Label>
+                      <Input type="number" value={section.product_count} onChange={(e) => updateSection(index, "product_count", Number(e.target.value))} min={1} max={20} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {catSections.length > 0 && (
+                <Button className="w-full" onClick={() => saveCatSections.mutate(catSections)} disabled={saveCatSections.isPending}>
+                  {saveCatSections.isPending ? "Saving..." : "Save Category Sections"}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Sales */}
+        <TabsContent value="sales">
+          <Card className="glass">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center"><Tag className="w-5 h-5 text-accent" /></div>
+                  <div><CardTitle>Sale Banners</CardTitle><p className="text-sm text-muted-foreground">Add multiple customizable sale sections to the home page.</p></div>
+                </div>
+                <Button onClick={addSale} size="sm"><Plus className="w-4 h-4 mr-1" />Add Sale</Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {sales.length === 0 && <p className="text-center text-muted-foreground py-8">No sale sections added. Click "Add Sale" to create one.</p>}
+              {sales.map((sale, idx) => (
+                <div key={sale.id} {...getSaleDragProps(idx)} className={`border border-border rounded-2xl p-4 space-y-4 bg-secondary/10 cursor-grab active:cursor-grabbing transition-colors ${saleOverIdx === idx && saleDragIdx !== idx ? "border-primary bg-primary/10" : ""}`}>
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-foreground flex items-center gap-2">
+                      <GripVertical className="w-4 h-4 text-muted-foreground shrink-0" />
+                      {sale.custom_icon_url ? <img src={sale.custom_icon_url} className="w-6 h-6 object-contain" alt="" /> : <span className="text-xl">{sale.icon}</span>}
+                      Sale #{idx + 1}: {sale.title || "Untitled"}
+                    </h4>
+                    <div className="flex items-center gap-2">
+                      <Switch checked={sale.enabled} onCheckedChange={(v) => updateSale(sale.id, "enabled", v)} />
+                      <Button size="icon" variant="ghost" onClick={() => removeSale(sale.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div><Label>Title</Label><Input value={sale.title} onChange={(e) => updateSale(sale.id, "title", e.target.value)} /></div>
+                    <div><Label>Subtitle</Label><Input value={sale.subtitle} onChange={(e) => updateSale(sale.id, "subtitle", e.target.value)} /></div>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div><Label>Emoji Icon</Label><div className="flex flex-wrap gap-1 mt-1">{iconOptions.map((ic) => (<button key={ic} onClick={() => updateSale(sale.id, "icon", ic)} className={`w-8 h-8 rounded-lg text-lg flex items-center justify-center border transition-all ${sale.icon === ic ? "border-primary bg-primary/10" : "border-border hover:border-primary/30"}`}>{ic}</button>))}</div></div>
+                    <div><Label>Color</Label><div className="flex flex-wrap gap-1 mt-1">{colorOptions.map((c) => (<button key={c.value} onClick={() => updateSale(sale.id, "color", c.value)} className={`w-6 h-6 rounded-full border-2 transition-all ${sale.color === c.value ? "border-foreground scale-110" : "border-transparent"}`} style={{ background: c.value.startsWith("var") ? `hsl(var(--primary))` : `hsl(${c.value})` }} title={c.label} />))}</div></div>
+                    <div><Label>Sort Order</Label><Input type="number" value={sale.sort_order} onChange={(e) => updateSale(sale.id, "sort_order", Number(e.target.value))} /></div>
+                    <div><Label>Position</Label><Select value={sale.position} onValueChange={(v) => updateSale(sale.id, "position", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{positionOptions.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}</SelectContent></Select></div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div><Label className="flex items-center gap-1"><Image className="w-3 h-3" /> Custom Icon</Label><ImageUpload bucket="banners" folder="sale-icons" value={sale.custom_icon_url || ""} onUploaded={(url) => updateSale(sale.id, "custom_icon_url", url)} />{sale.custom_icon_url && <Button variant="ghost" size="sm" className="mt-1 text-xs" onClick={() => updateSale(sale.id, "custom_icon_url", "")}>Remove</Button>}</div>
+                    <div><Label className="flex items-center gap-1"><Image className="w-3 h-3" /> Banner Image</Label><ImageUpload bucket="banners" folder="sale-banners" value={sale.banner_image || ""} onUploaded={(url) => updateSale(sale.id, "banner_image", url)} />{sale.banner_image && <Button variant="ghost" size="sm" className="mt-1 text-xs" onClick={() => updateSale(sale.id, "banner_image", "")}>Remove</Button>}</div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><Label>Button Text</Label><Input value={sale.button_text} onChange={(e) => updateSale(sale.id, "button_text", e.target.value)} /></div>
+                    <div><Label>Button Link</Label><Input value={sale.button_link} onChange={(e) => updateSale(sale.id, "button_link", e.target.value)} /></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><Label className="flex items-center gap-1"><Clock className="w-3 h-3" /> Starts At</Label><Input type="datetime-local" value={sale.starts_at} onChange={(e) => updateSale(sale.id, "starts_at", e.target.value)} /></div>
+                    <div><Label className="flex items-center gap-1"><Clock className="w-3 h-3" /> Ends At</Label><Input type="datetime-local" value={sale.ends_at} onChange={(e) => updateSale(sale.id, "ends_at", e.target.value)} /></div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-6">
+                    <div className="flex items-center gap-2"><Switch checked={sale.show_countdown} onCheckedChange={(v) => updateSale(sale.id, "show_countdown", v)} /><Label className="text-sm">Show Countdown</Label></div>
+                    <div className="flex items-center gap-2"><Switch checked={sale.trigger_popup} onCheckedChange={(v) => updateSale(sale.id, "trigger_popup", v)} /><Label className="text-sm flex items-center gap-1"><Bell className="w-3 h-3" /> Trigger Popup</Label></div>
+                    <div className="flex items-center gap-2"><Switch checked={sale.show_products} onCheckedChange={(v) => updateSale(sale.id, "show_products", v)} /><Label className="text-sm">Show Products</Label></div>
+                  </div>
+                  {sale.show_products && (
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1"><Select value={sale.product_source} onValueChange={(v) => updateSale(sale.id, "product_source", v)}><SelectTrigger><SelectValue placeholder="Select source" /></SelectTrigger><SelectContent><SelectItem value="featured">Featured Products</SelectItem><SelectItem value="latest">Latest Products</SelectItem>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
+                      <div className="w-20"><Input type="number" value={sale.product_count} onChange={(e) => updateSale(sale.id, "product_count", Number(e.target.value))} min={1} max={12} /></div>
+                    </div>
+                  )}
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-2 block">Preview</Label>
+                    <div className="rounded-2xl p-5 relative overflow-hidden" style={sale.banner_image ? { backgroundImage: `url(${sale.banner_image})`, backgroundSize: "cover", backgroundPosition: "center" } : {}}>
+                      <div className="absolute inset-0 opacity-20" style={{ background: sale.color.startsWith("var") ? `hsl(var(--primary))` : `linear-gradient(135deg, hsl(${sale.color}), hsl(${sale.color} / 0.6))` }} />
+                      {sale.banner_image && <div className="absolute inset-0 bg-background/60" />}
+                      <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          {sale.custom_icon_url ? <img src={sale.custom_icon_url} className="w-10 h-10 object-contain" alt="" /> : <span className="text-2xl">{sale.icon}</span>}
+                          <div>
+                            <h4 className="text-lg font-bold font-display text-foreground">{sale.title || "Sale"}</h4>
+                            <p className="text-sm text-muted-foreground">{sale.subtitle || "Limited time"}</p>
+                            {sale.show_countdown && sale.ends_at && <p className="text-xs text-primary font-mono mt-1">⏱ Countdown will show here</p>}
+                          </div>
+                        </div>
+                        <span className="btn-pill font-semibold px-6 py-2 text-sm text-white" style={{ background: getSaleColor(sale) }}>{sale.button_text || "Shop Now"}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {sales.length > 0 && (
+                <Button className="w-full" onClick={() => saveSales.mutate()} disabled={saveSales.isPending}>{saveSales.isPending ? "Saving..." : "Save All Sales"}</Button>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* New Arrivals */}
+        <TabsContent value="new-arrivals">
+          <Card className="glass">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center"><Sparkles className="w-5 h-5 text-primary" /></div>
+                <div><CardTitle>New Arrivals Section</CardTitle><p className="text-sm text-muted-foreground">Show the latest added products on the home page.</p></div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between"><Label>Show New Arrivals</Label><Switch checked={newArrivals.enabled} onCheckedChange={(v) => setNewArrivals({ ...newArrivals, enabled: v })} /></div>
+              <div><Label>Title</Label><Input value={newArrivals.title} onChange={(e) => setNewArrivals({ ...newArrivals, title: e.target.value })} /></div>
+              <div><Label>Subtitle</Label><Input value={newArrivals.subtitle} onChange={(e) => setNewArrivals({ ...newArrivals, subtitle: e.target.value })} /></div>
+              <div><Label>Number of Products</Label><Input type="number" value={newArrivals.product_count} onChange={(e) => setNewArrivals({ ...newArrivals, product_count: Number(e.target.value) })} min={1} max={20} /></div>
+              <Button className="w-full" onClick={() => saveNewArrivals.mutate()} disabled={saveNewArrivals.isPending}>{saveNewArrivals.isPending ? "Saving..." : "Save New Arrivals"}</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Layout & Style */}
         <TabsContent value="layout">
           {/* Color Theme Picker */}
