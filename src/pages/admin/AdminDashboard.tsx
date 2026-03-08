@@ -10,6 +10,7 @@ import {
   BarChart3, Activity, Layers, Filter, AlertTriangle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import DeviceBrowserBreakdown from "@/components/admin/DeviceBrowserBreakdown";
 import { format, subDays, startOfDay, isAfter, differenceInDays } from "date-fns";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
