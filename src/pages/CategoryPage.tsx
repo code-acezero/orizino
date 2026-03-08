@@ -43,6 +43,20 @@ const CategoryPage: React.FC = () => {
     enabled: !!slug,
   });
 
+  // Fetch parent category for breadcrumbs
+  const { data: parentCategory } = useQuery({
+    queryKey: ["parent-category", category?.parent_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("categories")
+        .select("name, slug")
+        .eq("id", category!.parent_id!)
+        .single();
+      return data;
+    },
+    enabled: !!category?.parent_id,
+  });
+
   // Apply SEO metadata for category page
   useCategorySeoMeta(category);
 
