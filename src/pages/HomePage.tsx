@@ -441,7 +441,7 @@ const HomePage: React.FC = () => {
                 {featuredSubtitle && <p className="text-muted-foreground mt-1">{featuredSubtitle}</p>}
               </div>
               {layout.section_title_align !== "center" && (
-                <a href={featuredLink} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+                <a href={featuredLink} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors" onClick={() => trackClick("view_all", "featured", "/home")}>View All</a>
               )}
             </motion.div>
             <div className={`grid grid-cols-2 md:grid-cols-3 ${sectionCols} gap-4`}>
