@@ -8,6 +8,7 @@ import { useCategorySeoMeta } from "@/hooks/use-category-seo-meta";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 const sortOptions = [
   { label: "Newest", value: "newest" },
@@ -123,7 +124,9 @@ const CategoryPage: React.FC = () => {
   return (
     <div className="min-h-screen pb-20 lg:pb-0">
       <Navbar />
-
+      <div className="container mx-auto px-4 pt-4">
+        <Breadcrumbs items={[{ label: "Home", href: "/home" }, { label: "Shop", href: "/shop" }, { label: category.name }]} className="mb-2" />
+      </div>
       {/* Banner Section with fading shadow */}
       <div className="relative w-full overflow-hidden" style={{ minHeight: "260px", maxHeight: "400px" }}>
         {/* Banner content */}

@@ -10,6 +10,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useProductSeoMeta } from "@/hooks/use-product-seo-meta";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -140,6 +141,16 @@ const ProductDetailPage: React.FC = () => {
     <div className="min-h-screen">
       <Navbar />
       <main className="container mx-auto px-4 py-8">
+        <Breadcrumbs
+          items={[
+            { label: "Home", href: "/home" },
+            ...(product.categories
+              ? [{ label: (product.categories as any).name, href: `/categories/${(product.categories as any).slug}` }]
+              : []),
+            { label: product.name },
+          ]}
+          className="mb-6"
+        />
         <div className="grid md:grid-cols-2 gap-10">
           {/* Image Gallery */}
           <div>

@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 import catElectronics from "@/assets/icons/cat-electronics.png";
 import catFashion from "@/assets/icons/cat-fashion.png";
@@ -128,6 +129,7 @@ const ShopPage: React.FC = () => {
     <div className="min-h-screen pb-20 lg:pb-0">
       <Navbar />
       <main className="container mx-auto px-4 py-8">
+        <Breadcrumbs items={[{ label: "Home", href: "/home" }, { label: "Shop" }]} className="mb-4" />
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
