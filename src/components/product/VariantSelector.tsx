@@ -11,6 +11,7 @@ interface Variant {
   stock_quantity: number;
   price_override: number | null;
   is_active: boolean;
+  image_url: string | null;
 }
 
 interface VariantSelectorProps {
