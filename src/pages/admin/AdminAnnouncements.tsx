@@ -21,6 +21,7 @@ import {
   AlertTriangle, Info, Zap, Clock, MousePointerClick, ScrollText,
   ArrowDown, Maximize, PanelBottom, SlidersHorizontal, Eye,
 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 
 /* ── Constants ── */
@@ -518,10 +519,22 @@ const AdminAnnouncements = () => {
                           <TableCell className="text-muted-foreground text-xs">
                             {format(new Date(n.created_at), "MMM dd, yyyy")}
                           </TableCell>
-                          <TableCell>
-                            <Button size="icon" variant="ghost" onClick={() => deleteNotification.mutate(n.id)}>
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
+                           <TableCell>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="icon" variant="ghost"><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete announcement?</AlertDialogTitle>
+                                  <AlertDialogDescription>This will permanently delete "{n.title}". This action cannot be undone.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deleteNotification.mutate(n.id)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </TableCell>
                         </TableRow>
                       );
@@ -576,9 +589,21 @@ const AdminAnnouncements = () => {
                       <Button size="sm" variant="ghost" onClick={() => duplicatePopup(p)}>
                         <Plus className="w-3 h-3" />
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => deletePopup.mutate(p.id)}>
-                        <Trash2 className="w-3 h-3 text-destructive" />
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="ghost"><Trash2 className="w-3 h-3 text-destructive" /></Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete popup?</AlertDialogTitle>
+                            <AlertDialogDescription>This will permanently delete "{p.title}". This action cannot be undone.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deletePopup.mutate(p.id)}>Delete</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </CardContent>
                 </Card>
