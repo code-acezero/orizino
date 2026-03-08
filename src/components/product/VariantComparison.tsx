@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { cn } from "@/lib/utils";
-import { Check, X, ArrowLeftRight, ChevronDown, ChevronUp, ShoppingCart, Loader2 } from "lucide-react";
+import { Check, X, ArrowLeftRight, ChevronDown, ChevronUp, ShoppingCart, Loader2, Minus, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
