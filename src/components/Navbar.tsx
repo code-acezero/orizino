@@ -10,13 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AuthModal from "@/components/AuthModal";
 import BottomNav from "@/components/BottomNav";
 
-const categories = [
-  { name: "Fashion", slug: "fashion", subs: ["Men", "Women", "Kids", "Shoes", "Bags"] },
-  { name: "Electronics", slug: "electronics", subs: ["Phones", "Laptops", "Audio", "Wearables"] },
-  { name: "Home Appliance", slug: "home-appliance", subs: ["Kitchen", "Cleaning", "Smart Home"] },
-  { name: "Accessories", slug: "accessories", subs: ["Watches", "Jewelry", "Sunglasses"] },
-  { name: "Groceries", slug: "groceries", subs: ["Fresh", "Pantry", "Beverages"] },
-];
+// Categories fetched from DB
 
 const Navbar: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -29,6 +23,19 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+
+  const { data: dbCategories = [] } = useQuery({
+    queryKey: ["nav-categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("categories").select("id, name, slug, parent_id").eq("is_active", true).order("sort_order");
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const parentCategories = dbCategories.filter((c) => !c.parent_id);
+  const getChildren = (parentId: string) => dbCategories.filter((c) => c.parent_id === parentId);
 
   const { data: unreadCount } = useQuery({
     queryKey: ["unread-notifications", user?.id],
@@ -80,31 +87,36 @@ const Navbar: React.FC = () => {
                   Home
                 </Link>
 
-                {categories.map((cat) => (
-                  <div key={cat.slug} className="relative"
-                    onMouseEnter={() => setHoveredCat(cat.slug)}
-                    onMouseLeave={() => setHoveredCat(null)}>
-                    <Link to={`/shop?category=${cat.slug}`}
-                      className="btn-pill text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
-                      {cat.name}<ChevronDown className="w-3 h-3" />
-                    </Link>
-                    <AnimatePresence>
-                      {hoveredCat === cat.slug && (
-                        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
-                          transition={{ duration: 0.2 }} className="absolute top-full left-0 pt-2 w-48">
-                          <div className="glass-strong rounded-2xl p-2">
-                            {cat.subs.map((sub) => (
-                              <Link key={sub} to={`/shop?category=${cat.slug}&sub=${sub.toLowerCase()}`}
-                                className="block px-4 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
-                                {sub}
-                              </Link>
-                            ))}
-                          </div>
-                        </motion.div>
+                {parentCategories.map((cat) => {
+                  const children = getChildren(cat.id);
+                  return (
+                    <div key={cat.slug} className="relative"
+                      onMouseEnter={() => setHoveredCat(cat.slug)}
+                      onMouseLeave={() => setHoveredCat(null)}>
+                      <Link to={`/shop?category=${cat.slug}`}
+                        className="btn-pill text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
+                        {cat.name}{children.length > 0 && <ChevronDown className="w-3 h-3" />}
+                      </Link>
+                      {children.length > 0 && (
+                        <AnimatePresence>
+                          {hoveredCat === cat.slug && (
+                            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
+                              transition={{ duration: 0.2 }} className="absolute top-full left-0 pt-2 w-48">
+                              <div className="glass-strong rounded-2xl p-2">
+                                {children.map((sub) => (
+                                  <Link key={sub.id} to={`/shop?category=${sub.slug}`}
+                                    className="block px-4 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
+                                    {sub.name}
+                                  </Link>
+                                ))}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       )}
-                    </AnimatePresence>
-                  </div>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Actions */}
@@ -203,7 +215,7 @@ const Navbar: React.FC = () => {
                     className="w-full px-4 py-3 rounded-2xl bg-secondary/50 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 mb-2" />
                 </form>
                 <Link to="/home" className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>Home</Link>
-                {categories.map((cat) => (
+                {parentCategories.map((cat) => (
                   <Link key={cat.slug} to={`/shop?category=${cat.slug}`} className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>
                     {cat.name}
                   </Link>
