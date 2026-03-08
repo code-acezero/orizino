@@ -55,7 +55,7 @@ const ProductDetailPage: React.FC = () => {
     },
     enabled: !!productCat?.parent_id,
   });
-  const { data: reviews } = useQuery<{ id: string; product_id: string; rating: number; title: string | null; comment: string | null; created_at: string }[]>({
+  const { data: reviews } = useQuery<{ id: string; product_id: string; rating: number; title: string | null; comment: string | null; created_at: string; is_approved?: boolean }[]>({
     queryKey: ["reviews", product?.id],
     queryFn: async () => {
       const { data } = await supabase
@@ -69,19 +69,27 @@ const ProductDetailPage: React.FC = () => {
     enabled: !!product?.id,
   });
 
-  // Fetch user's own review IDs to enable edit/delete
-  const { data: ownReviewIds } = useQuery<string[]>({
+  // Fetch user's own reviews (including pending unapproved ones)
+  const { data: ownReviews } = useQuery<{ id: string; product_id: string; rating: number; title: string | null; comment: string | null; created_at: string; is_approved: boolean }[]>({
     queryKey: ["own-reviews", product?.id],
     queryFn: async () => {
       const { data } = await supabase
         .from("reviews")
-        .select("id")
+        .select("id, product_id, rating, title, comment, created_at, is_approved")
         .eq("product_id", product!.id)
-        .eq("user_id", user!.id);
-      return (data || []).map((r) => r.id);
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false });
+      return (data || []) as any;
     },
     enabled: !!product?.id && !!user,
   });
+
+  // Merge: approved public reviews + user's pending reviews (deduplicated)
+  const ownReviewIds = new Set((ownReviews || []).map((r) => r.id));
+  const pendingOwnReviews = (ownReviews || []).filter((r) => !r.is_approved);
+  const mergedReviews = [...pendingOwnReviews, ...(reviews || [])].filter(
+    (r, i, arr) => arr.findIndex((x) => x.id === r.id) === i
+  );
 
   // Fetch related products from same category
   const { data: relatedProducts } = useQuery({

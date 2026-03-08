@@ -13,6 +13,7 @@ interface ReviewCardProps {
     title: string | null;
     comment: string | null;
     created_at: string;
+    is_approved?: boolean;
   };
   isOwn: boolean;
   productId: string;
