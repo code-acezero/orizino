@@ -197,7 +197,7 @@ const ProductDetailPage: React.FC = () => {
     toast({ title: "Added to cart!", description: `${product.name}${variantLabel ? ` (${variantLabel})` : ""} x${quantity}` });
   };
 
-  const addVariantToCart = async (variantId: string, variantLabel: string) => {
+  const addVariantToCart = async (variantId: string, variantLabel: string, qty: number = 1) => {
     if (!user) {
       toast({ title: "Please sign in", description: "You need to be logged in to add items to cart.", variant: "destructive" });
       return;
@@ -207,11 +207,11 @@ const ProductDetailPage: React.FC = () => {
       .from("cart_items").select("id, quantity").eq("user_id", user.id).eq("product_id", product.id).eq("variant_id", variantId);
     const { data: existing } = await query.maybeSingle();
     if (existing) {
-      await supabase.from("cart_items").update({ quantity: existing.quantity + 1 }).eq("id", existing.id);
+      await supabase.from("cart_items").update({ quantity: existing.quantity + qty }).eq("id", existing.id);
     } else {
-      await supabase.from("cart_items").insert({ user_id: user.id, product_id: product.id, quantity: 1, variant_id: variantId } as any);
+      await supabase.from("cart_items").insert({ user_id: user.id, product_id: product.id, quantity: qty, variant_id: variantId } as any);
     }
-    toast({ title: "Added to cart!", description: `${product.name}${variantLabel ? ` (${variantLabel})` : ""} x1` });
+    toast({ title: "Added to cart!", description: `${product.name}${variantLabel ? ` (${variantLabel})` : ""} x${qty}` });
   };
 
   const buyNow = async () => {
