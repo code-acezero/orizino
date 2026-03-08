@@ -11,7 +11,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Search, X, LayoutTemplate, Upload, Loader2, ImagePlus, Bell } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, X, LayoutTemplate, Upload, Loader2, ImagePlus, Bell, CheckCheck, Eye, EyeOff } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -53,6 +55,7 @@ const AdminProducts = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Record<string, any> | null>(null);
   const [activeMainTab, setActiveMainTab] = useState("list");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["admin-products"],
@@ -146,7 +149,41 @@ const AdminProducts = () => {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const bulkAction = useMutation({
+    mutationFn: async ({ ids, action }: { ids: string[]; action: "delete" | "activate" | "deactivate" }) => {
+      if (action === "delete") {
+        const { error } = await supabase.from("products").delete().in("id", ids);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("products").update({ is_active: action === "activate" }).in("id", ids);
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_, { ids, action }) => {
+      qc.invalidateQueries({ queryKey: ["admin-products"] });
+      setSelected(new Set());
+      toast.success(`${ids.length} product${ids.length > 1 ? "s" : ""} ${action === "delete" ? "deleted" : action === "activate" ? "activated" : "deactivated"}`);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const filtered = products.filter((p: any) => p.name.toLowerCase().includes(search.toLowerCase()));
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selected.size === filtered.length) setSelected(new Set());
+    else setSelected(new Set(filtered.map((p: any) => p.id)));
+  };
+
+  const allSelected = filtered.length > 0 && selected.size === filtered.length;
+  const someSelected = selected.size > 0;
 
   const openEdit = (product?: any) => {
     setEditing(
@@ -362,13 +399,99 @@ const AdminProducts = () => {
         <TabsContent value="list" className="space-y-4 mt-4">
           <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search products..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+            <Input placeholder="Search products..." value={search} onChange={(e) => { setSearch(e.target.value); setSelected(new Set()); }} className="pl-10" />
           </div>
+
+          {/* Bulk action bar */}
+          <AnimatePresence>
+            {someSelected && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="flex items-center gap-3 glass rounded-2xl px-4 py-3"
+              >
+                <span className="text-sm text-foreground font-medium">
+                  {selected.size} selected
+                </span>
+                <div className="flex gap-2 ml-auto">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="outline" className="gap-1.5" disabled={bulkAction.isPending}>
+                        <Eye className="w-4 h-4 text-primary" /> Activate
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Activate products?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will activate {selected.size} product{selected.size > 1 ? "s" : ""} and make them visible to customers.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => bulkAction.mutate({ ids: Array.from(selected), action: "activate" })}>
+                          Activate
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="outline" className="gap-1.5" disabled={bulkAction.isPending}>
+                        <EyeOff className="w-4 h-4" /> Deactivate
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Deactivate products?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will deactivate {selected.size} product{selected.size > 1 ? "s" : ""} and hide them from customers.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => bulkAction.mutate({ ids: Array.from(selected), action: "deactivate" })}>
+                          Deactivate
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="outline" className="gap-1.5 text-destructive hover:text-destructive" disabled={bulkAction.isPending}>
+                        <Trash2 className="w-4 h-4" /> Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete products?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete {selected.size} product{selected.size > 1 ? "s" : ""}. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => bulkAction.mutate({ ids: Array.from(selected), action: "delete" })}>
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <div className="rounded-lg border border-border overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} aria-label="Select all" />
+                  </TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Price</TableHead>
@@ -380,11 +503,14 @@ const AdminProducts = () => {
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
                 ) : filtered.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No products found</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No products found</TableCell></TableRow>
                 ) : filtered.map((p: any) => (
-                  <TableRow key={p.id}>
+                  <TableRow key={p.id} className={selected.has(p.id) ? "bg-primary/5" : ""}>
+                    <TableCell>
+                      <Checkbox checked={selected.has(p.id)} onCheckedChange={() => toggleSelect(p.id)} aria-label={`Select ${p.name}`} />
+                    </TableCell>
                     <TableCell className="font-medium">{p.name}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">{p.categories?.name || "—"}</TableCell>
                     <TableCell>${Number(p.price).toFixed(2)}</TableCell>
