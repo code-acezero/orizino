@@ -82,7 +82,12 @@ export const useCategorySeoMeta = (category: Category | undefined) => {
     setMeta("og:image:height", "630", "property");
     setMeta("og:type", "website", "property");
 
-    // Canonical URL
+    // Twitter Card
+    setMeta("twitter:card", "summary_large_image");
+    setMeta("twitter:title", title);
+    setMeta("twitter:description", description);
+    setMeta("twitter:image", ogImageUrl);
+
     if (typeof window !== "undefined") {
       setLink("canonical", `${window.location.origin}/categories/${category.slug}`);
     }

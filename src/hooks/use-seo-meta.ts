@@ -106,7 +106,14 @@ export const useSeoMeta = (pageId: string, defaultTitle: string) => {
     }
     setMeta("og:type", "website", "property");
 
-    // Canonical
+    // Twitter Card
+    setMeta("twitter:card", "summary_large_image");
+    setMeta("twitter:title", pageSeo.og_title || pageSeo.title || defaultTitle);
+    setMeta("twitter:description", pageSeo.og_description || pageSeo.description || "");
+    if (globalSeo.default_og_image) {
+      setMeta("twitter:image", globalSeo.default_og_image);
+    }
+
     if (pageSeo.canonical_url) {
       setLink("canonical", pageSeo.canonical_url);
     }
