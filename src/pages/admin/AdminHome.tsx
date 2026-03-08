@@ -231,6 +231,19 @@ const AdminHome = () => {
     }
   }, [layoutRow]);
 
+  useEffect(() => {
+    if (sectionOrderRow?.value) {
+      const val = sectionOrderRow.value as any;
+      const order = val?.value ?? val;
+      if (Array.isArray(order) && order.length > 0) {
+        // Merge saved order with defaults (in case new sections were added)
+        const merged = order.map((o: any) => defaultSectionOrder.find((d) => d.id === o.id) || o).filter(Boolean);
+        const missing = defaultSectionOrder.filter((d) => !order.some((o: any) => o.id === d.id));
+        setSectionOrder([...merged, ...missing]);
+      }
+    }
+  }, [sectionOrderRow]);
+
   const saveCatSections = useMutation({
     mutationFn: async (sections: typeof catSections) => {
       const jsonValue = { value: sections } as any;
