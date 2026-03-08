@@ -220,6 +220,7 @@ const AdminHome = () => {
   const [layoutConfig, setLayoutConfig] = useState<LayoutConfig>({ ...defaultLayoutConfig });
   const [sectionOrder, setSectionOrder] = useState(defaultSectionOrder);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedTheme, setSelectedTheme] = useState("default");
   const [selectedMode, setSelectedMode] = useState("dark");
 
@@ -477,7 +478,7 @@ const AdminHome = () => {
     <div className="space-y-6">
       <h1 className="text-3xl font-display font-bold">Home Page Management</h1>
 
-      <Tabs defaultValue="dashboard">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex-wrap">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -496,12 +497,12 @@ const AdminHome = () => {
             {/* Quick Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: "Visible Sections", value: sectionOrder.filter((s) => s.visible !== false).length, total: sectionOrder.length, icon: "👁️" },
-                { label: "Active Sales", value: sales.filter((s) => s.enabled).length, total: sales.length, icon: "🏷️" },
-                { label: "Category Sections", value: catSections.length, total: categories.length, icon: "📦" },
-                { label: "Featured Products", value: localProducts.filter((p) => p.is_featured).length, total: localProducts.length, icon: "⭐" },
+                { label: "Visible Sections", value: sectionOrder.filter((s) => s.visible !== false).length, total: sectionOrder.length, icon: "👁️", tab: "section-order" },
+                { label: "Active Sales", value: sales.filter((s) => s.enabled).length, total: sales.length, icon: "🏷️", tab: "sales" },
+                { label: "Category Sections", value: catSections.length, total: categories.length, icon: "📦", tab: "cat-sections" },
+                { label: "Featured Products", value: localProducts.filter((p) => p.is_featured).length, total: localProducts.length, icon: "⭐", tab: "products" },
               ].map((stat) => (
-                <Card key={stat.label} className="glass">
+                <Card key={stat.label} className="glass cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all" onClick={() => setActiveTab(stat.tab)}>
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{stat.icon}</span>
@@ -517,15 +518,16 @@ const AdminHome = () => {
 
             {/* Section Status */}
             <Card className="glass">
-              <CardHeader>
+              <CardHeader className="cursor-pointer hover:bg-primary/5 rounded-t-xl transition-all" onClick={() => setActiveTab("section-order")}>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
                     <Layout className="w-5 h-5 text-primary" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <CardTitle>Homepage Sections Status</CardTitle>
                     <p className="text-sm text-muted-foreground">Live view of all homepage sections and their current state</p>
                   </div>
+                  <span className="text-xs text-primary font-medium">Edit →</span>
                 </div>
               </CardHeader>
               <CardContent>
@@ -581,12 +583,13 @@ const AdminHome = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Sales Status */}
               <Card className="glass">
-                <CardHeader>
+                <CardHeader className="cursor-pointer hover:bg-primary/5 rounded-t-xl transition-all" onClick={() => setActiveTab("sales")}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
                       <Tag className="w-5 h-5 text-primary" />
                     </div>
-                    <CardTitle className="text-lg">Sales Banners</CardTitle>
+                    <CardTitle className="text-lg flex-1">Sales Banners</CardTitle>
+                    <span className="text-xs text-primary font-medium">Edit →</span>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -619,12 +622,13 @@ const AdminHome = () => {
 
               {/* Layout Summary */}
               <Card className="glass">
-                <CardHeader>
+                <CardHeader className="cursor-pointer hover:bg-primary/5 rounded-t-xl transition-all" onClick={() => setActiveTab("layout")}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
                       <Layers className="w-5 h-5 text-primary" />
                     </div>
-                    <CardTitle className="text-lg">Layout Settings</CardTitle>
+                    <CardTitle className="text-lg flex-1">Layout Settings</CardTitle>
+                    <span className="text-xs text-primary font-medium">Edit →</span>
                   </div>
                 </CardHeader>
                 <CardContent>
