@@ -98,7 +98,7 @@ const GeoBreakdown: React.FC<GeoBreakdownProps> = ({ analyticsData }) => {
               )}
             </CardTitle>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {[7, 30, 90].map((period) => (
               <Button
                 key={period}
@@ -110,6 +110,41 @@ const GeoBreakdown: React.FC<GeoBreakdownProps> = ({ analyticsData }) => {
                 {period}d
               </Button>
             ))}
+            <Button
+              variant={leaderboardPeriod === "custom" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setLeaderboardPeriod("custom")}
+              className="text-xs"
+            >
+              Custom
+            </Button>
+            {leaderboardPeriod === "custom" && (
+              <div className="flex items-center gap-1.5">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className={cn("text-xs h-8 gap-1", !customFrom && "text-muted-foreground")}>
+                      <CalendarIcon className="h-3 w-3" />
+                      {customFrom ? format(customFrom, "MMM d") : "From"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={customFrom} onSelect={setCustomFrom} initialFocus className="p-3 pointer-events-auto" />
+                  </PopoverContent>
+                </Popover>
+                <span className="text-xs text-muted-foreground">–</span>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className={cn("text-xs h-8 gap-1", !customTo && "text-muted-foreground")}>
+                      <CalendarIcon className="h-3 w-3" />
+                      {customTo ? format(customTo, "MMM d") : "To"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={customTo} onSelect={setCustomTo} initialFocus className="p-3 pointer-events-auto" />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
           </div>
         </CardHeader>
         <CardContent>
