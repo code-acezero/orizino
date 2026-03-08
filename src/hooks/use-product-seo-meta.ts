@@ -85,6 +85,11 @@ export const useProductSeoMeta = (product: Product | undefined) => {
     setMeta("og:image:height", "630", "property");
     setMeta("og:type", "product", "property");
 
+    // Twitter Card
+    setMeta("twitter:card", "summary_large_image");
+    setMeta("twitter:title", title);
+    setMeta("twitter:description", description);
+    setMeta("twitter:image", ogImageUrl);
     // Canonical URL
     if (typeof window !== "undefined") {
       setLink("canonical", `${window.location.origin}/product/${product.slug}`);
