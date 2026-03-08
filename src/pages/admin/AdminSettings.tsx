@@ -59,6 +59,7 @@ const defaultSettings: Record<string, any> = {
   terms_url: "",
   privacy_url: "",
   refund_policy_url: "",
+  product_page_layout: "premium",
 };
 
 const defaultCurrencyConfig: CurrencyConfig = {
