@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, LogOut, Bell, Settings,
+  Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, LogOut, Bell, Settings, LayoutGrid,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -10,16 +10,13 @@ import { supabase } from "@/integrations/supabase/client";
 import AuthModal from "@/components/AuthModal";
 import BottomNav from "@/components/BottomNav";
 
-// Categories fetched from DB
-
 const Navbar: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [hoveredCat, setHoveredCat] = useState<string | null>(null);
+  const [catOpen, setCatOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [authOpen, setAuthOpen] = useState(false);
-  const searchRef = useRef<HTMLInputElement>(null);
+  const catRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -27,7 +24,7 @@ const Navbar: React.FC = () => {
   const { data: dbCategories = [] } = useQuery({
     queryKey: ["nav-categories"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("categories").select("id, name, slug, parent_id").eq("is_active", true).order("sort_order");
+      const { data, error } = await supabase.from("categories").select("id, name, slug, parent_id, icon").eq("is_active", true).order("sort_order");
       if (error) throw error;
       return data;
     },
@@ -48,9 +45,14 @@ const Navbar: React.FC = () => {
     refetchInterval: 30000,
   });
 
+  // Close category dropdown on outside click
   useEffect(() => {
-    if (searchOpen && searchRef.current) searchRef.current.focus();
-  }, [searchOpen]);
+    const handler = (e: MouseEvent) => {
+      if (catRef.current && !catRef.current.contains(e.target as Node)) setCatOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -61,7 +63,6 @@ const Navbar: React.FC = () => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/shop?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchOpen(false);
       setSearchQuery("");
     }
   };
@@ -87,36 +88,76 @@ const Navbar: React.FC = () => {
                     Home
                   </Link>
 
-                  {parentCategories.map((cat) => {
-                    const children = getChildren(cat.id);
-                    return (
-                      <div key={cat.slug} className="relative"
-                        onMouseEnter={() => setHoveredCat(cat.slug)}
-                        onMouseLeave={() => setHoveredCat(null)}>
-                        <Link to={`/shop?category=${cat.slug}`}
-                          className="px-3 py-1.5 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
-                          {cat.name}{children.length > 0 && <ChevronDown className="w-3 h-3" />}
-                        </Link>
-                        {children.length > 0 && (
-                          <AnimatePresence>
-                            {hoveredCat === cat.slug && (
-                              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
-                                transition={{ duration: 0.2 }} className="absolute top-full left-0 pt-2 w-48">
-                                <div className="glass-strong rounded-2xl p-2">
-                                  {children.map((sub) => (
-                                    <Link key={sub.id} to={`/shop?category=${sub.slug}`}
-                                      className="block px-4 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
-                                      {sub.name}
-                                    </Link>
-                                  ))}
-                                </div>
-                              </motion.div>
+                  {/* Categories button - always visible */}
+                  <div ref={catRef} className="relative">
+                    <button
+                      onClick={() => setCatOpen(!catOpen)}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${catOpen ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                      Categories
+                      <ChevronDown className={`w-3 h-3 transition-transform ${catOpen ? "rotate-180" : ""}`} />
+                    </button>
+
+                    <AnimatePresence>
+                      {catOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 8 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute top-full left-0 pt-2 w-64 z-50"
+                        >
+                          <div className="glass-strong rounded-2xl p-3 shadow-lg border border-border/50">
+                            {parentCategories.length === 0 ? (
+                              <p className="text-sm text-muted-foreground text-center py-4">No categories available yet</p>
+                            ) : (
+                              <div className="space-y-1">
+                                {parentCategories.map((cat) => {
+                                  const children = getChildren(cat.id);
+                                  return (
+                                    <div key={cat.id}>
+                                      <Link
+                                        to={`/shop?category=${cat.slug}`}
+                                        onClick={() => setCatOpen(false)}
+                                        className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-foreground hover:bg-secondary/50 transition-colors"
+                                      >
+                                        {cat.icon && <span className="text-base">{cat.icon}</span>}
+                                        {cat.name}
+                                      </Link>
+                                      {children.length > 0 && (
+                                        <div className="ml-6 border-l border-border/50 pl-2 space-y-0.5">
+                                          {children.map((sub) => (
+                                            <Link
+                                              key={sub.id}
+                                              to={`/shop?category=${sub.slug}`}
+                                              onClick={() => setCatOpen(false)}
+                                              className="block px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                                            >
+                                              {sub.name}
+                                            </Link>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
                             )}
-                          </AnimatePresence>
-                        )}
-                      </div>
-                    );
-                  })}
+                            <div className="border-t border-border/50 mt-2 pt-2">
+                              <Link
+                                to="/shop"
+                                onClick={() => setCatOpen(false)}
+                                className="block text-center text-xs font-medium text-primary hover:underline py-1"
+                              >
+                                View All Products
+                              </Link>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
               </div>
 
@@ -207,11 +248,32 @@ const Navbar: React.FC = () => {
                     className="w-full px-4 py-3 rounded-2xl bg-secondary/50 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 mb-2" />
                 </form>
                 <Link to="/home" className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>Home</Link>
-                {parentCategories.map((cat) => (
-                  <Link key={cat.slug} to={`/shop?category=${cat.slug}`} className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>
-                    {cat.name}
-                  </Link>
-                ))}
+
+                {/* Categories section in mobile */}
+                <div className="px-4 py-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Categories</p>
+                  {parentCategories.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No categories available yet</p>
+                  ) : (
+                    parentCategories.map((cat) => {
+                      const children = getChildren(cat.id);
+                      return (
+                        <div key={cat.id} className="mb-1">
+                          <Link to={`/shop?category=${cat.slug}`} className="block py-1.5 text-sm text-foreground hover:text-primary" onClick={() => setMobileOpen(false)}>
+                            {cat.icon && <span className="mr-1.5">{cat.icon}</span>}{cat.name}
+                          </Link>
+                          {children.map((sub) => (
+                            <Link key={sub.id} to={`/shop?category=${sub.slug}`} className="block py-1 pl-5 text-xs text-muted-foreground hover:text-foreground" onClick={() => setMobileOpen(false)}>
+                              {sub.name}
+                            </Link>
+                          ))}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                <Link to="/shop" className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>All Products</Link>
                 {user ? (
                   <>
                     <Link to="/profile" className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>Profile</Link>
@@ -227,13 +289,7 @@ const Navbar: React.FC = () => {
         </AnimatePresence>
       </nav>
 
-      {/* Bottom Nav for Mobile */}
-      <BottomNav
-        onSearchClick={() => setSearchOpen(true)}
-        onAuthClick={() => setAuthOpen(true)}
-      />
-
-      {/* Auth Modal */}
+      <BottomNav onSearchClick={() => {}} onAuthClick={() => setAuthOpen(true)} />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </>
   );
