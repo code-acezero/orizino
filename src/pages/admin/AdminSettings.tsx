@@ -268,6 +268,11 @@ const AdminSettings = () => {
           </Card>
         </TabsContent>
 
+        {/* ── Customizer Tab ── */}
+        <TabsContent value="customizer">
+          <SiteCustomizer />
+        </TabsContent>
+
         {/* ── Currency Tab ── */}
         <TabsContent value="currency">
           <div className="space-y-6">
