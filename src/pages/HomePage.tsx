@@ -149,7 +149,14 @@ const defaultSectionOrder: SectionConfig[] = [
   { id: "arrivals", label: "New Arrivals", icon: "✨", visible: true, title: "New Arrivals", subtitle: "Fresh drops just landed", product_count: 8, columns: 4, view_all_link: "/shop" },
 ];
 
+/** Wrapper that tracks section visibility via Intersection Observer */
+const TrackedSection: React.FC<{ sectionId: string; children: React.ReactNode }> = ({ sectionId, children }) => {
+  const ref = useSectionTracker(sectionId);
+  return <div ref={ref}>{children}</div>;
+};
+
 const HomePage: React.FC = () => {
+  usePageViewTracker("/home");
   const { data: featuredProducts = [], isLoading } = useQuery({
     queryKey: ["featured-products"],
     queryFn: async () => {
