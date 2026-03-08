@@ -38,6 +38,20 @@ const ProductDetailPage: React.FC = () => {
   // Apply SEO metadata for product detail page
   useProductSeoMeta(product);
 
+  // Fetch parent category for breadcrumbs
+  const productCat = product?.categories as any;
+  const { data: parentCategory } = useQuery({
+    queryKey: ["parent-category", productCat?.parent_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("categories")
+        .select("name, slug")
+        .eq("id", productCat.parent_id)
+        .single();
+      return data;
+    },
+    enabled: !!productCat?.parent_id,
+  });
   const { data: reviews } = useQuery({
     queryKey: ["reviews", product?.id],
     queryFn: async () => {
