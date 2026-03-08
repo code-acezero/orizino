@@ -58,7 +58,7 @@ const AdminCategories = () => {
   const { data: orderItems = [] } = useQuery({
     queryKey: ["category-analytics-orders"],
     queryFn: async () => {
-      const { data } = await supabase.from("order_items").select("product_id, quantity, total_price").limit(5000);
+      const { data } = await supabase.from("order_items").select("product_id, quantity, total_price, order_id, orders!inner(created_at)").limit(5000);
       return data || [];
     },
     staleTime: 60_000,
