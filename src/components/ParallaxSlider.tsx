@@ -4,16 +4,14 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { trackClick } from "@/hooks/use-analytics";
-import heroImg from "@/assets/hero-bg.jpg";
-import fashionImg from "@/assets/slide-fashion.jpg";
-import electronicsImg from "@/assets/slide-electronics.jpg";
-import homeImg from "@/assets/slide-home.jpg";
+import demoSlide1 from "@/assets/demo-slide-1.jpg";
+import demoSlide2 from "@/assets/demo-slide-2.jpg";
+import demoSlide3 from "@/assets/demo-slide-3.jpg";
 
 const fallbackSlides = [
-  { id: "f1", title: "Discover the Future", subtitle: "New Arrivals", description: "Explore our curated collection of premium products.", image: heroImg, cta: "Shop Now", ctaLink: "/shop", transitionType: "" },
-  { id: "f2", title: "Street Style Redefined", subtitle: "Fashion", description: "Bold looks for the modern trendsetter.", image: fashionImg, cta: "Explore Fashion", ctaLink: "/categories/fashion", transitionType: "" },
-  { id: "f3", title: "Tech That Inspires", subtitle: "Electronics", description: "Cutting-edge gadgets designed for tomorrow.", image: electronicsImg, cta: "View Electronics", ctaLink: "/categories/electronics", transitionType: "" },
-  { id: "f4", title: "Elevate Your Space", subtitle: "Home", description: "Premium appliances for the modern home.", image: homeImg, cta: "Shop Home", ctaLink: "/categories/home-appliance", transitionType: "" },
+  { id: "demo1", title: "Step Into Style", subtitle: "New Collection", description: "Explore premium sneakers crafted for the modern trendsetter.", image: demoSlide1, cta: "Shop Now", ctaLink: "/shop", transitionType: "" },
+  { id: "demo2", title: "Tech That Inspires", subtitle: "Electronics", description: "Cutting-edge gadgets and wearables designed for tomorrow.", image: demoSlide2, cta: "View Electronics", ctaLink: "/shop?category=electronics", transitionType: "zoom" },
+  { id: "demo3", title: "Elevate Your Space", subtitle: "Home & Living", description: "Designer furniture and décor for the modern home.", image: demoSlide3, cta: "Explore Home", ctaLink: "/shop?category=home", transitionType: "blur" },
 ];
 
 interface ShowcaseConfig {
@@ -179,13 +177,11 @@ const ParallaxSlider: React.FC = () => {
   const slide = slides[current];
   if (!slide) return null;
 
-  // Resolve transition type: per-slide override → global config
   const activeTransition = slide.transitionType && slide.transitionType !== "fade" ? slide.transitionType : cfg.transition_type;
   const dur = cfg.transition_duration / 1000;
   const variants = getSlideVariants(activeTransition, dur);
   const contentAnim = getContentVariants(cfg.content_animation);
 
-  // Overlay
   const opa = cfg.overlay_opacity / 100;
   const overlayClasses: Record<string, string> = {
     "gradient-left": `bg-gradient-to-r from-background/${Math.round(opa * 90)} via-background/${Math.round(opa * 50)} to-transparent`,
@@ -201,21 +197,16 @@ const ParallaxSlider: React.FC = () => {
     ? { background: `hsl(var(--background) / ${opa})` }
     : {};
 
-  // Text alignment
   const textAlign = cfg.text_position === "center" ? "items-center text-center" : cfg.text_position === "right" ? "items-end text-right ml-auto" : "";
   const textContainer = cfg.text_position === "center" ? "flex justify-center" : cfg.text_position === "right" ? "flex justify-end" : "";
-
-  // Title size map
   const titleClass = `text-4xl md:text-${cfg.title_size}`;
 
-  // Subtitle
   const subtitleEl = (text: string) => {
     if (cfg.subtitle_style === "badge") return <span className="inline-block btn-pill bg-primary/20 text-primary text-sm mb-4 border border-primary/30">{text}</span>;
     if (cfg.subtitle_style === "underline") return <span className="inline-block text-primary text-sm mb-4 border-b-2 border-primary pb-1">{text}</span>;
     return <span className="inline-block text-primary text-sm mb-4 font-medium">{text}</span>;
   };
 
-  // CTA style
   const ctaClasses: Record<string, string> = {
     gradient: "bg-gradient-primary text-primary-foreground glow-primary",
     solid: "bg-primary text-primary-foreground",
@@ -223,7 +214,6 @@ const ParallaxSlider: React.FC = () => {
     ghost: "bg-background/20 backdrop-blur text-foreground border border-foreground/20",
   };
 
-  // Dot style
   const renderDot = (i: number) => {
     const active = i === current;
     if (cfg.dot_style === "number") {
@@ -240,7 +230,6 @@ const ParallaxSlider: React.FC = () => {
     if (cfg.dot_style === "dash") {
       return <button key={i} onClick={() => goTo(i)} className={`h-1 rounded-full transition-all ${active ? "w-10 bg-primary glow-primary" : "w-4 bg-muted-foreground/40 hover:bg-muted-foreground/60"}`} />;
     }
-    // pill default
     return <button key={i} onClick={() => goTo(i)} className={`h-2 rounded-full transition-all duration-300 ${active ? "w-8 bg-primary glow-primary" : "w-2 bg-muted-foreground/40 hover:bg-muted-foreground/60"}`} />;
   };
 
@@ -256,7 +245,6 @@ const ParallaxSlider: React.FC = () => {
     >
       <AnimatePresence custom={direction} mode="wait">
         <motion.div key={slide.id} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="absolute inset-0" style={{ transformStyle: activeTransition === "cube" || activeTransition === "flip" ? "preserve-3d" : undefined }}>
-          {/* Background image with ken burns + parallax */}
           <motion.div
             className="absolute inset-0"
             animate={cfg.ken_burns ? { scale: 1.05, y: [parallaxPx * -0.5, parallaxPx * 0.5] } : {}}
@@ -265,11 +253,9 @@ const ParallaxSlider: React.FC = () => {
             <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
           </motion.div>
 
-          {/* Overlays */}
           <div className={`absolute inset-0 ${overlayClasses[cfg.overlay_style] || ""}`} style={overlayStyle} />
           <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
 
-          {/* Content with configurable animation */}
           <div className="absolute inset-0 flex items-center">
             <div className={`container mx-auto px-6 lg:px-12 ${textContainer}`}>
               <motion.div
