@@ -149,7 +149,41 @@ const AdminProducts = () => {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const bulkAction = useMutation({
+    mutationFn: async ({ ids, action }: { ids: string[]; action: "delete" | "activate" | "deactivate" }) => {
+      if (action === "delete") {
+        const { error } = await supabase.from("products").delete().in("id", ids);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("products").update({ is_active: action === "activate" }).in("id", ids);
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_, { ids, action }) => {
+      qc.invalidateQueries({ queryKey: ["admin-products"] });
+      setSelected(new Set());
+      toast.success(`${ids.length} product${ids.length > 1 ? "s" : ""} ${action === "delete" ? "deleted" : action === "activate" ? "activated" : "deactivated"}`);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const filtered = products.filter((p: any) => p.name.toLowerCase().includes(search.toLowerCase()));
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selected.size === filtered.length) setSelected(new Set());
+    else setSelected(new Set(filtered.map((p: any) => p.id)));
+  };
+
+  const allSelected = filtered.length > 0 && selected.size === filtered.length;
+  const someSelected = selected.size > 0;
 
   const openEdit = (product?: any) => {
     setEditing(
