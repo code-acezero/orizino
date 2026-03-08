@@ -311,6 +311,17 @@ const AdminProducts = () => {
     } catch (e: any) { toast.error(e.message); }
   };
 
+  const notifyRestockSubscribers = async () => {
+    if (!editing?.id) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("notify-restock", {
+        body: { product_id: editing.id },
+      });
+      if (error) throw error;
+      toast.success(data?.message || "Notifications sent");
+    } catch (e: any) { toast.error("Failed: " + e.message); }
+  };
+
   const generateVariants = () => {
     if (!editing?.id) { toast.error("Save the product first"); return; }
     const sizes = specs.sizes || []; const colors = specs.colors || [];
