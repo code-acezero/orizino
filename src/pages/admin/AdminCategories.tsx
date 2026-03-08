@@ -64,6 +64,20 @@ const AdminCategories = () => {
     staleTime: 60_000,
   });
 
+  const dateFilterStart = useMemo(() => {
+    if (dateRange === "all") return null;
+    const days = dateRange === "7d" ? 7 : dateRange === "30d" ? 30 : 90;
+    return startOfDay(subDays(new Date(), days)).toISOString();
+  }, [dateRange]);
+
+  const filteredOrderItems = useMemo(() => {
+    if (!dateFilterStart) return orderItems;
+    return orderItems.filter((oi: any) => {
+      const orderDate = oi.orders?.created_at;
+      return orderDate && orderDate >= dateFilterStart;
+    });
+  }, [orderItems, dateFilterStart]);
+
   const categoryAnalytics = useMemo(() => {
     const prodCatMap = new Map<string, string>();
     products.forEach((p: any) => { if (p.category_id) prodCatMap.set(p.id, p.category_id); });
@@ -74,7 +88,7 @@ const AdminCategories = () => {
       entry.productCount++;
       map.set(p.category_id, entry);
     });
-    orderItems.forEach((oi: any) => {
+    filteredOrderItems.forEach((oi: any) => {
       const catId = prodCatMap.get(oi.product_id);
       if (!catId) return;
       const entry = map.get(catId) || { productCount: 0, orderCount: 0, revenue: 0 };
@@ -83,7 +97,7 @@ const AdminCategories = () => {
       map.set(catId, entry);
     });
     return map;
-  }, [products, orderItems]);
+  }, [products, filteredOrderItems]);
 
   const analyticsRows = useMemo(() => {
     const rows = parentCategories.map((c) => {
