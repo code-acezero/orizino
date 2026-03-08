@@ -680,8 +680,8 @@ const AdminHome = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               {sectionOrder.map((section, idx) => {
-                const settingsCfg = sectionSettingsConfig[section.id] || { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false };
-                const hasSettings = settingsCfg.hasTitle || settingsCfg.hasSubtitle || settingsCfg.hasProductCount || settingsCfg.hasColumns || settingsCfg.hasViewAllLink;
+                const settingsCfg = sectionSettingsConfig[section.id] || { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: "" };
+                const hasSettings = settingsCfg.hasTitle || settingsCfg.hasSubtitle || settingsCfg.hasProductCount || settingsCfg.hasColumns || settingsCfg.hasViewAllLink || !!settingsCfg.hasFeaturedToggle;
                 const isExpanded = expandedSection === section.id;
 
                 const updateSectionField = (field: string, value: any) => {
