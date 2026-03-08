@@ -312,7 +312,29 @@ const AdminHome = () => {
     onError: (e) => toast.error(e.message),
   });
 
-  const addSection = () => setCatSections([...catSections, { category_id: "", sort_order: catSections.length, product_count: 8 }]);
+  const saveSectionOrder = useMutation({
+    mutationFn: async () => {
+      const jsonValue = { value: sectionOrder } as any;
+      if (sectionOrderRow) {
+        await supabase.from("site_settings").update({ value: jsonValue }).eq("id", sectionOrderRow.id);
+      } else {
+        await supabase.from("site_settings").insert({ key: "home_section_order", value: jsonValue });
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-section-order"] });
+      qc.invalidateQueries({ queryKey: ["home-section-order"] });
+      toast.success("Section order saved");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const handleSectionOrderReorder = useCallback((reordered: typeof sectionOrder) => {
+    setSectionOrder(reordered);
+  }, []);
+
+  const { getDragProps: getSectionOrderDragProps, dragIndex: secDragIdx, overIndex: secOverIdx } = useDragReorder(sectionOrder, handleSectionOrderReorder);
+
   const removeSection = (index: number) => setCatSections(catSections.filter((_, i) => i !== index));
   const updateSection = (index: number, field: string, value: any) => {
     const updated = [...catSections];
