@@ -332,28 +332,28 @@ const HomePage: React.FC = () => {
   const divider = layout.show_section_dividers ? getDivider(layout.divider_style) : null;
   const spacingClass = spacingMap[layout.section_spacing] || "gap-16";
 
-  return (
-    <div className="min-h-screen pb-20 lg:pb-0" style={getPatternStyle(layout.page_bg_pattern)}>
-      <Navbar />
-      <HomePopup />
-      {popupSales.map((sale: SaleConfig) => <SalePopup key={sale.id} sale={sale} />)}
+  // Map section IDs to their sale position suffixes
+  const sectionSaleMap: Record<string, string> = {
+    slider: "after-slider",
+    categories: "after-categories",
+    featured: "after-featured",
+    arrivals: "after-arrivals",
+  };
 
-      <main className={`mx-auto px-4 pt-6 flex flex-col ${spacingClass}`} style={{ maxWidth: layout.container_max_width }}>
-        <ParallaxSlider />
+  const renderSection = (sectionId: string) => {
+    switch (sectionId) {
+      case "slider":
+        return <ParallaxSlider key="slider" />;
 
-        {salesByPos("after-slider").map(renderSaleBanner)}
+      case "categories":
+        return (
+          <div key="categories" className={getSectionBgClass(layout.categories_bg)}>
+            <CategoryGrid />
+          </div>
+        );
 
-        {divider}
-
-        <div className={getSectionBgClass(layout.categories_bg)}>
-          <CategoryGrid />
-        </div>
-
-        {salesByPos("after-categories").map(renderSaleBanner)}
-
-        {divider}
-
-        {(catSectionsConfig || []).map((section: any) => {
+      case "category-sections":
+        return (catSectionsConfig || []).map((section: any) => {
           const cat = sectionCategories.find((c) => c.id === section.category_id);
           const products = (sectionProducts as Record<string, any[]>)[section.category_id] || [];
           if (!cat || products.length === 0) return null;
@@ -382,12 +382,12 @@ const HomePage: React.FC = () => {
               )}
             </section>
           );
-        })}
+        });
 
-        {divider}
-
-        {(isLoading || featuredProducts.length > 0) && (
-          <section className={getSectionBgClass(layout.featured_bg)}>
+      case "featured":
+        if (!isLoading && featuredProducts.length === 0) return null;
+        return (
+          <section key="featured" className={getSectionBgClass(layout.featured_bg)}>
             <motion.div {...anim} viewport={{ once: true }} className={`flex items-center ${titleAlign} mb-8`}>
               <div className={layout.section_title_align === "center" ? "text-center" : ""}>
                 <h2 className={`${titleSize} font-bold font-display text-foreground`}>Featured Products</h2>
@@ -412,14 +412,12 @@ const HomePage: React.FC = () => {
               </div>
             )}
           </section>
-        )}
+        );
 
-        {salesByPos("after-featured").map(renderSaleBanner)}
-
-        {divider}
-
-        {showNewArrivals && (
-          <section className={getSectionBgClass(layout.arrivals_bg)}>
+      case "arrivals":
+        if (!showNewArrivals) return null;
+        return (
+          <section key="arrivals" className={getSectionBgClass(layout.arrivals_bg)}>
             <motion.div {...anim} viewport={{ once: true }} className={`flex items-center ${titleAlign} mb-8`}>
               <div className={`flex items-center gap-3 ${layout.section_title_align === "center" ? "justify-center" : ""}`}>
                 <Sparkles className="w-7 h-7 text-primary" />
@@ -445,9 +443,27 @@ const HomePage: React.FC = () => {
               </div>
             )}
           </section>
-        )}
+        );
 
-        {salesByPos("after-arrivals").map(renderSaleBanner)}
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen pb-20 lg:pb-0" style={getPatternStyle(layout.page_bg_pattern)}>
+      <Navbar />
+      <HomePopup />
+      {popupSales.map((sale: SaleConfig) => <SalePopup key={sale.id} sale={sale} />)}
+
+      <main className={`mx-auto px-4 pt-6 flex flex-col ${spacingClass}`} style={{ maxWidth: layout.container_max_width }}>
+        {sectionOrder.map((sectionId, idx) => (
+          <React.Fragment key={sectionId}>
+            {renderSection(sectionId)}
+            {sectionSaleMap[sectionId] && salesByPos(sectionSaleMap[sectionId]).map(renderSaleBanner)}
+            {idx < sectionOrder.length - 1 && divider}
+          </React.Fragment>
+        ))}
         {salesByPos("bottom").map(renderSaleBanner)}
       </main>
 
