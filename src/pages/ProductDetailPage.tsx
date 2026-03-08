@@ -168,15 +168,23 @@ const ProductDetailPage: React.FC = () => {
     }
     if (!product) return;
     setAddingToCart(true);
-    const { data: existing } = await supabase
-      .from("cart_items").select("id, quantity").eq("user_id", user.id).eq("product_id", product.id).maybeSingle();
+    const variantId = selectedVariant?.id || null;
+    let query = supabase
+      .from("cart_items").select("id, quantity").eq("user_id", user.id).eq("product_id", product.id);
+    if (variantId) {
+      query = query.eq("variant_id", variantId);
+    } else {
+      query = query.is("variant_id", null);
+    }
+    const { data: existing } = await query.maybeSingle();
     if (existing) {
       await supabase.from("cart_items").update({ quantity: existing.quantity + quantity }).eq("id", existing.id);
     } else {
-      await supabase.from("cart_items").insert({ user_id: user.id, product_id: product.id, quantity });
+      await supabase.from("cart_items").insert({ user_id: user.id, product_id: product.id, quantity, variant_id: variantId } as any);
     }
     setAddingToCart(false);
-    toast({ title: "Added to cart!", description: `${product.name} x${quantity}` });
+    const variantLabel = [selectedSize, selectedColor].filter(Boolean).join(" / ");
+    toast({ title: "Added to cart!", description: `${product.name}${variantLabel ? ` (${variantLabel})` : ""} x${quantity}` });
   };
 
   const buyNow = async () => {
@@ -186,12 +194,19 @@ const ProductDetailPage: React.FC = () => {
     }
     if (!product) return;
     setAddingToCart(true);
-    const { data: existing } = await supabase
-      .from("cart_items").select("id, quantity").eq("user_id", user.id).eq("product_id", product.id).maybeSingle();
+    const variantId = selectedVariant?.id || null;
+    let query = supabase
+      .from("cart_items").select("id, quantity").eq("user_id", user.id).eq("product_id", product.id);
+    if (variantId) {
+      query = query.eq("variant_id", variantId);
+    } else {
+      query = query.is("variant_id", null);
+    }
+    const { data: existing } = await query.maybeSingle();
     if (existing) {
       await supabase.from("cart_items").update({ quantity: quantity }).eq("id", existing.id);
     } else {
-      await supabase.from("cart_items").insert({ user_id: user.id, product_id: product.id, quantity });
+      await supabase.from("cart_items").insert({ user_id: user.id, product_id: product.id, quantity, variant_id: variantId } as any);
     }
     setAddingToCart(false);
     navigate("/checkout");

@@ -21,7 +21,7 @@ const CartPage: React.FC = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("cart_items")
-        .select("*, products(id, name, price, compare_at_price, thumbnail, slug, stock_quantity)")
+        .select("*, products(id, name, price, compare_at_price, thumbnail, slug, stock_quantity), product_variants(id, size, color, price_override, stock_quantity)")
         .eq("user_id", user!.id)
         .order("created_at");
       return data || [];
