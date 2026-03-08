@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
 import { ALL_CURRENCIES, type CurrencyConfig } from "@/contexts/CurrencyContext";
-import { DollarSign, Globe, Check, RefreshCw, Clock, Zap } from "lucide-react";
+import { DollarSign, Globe, Check, RefreshCw, Clock, Zap, PaintBucket } from "lucide-react";
+import SiteCustomizer from "@/components/admin/SiteCustomizer";
 
 const themes = [
   { id: "default", label: "Cyber Emerald", color: "160 84% 45%" },
@@ -173,11 +174,14 @@ const AdminSettings = () => {
     <div className="space-y-6">
       <h1 className="text-3xl font-display font-bold">Site Settings</h1>
 
-      <Tabs defaultValue="general" className="max-w-3xl">
+      <Tabs defaultValue="general">
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
           <TabsTrigger value="theme">Site Theme</TabsTrigger>
+          <TabsTrigger value="customizer" className="flex items-center gap-1">
+            <PaintBucket className="w-3.5 h-3.5" /> Customizer
+          </TabsTrigger>
           <TabsTrigger value="currency" className="flex items-center gap-1">
             <DollarSign className="w-3.5 h-3.5" /> Currency
           </TabsTrigger>
@@ -262,6 +266,11 @@ const AdminSettings = () => {
               </Button>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ── Customizer Tab ── */}
+        <TabsContent value="customizer">
+          <SiteCustomizer />
         </TabsContent>
 
         {/* ── Currency Tab ── */}

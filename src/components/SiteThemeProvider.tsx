@@ -128,12 +128,12 @@ const SiteThemeProvider = () => {
       const { data } = await supabase
         .from("site_settings")
         .select("key, value")
-        .in("key", ["site_theme", "site_mode"]);
-      const map: Record<string, string> = {};
+        .in("key", ["site_theme", "site_mode", "site_customizer"]);
+      const map: Record<string, any> = {};
       data?.forEach((s) => {
         const val = s.value;
         const resolved = typeof val === "object" && val !== null ? (val as any).value ?? val : val;
-        map[s.key] = String(resolved ?? "");
+        map[s.key] = resolved;
       });
       return map;
     },
@@ -145,12 +145,13 @@ const SiteThemeProvider = () => {
   // Apply theme via inline CSS custom properties on html element
   useEffect(() => {
     if (!siteSettings) return;
-    const mode = siteSettings.site_mode || "dark";
-    const theme = siteSettings.site_theme || "default";
+    const mode = String(siteSettings.site_mode || "dark");
+    const theme = String(siteSettings.site_theme || "default");
     const html = document.documentElement;
 
     // Clear all previously set inline theme variables
     allThemeVars.forEach((v) => html.style.removeProperty(v));
+    customizerVars.forEach((v) => html.style.removeProperty(v));
 
     // Apply light mode overrides
     if (mode === "light") {
@@ -163,6 +164,41 @@ const SiteThemeProvider = () => {
     // Apply color theme overrides
     if (theme !== "default" && themeOverrides[theme]) {
       Object.entries(themeOverrides[theme]).forEach(([k, v]) => html.style.setProperty(k, v));
+    }
+
+    // Apply customizer settings
+    const customizer = siteSettings.site_customizer;
+    if (customizer && typeof customizer === "object") {
+      const c = customizer as any;
+
+      // Typography
+      if (c.heading_font) {
+        html.style.setProperty("--font-display", `'${c.heading_font}', sans-serif`);
+        // Load Google Font dynamically
+        loadGoogleFont(c.heading_font, c.heading_weight || "700");
+      }
+      if (c.body_font) {
+        html.style.setProperty("--font-body", `'${c.body_font}', sans-serif`);
+        loadGoogleFont(c.body_font, c.body_weight || "400");
+      }
+
+      // Spacing & Layout
+      if (c.border_radius != null) html.style.setProperty("--radius", `${c.border_radius}px`);
+      if (c.glass_blur != null) html.style.setProperty("--glass-blur", `${c.glass_blur}px`);
+      if (c.glass_opacity != null) {
+        const opacity = c.glass_opacity / 100;
+        html.style.setProperty("--glass-bg", `220 20% 12% / ${opacity}`);
+      }
+
+      // Store customizer config as data attributes for component consumption
+      if (c.navbar_height) html.style.setProperty("--navbar-height", `${c.navbar_height}px`);
+      if (c.section_gap) html.style.setProperty("--section-gap", `${c.section_gap}px`);
+      if (c.container_width) html.style.setProperty("--container-max", `${c.container_width}px`);
+      if (c.content_padding) html.style.setProperty("--content-padding", `${c.content_padding}px`);
+      if (c.card_padding) html.style.setProperty("--card-padding", `${c.card_padding}px`);
+
+      // Store full config as dataset for JS consumption
+      html.dataset.customizer = JSON.stringify(c);
     }
   }, [siteSettings]);
 
@@ -177,6 +213,7 @@ const SiteThemeProvider = () => {
           qc.invalidateQueries({ queryKey: ["site-settings"] });
           qc.invalidateQueries({ queryKey: ["site-settings-nav"] });
           qc.invalidateQueries({ queryKey: ["admin-settings"] });
+          qc.invalidateQueries({ queryKey: ["site-customizer"] });
           qc.invalidateQueries({ queryKey: ["home-category-sections"] });
           qc.invalidateQueries({ queryKey: ["home-sales-config"] });
           qc.invalidateQueries({ queryKey: ["home-new-arrivals"] });
@@ -195,5 +232,24 @@ const SiteThemeProvider = () => {
 
   return null;
 };
+
+/* ── Helper to load Google Fonts dynamically ── */
+const loadedFonts = new Set<string>();
+function loadGoogleFont(family: string, weights: string = "400,500,600,700") {
+  const key = `${family}-${weights}`;
+  if (loadedFonts.has(key)) return;
+  loadedFonts.add(key);
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = `https://fonts.googleapis.com/css2?family=${family.replace(/ /g, "+")}:wght@${weights.split(",").concat(["300","400","500","600","700"]).filter((v, i, a) => a.indexOf(v) === i).join(";")}&display=swap`;
+  document.head.appendChild(link);
+}
+
+/* Customizer-specific CSS var names for cleanup */
+const customizerVars = [
+  "--font-display", "--font-body",
+  "--navbar-height", "--section-gap", "--container-max",
+  "--content-padding", "--card-padding",
+];
 
 export default SiteThemeProvider;
