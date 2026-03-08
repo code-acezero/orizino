@@ -185,9 +185,9 @@ const ProductDetailPage: React.FC = () => {
 
             {/* Price */}
             <div className="flex items-baseline gap-3">
-              <span className="text-4xl font-bold text-foreground">${product.price.toFixed(2)}</span>
+              <span className="text-4xl font-bold text-foreground">{formatPrice(product.price)}</span>
               {product.compare_at_price && (
-                <span className="text-xl text-muted-foreground line-through">${product.compare_at_price.toFixed(2)}</span>
+                <span className="text-xl text-muted-foreground line-through">{formatPrice(product.compare_at_price)}</span>
               )}
             </div>
 
