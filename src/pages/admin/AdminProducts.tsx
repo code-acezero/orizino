@@ -55,6 +55,7 @@ const AdminProducts = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Record<string, any> | null>(null);
   const [activeMainTab, setActiveMainTab] = useState("list");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["admin-products"],
