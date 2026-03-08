@@ -24,7 +24,7 @@ let fontData: ArrayBuffer | null = null;
 async function getFont(): Promise<ArrayBuffer> {
   if (fontData) return fontData;
   const res = await fetch(
-    "https://fonts.gstatic.com/s/inter/v18/UcCo3FwrK3iLTcviYwY.woff"
+    "https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-400-normal.woff"
   );
   fontData = await res.arrayBuffer();
   return fontData;
@@ -34,7 +34,7 @@ let boldFontData: ArrayBuffer | null = null;
 async function getBoldFont(): Promise<ArrayBuffer> {
   if (boldFontData) return boldFontData;
   const res = await fetch(
-    "https://fonts.gstatic.com/s/inter/v18/UcCo3FwrK3iLTcviBBY.woff"
+    "https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-700-normal.woff"
   );
   boldFontData = await res.arrayBuffer();
   return boldFontData;
