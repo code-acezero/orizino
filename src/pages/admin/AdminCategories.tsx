@@ -110,6 +110,19 @@ const AdminCategories = () => {
     else { setSortBy(col); setSortDir("desc"); }
   };
 
+  const exportCsv = useCallback(() => {
+    const header = "Category,Products,Orders,Revenue\n";
+    const rows = analyticsRows.map((r) => `"${r.name.replace(/"/g, '""')}",${r.productCount},${r.orderCount},${r.revenue.toFixed(2)}`).join("\n");
+    const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `category-analytics-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("CSV exported");
+  }, [analyticsRows]);
+
   const CHART_COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(262 83% 58%)", "hsl(330 81% 60%)", "hsl(200 95% 50%)", "hsl(150 60% 45%)", "hsl(40 95% 55%)", "hsl(0 72% 51%)"];
 
   // Filter by search
