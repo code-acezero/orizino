@@ -255,8 +255,27 @@ const AdminHome = () => {
     setSales(reordered.map((s, i) => ({ ...s, sort_order: i })));
   }, []);
 
+  const [localCategories, setLocalCategories] = useState(categories);
+  const [localProducts, setLocalProducts] = useState(products);
+  useEffect(() => { setLocalCategories(categories); }, [categories]);
+  useEffect(() => { setLocalProducts(products); }, [products]);
+
+  const handleFeatCatReorder = useCallback(async (reordered: typeof categories) => {
+    setLocalCategories(reordered);
+    for (let i = 0; i < reordered.length; i++) {
+      await supabase.from("categories").update({ sort_order: i }).eq("id", reordered[i].id);
+    }
+    qc.invalidateQueries({ queryKey: ["admin-home-categories"] });
+  }, [qc]);
+
+  const handleFeatProdReorder = useCallback((reordered: typeof products) => {
+    setLocalProducts(reordered);
+  }, []);
+
   const { dragIndex: catDragIdx, overIndex: catOverIdx, getDragProps: getCatDragProps } = useDragReorder(catSections, handleCatReorder);
   const { dragIndex: saleDragIdx, overIndex: saleOverIdx, getDragProps: getSaleDragProps } = useDragReorder(sales, handleSaleReorder);
+  const { dragIndex: featCatDragIdx, overIndex: featCatOverIdx, getDragProps: getFeatCatDragProps } = useDragReorder(localCategories, handleFeatCatReorder);
+  const { dragIndex: featProdDragIdx, overIndex: featProdOverIdx, getDragProps: getFeatProdDragProps } = useDragReorder(localProducts, handleFeatProdReorder);
 
   return (
     <div className="space-y-6">
