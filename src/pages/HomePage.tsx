@@ -21,7 +21,7 @@ const demoProducts = [
 
 const HomePage: React.FC = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-20 lg:pb-0">
       <Navbar />
 
       <main className="container mx-auto px-4 pt-6 space-y-16">
