@@ -70,6 +70,44 @@ const AdminCategories = () => {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const bulkAction = useMutation({
+    mutationFn: async ({ ids, action, status }: { ids: string[]; action: "delete" | "activate" | "deactivate"; status?: string }) => {
+      if (action === "delete") {
+        const { error } = await supabase.from("categories").delete().in("id", ids);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("categories").update({ is_active: action === "activate" }).in("id", ids);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-categories"] });
+      setSelected(new Set());
+      toast.success("Bulk action completed");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selected);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelected(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selected.size === categories.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(categories.map((c) => c.id)));
+    }
+  };
+
+  const someSelected = selected.size > 0;
+
   const openEdit = (cat?: any) => {
     setEditing(
       cat
