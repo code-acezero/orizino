@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Trash2, Star, Image as ImageIcon } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Check, X, Trash2, Star, Image as ImageIcon, CheckCheck, XCircle } from "lucide-react";
 import { toast } from "@/lib/app-toast";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,6 +15,7 @@ const AdminReviews = () => {
   const qc = useQueryClient();
   const [filterStatus, setFilterStatus] = useState("all");
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ["admin-reviews"],
@@ -42,6 +44,24 @@ const AdminReviews = () => {
     onError: (e) => toast.error(e.message),
   });
 
+  const bulkAction = useMutation({
+    mutationFn: async ({ ids, action }: { ids: string[]; action: "approve" | "reject" | "delete" }) => {
+      if (action === "delete") {
+        const { error } = await supabase.from("reviews").delete().in("id", ids);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("reviews").update({ is_approved: action === "approve" }).in("id", ids);
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_, { ids, action }) => {
+      qc.invalidateQueries({ queryKey: ["admin-reviews"] });
+      setSelected(new Set());
+      toast.success(`${ids.length} review${ids.length > 1 ? "s" : ""} ${action === "delete" ? "deleted" : action === "approve" ? "approved" : "rejected"}`);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   const statusCounts = {
     approved: reviews.filter((r: any) => r.is_approved).length,
     pending: reviews.filter((r: any) => !r.is_approved).length,
@@ -53,28 +73,100 @@ const AdminReviews = () => {
       ? reviews.filter((r: any) => r.is_approved)
       : reviews.filter((r: any) => !r.is_approved);
 
-  const ratingCounts: Record<string, number> = {};
-  reviews.forEach((r: any) => {
-    const key = `${r.rating}★`;
-    ratingCounts[key] = (ratingCounts[key] || 0) + 1;
-  });
-
   const filterOptions = [
     { value: "all", label: "All", count: reviews.length },
     { value: "pending", label: "Pending", count: statusCounts.pending },
     { value: "approved", label: "Approved", count: statusCounts.approved },
   ];
 
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selected.size === filtered.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(filtered.map((r: any) => r.id)));
+    }
+  };
+
+  const allSelected = filtered.length > 0 && selected.size === filtered.length;
+  const someSelected = selected.size > 0;
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-display font-bold">Reviews</h1>
 
-      <FilterChips options={filterOptions} value={filterStatus} onChange={setFilterStatus} />
+      <FilterChips options={filterOptions} value={filterStatus} onChange={(v) => { setFilterStatus(v); setSelected(new Set()); }} />
+
+      {/* Bulk action bar */}
+      <AnimatePresence>
+        {someSelected && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="flex items-center gap-3 glass rounded-2xl px-4 py-3"
+          >
+            <span className="text-sm text-foreground font-medium">
+              {selected.size} selected
+            </span>
+            <div className="flex gap-2 ml-auto">
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5"
+                onClick={() => bulkAction.mutate({ ids: Array.from(selected), action: "approve" })}
+                disabled={bulkAction.isPending}
+              >
+                <CheckCheck className="w-4 h-4 text-primary" />
+                Approve
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5"
+                onClick={() => bulkAction.mutate({ ids: Array.from(selected), action: "reject" })}
+                disabled={bulkAction.isPending}
+              >
+                <XCircle className="w-4 h-4" />
+                Reject
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 text-destructive hover:text-destructive"
+                onClick={() => {
+                  if (confirm(`Delete ${selected.size} review(s)?`)) {
+                    bulkAction.mutate({ ids: Array.from(selected), action: "delete" });
+                  }
+                }}
+                disabled={bulkAction.isPending}
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="rounded-lg border border-border overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-10">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={toggleSelectAll}
+                  aria-label="Select all"
+                />
+              </TableHead>
               <TableHead>Product</TableHead>
               <TableHead>Rating</TableHead>
               <TableHead>Comment</TableHead>
@@ -86,9 +178,18 @@ const AdminReviews = () => {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+            ) : filtered.length === 0 ? (
+              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No reviews found</TableCell></TableRow>
             ) : filtered.map((r: any) => (
-              <TableRow key={r.id}>
+              <TableRow key={r.id} className={selected.has(r.id) ? "bg-primary/5" : ""}>
+                <TableCell>
+                  <Checkbox
+                    checked={selected.has(r.id)}
+                    onCheckedChange={() => toggleSelect(r.id)}
+                    aria-label={`Select review`}
+                  />
+                </TableCell>
                 <TableCell className="font-medium">{r.products?.name ?? "—"}</TableCell>
                 <TableCell><div className="flex items-center gap-1"><Star className="h-3 w-3 fill-primary text-primary" />{r.rating}</div></TableCell>
                 <TableCell className="max-w-xs truncate">{r.comment || r.title || "—"}</TableCell>
