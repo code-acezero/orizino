@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, X, ZoomIn, Minus, Plus } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ImageGalleryProps {
   images: string[];
@@ -19,6 +20,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
   const [ripplePos, setRipplePos] = useState({ x: 0, y: 0 });
   const [pinchScale, setPinchScale] = useState(1);
   const [pinchOrigin, setPinchOrigin] = useState({ x: 50, y: 50 });
+  const [longPressZoom, setLongPressZoom] = useState(false);
   const pinchStartDist = useRef(0);
   const pinchStartScale = useRef(1);
   const swipeStartX = useRef(0);
@@ -26,6 +28,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
   const isSwiping = useRef(false);
   const lightboxImgRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLDivElement>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isMobile = useIsMobile();
 
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
@@ -99,33 +103,85 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
   const isMinimal = layout === "minimal";
   const isEditorial = layout === "editorial";
 
+  // Mobile: long-press to activate magnifier on main image
+  const handleMainTouchStart = useCallback((e: React.TouchEvent) => {
+    if (!isMobile || e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    const rect = imgRef.current?.getBoundingClientRect();
+    if (rect) {
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      setMousePos({ x, y });
+      setZoomPos({ x: (x / rect.width) * 100, y: (y / rect.height) * 100 });
+    }
+    longPressTimer.current = setTimeout(() => {
+      setLongPressZoom(true);
+      setRipplePos({ x: mousePos.x, y: mousePos.y });
+      setShowRipple(true);
+      setTimeout(() => setShowRipple(false), 600);
+    }, 400);
+  }, [isMobile, mousePos]);
+
+  const handleMainTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isMobile || e.touches.length !== 1) return;
+    if (longPressTimer.current && !longPressZoom) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    if (!longPressZoom) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = imgRef.current?.getBoundingClientRect();
+    if (rect) {
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      setMousePos({ x, y });
+      setZoomPos({ x: (x / rect.width) * 100, y: (y / rect.height) * 100 });
+    }
+  }, [isMobile, longPressZoom]);
+
+  const handleMainTouchEnd = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    setLongPressZoom(false);
+  }, []);
+
   return (
     <>
       <div className={`space-y-3 ${isEditorial ? "md:col-span-3" : ""}`}>
         {/* Main image with zoom */}
         <div
           ref={imgRef}
-          className={`relative overflow-hidden cursor-zoom-in group ${
-            isMinimal ? "rounded-2xl" : isEditorial ? "rounded-none aspect-[4/3]" : "rounded-3xl aspect-square glass"
-          }`}
-          onMouseEnter={(e) => {
-            setIsZooming(true);
-            const rect = imgRef.current?.getBoundingClientRect();
-            if (rect) {
-              setRipplePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-              setShowRipple(true);
-              setTimeout(() => setShowRipple(false), 600);
-            }
-          }}
-          onMouseLeave={() => setIsZooming(false)}
-          onMouseMove={handleMouseMove}
-          onWheel={(e) => {
-            if (isZooming) {
-              e.preventDefault();
-              setLensSize((s) => Math.min(300, Math.max(80, s + (e.deltaY < 0 ? 20 : -20))));
-            }
-          }}
-          onClick={() => setLightboxOpen(true)}
+          className={`relative overflow-hidden group ${
+            isMobile ? "cursor-default" : "cursor-zoom-in"
+          } ${isMinimal ? "rounded-2xl" : isEditorial ? "rounded-none aspect-[4/3]" : "rounded-3xl aspect-square glass"}`}
+          {...(!isMobile ? {
+            onMouseEnter: (e: React.MouseEvent) => {
+              setIsZooming(true);
+              const rect = imgRef.current?.getBoundingClientRect();
+              if (rect) {
+                setRipplePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                setShowRipple(true);
+                setTimeout(() => setShowRipple(false), 600);
+              }
+            },
+            onMouseLeave: () => setIsZooming(false),
+            onMouseMove: handleMouseMove,
+            onWheel: (e: React.WheelEvent) => {
+              if (isZooming) {
+                e.preventDefault();
+                setLensSize((s) => Math.min(300, Math.max(80, s + (e.deltaY < 0 ? 20 : -20))));
+              }
+            },
+          } : {})}
+          {...(isMobile ? {
+            onTouchStart: handleMainTouchStart,
+            onTouchMove: handleMainTouchMove,
+            onTouchEnd: handleMainTouchEnd,
+          } : {})}
+          onClick={() => { if (!longPressZoom) setLightboxOpen(true); }}
         >
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.img
@@ -140,7 +196,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
             />
           </AnimatePresence>
 
-          {/* Ripple effect on hover start */}
+          {/* Ripple effect */}
           <AnimatePresence>
             {showRipple && (
               <motion.div
@@ -154,8 +210,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
             )}
           </AnimatePresence>
 
-          {/* Liquid loupe magnifier */}
-          {isZooming && (
+          {/* Liquid loupe magnifier — desktop hover OR mobile long-press */}
+          {((!isMobile && isZooming) || (isMobile && longPressZoom)) && (
             <motion.div
               className="absolute pointer-events-none z-10"
               initial={{ scale: 0, opacity: 0 }}
@@ -177,8 +233,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
             />
           )}
 
-          {/* Lens size controls */}
-          {isZooming && (
+          {/* Lens size controls — desktop only */}
+          {!isMobile && isZooming && (
             <div className="absolute top-3 right-3 z-20 flex items-center gap-1 glass rounded-full px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
                 onClick={(e) => { e.stopPropagation(); setLensSize((s) => Math.max(80, s - 30)); }}
@@ -193,6 +249,13 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
               >
                 <Plus className="w-3 h-3" />
               </button>
+            </div>
+          )}
+
+          {/* Mobile long-press hint */}
+          {isMobile && longPressZoom && (
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 glass rounded-full px-3 py-1">
+              <span className="text-[10px] text-muted-foreground font-medium">Drag to inspect</span>
             </div>
           )}
 
