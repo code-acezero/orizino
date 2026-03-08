@@ -518,15 +518,16 @@ const AdminHome = () => {
 
             {/* Section Status */}
             <Card className="glass">
-              <CardHeader>
+              <CardHeader className="cursor-pointer hover:bg-primary/5 rounded-t-xl transition-all" onClick={() => setActiveTab("section-order")}>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
                     <Layout className="w-5 h-5 text-primary" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <CardTitle>Homepage Sections Status</CardTitle>
                     <p className="text-sm text-muted-foreground">Live view of all homepage sections and their current state</p>
                   </div>
+                  <span className="text-xs text-primary font-medium">Edit →</span>
                 </div>
               </CardHeader>
               <CardContent>
