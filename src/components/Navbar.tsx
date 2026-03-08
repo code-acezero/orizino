@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, LogOut, Bell, Settings,
+  Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, LogOut, Bell, Settings, LayoutGrid,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -12,6 +12,7 @@ import BottomNav from "@/components/BottomNav";
 
 const Navbar: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [catBarOpen, setCatBarOpen] = useState(false);
   const [hoveredCat, setHoveredCat] = useState<string | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -19,6 +20,20 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const catBarRef = useRef<HTMLDivElement>(null);
+
+  const { data: siteSettings } = useQuery({
+    queryKey: ["site-settings-name"],
+    queryFn: async () => {
+      const { data } = await supabase.from("site_settings").select("key, value").in("key", ["site_name"]);
+      const map: Record<string, any> = {};
+      data?.forEach((s) => (map[s.key] = s.value));
+      return map;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const siteName = (siteSettings?.site_name as string) || "Zero";
 
   const { data: dbCategories = [] } = useQuery({
     queryKey: ["nav-categories"],
@@ -44,6 +59,18 @@ const Navbar: React.FC = () => {
     refetchInterval: 30000,
   });
 
+  // Close category bar when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (catBarRef.current && !catBarRef.current.contains(e.target as Node)) {
+        setCatBarOpen(false);
+        setHoveredCat(null);
+      }
+    };
+    if (catBarOpen) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [catBarOpen]);
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
@@ -59,7 +86,7 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 w-full">
+      <nav className="sticky top-0 z-50 w-full" ref={catBarRef}>
         {/* Main bar */}
         <div className="glass-strong">
           <div className="w-full max-w-[1440px] mx-auto px-4 lg:px-6">
@@ -67,9 +94,9 @@ const Navbar: React.FC = () => {
               {/* Logo */}
               <Link to="/home" className="flex items-center gap-2 shrink-0">
                 <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-sm">Z</span>
+                  <span className="text-primary-foreground font-bold text-sm">{siteName.charAt(0)}</span>
                 </div>
-                <span className="font-display font-bold text-xl text-foreground hidden sm:inline">Zero</span>
+                <span className="font-display font-bold text-xl text-foreground hidden sm:inline">{siteName}</span>
               </Link>
 
               {/* Desktop nav links */}
@@ -80,8 +107,17 @@ const Navbar: React.FC = () => {
                 </Link>
                 <Link to="/shop"
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${location.pathname === "/shop" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
-                  Shop
+                  Mall
                 </Link>
+                {/* Categories toggle button */}
+                <button
+                  onClick={() => { setCatBarOpen(!catBarOpen); setHoveredCat(null); }}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors inline-flex items-center gap-1 ${catBarOpen ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  Categories
+                  <ChevronDown className={`w-3 h-3 transition-transform ${catBarOpen ? "rotate-180" : ""}`} />
+                </button>
               </div>
 
               {/* Center: Search */}
@@ -147,77 +183,87 @@ const Navbar: React.FC = () => {
           </div>
         </div>
 
-        {/* Category bar — desktop only */}
-        {parentCategories.length > 0 && (
-          <div className="hidden lg:block glass border-t border-border/30">
-            <div className="w-full max-w-[1440px] mx-auto px-4 lg:px-6">
-              <div className="flex items-center gap-1 h-11 overflow-x-auto scrollbar-none">
-                {parentCategories.map((cat) => {
-                  const children = getChildren(cat.id);
-                  const isActive = location.pathname === `/categories/${cat.slug}`;
+        {/* Category bar — desktop only, toggle on click */}
+        <AnimatePresence>
+          {catBarOpen && parentCategories.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="hidden lg:block glass border-t border-border/30 overflow-visible"
+            >
+              <div className="w-full max-w-[1440px] mx-auto px-4 lg:px-6">
+                <div className="flex items-center gap-1 h-11 overflow-x-auto scrollbar-none">
+                  {parentCategories.map((cat) => {
+                    const children = getChildren(cat.id);
+                    const isActive = location.pathname === `/categories/${cat.slug}`;
 
-                  return (
-                    <div
-                      key={cat.id}
-                      className="relative"
-                      onMouseEnter={() => setHoveredCat(cat.id)}
-                      onMouseLeave={() => setHoveredCat(null)}
-                    >
-                      <Link
-                        to={`/categories/${cat.slug}`}
-                        className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
-                          isActive
-                            ? "bg-primary/15 text-primary"
-                            : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                        }`}
+                    return (
+                      <div
+                        key={cat.id}
+                        className="relative"
+                        onMouseEnter={() => setHoveredCat(cat.id)}
+                        onMouseLeave={() => setHoveredCat(null)}
                       >
-                        {cat.icon_url ? (
-                          <img src={cat.icon_url} alt="" className="w-4 h-4 rounded object-contain" />
-                        ) : cat.icon ? (
-                          <span className="text-sm">{cat.icon}</span>
-                        ) : null}
-                        {cat.name}
-                        {children.length > 0 && (
-                          <ChevronDown className={`w-3 h-3 transition-transform ${hoveredCat === cat.id ? "rotate-180" : ""}`} />
-                        )}
-                      </Link>
+                        <Link
+                          to={`/categories/${cat.slug}`}
+                          onClick={() => setCatBarOpen(false)}
+                          className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                            isActive
+                              ? "bg-primary/15 text-primary"
+                              : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                          }`}
+                        >
+                          {cat.icon_url ? (
+                            <img src={cat.icon_url} alt="" className="w-4 h-4 rounded object-contain" />
+                          ) : cat.icon ? (
+                            <span className="text-sm">{cat.icon}</span>
+                          ) : null}
+                          {cat.name}
+                          {children.length > 0 && (
+                            <ChevronDown className={`w-3 h-3 transition-transform ${hoveredCat === cat.id ? "rotate-180" : ""}`} />
+                          )}
+                        </Link>
 
-                      {/* Subcategory dropdown */}
-                      <AnimatePresence>
-                        {hoveredCat === cat.id && children.length > 0 && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 4 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 4 }}
-                            transition={{ duration: 0.15 }}
-                            className="absolute top-full left-0 pt-1.5 z-50"
-                          >
-                            <div className="glass-strong rounded-xl p-1.5 shadow-lg border border-border/50 min-w-[160px]">
-                              {children.map((sub) => (
-                                <Link
-                                  key={sub.id}
-                                  to={`/categories/${sub.slug}`}
-                                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
-                                >
-                                  {sub.icon_url ? (
-                                    <img src={sub.icon_url} alt="" className="w-3.5 h-3.5 rounded object-contain" />
-                                  ) : sub.icon ? (
-                                    <span className="text-xs">{sub.icon}</span>
-                                  ) : null}
-                                  {sub.name}
-                                </Link>
-                              ))}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                })}
+                        {/* Subcategory dropdown */}
+                        <AnimatePresence>
+                          {hoveredCat === cat.id && children.length > 0 && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: 4 }}
+                              transition={{ duration: 0.15 }}
+                              className="absolute top-full left-0 pt-1.5 z-50"
+                            >
+                              <div className="glass-strong rounded-xl p-1.5 shadow-lg border border-border/50 min-w-[160px]">
+                                {children.map((sub) => (
+                                  <Link
+                                    key={sub.id}
+                                    to={`/categories/${sub.slug}`}
+                                    onClick={() => setCatBarOpen(false)}
+                                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                                  >
+                                    {sub.icon_url ? (
+                                      <img src={sub.icon_url} alt="" className="w-3.5 h-3.5 rounded object-contain" />
+                                    ) : sub.icon ? (
+                                      <span className="text-xs">{sub.icon}</span>
+                                    ) : null}
+                                    {sub.name}
+                                  </Link>
+                                ))}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Mobile menu */}
         <AnimatePresence>
@@ -256,7 +302,7 @@ const Navbar: React.FC = () => {
                   )}
                 </div>
 
-                <Link to="/shop" className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>All Products</Link>
+                <Link to="/shop" className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>Mall</Link>
                 {user ? (
                   <>
                     <Link to="/profile" className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>Profile</Link>
