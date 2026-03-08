@@ -288,7 +288,7 @@ const AdminHome = () => {
             <CardContent className="space-y-3">
               {catSections.length === 0 && <p className="text-center text-muted-foreground py-8">No category sections added yet.</p>}
               {catSections.map((section, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 rounded-xl border border-border bg-secondary/20">
+                <div key={index} {...getCatDragProps(index)} className={`flex items-center gap-3 p-3 rounded-xl border border-border bg-secondary/20 cursor-grab active:cursor-grabbing transition-colors ${catOverIdx === index && catDragIdx !== index ? "border-primary bg-primary/10" : ""}`}>
                   <GripVertical className="w-4 h-4 text-muted-foreground shrink-0" />
                   <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
