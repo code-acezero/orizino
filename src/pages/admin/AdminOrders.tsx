@@ -59,23 +59,51 @@ const AdminOrders = () => {
     onError: (e) => toast.error(e.message),
   });
 
+  const statusCounts = orders.reduce<Record<string, number>>((acc, o) => {
+    acc[o.status] = (acc[o.status] || 0) + 1;
+    return acc;
+  }, {});
+
   const filtered = filterStatus === "all" ? orders : orders.filter((o) => o.status === filterStatus);
+
+  const statuses = [
+    { value: "all", label: "All" },
+    { value: "pending", label: "Pending" },
+    { value: "processing", label: "Processing" },
+    { value: "shipped", label: "Shipped" },
+    { value: "delivered", label: "Delivered" },
+    { value: "cancelled", label: "Cancelled" },
+  ];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-display font-bold">Orders</h1>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="processing">Processing</SelectItem>
-            <SelectItem value="shipped">Shipped</SelectItem>
-            <SelectItem value="delivered">Delivered</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
-          </SelectContent>
-        </Select>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {statuses.map((s) => {
+          const count = s.value === "all" ? orders.length : (statusCounts[s.value] || 0);
+          const isActive = filterStatus === s.value;
+          return (
+            <button
+              key={s.value}
+              onClick={() => setFilterStatus(s.value)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                isActive
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border/50 text-muted-foreground hover:bg-secondary/50 hover:border-primary/30"
+              }`}
+            >
+              {s.label}
+              <span className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-semibold ${
+                isActive ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+              }`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       <div className="rounded-lg border border-border overflow-hidden">
