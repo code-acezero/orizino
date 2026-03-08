@@ -73,24 +73,19 @@ export const trackSectionDuration = async (
   }
 };
 
-/** Track a click event (CTA, product card, link, etc.) */
+/** Track a click event (CTA, product card, link, etc.) — geo-enriched */
 export const trackClick = async (
   clickType: string,
   targetId: string,
   page = "/home",
   metadata?: Record<string, any>
 ) => {
-  try {
-    await (supabase as any).from("page_analytics").insert({
-      event_type: "click",
-      page,
-      section_id: clickType,
-      session_id: getSessionId(),
-      metadata: { target_id: targetId, click_type: clickType, ...metadata },
-    });
-  } catch {
-    // silently fail
-  }
+  await trackViaEdge({
+    event_type: "click",
+    page,
+    section_id: clickType,
+    metadata: { target_id: targetId, click_type: clickType, ...metadata },
+  });
 };
 
 /**
