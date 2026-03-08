@@ -26,7 +26,7 @@ const ProductDetailPage: React.FC = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("products")
-        .select("*, categories(name, slug)")
+        .select("*, categories(name, slug, parent_id)")
         .eq("slug", slug!)
         .eq("is_active", true)
         .single();
@@ -38,6 +38,20 @@ const ProductDetailPage: React.FC = () => {
   // Apply SEO metadata for product detail page
   useProductSeoMeta(product);
 
+  // Fetch parent category for breadcrumbs
+  const productCat = product?.categories as any;
+  const { data: parentCategory } = useQuery({
+    queryKey: ["parent-category", productCat?.parent_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("categories")
+        .select("name, slug")
+        .eq("id", productCat.parent_id)
+        .single();
+      return data;
+    },
+    enabled: !!productCat?.parent_id,
+  });
   const { data: reviews } = useQuery({
     queryKey: ["reviews", product?.id],
     queryFn: async () => {
@@ -144,8 +158,9 @@ const ProductDetailPage: React.FC = () => {
         <Breadcrumbs
           items={[
             { label: "Home", href: "/home" },
-            ...(product.categories
-              ? [{ label: (product.categories as any).name, href: `/categories/${(product.categories as any).slug}` }]
+            ...(parentCategory ? [{ label: parentCategory.name, href: `/categories/${parentCategory.slug}` }] : []),
+            ...(productCat
+              ? [{ label: productCat.name, href: `/categories/${productCat.slug}` }]
               : []),
             { label: product.name },
           ]}

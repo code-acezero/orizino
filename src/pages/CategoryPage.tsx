@@ -43,6 +43,20 @@ const CategoryPage: React.FC = () => {
     enabled: !!slug,
   });
 
+  // Fetch parent category for breadcrumbs
+  const { data: parentCategory } = useQuery({
+    queryKey: ["parent-category", category?.parent_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("categories")
+        .select("name, slug")
+        .eq("id", category!.parent_id!)
+        .single();
+      return data;
+    },
+    enabled: !!category?.parent_id,
+  });
+
   // Apply SEO metadata for category page
   useCategorySeoMeta(category);
 
@@ -125,7 +139,12 @@ const CategoryPage: React.FC = () => {
     <div className="min-h-screen pb-20 lg:pb-0">
       <Navbar />
       <div className="container mx-auto px-4 pt-4">
-        <Breadcrumbs items={[{ label: "Home", href: "/home" }, { label: "Shop", href: "/shop" }, { label: category.name }]} className="mb-2" />
+        <Breadcrumbs items={[
+          { label: "Home", href: "/home" },
+          { label: "Shop", href: "/shop" },
+          ...(parentCategory ? [{ label: parentCategory.name, href: `/categories/${parentCategory.slug}` }] : []),
+          { label: category.name },
+        ]} className="mb-2" />
       </div>
       {/* Banner Section with fading shadow */}
       <div className="relative w-full overflow-hidden" style={{ minHeight: "260px", maxHeight: "400px" }}>
