@@ -23,6 +23,8 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { currency, setCurrency, enabledCurrencies } = useCurrency();
+  const [currencyOpen, setCurrencyOpen] = useState(false);
   const catDropRef = useRef<HTMLDivElement>(null);
 
   const { data: siteSettings } = useQuery({
