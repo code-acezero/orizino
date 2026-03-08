@@ -1,9 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Globe, MapPin } from "lucide-react";
+import { Globe, MapPin, Trophy, TrendingUp } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import VisitorWorldMap from "./VisitorWorldMap";
 
 interface GeoBreakdownProps {
   analyticsData: any[];
