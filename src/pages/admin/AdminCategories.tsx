@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, ChevronRight, Check, X, FolderTree, Search, Eye, EyeOff, Star } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronRight, Check, X, FolderTree, Search, Eye, EyeOff, Star, GripVertical } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
+import { useDragReorder } from "@/hooks/use-drag-reorder";
 
 const AdminCategories = () => {
   const qc = useQueryClient();
@@ -108,6 +109,27 @@ const AdminCategories = () => {
     else setSelected(new Set(categories.map((c) => c.id)));
   };
 
+  // Drag-and-drop reorder
+  const reorderMutation = useMutation({
+    mutationFn: async (reordered: typeof parentCategories) => {
+      const updates = reordered.map((cat, i) =>
+        supabase.from("categories").update({ sort_order: i }).eq("id", cat.id)
+      );
+      await Promise.all(updates);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-categories"] });
+      toast.success("Order saved");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const handleReorder = useCallback((reordered: typeof parentCategories) => {
+    reorderMutation.mutate(reordered);
+  }, [reorderMutation]);
+
+  const { dragIndex, overIndex, getDragProps } = useDragReorder(filteredParents, handleReorder);
+
   const openEdit = (cat?: any) => {
     setEditing(
       cat
@@ -179,22 +201,28 @@ const AdminCategories = () => {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredParents.map((c) => {
+          {filteredParents.map((c, idx) => {
             const children = getChildren(c.id);
+            const isDragging = dragIndex === idx;
+            const isOver = overIndex === idx;
             return (
-              <motion.div
-                key={c.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25 }}
+              <div
+                {...(search ? {} : getDragProps(idx))}
+                className={`${isDragging ? "opacity-50" : isOver ? "scale-[1.02]" : ""}`}
+                style={{ transition: "transform 0.15s ease" }}
               >
-                <Card className={`glass group hover:border-primary/30 transition-all relative overflow-hidden ${selected.has(c.id) ? "ring-2 ring-primary/50 border-primary/40" : ""}`}>
+                <Card className={`glass group hover:border-primary/30 transition-all relative overflow-hidden ${selected.has(c.id) ? "ring-2 ring-primary/50 border-primary/40" : ""} ${isOver ? "border-primary/50" : ""}`}>
                   {/* Accent strip */}
                   <div className="absolute top-0 left-0 right-0 h-1" style={{ background: c.accent_color || "hsl(var(--primary))" }} />
 
                   <CardContent className="pt-5 pb-4 px-5">
-                    {/* Top row: checkbox + icon + name + actions */}
+                    {/* Top row: drag handle + checkbox + icon + name + actions */}
                     <div className="flex items-start gap-3">
+                      {!search && (
+                        <div className="cursor-grab active:cursor-grabbing mt-1 text-muted-foreground hover:text-foreground transition-colors">
+                          <GripVertical className="w-4 h-4" />
+                        </div>
+                      )}
                       <Checkbox
                         checked={selected.has(c.id)}
                         onCheckedChange={() => toggleSelect(c.id)}
@@ -308,7 +336,7 @@ const AdminCategories = () => {
                     )}
                   </CardContent>
                 </Card>
-              </motion.div>
+              </div>
             );
           })}
         </div>
