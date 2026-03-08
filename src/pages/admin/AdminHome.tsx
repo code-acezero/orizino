@@ -335,6 +335,7 @@ const AdminHome = () => {
 
   const { getDragProps: getSectionOrderDragProps, dragIndex: secDragIdx, overIndex: secOverIdx } = useDragReorder(sectionOrder, handleSectionOrderReorder);
 
+  const addSection = () => setCatSections([...catSections, { category_id: "", sort_order: catSections.length, product_count: 8 }]);
   const removeSection = (index: number) => setCatSections(catSections.filter((_, i) => i !== index));
   const updateSection = (index: number, field: string, value: any) => {
     const updated = [...catSections];
