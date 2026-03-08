@@ -23,6 +23,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   avgRating = 0,
   reviewCount = 0,
   slug,
+  className = "",
 }) => {
   const discount = compareAtPrice
     ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
