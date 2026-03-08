@@ -45,7 +45,16 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ productId }) => {
     enabled: !!user,
   });
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="glass-strong rounded-3xl p-6 flex items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">Sign in to leave a review for this product.</p>
+        <a href="/auth" className="btn-pill bg-gradient-primary text-primary-foreground font-semibold py-2 px-5 text-sm whitespace-nowrap">
+          Sign In
+        </a>
+      </div>
+    );
+  }
 
   if (checkingEligibility) return null;
 
