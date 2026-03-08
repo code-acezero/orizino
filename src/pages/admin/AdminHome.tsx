@@ -785,49 +785,6 @@ const AdminHome = () => {
                             </div>
                           )}
                         </div>
-
-                        {/* Featured Categories toggle */}
-                        {settingsCfg.hasFeaturedToggle === "categories" && (
-                          <div className="mt-4">
-                            <Label className="text-xs font-semibold mb-2 block">Featured Categories</Label>
-                            <p className="text-xs text-muted-foreground mb-3">Toggle which categories appear in the "Shop by Category" section.</p>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
-                              {categories.map((cat) => (
-                                <div key={cat.id} className="flex items-center gap-2 p-2 rounded-lg border border-border/30 bg-secondary/10">
-                                  <Switch
-                                    checked={cat.is_featured}
-                                    onCheckedChange={(v) => toggleCatFeatured.mutate({ id: cat.id, is_featured: v })}
-                                    className="scale-75"
-                                  />
-                                  <span className="text-xs font-medium text-foreground truncate">{cat.name}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Featured Products toggle */}
-                        {settingsCfg.hasFeaturedToggle === "products" && (
-                          <div className="mt-4">
-                            <Label className="text-xs font-semibold mb-2 block">Featured Products</Label>
-                            <p className="text-xs text-muted-foreground mb-3">Toggle which products appear in the "Featured Products" section.</p>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-64 overflow-y-auto">
-                              {localProducts.map((prod) => (
-                                <div key={prod.id} className="flex items-center gap-2 p-2 rounded-lg border border-border/30 bg-secondary/10">
-                                  <Switch
-                                    checked={prod.is_featured}
-                                    onCheckedChange={(v) => toggleProdFeatured.mutate({ id: prod.id, is_featured: v })}
-                                    className="scale-75"
-                                  />
-                                  {prod.thumbnail && <img src={prod.thumbnail} alt="" className="w-7 h-7 object-cover rounded" />}
-                                  <span className="text-xs font-medium text-foreground truncate flex-1">{prod.name}</span>
-                                  <span className="text-[10px] text-muted-foreground">${Number(prod.price).toFixed(2)}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
                     )}
                   </div>
                 );
