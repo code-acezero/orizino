@@ -101,50 +101,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
   const isMinimal = layout === "minimal";
   const isEditorial = layout === "editorial";
 
-  // Mobile: long-press to activate magnifier on main image
-  const handleMainTouchStart = useCallback((e: React.TouchEvent) => {
-    if (!isMobile || e.touches.length !== 1) return;
-    const touch = e.touches[0];
-    const rect = imgRef.current?.getBoundingClientRect();
-    if (rect) {
-      const x = touch.clientX - rect.left;
-      const y = touch.clientY - rect.top;
-      setMousePos({ x, y });
-      setZoomPos({ x: (x / rect.width) * 100, y: (y / rect.height) * 100 });
-    }
-    longPressTimer.current = setTimeout(() => {
-      setLongPressZoom(true);
-      setRipplePos({ x: mousePos.x, y: mousePos.y });
-      setShowRipple(true);
-      setTimeout(() => setShowRipple(false), 600);
-    }, 400);
-  }, [isMobile, mousePos]);
-
-  const handleMainTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isMobile || e.touches.length !== 1) return;
-    if (longPressTimer.current && !longPressZoom) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-    if (!longPressZoom) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    const rect = imgRef.current?.getBoundingClientRect();
-    if (rect) {
-      const x = touch.clientX - rect.left;
-      const y = touch.clientY - rect.top;
-      setMousePos({ x, y });
-      setZoomPos({ x: (x / rect.width) * 100, y: (y / rect.height) * 100 });
-    }
-  }, [isMobile, longPressZoom]);
-
-  const handleMainTouchEnd = useCallback(() => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-    setLongPressZoom(false);
-  }, []);
 
   return (
     <>
