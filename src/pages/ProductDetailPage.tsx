@@ -352,16 +352,12 @@ const ProductDetailPage: React.FC = () => {
           {reviews && reviews.length > 0 && (
             <div className="grid md:grid-cols-2 gap-4">
               {reviews.map((review) => (
-                <div key={review.id} className="glass rounded-3xl p-6">
-                  <div className="flex items-center gap-1 mb-2">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className={`w-4 h-4 ${i < review.rating ? "fill-primary text-primary" : "text-muted-foreground/30"}`} />
-                    ))}
-                  </div>
-                  {review.title && <h4 className="font-semibold text-foreground mb-1">{review.title}</h4>}
-                  {review.comment && <p className="text-muted-foreground text-sm">{review.comment}</p>}
-                  <p className="text-xs text-muted-foreground/60 mt-3">{new Date(review.created_at).toLocaleDateString()}</p>
-                </div>
+                <ReviewCard
+                  key={review.id}
+                  review={review}
+                  isOwn={ownReviewIds?.includes(review.id) || false}
+                  productId={product.id}
+                />
               ))}
             </div>
           )}
