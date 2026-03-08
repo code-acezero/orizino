@@ -575,10 +575,12 @@ const AdminAnnouncements = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 <AnimatePresence mode="popLayout">
-                  {notifications.map((n: any, idx: number) => {
+                  {orderedNotifications.map((n: any, idx: number) => {
                     const prio = priorityConfig[n.priority] || priorityConfig.normal;
                     const PrioIcon = prio.icon;
                     const iconEmoji = notifIcons.find(i => i.value === n.icon)?.label.split(" ")[0] || "";
+                    const isDragging = notifDragIndex === idx;
+                    const isOver = notifOverIndex === idx;
                     return (
                       <motion.div
                         key={n.id}
@@ -586,11 +588,14 @@ const AdminAnnouncements = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.25, delay: idx * 0.03 }}
+                        {...getNotifDragProps(idx)}
+                        className={`cursor-grab active:cursor-grabbing transition-all ${isDragging ? "opacity-50 scale-95" : ""} ${isOver ? "ring-2 ring-primary/40 rounded-xl" : ""}`}
                       >
                         <Card className="glass group hover:border-primary/20 transition-all">
                           <CardContent className="p-4 space-y-3">
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex items-start gap-2.5">
+                                <GripVertical className="w-4 h-4 text-muted-foreground/40 mt-0.5 shrink-0 hover:text-muted-foreground transition-colors" />
                                 {n.icon && <span className="text-lg mt-0.5">{iconEmoji}</span>}
                                 <div>
                                   <h3 className="text-sm font-display font-semibold leading-tight">{n.title}</h3>
