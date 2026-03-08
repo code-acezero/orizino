@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Package, ShoppingCart, Users, DollarSign, TrendingUp, TrendingDown,
   Star, ArrowRight, Clock, CheckCircle2, XCircle, Truck, Eye,
-  BarChart3, Activity, Layers, Filter,
+  BarChart3, Activity, Layers, Filter, AlertTriangle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format, subDays, startOfDay, isAfter, differenceInDays } from "date-fns";
