@@ -215,7 +215,7 @@ const Navbar: React.FC = () => {
                     className="w-full px-4 py-3 rounded-2xl bg-secondary/50 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 mb-2" />
                 </form>
                 <Link to="/home" className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>Home</Link>
-                {categories.map((cat) => (
+                {parentCategories.map((cat) => (
                   <Link key={cat.slug} to={`/shop?category=${cat.slug}`} className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>
                     {cat.name}
                   </Link>
