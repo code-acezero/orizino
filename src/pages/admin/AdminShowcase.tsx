@@ -188,6 +188,7 @@ const AdminShowcase = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-8"></TableHead>
                     <TableHead>Image</TableHead>
                     <TableHead>Title</TableHead>
                     <TableHead>Subtitle</TableHead>
@@ -197,8 +198,13 @@ const AdminShowcase = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {slides.map((slide) => (
-                    <TableRow key={slide.id}>
+                  {slides.map((slide, idx) => (
+                    <TableRow
+                      key={slide.id}
+                      {...getSlideDragProps(idx)}
+                      className={`cursor-grab active:cursor-grabbing transition-colors ${slideOverIdx === idx && slideDragIdx !== idx ? "bg-primary/10" : ""}`}
+                    >
+                      <TableCell><GripVertical className="w-4 h-4 text-muted-foreground" /></TableCell>
                       <TableCell>{slide.image_url && <img src={slide.image_url} alt="" className="w-20 h-12 object-cover rounded-lg" />}</TableCell>
                       <TableCell className="font-medium">{slide.title}</TableCell>
                       <TableCell className="text-muted-foreground">{slide.subtitle}</TableCell>

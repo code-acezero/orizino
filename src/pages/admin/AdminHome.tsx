@@ -247,6 +247,17 @@ const AdminHome = () => {
 
   const getSaleColor = (sale: SaleConfig) => sale.color?.startsWith("var") ? `hsl(var(--primary))` : `hsl(${sale.color})`;
 
+  const handleCatReorder = useCallback((reordered: typeof catSections) => {
+    setCatSections(reordered.map((s, i) => ({ ...s, sort_order: i })));
+  }, []);
+
+  const handleSaleReorder = useCallback((reordered: SaleConfig[]) => {
+    setSales(reordered.map((s, i) => ({ ...s, sort_order: i })));
+  }, []);
+
+  const { dragIndex: catDragIdx, overIndex: catOverIdx, getDragProps: getCatDragProps } = useDragReorder(catSections, handleCatReorder);
+  const { dragIndex: saleDragIdx, overIndex: saleOverIdx, getDragProps: getSaleDragProps } = useDragReorder(sales, handleSaleReorder);
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-display font-bold">Home Page Management</h1>
