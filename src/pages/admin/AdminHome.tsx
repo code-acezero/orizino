@@ -483,6 +483,8 @@ const AdminHome = () => {
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="section-order">Section Order</TabsTrigger>
+          <TabsTrigger value="featured-categories">Featured Categories</TabsTrigger>
+          <TabsTrigger value="featured-products">Featured Products</TabsTrigger>
           <TabsTrigger value="cat-sections">Category Sections</TabsTrigger>
           <TabsTrigger value="sales">Sales</TabsTrigger>
           <TabsTrigger value="new-arrivals">New Arrivals</TabsTrigger>
