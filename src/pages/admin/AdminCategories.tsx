@@ -336,7 +336,7 @@ const AdminCategories = () => {
                     )}
                   </CardContent>
                 </Card>
-              </motion.div>
+              </div>
             );
           })}
         </div>
