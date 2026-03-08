@@ -205,6 +205,14 @@ const AdminHome = () => {
     }
   }, [arrivalsRow]);
 
+  useEffect(() => {
+    if (layoutRow?.value) {
+      const val = layoutRow.value as any;
+      const config = val?.value ?? val;
+      if (config && typeof config === "object") setLayoutConfig((prev) => ({ ...prev, ...config }));
+    }
+  }, [layoutRow]);
+
   const saveCatSections = useMutation({
     mutationFn: async (sections: typeof catSections) => {
       const jsonValue = { value: sections } as any;
