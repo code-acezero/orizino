@@ -23,7 +23,7 @@ const GeoBreakdown: React.FC<GeoBreakdownProps> = ({ analyticsData }) => {
     const countryMap: Record<string, { count: number; code: string; cities: Record<string, number> }> = {};
     let geoTracked = 0;
 
-    analyticsData.forEach((e: any) => {
+    filteredAnalyticsForLeaderboard.forEach((e: any) => {
       const country = e.metadata?.country;
       if (!country) return;
       geoTracked++;
