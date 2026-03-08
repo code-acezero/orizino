@@ -187,18 +187,18 @@ const CheckoutPage: React.FC = () => {
                         <p className="text-sm text-foreground line-clamp-1">{product.name}</p>
                         <p className="text-xs text-muted-foreground">x{item.quantity}</p>
                       </div>
-                      <span className="text-sm font-medium text-foreground">${(product.price * item.quantity).toFixed(2)}</span>
+                      <span className="text-sm font-medium text-foreground">{formatPrice(product.price * item.quantity)}</span>
                     </div>
                   );
                 })}
               </div>
 
               <div className="border-t border-border pt-4 space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="text-foreground">${subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span className="text-foreground">{shippingFee === 0 ? "Free" : `$${shippingFee.toFixed(2)}`}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="text-foreground">{formatPrice(subtotal)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span className="text-foreground">{shippingFee === 0 ? "Free" : formatPrice(shippingFee)}</span></div>
               </div>
               <div className="border-t border-border pt-4 flex justify-between font-bold text-foreground text-lg">
-                <span>Total</span><span>${total.toFixed(2)}</span>
+                <span>Total</span><span>{formatPrice(total)}</span>
               </div>
 
               <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" disabled={loading || !cartItems?.length}
