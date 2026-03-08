@@ -17,6 +17,7 @@ import ProductTabs from "@/components/product/ProductTabs";
 import ProductActions from "@/components/product/ProductActions";
 import CurrencyWidget from "@/components/product/CurrencyWidget";
 import StickyAddToCart from "@/components/product/StickyAddToCart";
+import VariantSelector from "@/components/product/VariantSelector";
 
 type LayoutStyle = "minimal" | "premium" | "editorial";
 
@@ -28,6 +29,8 @@ const ProductDetailPage: React.FC = () => {
 
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
   // Fetch product page layout setting
   const { data: layoutStyle } = useQuery<LayoutStyle>({
@@ -119,6 +122,39 @@ const ProductDetailPage: React.FC = () => {
     },
     enabled: !!product?.category_id && !!product?.id,
   });
+
+  // Fetch variants for stock-aware selection
+  const { data: variants = [] } = useQuery({
+    queryKey: ["product-variants", product?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("product_variants")
+        .select("id, size, color, stock_quantity, price_override, is_active")
+        .eq("product_id", product!.id)
+        .eq("is_active", true)
+        .order("sort_order");
+      return data || [];
+    },
+    enabled: !!product?.id,
+  });
+
+  const hasVariants = variants.length > 0;
+  const effectiveStock = hasVariants
+    ? (() => {
+        const match = variants.find(
+          (v) => (!selectedSize || v.size === selectedSize) && (!selectedColor || v.color === selectedColor)
+        );
+        if (selectedSize || selectedColor) return match?.stock_quantity ?? 0;
+        return variants.reduce((sum, v) => sum + v.stock_quantity, 0);
+      })()
+    : product?.stock_quantity ?? 0;
+
+  const selectedVariant = hasVariants
+    ? variants.find(
+        (v) => (!selectedSize || v.size === selectedSize) && (!selectedColor || v.color === selectedColor)
+      )
+    : null;
+  const effectivePrice = selectedVariant?.price_override ?? product?.price ?? 0;
 
   const images = product?.images?.length ? product.images : [product?.thumbnail || "/placeholder.svg"];
   const discount = product?.compare_at_price
@@ -265,18 +301,29 @@ const ProductDetailPage: React.FC = () => {
 
                   {/* Price */}
                   <div className="flex items-baseline gap-3">
-                    <span className="text-4xl font-bold text-gradient">{formatPrice(product.price)}</span>
+                    <span className="text-4xl font-bold text-gradient">{formatPrice(effectivePrice)}</span>
                     {product.compare_at_price && (
                       <span className="text-xl text-muted-foreground line-through">{formatPrice(product.compare_at_price)}</span>
                     )}
                   </div>
 
-                  <CurrencyWidget price={product.price} />
+                  <CurrencyWidget price={effectivePrice} />
+
+                  {hasVariants && product && (
+                    <VariantSelector
+                      productId={product.id}
+                      selectedSize={selectedSize}
+                      selectedColor={selectedColor}
+                      onSizeChange={setSelectedSize}
+                      onColorChange={setSelectedColor}
+                      layout="editorial"
+                    />
+                  )}
 
                   <ProductActions
-                    quantity={quantity} setQuantity={setQuantity} maxQuantity={product.stock_quantity}
+                    quantity={quantity} setQuantity={setQuantity} maxQuantity={effectiveStock}
                     onAddToCart={addToCart} onBuyNow={buyNow} onToggleWishlist={toggleWishlist}
-                    addingToCart={addingToCart} inStock={product.stock_quantity > 0} layout="editorial"
+                    addingToCart={addingToCart} inStock={effectiveStock > 0} layout="editorial"
                   />
                 </div>
               </div>
@@ -315,7 +362,7 @@ const ProductDetailPage: React.FC = () => {
                 {/* Price */}
                 <div className="flex items-baseline gap-3">
                   <span className={`font-bold ${isMinimal ? "text-3xl text-foreground" : "text-4xl text-gradient"}`}>
-                    {formatPrice(product.price)}
+                    {formatPrice(effectivePrice)}
                   </span>
                   {product.compare_at_price && (
                     <span className="text-xl text-muted-foreground line-through">{formatPrice(product.compare_at_price)}</span>
@@ -327,16 +374,27 @@ const ProductDetailPage: React.FC = () => {
                   )}
                 </div>
 
-                <CurrencyWidget price={product.price} />
+                <CurrencyWidget price={effectivePrice} />
 
                 {product.short_description && (
                   <p className={`${isMinimal ? "text-muted-foreground text-base" : "text-muted-foreground"}`}>{product.short_description}</p>
                 )}
 
+                {hasVariants && (
+                  <VariantSelector
+                    productId={product.id}
+                    selectedSize={selectedSize}
+                    selectedColor={selectedColor}
+                    onSizeChange={setSelectedSize}
+                    onColorChange={setSelectedColor}
+                    layout={layout}
+                  />
+                )}
+
                 <ProductActions
-                  quantity={quantity} setQuantity={setQuantity} maxQuantity={product.stock_quantity}
+                  quantity={quantity} setQuantity={setQuantity} maxQuantity={effectiveStock}
                   onAddToCart={addToCart} onBuyNow={buyNow} onToggleWishlist={toggleWishlist}
-                  addingToCart={addingToCart} inStock={product.stock_quantity > 0} layout={layout}
+                  addingToCart={addingToCart} inStock={effectiveStock > 0} layout={layout}
                 />
 
                 {/* Trust badges (premium only) */}
