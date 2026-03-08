@@ -10,13 +10,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, GripVertical } from "lucide-react";
+import { Plus, Trash2, GripVertical, Zap } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 const AdminHome = () => {
   const qc = useQueryClient();
 
-  // Featured categories (Shop by Category grid)
   const { data: categories = [] } = useQuery({
     queryKey: ["admin-home-categories"],
     queryFn: async () => {
@@ -26,7 +26,6 @@ const AdminHome = () => {
     },
   });
 
-  // Featured products
   const { data: products = [] } = useQuery({
     queryKey: ["admin-home-products"],
     queryFn: async () => {
@@ -36,7 +35,7 @@ const AdminHome = () => {
     },
   });
 
-  // Home category sections (from site_settings)
+  // Home category sections
   const { data: settingsRow } = useQuery({
     queryKey: ["admin-home-cat-sections"],
     queryFn: async () => {
@@ -46,7 +45,24 @@ const AdminHome = () => {
     },
   });
 
+  // Flash sale settings
+  const { data: flashSaleRow } = useQuery({
+    queryKey: ["admin-flash-sale"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("site_settings").select("*").eq("key", "flash_sale_config").maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const [catSections, setCatSections] = useState<{ category_id: string; sort_order: number; product_count: number }[]>([]);
+  const [flashSale, setFlashSale] = useState({
+    enabled: true,
+    title: "Flash Sale Live!",
+    subtitle: "Up to 70% off on selected items. Limited time only.",
+    button_text: "Shop Flash Sale",
+    button_link: "/shop",
+  });
 
   useEffect(() => {
     if (settingsRow?.value) {
@@ -55,6 +71,14 @@ const AdminHome = () => {
       if (Array.isArray(sections)) setCatSections(sections);
     }
   }, [settingsRow]);
+
+  useEffect(() => {
+    if (flashSaleRow?.value) {
+      const val = flashSaleRow.value as any;
+      const config = val?.value ?? val;
+      if (config && typeof config === "object") setFlashSale((prev) => ({ ...prev, ...config }));
+    }
+  }, [flashSaleRow]);
 
   const saveCatSections = useMutation({
     mutationFn: async (sections: typeof catSections) => {
@@ -71,6 +95,25 @@ const AdminHome = () => {
       qc.invalidateQueries({ queryKey: ["admin-home-cat-sections"] });
       qc.invalidateQueries({ queryKey: ["home-category-sections"] });
       toast.success("Category sections saved");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const saveFlashSale = useMutation({
+    mutationFn: async () => {
+      const jsonValue = { value: flashSale } as any;
+      if (flashSaleRow) {
+        const { error } = await supabase.from("site_settings").update({ value: jsonValue }).eq("id", flashSaleRow.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("site_settings").insert({ key: "flash_sale_config", value: jsonValue });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-flash-sale"] });
+      qc.invalidateQueries({ queryKey: ["flash-sale-config"] });
+      toast.success("Flash sale settings saved");
     },
     onError: (e) => toast.error(e.message),
   });
@@ -119,9 +162,7 @@ const AdminHome = () => {
     },
   });
 
-  // Get category name by id
   const getCatName = (id: string) => categories.find((c) => c.id === id)?.name || "Unknown";
-  // Categories not yet added
   const availableCategories = categories.filter((c) => !catSections.some((s) => s.category_id === c.id));
 
   return (
@@ -131,11 +172,12 @@ const AdminHome = () => {
       <Tabs defaultValue="cat-sections">
         <TabsList>
           <TabsTrigger value="cat-sections">Category Sections</TabsTrigger>
+          <TabsTrigger value="flash-sale">Flash Sale</TabsTrigger>
           <TabsTrigger value="categories">Featured Categories</TabsTrigger>
           <TabsTrigger value="products">Featured Products</TabsTrigger>
         </TabsList>
 
-        {/* Category Sections - which category products show on home */}
+        {/* Category Sections */}
         <TabsContent value="cat-sections">
           <Card className="glass">
             <CardHeader>
@@ -161,40 +203,21 @@ const AdminHome = () => {
                   <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                       <Label className="text-xs">Category</Label>
-                      <Select
-                        value={section.category_id}
-                        onValueChange={(v) => updateSection(index, "category_id", v)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
+                      <Select value={section.category_id} onValueChange={(v) => updateSection(index, "category_id", v)}>
+                        <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
                         <SelectContent>
-                          {section.category_id && (
-                            <SelectItem value={section.category_id}>{getCatName(section.category_id)}</SelectItem>
-                          )}
-                          {availableCategories.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                          ))}
+                          {section.category_id && <SelectItem value={section.category_id}>{getCatName(section.category_id)}</SelectItem>}
+                          {availableCategories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
                       <Label className="text-xs">Position</Label>
-                      <Input
-                        type="number"
-                        value={section.sort_order}
-                        onChange={(e) => updateSection(index, "sort_order", Number(e.target.value))}
-                      />
+                      <Input type="number" value={section.sort_order} onChange={(e) => updateSection(index, "sort_order", Number(e.target.value))} />
                     </div>
                     <div>
                       <Label className="text-xs">Products to Show</Label>
-                      <Input
-                        type="number"
-                        value={section.product_count}
-                        onChange={(e) => updateSection(index, "product_count", Number(e.target.value))}
-                        min={1}
-                        max={20}
-                      />
+                      <Input type="number" value={section.product_count} onChange={(e) => updateSection(index, "product_count", Number(e.target.value))} min={1} max={20} />
                     </div>
                   </div>
                   <Button size="icon" variant="ghost" onClick={() => removeSection(index)}>
@@ -207,6 +230,73 @@ const AdminHome = () => {
                   {saveCatSections.isPending ? "Saving..." : "Save Category Sections"}
                 </Button>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Flash Sale */}
+        <TabsContent value="flash-sale">
+          <Card className="glass">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-accent" />
+                </div>
+                <div>
+                  <CardTitle>Flash Sale Banner</CardTitle>
+                  <p className="text-sm text-muted-foreground">Customize the flash sale section on the home page.</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label>Show Flash Sale Banner</Label>
+                <Switch checked={flashSale.enabled} onCheckedChange={(v) => setFlashSale({ ...flashSale, enabled: v })} />
+              </div>
+              <div>
+                <Label>Title</Label>
+                <Input value={flashSale.title} onChange={(e) => setFlashSale({ ...flashSale, title: e.target.value })} />
+              </div>
+              <div>
+                <Label>Subtitle / Description</Label>
+                <Textarea value={flashSale.subtitle} onChange={(e) => setFlashSale({ ...flashSale, subtitle: e.target.value })} rows={2} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Button Text</Label>
+                  <Input value={flashSale.button_text} onChange={(e) => setFlashSale({ ...flashSale, button_text: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Button Link</Label>
+                  <Input value={flashSale.button_link} onChange={(e) => setFlashSale({ ...flashSale, button_link: e.target.value })} />
+                </div>
+              </div>
+
+              {/* Preview */}
+              <div className="mt-4">
+                <Label className="mb-2 block text-xs text-muted-foreground">Preview</Label>
+                <div className="glass-strong rounded-2xl p-6 relative overflow-hidden">
+                  <div className="absolute inset-0 opacity-20" style={{ background: "var(--gradient-accent)" }} />
+                  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
+                        <Zap className="w-5 h-5 text-accent" />
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-bold font-display text-foreground">{flashSale.title || "Flash Sale"}</h4>
+                        <p className="text-sm text-muted-foreground">{flashSale.subtitle || "Limited time offer"}</p>
+                      </div>
+                    </div>
+                    <span className="btn-pill bg-gradient-accent text-accent-foreground font-semibold px-6 py-2 text-sm">
+                      {flashSale.button_text || "Shop Now"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <Button className="w-full" onClick={() => saveFlashSale.mutate()} disabled={saveFlashSale.isPending}>
+                {saveFlashSale.isPending ? "Saving..." : "Save Flash Sale Settings"}
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -232,18 +322,10 @@ const AdminHome = () => {
                     <TableRow key={cat.id}>
                       <TableCell className="font-medium">{cat.name}</TableCell>
                       <TableCell>
-                        <Input
-                          type="number"
-                          className="w-20"
-                          defaultValue={cat.sort_order}
-                          onBlur={(e) => updateCatOrder.mutate({ id: cat.id, sort_order: Number(e.target.value) })}
-                        />
+                        <Input type="number" className="w-20" defaultValue={cat.sort_order} onBlur={(e) => updateCatOrder.mutate({ id: cat.id, sort_order: Number(e.target.value) })} />
                       </TableCell>
                       <TableCell>
-                        <Switch
-                          checked={cat.is_featured}
-                          onCheckedChange={(v) => toggleCatFeatured.mutate({ id: cat.id, is_featured: v })}
-                        />
+                        <Switch checked={cat.is_featured} onCheckedChange={(v) => toggleCatFeatured.mutate({ id: cat.id, is_featured: v })} />
                       </TableCell>
                       <TableCell>
                         <Badge variant={cat.is_active ? "default" : "secondary"}>{cat.is_active ? "Active" : "Inactive"}</Badge>
@@ -282,10 +364,7 @@ const AdminHome = () => {
                       <TableCell className="font-medium">{prod.name}</TableCell>
                       <TableCell>${Number(prod.price).toFixed(2)}</TableCell>
                       <TableCell>
-                        <Switch
-                          checked={prod.is_featured}
-                          onCheckedChange={(v) => toggleProdFeatured.mutate({ id: prod.id, is_featured: v })}
-                        />
+                        <Switch checked={prod.is_featured} onCheckedChange={(v) => toggleProdFeatured.mutate({ id: prod.id, is_featured: v })} />
                       </TableCell>
                       <TableCell>
                         <Badge variant={prod.is_active ? "default" : "secondary"}>{prod.is_active ? "Active" : "Inactive"}</Badge>

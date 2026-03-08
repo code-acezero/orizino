@@ -2,13 +2,14 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, LogOut, Bell, Settings, LayoutGrid,
+  Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, LogOut, Settings, LayoutGrid,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AuthModal from "@/components/AuthModal";
 import BottomNav from "@/components/BottomNav";
+import NotificationBell from "@/components/NotificationBell";
 
 const Navbar: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -54,16 +55,7 @@ const Navbar: React.FC = () => {
   const parentCategories = dbCategories.filter((c) => !c.parent_id);
   const getChildren = (parentId: string) => dbCategories.filter((c) => c.parent_id === parentId);
 
-  const { data: unreadCount } = useQuery({
-    queryKey: ["unread-notifications", user?.id],
-    queryFn: async () => {
-      const { count } = await supabase.from("notifications").select("*", { count: "exact", head: true })
-        .or(`user_id.eq.${user!.id},user_id.is.null`).eq("is_read", false);
-      return count || 0;
-    },
-    enabled: !!user,
-    refetchInterval: 30000,
-  });
+  // unreadCount query removed - handled by NotificationBell component
 
   // Close category dropdown when clicking outside
   useEffect(() => {
@@ -222,16 +214,7 @@ const Navbar: React.FC = () => {
                   <ShoppingCart className="w-5 h-5" />
                 </Link>
 
-                {user && (
-                  <Link to="/profile" className="p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all relative">
-                    <Bell className="w-5 h-5" />
-                    {(unreadCount || 0) > 0 && (
-                      <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-destructive text-[10px] text-destructive-foreground flex items-center justify-center font-bold">
-                        {unreadCount}
-                      </span>
-                    )}
-                  </Link>
-                )}
+                {user && <NotificationBell />}
 
                 {user ? (
                   <div className="relative hidden lg:block" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)}>
