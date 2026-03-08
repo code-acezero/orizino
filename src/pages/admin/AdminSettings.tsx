@@ -425,6 +425,11 @@ const AdminSettings = () => {
           <SiteCustomizer />
         </TabsContent>
 
+        {/* ── SEO Tab ── */}
+        <TabsContent value="seo">
+          <AdminSeoSettings />
+        </TabsContent>
+
         {/* ── Currency Tab ── */}
         <TabsContent value="currency">
           <div className="space-y-6">
