@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,10 +10,10 @@ import electronicsImg from "@/assets/slide-electronics.jpg";
 import homeImg from "@/assets/slide-home.jpg";
 
 const fallbackSlides = [
-  { id: "f1", title: "Discover the Future", subtitle: "New Arrivals", description: "Explore our curated collection of premium products.", image: heroImg, cta: "Shop Now", ctaLink: "/shop" },
-  { id: "f2", title: "Street Style Redefined", subtitle: "Fashion", description: "Bold looks for the modern trendsetter.", image: fashionImg, cta: "Explore Fashion", ctaLink: "/categories/fashion" },
-  { id: "f3", title: "Tech That Inspires", subtitle: "Electronics", description: "Cutting-edge gadgets designed for tomorrow.", image: electronicsImg, cta: "View Electronics", ctaLink: "/categories/electronics" },
-  { id: "f4", title: "Elevate Your Space", subtitle: "Home", description: "Premium appliances for the modern home.", image: homeImg, cta: "Shop Home", ctaLink: "/categories/home-appliance" },
+  { id: "f1", title: "Discover the Future", subtitle: "New Arrivals", description: "Explore our curated collection of premium products.", image: heroImg, cta: "Shop Now", ctaLink: "/shop", transitionType: "" },
+  { id: "f2", title: "Street Style Redefined", subtitle: "Fashion", description: "Bold looks for the modern trendsetter.", image: fashionImg, cta: "Explore Fashion", ctaLink: "/categories/fashion", transitionType: "" },
+  { id: "f3", title: "Tech That Inspires", subtitle: "Electronics", description: "Cutting-edge gadgets designed for tomorrow.", image: electronicsImg, cta: "View Electronics", ctaLink: "/categories/electronics", transitionType: "" },
+  { id: "f4", title: "Elevate Your Space", subtitle: "Home", description: "Premium appliances for the modern home.", image: homeImg, cta: "Shop Home", ctaLink: "/categories/home-appliance", transitionType: "" },
 ];
 
 interface ShowcaseConfig {
@@ -34,6 +34,10 @@ interface ShowcaseConfig {
   border_radius: string;
   autoplay: boolean;
   pause_on_hover: boolean;
+  transition_type: string;
+  parallax_intensity: number;
+  content_animation: string;
+  slide_gap: string;
 }
 
 const defaultConfig: ShowcaseConfig = {
@@ -54,6 +58,76 @@ const defaultConfig: ShowcaseConfig = {
   border_radius: "3xl",
   autoplay: true,
   pause_on_hover: true,
+  transition_type: "fade",
+  parallax_intensity: 20,
+  content_animation: "slide-up",
+  slide_gap: "0",
+};
+
+/* ── Transition variant factories ── */
+const getSlideVariants = (type: string, dur: number): Variants => {
+  const ease = [0.25, 0.46, 0.45, 0.94] as const;
+  switch (type) {
+    case "slide":
+      return {
+        enter: (dir: number) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 1 }),
+        center: { x: 0, opacity: 1, transition: { duration: dur, ease } },
+        exit: (dir: number) => ({ x: dir > 0 ? "-100%" : "100%", opacity: 1, transition: { duration: dur, ease } }),
+      };
+    case "zoom":
+      return {
+        enter: () => ({ scale: 1.4, opacity: 0 }),
+        center: { scale: 1, opacity: 1, transition: { duration: dur, ease } },
+        exit: () => ({ scale: 0.6, opacity: 0, transition: { duration: dur * 0.75, ease } }),
+      };
+    case "flip":
+      return {
+        enter: (dir: number) => ({ rotateY: dir > 0 ? 90 : -90, opacity: 0 }),
+        center: { rotateY: 0, opacity: 1, transition: { duration: dur, ease } },
+        exit: (dir: number) => ({ rotateY: dir > 0 ? -90 : 90, opacity: 0, transition: { duration: dur * 0.75, ease } }),
+      };
+    case "blur":
+      return {
+        enter: () => ({ filter: "blur(30px)", opacity: 0, scale: 1.1 }),
+        center: { filter: "blur(0px)", opacity: 1, scale: 1, transition: { duration: dur, ease } },
+        exit: () => ({ filter: "blur(30px)", opacity: 0, scale: 0.95, transition: { duration: dur * 0.75, ease } }),
+      };
+    case "cube":
+      return {
+        enter: (dir: number) => ({ rotateY: dir > 0 ? 90 : -90, x: dir > 0 ? "50%" : "-50%", opacity: 0, transformOrigin: dir > 0 ? "left center" : "right center" }),
+        center: { rotateY: 0, x: 0, opacity: 1, transformOrigin: "center", transition: { duration: dur, ease } },
+        exit: (dir: number) => ({ rotateY: dir > 0 ? -90 : 90, x: dir > 0 ? "-50%" : "50%", opacity: 0, transformOrigin: dir > 0 ? "right center" : "left center", transition: { duration: dur * 0.75, ease } }),
+      };
+    case "fade":
+    default:
+      return {
+        enter: (dir: number) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 0, scale: 1.1 }),
+        center: { x: 0, opacity: 1, scale: 1, transition: { duration: dur, ease } },
+        exit: (dir: number) => ({ x: dir > 0 ? "-30%" : "30%", opacity: 0, scale: 0.95, transition: { duration: dur * 0.75, ease } }),
+      };
+  }
+};
+
+/* ── Content animation variants ── */
+const getContentVariants = (anim: string): { initial: Record<string, any>; animate: Record<string, any> } => {
+  const base = { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] };
+  switch (anim) {
+    case "slide-left":
+      return { initial: { opacity: 0, x: -60 }, animate: { opacity: 1, x: 0, transition: { delay: 0.3, ...base } } };
+    case "slide-right":
+      return { initial: { opacity: 0, x: 60 }, animate: { opacity: 1, x: 0, transition: { delay: 0.3, ...base } } };
+    case "scale":
+      return { initial: { opacity: 0, scale: 0.8 }, animate: { opacity: 1, scale: 1, transition: { delay: 0.3, ...base } } };
+    case "fade":
+      return { initial: { opacity: 0 }, animate: { opacity: 1, transition: { delay: 0.3, ...base } } };
+    case "rotate":
+      return { initial: { opacity: 0, rotate: -5, y: 40 }, animate: { opacity: 1, rotate: 0, y: 0, transition: { delay: 0.3, ...base } } };
+    case "blur-in":
+      return { initial: { opacity: 0, filter: "blur(20px)" }, animate: { opacity: 1, filter: "blur(0px)", transition: { delay: 0.3, ...base } } };
+    case "slide-up":
+    default:
+      return { initial: { opacity: 0, y: 40 }, animate: { opacity: 1, y: 0, transition: { delay: 0.3, ...base } } };
+  }
 };
 
 const ParallaxSlider: React.FC = () => {
@@ -86,7 +160,7 @@ const ParallaxSlider: React.FC = () => {
   const cfg = configData || defaultConfig;
 
   const slides = dbSlides.length > 0
-    ? dbSlides.map((s) => ({ id: s.id, title: s.title, subtitle: s.subtitle || "", description: s.description || "", image: s.image_url, cta: s.cta_text || "Shop Now", ctaLink: s.cta_link || "/shop" }))
+    ? dbSlides.map((s) => ({ id: s.id, title: s.title, subtitle: s.subtitle || "", description: s.description || "", image: s.image_url, cta: s.cta_text || "Shop Now", ctaLink: s.cta_link || "/shop", transitionType: s.transition_type || "" }))
     : fallbackSlides;
 
   useEffect(() => {
@@ -102,15 +176,14 @@ const ParallaxSlider: React.FC = () => {
   const prev = () => { setDirection(-1); setCurrent((c) => (c - 1 + slides.length) % slides.length); };
   const next = () => { setDirection(1); setCurrent((c) => (c + 1) % slides.length); };
 
-  const dur = cfg.transition_duration / 1000;
-  const variants = {
-    enter: (dir: number) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 0, scale: 1.1 }),
-    center: { x: 0, opacity: 1, scale: 1, transition: { duration: dur, ease: [0.25, 0.46, 0.45, 0.94] as const } },
-    exit: (dir: number) => ({ x: dir > 0 ? "-30%" : "30%", opacity: 0, scale: 0.95, transition: { duration: dur * 0.75, ease: [0.25, 0.46, 0.45, 0.94] as const } }),
-  };
-
   const slide = slides[current];
   if (!slide) return null;
+
+  // Resolve transition type: per-slide override → global config
+  const activeTransition = slide.transitionType && slide.transitionType !== "fade" ? slide.transitionType : cfg.transition_type;
+  const dur = cfg.transition_duration / 1000;
+  const variants = getSlideVariants(activeTransition, dur);
+  const contentAnim = getContentVariants(cfg.content_animation);
 
   // Overlay
   const opa = cfg.overlay_opacity / 100;
@@ -172,24 +245,39 @@ const ParallaxSlider: React.FC = () => {
   };
 
   const radiusClass = cfg.border_radius === "none" ? "" : `rounded-${cfg.border_radius}`;
+  const parallaxPx = cfg.parallax_intensity || 20;
 
   return (
     <div
       className={`relative w-full overflow-hidden ${radiusClass}`}
-      style={{ height: cfg.height, minHeight: "400px" }}
+      style={{ height: cfg.height, minHeight: "400px", perspective: activeTransition === "cube" || activeTransition === "flip" ? "1200px" : undefined }}
       onMouseEnter={() => cfg.pause_on_hover && setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
       <AnimatePresence custom={direction} mode="wait">
-        <motion.div key={slide.id} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="absolute inset-0">
-          <motion.div className="absolute inset-0" animate={cfg.ken_burns ? { scale: 1.05 } : {}} transition={{ duration: cfg.autoplay_speed / 1000, ease: "linear" }}>
+        <motion.div key={slide.id} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="absolute inset-0" style={{ transformStyle: activeTransition === "cube" || activeTransition === "flip" ? "preserve-3d" : undefined }}>
+          {/* Background image with ken burns + parallax */}
+          <motion.div
+            className="absolute inset-0"
+            animate={cfg.ken_burns ? { scale: 1.05, y: [parallaxPx * -0.5, parallaxPx * 0.5] } : {}}
+            transition={{ duration: cfg.autoplay_speed / 1000, ease: "linear", y: { duration: cfg.autoplay_speed / 1000, ease: "linear", repeat: 0 } }}
+          >
             <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
           </motion.div>
+
+          {/* Overlays */}
           <div className={`absolute inset-0 ${overlayClasses[cfg.overlay_style] || ""}`} style={overlayStyle} />
           <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
+
+          {/* Content with configurable animation */}
           <div className="absolute inset-0 flex items-center">
             <div className={`container mx-auto px-6 lg:px-12 ${textContainer}`}>
-              <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.6 }} className={`max-w-${cfg.text_max_width} ${textAlign}`}>
+              <motion.div
+                key={`content-${slide.id}`}
+                initial={contentAnim.initial}
+                animate={contentAnim.animate}
+                className={`max-w-${cfg.text_max_width} ${textAlign}`}
+              >
                 {subtitleEl(slide.subtitle)}
                 <h1 className={`${titleClass} font-bold font-display mb-4 leading-tight text-foreground`}>{slide.title}</h1>
                 <p className="text-lg text-muted-foreground mb-8 max-w-lg">{slide.description}</p>
