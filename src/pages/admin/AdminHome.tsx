@@ -535,18 +535,19 @@ const AdminHome = () => {
           <Card className="glass">
             <CardHeader>
               <CardTitle>Categories on Home Page</CardTitle>
-              <p className="text-sm text-muted-foreground">Toggle which categories appear in the "Shop by Category" section.</p>
+              <p className="text-sm text-muted-foreground">Toggle which categories appear in the "Shop by Category" section. Drag to reorder.</p>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader><TableRow>
-                  <TableHead>Name</TableHead><TableHead>Sort Order</TableHead><TableHead>Featured</TableHead><TableHead>Status</TableHead>
+                  <TableHead className="w-8"></TableHead><TableHead>Name</TableHead><TableHead>Sort Order</TableHead><TableHead>Featured</TableHead><TableHead>Status</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
-                  {categories.map((cat) => (
-                    <TableRow key={cat.id}>
+                  {categories.map((cat, idx) => (
+                    <TableRow key={cat.id} {...getFeatCatDragProps(idx)} className={`cursor-grab active:cursor-grabbing transition-colors ${featCatOverIdx === idx && featCatDragIdx !== idx ? "bg-primary/10" : ""}`}>
+                      <TableCell><GripVertical className="w-4 h-4 text-muted-foreground" /></TableCell>
                       <TableCell className="font-medium">{cat.name}</TableCell>
-                      <TableCell><Input type="number" className="w-20" defaultValue={cat.sort_order} onBlur={(e) => updateCatOrder.mutate({ id: cat.id, sort_order: Number(e.target.value) })} /></TableCell>
+                      <TableCell>{cat.sort_order}</TableCell>
                       <TableCell><Switch checked={cat.is_featured} onCheckedChange={(v) => toggleCatFeatured.mutate({ id: cat.id, is_featured: v })} /></TableCell>
                       <TableCell><Badge variant={cat.is_active ? "default" : "secondary"}>{cat.is_active ? "Active" : "Inactive"}</Badge></TableCell>
                     </TableRow>
