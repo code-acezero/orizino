@@ -237,8 +237,11 @@ const AdminHome = () => {
       const val = sectionOrderRow.value as any;
       const order = val?.value ?? val;
       if (Array.isArray(order) && order.length > 0) {
-        // Merge saved order with defaults (in case new sections were added)
-        const merged = order.map((o: any) => defaultSectionOrder.find((d) => d.id === o.id) || o).filter(Boolean);
+        // Merge saved order with defaults (in case new sections were added or visibility is missing)
+        const merged = order.map((o: any) => {
+          const defaultSection = defaultSectionOrder.find((d) => d.id === o.id);
+          return defaultSection ? { ...defaultSection, ...o } : o;
+        }).filter(Boolean);
         const missing = defaultSectionOrder.filter((d) => !order.some((o: any) => o.id === d.id));
         setSectionOrder([...merged, ...missing]);
       }
