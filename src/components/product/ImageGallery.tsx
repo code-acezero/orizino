@@ -130,7 +130,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
               }
             },
           } : {})}
-          onClick={() => { if (!longPressZoom) setLightboxOpen(true); }}
+          onClick={() => setLightboxOpen(true)}
         >
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.img
