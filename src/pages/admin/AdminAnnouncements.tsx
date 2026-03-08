@@ -582,12 +582,8 @@ const AdminAnnouncements = () => {
                     const isDragging = notifDragIndex === idx;
                     const isOver = notifOverIndex === idx;
                     return (
-                      <motion.div
+                      <div
                         key={n.id}
-                        layout
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.25, delay: idx * 0.03 }}
                         {...getNotifDragProps(idx)}
                         className={`cursor-grab active:cursor-grabbing transition-all ${isDragging ? "opacity-50 scale-95" : ""} ${isOver ? "ring-2 ring-primary/40 rounded-xl" : ""}`}
                       >
