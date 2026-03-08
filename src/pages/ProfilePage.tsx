@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, Phone, MapPin, Save, LogOut, ShoppingCart, Package, Star, Bell, Settings, ChevronRight } from "lucide-react";
+import { User, Phone, MapPin, Save, LogOut, ShoppingCart, Package, Star, Bell, Settings, ChevronRight, Camera } from "lucide-react";
+import ImageUpload from "@/components/ImageUpload";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
