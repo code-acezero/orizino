@@ -226,17 +226,51 @@ const AdminProducts = () => {
   // --- Variants ---
   const [variants, setVariants] = useState<any[]>([]);
   const [variantsLoading, setVariantsLoading] = useState(false);
+  const [bulkUploading, setBulkUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const variantImageRefs = useRef<Record<number, HTMLInputElement>>({});
+  const bulkInputRef = useRef<HTMLInputElement>(null);
 
-  const handleVariantImageUpload = async (idx: number, file?: File | null) => {
-    if (!file) return;
+  const uploadSingleFile = async (file: File): Promise<string | null> => {
     const ext = file.name.split(".").pop();
     const path = `variants/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const { error } = await supabase.storage.from("products").upload(path, file, { cacheControl: "3600", upsert: false });
-    if (error) { toast.error("Upload failed: " + error.message); return; }
+    if (error) return null;
     const { data: urlData } = supabase.storage.from("products").getPublicUrl(path);
-    updateVariant(idx, "image_url", urlData.publicUrl);
+    return urlData.publicUrl;
+  };
+
+  const handleVariantImageUpload = async (idx: number, file?: File | null) => {
+    if (!file) return;
+    const url = await uploadSingleFile(file);
+    if (!url) { toast.error("Upload failed"); return; }
+    updateVariant(idx, "image_url", url);
     toast.success("Variant image uploaded");
+  };
+
+  const handleBulkImageUpload = async (files: FileList | File[]) => {
+    const fileArr = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (fileArr.length === 0) return;
+
+    // Find variants without images, assign in order
+    const emptyIndices = variants.map((v, i) => (!v.image_url ? i : -1)).filter((i) => i >= 0);
+    const assignCount = Math.min(fileArr.length, emptyIndices.length || fileArr.length);
+
+    setBulkUploading(true);
+    let uploaded = 0;
+    for (let f = 0; f < fileArr.length; f++) {
+      const url = await uploadSingleFile(fileArr[f]);
+      if (url) {
+        const targetIdx = emptyIndices.length > 0 ? emptyIndices[f] : f;
+        if (targetIdx !== undefined && targetIdx < variants.length) {
+          updateVariant(targetIdx, "image_url", url);
+          uploaded++;
+        }
+      }
+    }
+    setBulkUploading(false);
+    if (uploaded > 0) toast.success(`Uploaded ${uploaded} image${uploaded > 1 ? "s" : ""} to variants`);
+    else toast.error("No images could be uploaded");
   };
 
   const loadVariants = async (productId: string) => {
