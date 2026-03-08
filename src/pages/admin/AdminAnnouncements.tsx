@@ -347,6 +347,48 @@ const AdminAnnouncements = () => {
     },
   });
 
+  /* ── Notification order (persisted in site_settings) ── */
+  const { data: savedOrder } = useQuery({
+    queryKey: ["notification-order"],
+    queryFn: async () => {
+      const { data } = await supabase.from("site_settings").select("value").eq("key", "notification_order").maybeSingle();
+      return (data?.value as string[]) || [];
+    },
+  });
+
+  const orderedNotifications = useMemo(() => {
+    if (!savedOrder || savedOrder.length === 0) return notifications;
+    const orderMap = new Map(savedOrder.map((id: string, i: number) => [id, i]));
+    const sorted = [...notifications].sort((a: any, b: any) => {
+      const ai = orderMap.has(a.id) ? orderMap.get(a.id)! : 9999;
+      const bi = orderMap.has(b.id) ? orderMap.get(b.id)! : 9999;
+      return ai - bi;
+    });
+    return sorted;
+  }, [notifications, savedOrder]);
+
+  const saveNotifOrder = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from("site_settings").upsert(
+        { key: "notification_order", value: ids as any },
+        { onConflict: "key" }
+      );
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["notification-order"] });
+      toast.success("Order saved");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const handleNotifReorder = (reordered: any[]) => {
+    const ids = reordered.map((n: any) => n.id);
+    saveNotifOrder.mutate(ids);
+  };
+
+  const { dragIndex: notifDragIndex, overIndex: notifOverIndex, getDragProps: getNotifDragProps } = useDragReorder(orderedNotifications, handleNotifReorder);
+
   const sendNotification = useMutation({
     mutationFn: async () => {
       const payload: any = {
