@@ -1,4 +1,5 @@
 import { useState } from "react";
+import FilterChips from "@/components/admin/FilterChips";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -66,13 +67,13 @@ const AdminOrders = () => {
 
   const filtered = filterStatus === "all" ? orders : orders.filter((o) => o.status === filterStatus);
 
-  const statuses = [
-    { value: "all", label: "All" },
-    { value: "pending", label: "Pending" },
-    { value: "processing", label: "Processing" },
-    { value: "shipped", label: "Shipped" },
-    { value: "delivered", label: "Delivered" },
-    { value: "cancelled", label: "Cancelled" },
+  const filterOptions = [
+    { value: "all", label: "All", count: orders.length },
+    { value: "pending", label: "Pending", count: statusCounts["pending"] || 0 },
+    { value: "processing", label: "Processing", count: statusCounts["processing"] || 0 },
+    { value: "shipped", label: "Shipped", count: statusCounts["shipped"] || 0 },
+    { value: "delivered", label: "Delivered", count: statusCounts["delivered"] || 0 },
+    { value: "cancelled", label: "Cancelled", count: statusCounts["cancelled"] || 0 },
   ];
 
   return (
@@ -81,30 +82,7 @@ const AdminOrders = () => {
         <h1 className="text-3xl font-display font-bold">Orders</h1>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {statuses.map((s) => {
-          const count = s.value === "all" ? orders.length : (statusCounts[s.value] || 0);
-          const isActive = filterStatus === s.value;
-          return (
-            <button
-              key={s.value}
-              onClick={() => setFilterStatus(s.value)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
-                isActive
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border/50 text-muted-foreground hover:bg-secondary/50 hover:border-primary/30"
-              }`}
-            >
-              {s.label}
-              <span className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-semibold ${
-                isActive ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
-              }`}>
-                {count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      <FilterChips options={filterOptions} value={filterStatus} onChange={setFilterStatus} />
 
       <div className="rounded-lg border border-border overflow-hidden">
         <Table>
