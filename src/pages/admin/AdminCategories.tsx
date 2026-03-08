@@ -139,6 +139,13 @@ const AdminCategories = () => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={selected.size === categories.length && categories.length > 0}
+                  onCheckedChange={toggleSelectAll}
+                  disabled={categories.length === 0}
+                />
+              </TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Slug</TableHead>
               <TableHead>Color</TableHead>
