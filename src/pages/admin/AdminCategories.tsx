@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { subDays, startOfDay } from "date-fns";
+import { subDays, startOfDay, format as fmtDate, eachDayOfInterval } from "date-fns";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDragReorder } from "@/hooks/use-drag-reorder";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, LineChart, Line } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 const AdminCategories = () => {
   const qc = useQueryClient();
@@ -120,6 +120,49 @@ const AdminCategories = () => {
     });
     return rows;
   }, [parentCategories, categoryAnalytics, sortBy, sortDir, categories]);
+
+  // Build daily sparkline data per parent category
+  const sparklineData = useMemo(() => {
+    const days = dateRange === "7d" ? 7 : dateRange === "30d" ? 30 : dateRange === "90d" ? 90 : 30;
+    const end = new Date();
+    const start = startOfDay(subDays(end, days - 1));
+    const dayList = eachDayOfInterval({ start, end });
+    const dayKeys = dayList.map((d) => fmtDate(d, "yyyy-MM-dd"));
+
+    const prodCatMap = new Map<string, string>();
+    products.forEach((p: any) => { if (p.category_id) prodCatMap.set(p.id, p.category_id); });
+
+    // parentCatId → { dayKey → revenue }
+    const catDayMap = new Map<string, Map<string, number>>();
+
+    // Map child category ids to parent ids
+    const childToParent = new Map<string, string>();
+    parentCategories.forEach((p) => {
+      getChildren(p.id).forEach((ch) => childToParent.set(ch.id, p.id));
+    });
+
+    const resolveParent = (catId: string) => childToParent.get(catId) || catId;
+
+    filteredOrderItems.forEach((oi: any) => {
+      const catId = prodCatMap.get(oi.product_id);
+      if (!catId) return;
+      const parentId = resolveParent(catId);
+      const orderDate = oi.orders?.created_at;
+      if (!orderDate) return;
+      const dayKey = orderDate.slice(0, 10);
+      if (!catDayMap.has(parentId)) catDayMap.set(parentId, new Map());
+      const dm = catDayMap.get(parentId)!;
+      dm.set(dayKey, (dm.get(dayKey) || 0) + (Number(oi.total_price) || 0));
+    });
+
+    // Convert to array format per category
+    const result = new Map<string, { day: string; rev: number }[]>();
+    parentCategories.forEach((c) => {
+      const dm = catDayMap.get(c.id);
+      result.set(c.id, dayKeys.map((dk) => ({ day: dk, rev: dm?.get(dk) || 0 })));
+    });
+    return result;
+  }, [products, filteredOrderItems, dateRange, parentCategories, categories]);
 
   const toggleSort = (col: typeof sortBy) => {
     if (sortBy === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -381,12 +424,15 @@ const AdminCategories = () => {
                         <TableHead className="cursor-pointer select-none text-right" onClick={() => toggleSort("revenue")}>
                           <span className="flex items-center gap-1 justify-end"><DollarSign className="w-3 h-3" /> Revenue <ArrowUpDown className="w-3 h-3" /></span>
                         </TableHead>
+                        <TableHead className="text-right w-[120px]">
+                          <span className="text-xs">Trend</span>
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {analyticsRows.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={4} className="text-center text-muted-foreground py-8">No categories yet</TableCell>
+                          <TableCell colSpan={5} className="text-center text-muted-foreground py-8">No categories yet</TableCell>
                         </TableRow>
                       ) : (
                         analyticsRows.map((row, i) => (
@@ -403,6 +449,33 @@ const AdminCategories = () => {
                             <TableCell className="text-right tabular-nums">{row.productCount}</TableCell>
                             <TableCell className="text-right tabular-nums">{row.orderCount}</TableCell>
                             <TableCell className="text-right tabular-nums font-medium">{formatPrice(row.revenue)}</TableCell>
+                            <TableCell className="text-right p-1">
+                              {(() => {
+                                const data = sparklineData.get(row.id) || [];
+                                const hasData = data.some((d) => d.rev > 0);
+                                if (!hasData) return <span className="text-xs text-muted-foreground">—</span>;
+                                return (
+                                  <div className="w-[100px] h-[28px] ml-auto">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                      <LineChart data={data}>
+                                        <Line
+                                          type="monotone"
+                                          dataKey="rev"
+                                          stroke={CHART_COLORS[i % CHART_COLORS.length]}
+                                          strokeWidth={1.5}
+                                          dot={false}
+                                        />
+                                        <RechartsTooltip
+                                          contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 6, fontSize: 10, padding: "2px 6px" }}
+                                          formatter={(v: number) => [formatPrice(v), ""]}
+                                          labelFormatter={(l) => l}
+                                        />
+                                      </LineChart>
+                                    </ResponsiveContainer>
+                                  </div>
+                                );
+                              })()}
+                            </TableCell>
                           </TableRow>
                         ))
                       )}
