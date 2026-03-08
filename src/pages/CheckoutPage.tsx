@@ -52,7 +52,11 @@ const CheckoutPage: React.FC = () => {
     enabled: !!user,
   });
 
-  const subtotal = cartItems?.reduce((sum, item) => sum + ((item.products as any)?.price || 0) * item.quantity, 0) || 0;
+  const subtotal = cartItems?.reduce((sum, item) => {
+    const variant = (item as any).product_variants as any;
+    const price = variant?.price_override ?? (item.products as any)?.price ?? 0;
+    return sum + price * item.quantity;
+  }, 0) || 0;
   const shippingFee = subtotal >= 50 ? 0 : 5.99;
   const total = subtotal + shippingFee;
 
