@@ -15,11 +15,37 @@ import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+const PRODUCT_TYPES = [
+  { value: "general", label: "General" },
+  { value: "clothing", label: "Clothing & Apparel" },
+  { value: "shoes", label: "Shoes & Footwear" },
+  { value: "electronics", label: "Electronics" },
+  { value: "grocery", label: "Grocery & Food" },
+] as const;
+
+const CLOTHING_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];
+const SHOE_SIZES = ["36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46"];
+const COMMON_COLORS = [
+  { name: "Black", hex: "#000000" },
+  { name: "White", hex: "#FFFFFF" },
+  { name: "Red", hex: "#EF4444" },
+  { name: "Blue", hex: "#3B82F6" },
+  { name: "Green", hex: "#22C55E" },
+  { name: "Yellow", hex: "#EAB308" },
+  { name: "Purple", hex: "#A855F7" },
+  { name: "Pink", hex: "#EC4899" },
+  { name: "Orange", hex: "#F97316" },
+  { name: "Gray", hex: "#6B7280" },
+  { name: "Brown", hex: "#92400E" },
+  { name: "Navy", hex: "#1E3A5F" },
+];
+
 const AdminProducts = () => {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Record<string, any> | null>(null);
+  const [activeMainTab, setActiveMainTab] = useState("list");
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["admin-products"],
