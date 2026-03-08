@@ -126,7 +126,124 @@ const PopupPreview = ({ popup }: { popup: any }) => {
   );
 };
 
-/* ── Main Component ── */
+/* ── Full-screen live preview (matches HomePopup rendering) ── */
+const getPreviewAnimation = (style: string) => {
+  switch (style) {
+    case "slide-up": return { initial: { opacity: 0, y: 80 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: 80 } };
+    case "slide-down": return { initial: { opacity: 0, y: -80 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -80 } };
+    case "fade": return { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } };
+    case "bounce": return { initial: { opacity: 0, scale: 0.3 }, animate: { opacity: 1, scale: 1, transition: { type: "spring", stiffness: 300, damping: 15 } }, exit: { opacity: 0, scale: 0.3 } };
+    case "flip": return { initial: { opacity: 0, rotateX: 90 }, animate: { opacity: 1, rotateX: 0 }, exit: { opacity: 0, rotateX: 90 } };
+    case "zoom": return { initial: { opacity: 0, scale: 1.3 }, animate: { opacity: 1, scale: 1 }, exit: { opacity: 0, scale: 1.3 } };
+    case "scale": default: return { initial: { opacity: 0, scale: 0.9, y: 20 }, animate: { opacity: 1, scale: 1, y: 0 }, exit: { opacity: 0, scale: 0.9, y: 20 } };
+  }
+};
+
+const getPreviewPosition = (position: string, displayType: string): string => {
+  if (displayType === "banner") {
+    if (position === "top" || position === "top-center") return "items-start justify-center pt-4";
+    if (position === "bottom" || position === "bottom-center") return "items-end justify-center pb-4";
+    return "items-center justify-center";
+  }
+  if (displayType === "slide-in") {
+    if (position === "bottom-right") return "items-end justify-end pb-6 pr-6";
+    if (position === "bottom-left" || position === "bottom-center") return "items-end justify-start pb-6 pl-6";
+    if (position === "top-center") return "items-start justify-center pt-6";
+    return "items-end justify-end pb-6 pr-6";
+  }
+  if (position === "top" || position === "top-center") return "items-start justify-center pt-20";
+  if (position === "bottom" || position === "bottom-center") return "items-end justify-center pb-20";
+  if (position === "bottom-right") return "items-end justify-end pb-20 pr-8";
+  if (position === "fullscreen") return "items-center justify-center";
+  return "items-center justify-center";
+};
+
+const getPreviewSize = (displayType: string): string => {
+  if (displayType === "banner") return "w-full max-w-2xl";
+  if (displayType === "slide-in") return "max-w-sm w-full";
+  if (displayType === "fullscreen") return "w-full h-full max-w-none rounded-none";
+  return "max-w-md w-full";
+};
+
+const FullPopupPreview = ({ popup, onClose }: { popup: any; onClose: () => void }) => {
+  const animStyle = popup.animation_style || "scale";
+  const position = popup.position || "center";
+  const displayType = popup.display_type || "popup";
+  const anim = getPreviewAnimation(animStyle);
+  const posClasses = getPreviewPosition(position, displayType);
+  const sizeClasses = getPreviewSize(displayType);
+  const hasBg = !!popup.bg_color;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className={`fixed inset-0 z-[200] flex p-4 ${posClasses}`}
+      onClick={onClose}
+    >
+      {displayType !== "banner" && displayType !== "slide-in" && (
+        <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
+      )}
+
+      {/* Admin label */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[210] flex items-center gap-2">
+        <Badge className="bg-primary/90 text-primary-foreground text-xs px-3 py-1">
+          <Eye className="w-3 h-3 mr-1.5" /> Preview Mode
+        </Badge>
+        <Button size="sm" variant="secondary" onClick={onClose} className="h-7 text-xs rounded-full">
+          <X className="w-3 h-3 mr-1" /> Close
+        </Button>
+      </div>
+
+      <motion.div
+        {...anim}
+        transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+        onClick={(e) => e.stopPropagation()}
+        className={`relative overflow-hidden shadow-2xl ${sizeClasses} ${hasBg ? "rounded-3xl" : "glass-strong rounded-3xl"}`}
+        style={{
+          ...(popup.bg_color ? { backgroundColor: popup.bg_color } : {}),
+          perspective: animStyle === "flip" ? "800px" : undefined,
+        }}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-background/50 hover:bg-background/80 transition-colors"
+          style={popup.text_color ? { color: popup.text_color } : {}}
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        {popup.image_url && (
+          <img src={popup.image_url} alt="" className="w-full h-48 object-cover" />
+        )}
+
+        <div className="p-6 space-y-3">
+          <h3
+            className={popup.text_color ? "text-xl font-bold font-display" : "text-xl font-bold font-display text-foreground"}
+            style={popup.text_color ? { color: popup.text_color } : undefined}
+          >
+            {popup.title || "Popup Title"}
+          </h3>
+          {popup.message && (
+            <p
+              className={popup.text_color ? "text-sm opacity-80" : "text-sm text-muted-foreground"}
+              style={popup.text_color ? { color: popup.text_color } : undefined}
+            >
+              {popup.message}
+            </p>
+          )}
+          {popup.link_url && (
+            <span className="inline-block btn-pill bg-gradient-primary text-primary-foreground font-semibold px-6 py-2.5 text-sm cursor-pointer">
+              {popup.link_text || "Learn More"}
+            </span>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 const AdminAnnouncements = () => {
   const qc = useQueryClient();
   const [notifDialog, setNotifDialog] = useState(false);
