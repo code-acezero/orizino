@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Search, X, LayoutTemplate } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, X, LayoutTemplate, Upload } from "lucide-react";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -226,6 +226,18 @@ const AdminProducts = () => {
   // --- Variants ---
   const [variants, setVariants] = useState<any[]>([]);
   const [variantsLoading, setVariantsLoading] = useState(false);
+  const variantImageRefs = useRef<Record<number, HTMLInputElement>>({});
+
+  const handleVariantImageUpload = async (idx: number, file?: File | null) => {
+    if (!file) return;
+    const ext = file.name.split(".").pop();
+    const path = `variants/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from("products").upload(path, file, { cacheControl: "3600", upsert: false });
+    if (error) { toast.error("Upload failed: " + error.message); return; }
+    const { data: urlData } = supabase.storage.from("products").getPublicUrl(path);
+    updateVariant(idx, "image_url", urlData.publicUrl);
+    toast.success("Variant image uploaded");
+  };
 
   const loadVariants = async (productId: string) => {
     setVariantsLoading(true);
@@ -257,7 +269,7 @@ const AdminProducts = () => {
     if (!editing?.id) { toast.error("Save the product first"); return; }
     try {
       for (const v of variants) {
-        const p = { product_id: editing.id, size: v.size || null, color: v.color || null, sku: v.sku || null, price_override: v.price_override || null, stock_quantity: v.stock_quantity || 0, is_active: v.is_active, sort_order: v.sort_order };
+        const p = { product_id: editing.id, size: v.size || null, color: v.color || null, sku: v.sku || null, price_override: v.price_override || null, stock_quantity: v.stock_quantity || 0, is_active: v.is_active, sort_order: v.sort_order, image_url: v.image_url || null };
         if (v.id) await supabase.from("product_variants" as any).update(p).eq("id", v.id);
         else await supabase.from("product_variants" as any).insert(p);
       }
@@ -684,17 +696,32 @@ const AdminProducts = () => {
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <div className="grid grid-cols-[1fr_1fr_80px_80px_80px_1fr_40px] gap-2 px-2 text-xs font-medium text-muted-foreground">
-                          <span>Size</span><span>Color</span><span>SKU</span><span>Price ±</span><span>Stock</span><span>Image URL</span><span></span>
+                        <div className="grid grid-cols-[1fr_1fr_80px_80px_80px_60px_40px] gap-2 px-2 text-xs font-medium text-muted-foreground">
+                          <span>Size</span><span>Color</span><span>SKU</span><span>Price ±</span><span>Stock</span><span>Image</span><span></span>
                         </div>
                         {variants.map((v, i) => (
-                          <div key={i} className={`grid grid-cols-[1fr_1fr_80px_80px_80px_1fr_40px] gap-2 items-center p-2 rounded-lg border transition-all ${v.is_active ? "border-border bg-secondary/10" : "border-border/40 bg-muted/20 opacity-60"}`}>
+                          <div key={i} className={`grid grid-cols-[1fr_1fr_80px_80px_80px_60px_40px] gap-2 items-center p-2 rounded-lg border transition-all ${v.is_active ? "border-border bg-secondary/10" : "border-border/40 bg-muted/20 opacity-60"}`}>
                             <Input value={v.size || ""} onChange={(e) => updateVariant(i, "size", e.target.value)} placeholder="Size" className="h-8 text-sm" />
                             <Input value={v.color || ""} onChange={(e) => updateVariant(i, "color", e.target.value)} placeholder="Color" className="h-8 text-sm" />
                             <Input value={v.sku || ""} onChange={(e) => updateVariant(i, "sku", e.target.value)} placeholder="SKU" className="h-8 text-xs" />
                             <Input type="number" value={v.price_override ?? ""} onChange={(e) => updateVariant(i, "price_override", e.target.value ? +e.target.value : null)} placeholder="—" className="h-8 text-sm" />
                             <Input type="number" value={v.stock_quantity} onChange={(e) => updateVariant(i, "stock_quantity", +e.target.value)} className="h-8 text-sm" />
-                            <Input value={(v as any).image_url || ""} onChange={(e) => updateVariant(i, "image_url", e.target.value)} placeholder="https://..." className="h-8 text-xs" />
+                            <div className="flex items-center justify-center">
+                              {v.image_url ? (
+                                <div className="relative group w-10 h-10">
+                                  <img src={v.image_url} alt="Variant" className="w-10 h-10 object-cover rounded border border-border" />
+                                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center gap-0.5">
+                                    <button type="button" onClick={() => variantImageRefs.current[i]?.click()} className="p-0.5 rounded-full bg-primary text-primary-foreground"><Upload className="w-3 h-3" /></button>
+                                    <button type="button" onClick={() => updateVariant(i, "image_url", "")} className="p-0.5 rounded-full bg-destructive text-destructive-foreground"><X className="w-3 h-3" /></button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button type="button" onClick={() => variantImageRefs.current[i]?.click()} className="w-10 h-10 border border-dashed border-border rounded flex items-center justify-center text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors">
+                                  <Upload className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                              <input ref={(el) => { if (el) variantImageRefs.current[i] = el; }} type="file" accept="image/*" className="hidden" onChange={(e) => { handleVariantImageUpload(i, e.target.files?.[0]); e.target.value = ""; }} />
+                            </div>
                             <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeVariant(i)}>
                               <X className="w-3.5 h-3.5 text-destructive" />
                             </Button>
