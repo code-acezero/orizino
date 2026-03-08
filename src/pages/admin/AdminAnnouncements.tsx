@@ -78,8 +78,32 @@ const displayTypes = [
   { value: "fullscreen", label: "Fullscreen", icon: Maximize },
 ];
 
-/* ── Mini Preview ── */
+/* ── Mini Preview with live animation ── */
+const getMiniAnimation = (style: string) => {
+  switch (style) {
+    case "slide-up": return { initial: { opacity: 0, y: 30 }, animate: { opacity: 1, y: 0 } };
+    case "slide-down": return { initial: { opacity: 0, y: -30 }, animate: { opacity: 1, y: 0 } };
+    case "fade": return { initial: { opacity: 0 }, animate: { opacity: 1 } };
+    case "bounce": return { initial: { opacity: 0, scale: 0.3 }, animate: { opacity: 1, scale: 1, transition: { type: "spring" as const, stiffness: 300, damping: 15 } } };
+    case "flip": return { initial: { opacity: 0, rotateX: 90 }, animate: { opacity: 1, rotateX: 0 } };
+    case "zoom": return { initial: { opacity: 0, scale: 1.4 }, animate: { opacity: 1, scale: 1 } };
+    case "scale": default: return { initial: { opacity: 0, scale: 0.85 }, animate: { opacity: 1, scale: 1 } };
+  }
+};
+
 const PopupPreview = ({ popup }: { popup: any }) => {
+  const [animKey, setAnimKey] = useState(0);
+  const prevRef = useRef({ position: popup.position, display_type: popup.display_type, animation_style: popup.animation_style });
+
+  // Re-trigger animation when position, display_type, or animation changes
+  useEffect(() => {
+    const prev = prevRef.current;
+    if (prev.position !== popup.position || prev.display_type !== popup.display_type || prev.animation_style !== popup.animation_style) {
+      setAnimKey((k) => k + 1);
+      prevRef.current = { position: popup.position, display_type: popup.display_type, animation_style: popup.animation_style };
+    }
+  }, [popup.position, popup.display_type, popup.animation_style]);
+
   const positionClasses: Record<string, string> = {
     center: "items-center justify-center",
     "bottom-center": "items-end justify-center pb-2",
@@ -88,39 +112,88 @@ const PopupPreview = ({ popup }: { popup: any }) => {
     fullscreen: "items-center justify-center",
   };
 
+  const anim = getMiniAnimation(popup.animation_style || "scale");
+
   return (
-    <div className="relative w-full h-48 rounded-xl bg-secondary/30 border border-border/50 overflow-hidden flex flex-col">
-      <div className="text-[8px] text-muted-foreground px-2 pt-1">Preview</div>
-      <div className={`flex-1 flex ${positionClasses[popup.position || "center"] || positionClasses.center} p-2`}>
-        <div
-          className={`rounded-xl shadow-lg overflow-hidden ${
+    <div className="relative w-full h-56 rounded-xl bg-secondary/30 border border-border/50 overflow-hidden flex flex-col">
+      {/* Simulated browser chrome */}
+      <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-secondary/40 border-b border-border/30">
+        <div className="flex gap-1">
+          <span className="w-2 h-2 rounded-full bg-destructive/60" />
+          <span className="w-2 h-2 rounded-full bg-amber-400/60" />
+          <span className="w-2 h-2 rounded-full bg-primary/60" />
+        </div>
+        <div className="flex-1 mx-2 h-3.5 rounded-md bg-secondary/60 flex items-center px-1.5">
+          <span className="text-[7px] text-muted-foreground">yoursite.com</span>
+        </div>
+        <Badge variant="outline" className="text-[7px] h-3.5 px-1 border-primary/30 text-primary">Live</Badge>
+      </div>
+
+      {/* Preview area */}
+      <div className={`flex-1 flex ${positionClasses[popup.position || "center"] || positionClasses.center} p-2 relative`}>
+        {/* Backdrop for modal types */}
+        {popup.display_type !== "banner" && popup.display_type !== "slide-in" && (
+          <motion.div
+            key={`backdrop-${animKey}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 bg-background/30"
+          />
+        )}
+
+        <motion.div
+          key={animKey}
+          {...anim}
+          transition={anim.animate?.transition || { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className={`rounded-lg shadow-xl overflow-hidden relative z-10 ${
             popup.position === "fullscreen" ? "w-full h-full" :
-            popup.display_type === "banner" ? "w-full max-h-12" : "w-3/5 max-h-32"
+            popup.display_type === "banner" ? "w-full max-h-14" :
+            popup.display_type === "slide-in" ? "w-2/5 max-h-28" : "w-3/5 max-h-32"
           }`}
           style={{
             backgroundColor: popup.bg_color || "hsl(220, 20%, 10%)",
             color: popup.text_color || "hsl(210, 40%, 95%)",
           }}
         >
+          {/* Close button */}
+          <div className="absolute top-1 right-1 w-3 h-3 rounded-full bg-background/30 flex items-center justify-center">
+            <X className="w-1.5 h-1.5" />
+          </div>
           {popup.image_url && (
-            <div className="h-12 bg-secondary/50">
+            <div className="h-10 bg-secondary/50">
               <img src={popup.image_url} alt="" className="w-full h-full object-cover" />
             </div>
           )}
-          <div className="p-2">
+          <div className="p-1.5">
             <p className="text-[9px] font-bold truncate">{popup.title || "Popup Title"}</p>
-            {popup.message && <p className="text-[7px] opacity-70 truncate">{popup.message}</p>}
+            {popup.message && <p className="text-[6px] opacity-70 line-clamp-2 leading-tight mt-0.5">{popup.message}</p>}
             {popup.link_url && (
-              <div className="mt-1 inline-block text-[7px] px-1.5 py-0.5 rounded bg-primary/20 text-primary">
+              <div className="mt-1 inline-block text-[6px] px-1.5 py-0.5 rounded-md bg-primary/20 text-primary font-medium">
                 {popup.link_text || "Learn More"}
               </div>
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
-      <div className="absolute top-1 right-1 flex gap-1">
-        <Badge variant="outline" className="text-[8px] h-4 px-1">{popup.position || "center"}</Badge>
-        <Badge variant="outline" className="text-[8px] h-4 px-1">{popup.animation_style || "scale"}</Badge>
+
+      {/* Info badges */}
+      <div className="absolute bottom-1.5 left-2 right-2 flex items-center justify-between">
+        <div className="flex gap-1">
+          <Badge variant="outline" className="text-[7px] h-4 px-1">{popup.display_type || "popup"}</Badge>
+          <Badge variant="outline" className="text-[7px] h-4 px-1">{popup.position || "center"}</Badge>
+        </div>
+        <button
+          onClick={() => setAnimKey((k) => k + 1)}
+          className="text-[7px] text-primary hover:text-primary/80 transition-colors flex items-center gap-0.5"
+        >
+          <motion.span
+            key={`replay-${animKey}`}
+            animate={{ rotate: 360 }}
+            transition={{ duration: 0.4 }}
+            className="inline-block"
+          >↻</motion.span>
+          Replay {popup.animation_style || "scale"}
+        </button>
       </div>
     </div>
   );
