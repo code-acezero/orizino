@@ -156,7 +156,14 @@ const ProductDetailPage: React.FC = () => {
     : null;
   const effectivePrice = selectedVariant?.price_override ?? product?.price ?? 0;
 
-  const images = product?.images?.length ? product.images : [product?.thumbnail || "/placeholder.svg"];
+  // Build images: if a color is selected and variants have images for that color, show those first
+  const baseImages = product?.images?.length ? product.images : [product?.thumbnail || "/placeholder.svg"];
+  const variantImages = selectedColor
+    ? variants
+        .filter((v) => v.color === selectedColor && (v as any).image_url)
+        .map((v) => (v as any).image_url as string)
+    : [];
+  const images = variantImages.length > 0 ? [...variantImages, ...baseImages] : baseImages;
   const discount = product?.compare_at_price
     ? Math.round(((product.compare_at_price - product.price) / product.compare_at_price) * 100)
     : 0;
