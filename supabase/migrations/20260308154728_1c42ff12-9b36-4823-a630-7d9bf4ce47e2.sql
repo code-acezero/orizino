@@ -1,0 +1,1 @@
+INSERT INTO site_settings (key, value) VALUES ('product_page_layout', '{"value": "editorial"}'::jsonb) ON CONFLICT (key) DO UPDATE SET value = '{"value": "editorial"}'::jsonb;
