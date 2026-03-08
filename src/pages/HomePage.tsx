@@ -488,7 +488,6 @@ const HomePage: React.FC = () => {
           </section>
         );
       }
-        );
 
       default:
         return null;
