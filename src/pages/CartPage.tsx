@@ -127,12 +127,12 @@ const CartPage: React.FC = () => {
             <div className="glass-strong rounded-3xl p-6 h-fit sticky top-24 space-y-4">
               <h3 className="font-display font-semibold text-foreground text-lg">Order Summary</h3>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="text-foreground">${subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span className="text-foreground">{shippingFee === 0 ? "Free" : `$${shippingFee.toFixed(2)}`}</span></div>
-                {shippingFee > 0 && <p className="text-xs text-primary">Free shipping on orders over $50</p>}
+                <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="text-foreground">{formatPrice(subtotal)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span className="text-foreground">{shippingFee === 0 ? "Free" : formatPrice(shippingFee)}</span></div>
+                {shippingFee > 0 && <p className="text-xs text-primary">Free shipping on orders over {formatPrice(50)}</p>}
               </div>
               <div className="border-t border-border pt-4 flex justify-between font-bold text-foreground">
-                <span>Total</span><span>${total.toFixed(2)}</span>
+                <span>Total</span><span>{formatPrice(total)}</span>
               </div>
               <Link to="/checkout" className="block">
                 <motion.span whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
