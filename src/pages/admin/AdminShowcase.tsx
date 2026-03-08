@@ -154,6 +154,21 @@ const AdminShowcase = () => {
     setDialogOpen(true);
   };
 
+  const reorderSlides = async (reordered: any[]) => {
+    // Update sort_order based on new position
+    const updated = reordered.map((s, i) => ({ ...s, sort_order: i }));
+    // Optimistically update cache
+    qc.setQueryData(["admin-showcase"], updated);
+    // Persist each slide's new sort_order
+    for (const s of updated) {
+      await supabase.from("showcase_slides").update({ sort_order: s.sort_order }).eq("id", s.id);
+    }
+    qc.invalidateQueries({ queryKey: ["admin-showcase"] });
+    qc.invalidateQueries({ queryKey: ["showcase-slides"] });
+  };
+
+  const { dragIndex: slideDragIdx, overIndex: slideOverIdx, getDragProps: getSlideDragProps } = useDragReorder(slides, reorderSlides);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
