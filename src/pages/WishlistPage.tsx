@@ -12,6 +12,7 @@ import Footer from "@/components/Footer";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 
 const WishlistPage: React.FC = () => {
+  useSeoMeta("wishlist", "Wishlist | Ace Marketplace");
   const { user } = useAuth();
   const { formatPrice } = useCurrency();
   

@@ -5,10 +5,12 @@ import { Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/lib/app-toast";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 
 type AuthMode = "login" | "signup" | "forgot";
 
 const AuthPage: React.FC = () => {
+  useSeoMeta("auth", "Sign In | Ace Marketplace");
   const { user } = useAuth();
   
   const [mode, setMode] = useState<AuthMode>("login");

@@ -158,6 +158,7 @@ const TrackedSection: React.FC<{ sectionId: string; children: React.ReactNode }>
 };
 
 const HomePage: React.FC = () => {
+  useSeoMeta("home", "Home | Ace Marketplace");
   usePageViewTracker("/home");
   const { data: featuredProducts = [], isLoading } = useQuery({
     queryKey: ["featured-products"],

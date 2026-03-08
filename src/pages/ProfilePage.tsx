@@ -12,6 +12,7 @@ import Footer from "@/components/Footer";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 
 const ProfilePage: React.FC = () => {
+  useSeoMeta("profile", "Profile | Ace Marketplace");
   const { user, signOut } = useAuth();
   
   const [loading, setLoading] = useState(false);

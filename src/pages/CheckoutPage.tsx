@@ -12,6 +12,7 @@ import Footer from "@/components/Footer";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 
 const CheckoutPage: React.FC = () => {
+  useSeoMeta("checkout", "Checkout | Ace Marketplace");
   const { user } = useAuth();
   const { formatPrice } = useCurrency();
   

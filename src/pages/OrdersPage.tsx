@@ -19,6 +19,7 @@ const statusColors: Record<string, string> = {
 };
 
 const OrdersPage: React.FC = () => {
+  useSeoMeta("orders", "My Orders | Ace Marketplace");
   const { user } = useAuth();
   const { formatPrice } = useCurrency();
 

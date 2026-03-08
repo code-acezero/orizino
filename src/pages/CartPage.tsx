@@ -11,6 +11,7 @@ import Footer from "@/components/Footer";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 
 const CartPage: React.FC = () => {
+  useSeoMeta("cart", "Cart | Ace Marketplace");
   const { user } = useAuth();
   const { formatPrice, currency, setCurrency, enabledCurrencies, config } = useCurrency();
   const queryClient = useQueryClient();
