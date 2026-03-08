@@ -11,6 +11,7 @@ import HomePopup from "@/components/HomePopup";
 import SaleCountdown from "@/components/SaleCountdown";
 import SalePopup from "@/components/SalePopup";
 import { Sparkles } from "lucide-react";
+import { usePageViewTracker, useSectionTracker } from "@/hooks/use-analytics";
 
 interface SaleConfig {
   id: string;
@@ -148,7 +149,14 @@ const defaultSectionOrder: SectionConfig[] = [
   { id: "arrivals", label: "New Arrivals", icon: "✨", visible: true, title: "New Arrivals", subtitle: "Fresh drops just landed", product_count: 8, columns: 4, view_all_link: "/shop" },
 ];
 
+/** Wrapper that tracks section visibility via Intersection Observer */
+const TrackedSection: React.FC<{ sectionId: string; children: React.ReactNode }> = ({ sectionId, children }) => {
+  const ref = useSectionTracker(sectionId);
+  return <div ref={ref}>{children}</div>;
+};
+
 const HomePage: React.FC = () => {
+  usePageViewTracker("/home");
   const { data: featuredProducts = [], isLoading } = useQuery({
     queryKey: ["featured-products"],
     queryFn: async () => {
@@ -508,7 +516,9 @@ const HomePage: React.FC = () => {
           
           return (
             <React.Fragment key={section.id}>
-              {renderSection(section.id)}
+              <TrackedSection sectionId={section.id}>
+                {renderSection(section.id)}
+              </TrackedSection>
               {sectionSaleMap[section.id] && salesByPos(sectionSaleMap[section.id]).map(renderSaleBanner)}
               {idx < sectionOrder.length - 1 && divider}
             </React.Fragment>

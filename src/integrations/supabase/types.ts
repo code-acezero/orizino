@@ -300,6 +300,39 @@ export type Database = {
         }
         Relationships: []
       }
+      page_analytics: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          page: string
+          section_id: string | null
+          session_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          page?: string
+          section_id?: string | null
+          session_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          page?: string
+          section_id?: string | null
+          session_id?: string | null
+        }
+        Relationships: []
+      }
       popups: {
         Row: {
           created_at: string

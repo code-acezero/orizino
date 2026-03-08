@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import ImageUpload from "@/components/ImageUpload";
 import LayoutPreview from "@/components/admin/LayoutPreview";
+import HomepageAnalytics from "@/components/admin/HomepageAnalytics";
 
 interface LayoutConfig {
   section_spacing: string;
@@ -479,6 +480,7 @@ const AdminHome = () => {
       <Tabs defaultValue="dashboard">
         <TabsList className="flex-wrap">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="section-order">Section Order</TabsTrigger>
           <TabsTrigger value="cat-sections">Category Sections</TabsTrigger>
           <TabsTrigger value="sales">Sales</TabsTrigger>
@@ -647,6 +649,11 @@ const AdminHome = () => {
               </Card>
             </div>
           </div>
+        </TabsContent>
+
+        {/* Analytics */}
+        <TabsContent value="analytics">
+          <HomepageAnalytics />
         </TabsContent>
 
         {/* Section Order */}
