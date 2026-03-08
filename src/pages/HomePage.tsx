@@ -63,7 +63,7 @@ const HomePage: React.FC = () => {
       const sections = val?.value ?? val;
       return Array.isArray(sections) ? sections.sort((a: any, b: any) => a.sort_order - b.sort_order) : [];
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
   });
 
   const { data: salesConfig = [] } = useQuery({
