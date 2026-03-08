@@ -12,28 +12,34 @@ import BottomNav from "@/components/BottomNav";
 
 const Navbar: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [catBarOpen, setCatBarOpen] = useState(false);
+  const [catDropOpen, setCatDropOpen] = useState(false);
   const [hoveredCat, setHoveredCat] = useState<string | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [authOpen, setAuthOpen] = useState(false);
+  const [mobileCatOpen, setMobileCatOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const catBarRef = useRef<HTMLDivElement>(null);
+  const catDropRef = useRef<HTMLDivElement>(null);
 
   const { data: siteSettings } = useQuery({
-    queryKey: ["site-settings-name"],
+    queryKey: ["site-settings-nav"],
     queryFn: async () => {
-      const { data } = await supabase.from("site_settings").select("key, value").in("key", ["site_name"]);
+      const { data } = await supabase.from("site_settings").select("key, value").in("key", ["site_name", "logo_url", "site_icon_url"]);
       const map: Record<string, any> = {};
-      data?.forEach((s) => (map[s.key] = s.value));
+      data?.forEach((s) => {
+        const val = s.value;
+        map[s.key] = typeof val === "object" && val !== null ? (val as any).value ?? val : val;
+      });
       return map;
     },
     staleTime: 10 * 60 * 1000,
   });
 
   const siteName = (siteSettings?.site_name as string) || "Zero";
+  const logoUrl = (siteSettings?.logo_url as string) || "";
+  const siteIconUrl = (siteSettings?.site_icon_url as string) || "";
 
   const { data: dbCategories = [] } = useQuery({
     queryKey: ["nav-categories"],
@@ -59,17 +65,17 @@ const Navbar: React.FC = () => {
     refetchInterval: 30000,
   });
 
-  // Close category bar when clicking outside
+  // Close category dropdown when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (catBarRef.current && !catBarRef.current.contains(e.target as Node)) {
-        setCatBarOpen(false);
+      if (catDropRef.current && !catDropRef.current.contains(e.target as Node)) {
+        setCatDropOpen(false);
         setHoveredCat(null);
       }
     };
-    if (catBarOpen) document.addEventListener("mousedown", handler);
+    if (catDropOpen) document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [catBarOpen]);
+  }, [catDropOpen]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -86,16 +92,21 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 w-full" ref={catBarRef}>
-        {/* Main bar */}
+      <nav className="sticky top-0 z-50 w-full">
         <div className="glass-strong">
           <div className="w-full max-w-[1440px] mx-auto px-4 lg:px-6">
             <div className="flex items-center h-16 gap-4">
               {/* Logo */}
               <Link to="/home" className="flex items-center gap-2 shrink-0">
-                <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-sm">{siteName.charAt(0)}</span>
-                </div>
+                {logoUrl ? (
+                  <img src={logoUrl} alt={siteName} className="w-8 h-8 rounded-full object-cover" />
+                ) : siteIconUrl ? (
+                  <img src={siteIconUrl} alt={siteName} className="w-8 h-8 rounded-full object-cover" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center">
+                    <span className="text-primary-foreground font-bold text-sm">{siteName.charAt(0)}</span>
+                  </div>
+                )}
                 <span className="font-display font-bold text-xl text-foreground hidden sm:inline">{siteName}</span>
               </Link>
 
@@ -107,17 +118,94 @@ const Navbar: React.FC = () => {
                 </Link>
                 <Link to="/shop"
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${location.pathname === "/shop" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
-                  Mall
+                  Shop
                 </Link>
-                {/* Categories toggle button */}
-                <button
-                  onClick={() => { setCatBarOpen(!catBarOpen); setHoveredCat(null); }}
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors inline-flex items-center gap-1 ${catBarOpen ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  <LayoutGrid className="w-3.5 h-3.5" />
-                  Categories
-                  <ChevronDown className={`w-3 h-3 transition-transform ${catBarOpen ? "rotate-180" : ""}`} />
-                </button>
+                {/* Categories dropdown */}
+                <div className="relative" ref={catDropRef}>
+                  <button
+                    onClick={() => { setCatDropOpen(!catDropOpen); setHoveredCat(null); }}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors inline-flex items-center gap-1 ${catDropOpen ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                    Categories
+                    <ChevronDown className={`w-3 h-3 transition-transform ${catDropOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {catDropOpen && parentCategories.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 8 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute top-full left-0 pt-2 z-50"
+                      >
+                        <div className="glass-strong rounded-2xl p-2 shadow-lg border border-border/50 min-w-[200px]">
+                          {parentCategories.map((cat) => {
+                            const children = getChildren(cat.id);
+                            return (
+                              <div
+                                key={cat.id}
+                                className="relative"
+                                onMouseEnter={() => setHoveredCat(cat.id)}
+                                onMouseLeave={() => setHoveredCat(null)}
+                              >
+                                <Link
+                                  to={`/categories/${cat.slug}`}
+                                  onClick={() => setCatDropOpen(false)}
+                                  className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    {cat.icon_url ? (
+                                      <img src={cat.icon_url} alt="" className="w-4 h-4 rounded object-contain" />
+                                    ) : cat.icon ? (
+                                      <span className="text-sm">{cat.icon}</span>
+                                    ) : null}
+                                    {cat.name}
+                                  </div>
+                                  {children.length > 0 && (
+                                    <ChevronDown className={`w-3 h-3 -rotate-90`} />
+                                  )}
+                                </Link>
+
+                                {/* Subcategory flyout */}
+                                <AnimatePresence>
+                                  {hoveredCat === cat.id && children.length > 0 && (
+                                    <motion.div
+                                      initial={{ opacity: 0, x: -4 }}
+                                      animate={{ opacity: 1, x: 0 }}
+                                      exit={{ opacity: 0, x: -4 }}
+                                      transition={{ duration: 0.12 }}
+                                      className="absolute left-full top-0 pl-1.5 z-50"
+                                    >
+                                      <div className="glass-strong rounded-xl p-1.5 shadow-lg border border-border/50 min-w-[160px]">
+                                        {children.map((sub) => (
+                                          <Link
+                                            key={sub.id}
+                                            to={`/categories/${sub.slug}`}
+                                            onClick={() => setCatDropOpen(false)}
+                                            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                                          >
+                                            {sub.icon_url ? (
+                                              <img src={sub.icon_url} alt="" className="w-3.5 h-3.5 rounded object-contain" />
+                                            ) : sub.icon ? (
+                                              <span className="text-xs">{sub.icon}</span>
+                                            ) : null}
+                                            {sub.name}
+                                          </Link>
+                                        ))}
+                                      </div>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
 
               {/* Center: Search */}
@@ -183,88 +271,6 @@ const Navbar: React.FC = () => {
           </div>
         </div>
 
-        {/* Category bar — desktop only, toggle on click */}
-        <AnimatePresence>
-          {catBarOpen && parentCategories.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="hidden lg:block glass border-t border-border/30 overflow-visible"
-            >
-              <div className="w-full max-w-[1440px] mx-auto px-4 lg:px-6">
-                <div className="flex items-center gap-1 h-11 overflow-x-auto scrollbar-none">
-                  {parentCategories.map((cat) => {
-                    const children = getChildren(cat.id);
-                    const isActive = location.pathname === `/categories/${cat.slug}`;
-
-                    return (
-                      <div
-                        key={cat.id}
-                        className="relative"
-                        onMouseEnter={() => setHoveredCat(cat.id)}
-                        onMouseLeave={() => setHoveredCat(null)}
-                      >
-                        <Link
-                          to={`/categories/${cat.slug}`}
-                          onClick={() => setCatBarOpen(false)}
-                          className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
-                            isActive
-                              ? "bg-primary/15 text-primary"
-                              : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                          }`}
-                        >
-                          {cat.icon_url ? (
-                            <img src={cat.icon_url} alt="" className="w-4 h-4 rounded object-contain" />
-                          ) : cat.icon ? (
-                            <span className="text-sm">{cat.icon}</span>
-                          ) : null}
-                          {cat.name}
-                          {children.length > 0 && (
-                            <ChevronDown className={`w-3 h-3 transition-transform ${hoveredCat === cat.id ? "rotate-180" : ""}`} />
-                          )}
-                        </Link>
-
-                        {/* Subcategory dropdown */}
-                        <AnimatePresence>
-                          {hoveredCat === cat.id && children.length > 0 && (
-                            <motion.div
-                              initial={{ opacity: 0, y: 4 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: 4 }}
-                              transition={{ duration: 0.15 }}
-                              className="absolute top-full left-0 pt-1.5 z-50"
-                            >
-                              <div className="glass-strong rounded-xl p-1.5 shadow-lg border border-border/50 min-w-[160px]">
-                                {children.map((sub) => (
-                                  <Link
-                                    key={sub.id}
-                                    to={`/categories/${sub.slug}`}
-                                    onClick={() => setCatBarOpen(false)}
-                                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
-                                  >
-                                    {sub.icon_url ? (
-                                      <img src={sub.icon_url} alt="" className="w-3.5 h-3.5 rounded object-contain" />
-                                    ) : sub.icon ? (
-                                      <span className="text-xs">{sub.icon}</span>
-                                    ) : null}
-                                    {sub.name}
-                                  </Link>
-                                ))}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Mobile menu */}
         <AnimatePresence>
           {mobileOpen && (
@@ -276,33 +282,41 @@ const Navbar: React.FC = () => {
                     className="w-full px-4 py-3 rounded-2xl bg-secondary/50 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 mb-2" />
                 </form>
                 <Link to="/home" className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>Home</Link>
+                <Link to="/shop" className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>Shop</Link>
 
                 {/* Categories in mobile */}
-                <div className="px-4 py-2">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Categories</p>
-                  {parentCategories.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No categories available yet</p>
-                  ) : (
-                    parentCategories.map((cat) => {
-                      const children = getChildren(cat.id);
-                      return (
-                        <div key={cat.id} className="mb-1">
-                          <Link to={`/categories/${cat.slug}`} className="flex items-center gap-2 py-1.5 text-sm text-foreground hover:text-primary" onClick={() => setMobileOpen(false)}>
-                            {cat.icon_url ? <img src={cat.icon_url} alt="" className="w-4 h-4 rounded object-contain" /> : cat.icon ? <span>{cat.icon}</span> : null}
-                            {cat.name}
-                          </Link>
-                          {children.map((sub) => (
-                            <Link key={sub.id} to={`/categories/${sub.slug}`} className="block py-1 pl-6 text-xs text-muted-foreground hover:text-foreground" onClick={() => setMobileOpen(false)}>
-                              {sub.name}
-                            </Link>
-                          ))}
-                        </div>
-                      );
-                    })
+                <button
+                  onClick={() => setMobileCatOpen(!mobileCatOpen)}
+                  className="w-full flex items-center justify-between px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50"
+                >
+                  <span className="flex items-center gap-2"><LayoutGrid className="w-4 h-4" /> Categories</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${mobileCatOpen ? "rotate-180" : ""}`} />
+                </button>
+                <AnimatePresence>
+                  {mobileCatOpen && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                      <div className="pl-4 space-y-1">
+                        {parentCategories.map((cat) => {
+                          const children = getChildren(cat.id);
+                          return (
+                            <div key={cat.id}>
+                              <Link to={`/categories/${cat.slug}`} className="flex items-center gap-2 py-1.5 px-3 text-sm text-foreground hover:text-primary rounded-lg" onClick={() => setMobileOpen(false)}>
+                                {cat.icon_url ? <img src={cat.icon_url} alt="" className="w-4 h-4 rounded object-contain" /> : cat.icon ? <span>{cat.icon}</span> : null}
+                                {cat.name}
+                              </Link>
+                              {children.map((sub) => (
+                                <Link key={sub.id} to={`/categories/${sub.slug}`} className="block py-1 pl-9 text-xs text-muted-foreground hover:text-foreground" onClick={() => setMobileOpen(false)}>
+                                  {sub.name}
+                                </Link>
+                              ))}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
                   )}
-                </div>
+                </AnimatePresence>
 
-                <Link to="/shop" className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>Mall</Link>
                 {user ? (
                   <>
                     <Link to="/profile" className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>Profile</Link>
