@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
 
     if (error) {
       console.error("Insert error:", error);
-      return new Response(JSON.stringify({ error: error.message }), {
+      return new Response(JSON.stringify({ error: "Failed to record analytics" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

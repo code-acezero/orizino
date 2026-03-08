@@ -612,7 +612,7 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error("OG image generation error:", error);
-    return new Response(`Error generating image: ${error.message}`, {
+    return new Response("Internal server error", {
       status: 500,
       headers: corsHeaders,
     });

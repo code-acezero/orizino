@@ -28,9 +28,8 @@ Deno.serve(async (req) => {
     const authClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await authClient.auth.getUser();
+    if (userError || !user) {
       return new Response(
         JSON.stringify({ success: false, error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -39,6 +38,18 @@ Deno.serve(async (req) => {
 
     // Use service role client for DB operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Verify caller is admin
+    const { data: isAdmin } = await supabase.rpc("has_role", {
+      _user_id: user.id,
+      _role: "admin",
+    });
+    if (!isAdmin) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Forbidden" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Get current currency config
     const { data: settingsRow } = await supabase
@@ -110,9 +121,8 @@ Deno.serve(async (req) => {
     );
   } catch (error: unknown) {
     console.error("Error fetching exchange rates:", error);
-    const msg = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ success: false, error: msg }),
+      JSON.stringify({ success: false, error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

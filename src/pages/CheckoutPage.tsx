@@ -67,51 +67,22 @@ const CheckoutPage: React.FC = () => {
     }
 
     setLoading(true);
-    const orderNumber = `ZM-${Date.now().toString(36).toUpperCase()}`;
 
-    const { data: order, error: orderError } = await supabase
-      .from("orders")
-      .insert({
-        user_id: user.id,
-        order_number: orderNumber,
-        subtotal,
-        shipping_fee: shippingFee,
-        total,
+    const { data, error } = await supabase.functions.invoke("create-order", {
+      body: {
         shipping_address: address,
-        payment_method: "cod",
         notes,
-        status: "pending",
-      })
-      .select("id")
-      .single();
+      },
+    });
 
-    if (orderError || !order) {
-      toast({ title: "Order failed", description: orderError?.message, variant: "destructive" });
-      setLoading(false);
+    setLoading(false);
+
+    if (error || !data?.success) {
+      toast({ title: "Order failed", description: data?.error || "Something went wrong", variant: "destructive" });
       return;
     }
 
-    // Create order items
-    const orderItems = cartItems.map((item) => {
-      const product = item.products as any;
-      return {
-        order_id: order.id,
-        product_id: product.id,
-        product_name: product.name,
-        product_image: product.thumbnail,
-        unit_price: product.price,
-        quantity: item.quantity,
-        total_price: product.price * item.quantity,
-      };
-    });
-
-    await supabase.from("order_items").insert(orderItems);
-
-    // Clear cart
-    await supabase.from("cart_items").delete().eq("user_id", user.id);
-
-    setLoading(false);
-    toast({ title: "Order placed!", description: `Order ${orderNumber} confirmed.` });
+    toast({ title: "Order placed!", description: `Order ${data.order_number} confirmed.` });
     navigate("/orders");
   };
 
