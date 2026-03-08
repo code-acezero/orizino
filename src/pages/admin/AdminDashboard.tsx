@@ -10,14 +10,19 @@ import {
   BarChart3, Activity, Layers, Filter,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { format, subDays, startOfDay, isAfter } from "date-fns";
+import { format, subDays, startOfDay, isAfter, differenceInDays } from "date-fns";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar,
   FunnelChart, Funnel, LabelList,
 } from "recharts";
 import { motion } from "framer-motion";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 /* ── Stat card with trend indicator ── */
 const StatCard = ({
