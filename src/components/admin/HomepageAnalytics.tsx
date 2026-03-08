@@ -390,6 +390,9 @@ const HomepageAnalytics = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Live Activity Feed */}
+      <LiveActivityFeed />
     </div>
   );
 };
