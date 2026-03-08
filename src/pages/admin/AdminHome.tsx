@@ -487,8 +487,6 @@ const AdminHome = () => {
           <TabsTrigger value="sales">Sales</TabsTrigger>
           <TabsTrigger value="new-arrivals">New Arrivals</TabsTrigger>
           <TabsTrigger value="layout">Layout & Style</TabsTrigger>
-          <TabsTrigger value="categories">Featured Categories</TabsTrigger>
-          <TabsTrigger value="products">Featured Products</TabsTrigger>
         </TabsList>
 
         {/* Dashboard */}
