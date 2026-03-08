@@ -14,6 +14,7 @@ import { format, subDays, startOfDay, isAfter } from "date-fns";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar,
+  FunnelChart, Funnel, LabelList,
 } from "recharts";
 import { motion } from "framer-motion";
 import { useMemo } from "react";
