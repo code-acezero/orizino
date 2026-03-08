@@ -479,7 +479,7 @@ const HomePage: React.FC = () => {
                 </div>
               </div>
               {layout.section_title_align !== "center" && (
-                <a href={arrivalsLink} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+                <a href={arrivalsLink} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors" onClick={() => trackClick("view_all", "arrivals", "/home")}>View All</a>
               )}
             </motion.div>
             <div className={`grid grid-cols-2 md:grid-cols-3 ${arrivalsCols} gap-4`}>
