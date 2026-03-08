@@ -424,6 +424,16 @@ const ProductDetailPage: React.FC = () => {
                   />
                 )}
 
+                {hasVariants && product && (
+                  <VariantComparison
+                    productId={product.id}
+                    basePrice={product.price}
+                    compareAtPrice={product.compare_at_price}
+                    productName={product.name}
+                    productThumbnail={product.thumbnail}
+                  />
+                )}
+
                 <ProductActions
                   quantity={quantity} setQuantity={setQuantity} maxQuantity={effectiveStock}
                   onAddToCart={addToCart} onBuyNow={buyNow} onToggleWishlist={toggleWishlist}
