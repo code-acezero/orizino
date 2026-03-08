@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/app-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, GripVertical, Tag, Clock, Sparkles, Image, Bell, Layout, Layers, ChevronDown, ChevronUp, Settings2 } from "lucide-react";
+import { Plus, Trash2, GripVertical, Tag, Clock, Sparkles, Image, Bell, Layout, Layers, ChevronDown, ChevronUp, Settings2, Palette, Sun, Moon } from "lucide-react";
 import { useDragReorder } from "@/hooks/use-drag-reorder";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
@@ -98,6 +98,17 @@ const defaultSale = (): SaleConfig => ({
   sort_order: 0,
   trigger_popup: false,
 });
+
+const themeOptions = [
+  { id: "default", label: "Cyber Emerald", color: "160 84% 45%" },
+  { id: "ocean", label: "Ocean Blue", color: "200 90% 50%" },
+  { id: "sunset", label: "Sunset Orange", color: "25 95% 55%" },
+  { id: "rose", label: "Rose Pink", color: "340 82% 55%" },
+  { id: "violet", label: "Royal Violet", color: "270 80% 60%" },
+  { id: "crimson", label: "Crimson Red", color: "0 85% 55%" },
+  { id: "gold", label: "Golden Hour", color: "45 90% 50%" },
+  { id: "mint", label: "Fresh Mint", color: "170 70% 45%" },
+];
 
 const iconOptions = ["⚡", "🔥", "💎", "🎯", "🏷️", "💥", "🌟", "❄️", "🎁", "🛒", "🎉", "💰", "🚀", "🎪"];
 const colorOptions = [
@@ -208,6 +219,49 @@ const AdminHome = () => {
   const [layoutConfig, setLayoutConfig] = useState<LayoutConfig>({ ...defaultLayoutConfig });
   const [sectionOrder, setSectionOrder] = useState(defaultSectionOrder);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [selectedTheme, setSelectedTheme] = useState("default");
+  const [selectedMode, setSelectedMode] = useState("dark");
+
+  // Fetch current theme/mode
+  const { data: themeSettings } = useQuery({
+    queryKey: ["admin-theme-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("site_settings").select("*").in("key", ["site_theme", "site_mode"]);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  useEffect(() => {
+    if (themeSettings) {
+      themeSettings.forEach((s) => {
+        const val = typeof s.value === "object" && s.value !== null ? (s.value as any).value ?? s.value : s.value;
+        if (s.key === "site_theme") setSelectedTheme(String(val || "default"));
+        if (s.key === "site_mode") setSelectedMode(String(val || "dark"));
+      });
+    }
+  }, [themeSettings]);
+
+  const saveTheme = useMutation({
+    mutationFn: async () => {
+      for (const [key, value] of [["site_theme", selectedTheme], ["site_mode", selectedMode]] as const) {
+        const existing = themeSettings?.find((s) => s.key === key);
+        const jsonValue = { value } as any;
+        if (existing) {
+          await supabase.from("site_settings").update({ value: jsonValue }).eq("id", existing.id);
+        } else {
+          await supabase.from("site_settings").insert({ key, value: jsonValue });
+        }
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-theme-settings"] });
+      qc.invalidateQueries({ queryKey: ["site-settings"] });
+      qc.invalidateQueries({ queryKey: ["admin-settings"] });
+      toast.success("Theme applied successfully");
+    },
+    onError: (e) => toast.error(e.message),
+  });
 
   useEffect(() => {
     if (settingsRow?.value) {
@@ -1051,6 +1105,63 @@ const AdminHome = () => {
 
         {/* Layout & Style */}
         <TabsContent value="layout">
+          {/* Color Theme Picker */}
+          <Card className="glass mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2"><Palette className="w-5 h-5" /> Color Theme</CardTitle>
+              <p className="text-sm text-muted-foreground">Switch the site-wide color palette. Changes apply instantly across all sections.</p>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {themeOptions.map((theme) => (
+                  <button
+                    key={theme.id}
+                    onClick={() => setSelectedTheme(theme.id)}
+                    className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                      selectedTheme === theme.id
+                        ? "border-primary bg-primary/10 scale-[1.02] shadow-lg"
+                        : "border-border bg-secondary/20 hover:border-primary/50 hover:bg-secondary/40"
+                    }`}
+                  >
+                    <div
+                      className="w-10 h-10 rounded-full shadow-md ring-2 ring-background"
+                      style={{ background: `hsl(${theme.color})` }}
+                    />
+                    <span className="text-xs font-medium text-foreground">{theme.label}</span>
+                    {selectedTheme === theme.id && (
+                      <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary" />
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-4">
+                <Label className="text-sm">Mode</Label>
+                <div className="flex items-center gap-2 p-1 rounded-xl bg-secondary/30 border border-border">
+                  <button
+                    onClick={() => setSelectedMode("dark")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      selectedMode === "dark" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Moon className="w-3.5 h-3.5" /> Dark
+                  </button>
+                  <button
+                    onClick={() => setSelectedMode("light")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      selectedMode === "light" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Sun className="w-3.5 h-3.5" /> Light
+                  </button>
+                </div>
+                <Button size="sm" onClick={() => saveTheme.mutate()} disabled={saveTheme.isPending} className="ml-auto">
+                  {saveTheme.isPending ? "Applying..." : "Apply Theme"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-6">
            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="glass">
