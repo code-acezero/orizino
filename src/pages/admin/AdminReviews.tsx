@@ -5,9 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Trash2, Star } from "lucide-react";
+import { Check, X, Trash2, Star, Image as ImageIcon } from "lucide-react";
 import { toast } from "@/lib/app-toast";
 import { format } from "date-fns";
+import { motion, AnimatePresence } from "framer-motion";
 
 const AdminReviews = () => {
   const qc = useQueryClient();
