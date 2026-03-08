@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,23 +9,28 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, ChevronRight, Check, X, FolderTree, Search, Eye, EyeOff, Star, GripVertical } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronRight, Check, X, FolderTree, Search, Eye, EyeOff, Star, GripVertical, BarChart3, ChevronDown, ChevronUp, Package, ShoppingCart, DollarSign, ArrowUpDown } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AnimatePresence, motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDragReorder } from "@/hooks/use-drag-reorder";
-
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from "recharts";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 const AdminCategories = () => {
   const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Record<string, any> | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
-
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [sortBy, setSortBy] = useState<"name" | "products" | "orders" | "revenue">("revenue");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const { formatPrice } = useCurrency();
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ["admin-categories"],
     queryFn: async () => {
@@ -37,6 +42,75 @@ const AdminCategories = () => {
 
   const parentCategories = categories.filter((c) => !c.parent_id);
   const getChildren = (parentId: string) => categories.filter((c) => c.parent_id === parentId);
+
+  // Analytics: fetch products + order_items with category info
+  const { data: products = [] } = useQuery({
+    queryKey: ["category-analytics-products"],
+    queryFn: async () => {
+      const { data } = await supabase.from("products").select("id, category_id").limit(5000);
+      return data || [];
+    },
+    staleTime: 60_000,
+  });
+
+  const { data: orderItems = [] } = useQuery({
+    queryKey: ["category-analytics-orders"],
+    queryFn: async () => {
+      const { data } = await supabase.from("order_items").select("product_id, quantity, total_price").limit(5000);
+      return data || [];
+    },
+    staleTime: 60_000,
+  });
+
+  const categoryAnalytics = useMemo(() => {
+    const prodCatMap = new Map<string, string>();
+    products.forEach((p: any) => { if (p.category_id) prodCatMap.set(p.id, p.category_id); });
+    const map = new Map<string, { productCount: number; orderCount: number; revenue: number }>();
+    products.forEach((p: any) => {
+      if (!p.category_id) return;
+      const entry = map.get(p.category_id) || { productCount: 0, orderCount: 0, revenue: 0 };
+      entry.productCount++;
+      map.set(p.category_id, entry);
+    });
+    orderItems.forEach((oi: any) => {
+      const catId = prodCatMap.get(oi.product_id);
+      if (!catId) return;
+      const entry = map.get(catId) || { productCount: 0, orderCount: 0, revenue: 0 };
+      entry.orderCount += oi.quantity || 1;
+      entry.revenue += Number(oi.total_price) || 0;
+      map.set(catId, entry);
+    });
+    return map;
+  }, [products, orderItems]);
+
+  const analyticsRows = useMemo(() => {
+    const rows = parentCategories.map((c) => {
+      const children = getChildren(c.id);
+      const allIds = [c.id, ...children.map((ch) => ch.id)];
+      const stats = allIds.reduce(
+        (acc, id) => {
+          const s = categoryAnalytics.get(id);
+          if (s) { acc.productCount += s.productCount; acc.orderCount += s.orderCount; acc.revenue += s.revenue; }
+          return acc;
+        },
+        { productCount: 0, orderCount: 0, revenue: 0 }
+      );
+      return { id: c.id, name: c.name, icon: c.icon, icon_url: c.icon_url, accent_color: c.accent_color, ...stats };
+    });
+    rows.sort((a, b) => {
+      const key = sortBy === "name" ? "name" : sortBy === "products" ? "productCount" : sortBy === "orders" ? "orderCount" : "revenue";
+      if (key === "name") return sortDir === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+      return sortDir === "asc" ? (a as any)[key] - (b as any)[key] : (b as any)[key] - (a as any)[key];
+    });
+    return rows;
+  }, [parentCategories, categoryAnalytics, sortBy, sortDir, categories]);
+
+  const toggleSort = (col: typeof sortBy) => {
+    if (sortBy === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortBy(col); setSortDir("desc"); }
+  };
+
+  const CHART_COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(262 83% 58%)", "hsl(330 81% 60%)", "hsl(200 95% 50%)", "hsl(150 60% 45%)", "hsl(40 95% 55%)", "hsl(0 72% 51%)"];
 
   // Filter by search
   const filteredParents = parentCategories.filter((c) => {
@@ -180,7 +254,112 @@ const AdminCategories = () => {
         />
       </div>
 
-      {/* Category Cards Grid */}
+      {/* Category Analytics Card */}
+      <Card className="glass overflow-hidden">
+        <button
+          onClick={() => setShowAnalytics(!showAnalytics)}
+          className="w-full flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
+              <BarChart3 className="w-4 h-4 text-primary" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-semibold">Category Analytics</p>
+              <p className="text-xs text-muted-foreground">Products, orders & revenue per category</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-4 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1"><Package className="w-3.5 h-3.5" /> {products.length} products</span>
+              <span className="flex items-center gap-1"><ShoppingCart className="w-3.5 h-3.5" /> {orderItems.length} items sold</span>
+            </div>
+            {showAnalytics ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+          </div>
+        </button>
+
+        <AnimatePresence>
+          {showAnalytics && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="overflow-hidden"
+            >
+              <div className="px-4 pb-4 space-y-4">
+                {/* Revenue Bar Chart */}
+                {analyticsRows.some((r) => r.revenue > 0) && (
+                  <div className="h-48">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analyticsRows.slice(0, 8)} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+                        <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                        <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={50} />
+                        <RechartsTooltip
+                          contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
+                          formatter={(value: number) => [formatPrice(value), "Revenue"]}
+                        />
+                        <Bar dataKey="revenue" radius={[6, 6, 0, 0]}>
+                          {analyticsRows.slice(0, 8).map((_, i) => (
+                            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+
+                {/* Table */}
+                <div className="rounded-lg border border-border overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("name")}>
+                          <span className="flex items-center gap-1">Category <ArrowUpDown className="w-3 h-3" /></span>
+                        </TableHead>
+                        <TableHead className="cursor-pointer select-none text-right" onClick={() => toggleSort("products")}>
+                          <span className="flex items-center gap-1 justify-end"><Package className="w-3 h-3" /> Products <ArrowUpDown className="w-3 h-3" /></span>
+                        </TableHead>
+                        <TableHead className="cursor-pointer select-none text-right" onClick={() => toggleSort("orders")}>
+                          <span className="flex items-center gap-1 justify-end"><ShoppingCart className="w-3 h-3" /> Orders <ArrowUpDown className="w-3 h-3" /></span>
+                        </TableHead>
+                        <TableHead className="cursor-pointer select-none text-right" onClick={() => toggleSort("revenue")}>
+                          <span className="flex items-center gap-1 justify-end"><DollarSign className="w-3 h-3" /> Revenue <ArrowUpDown className="w-3 h-3" /></span>
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {analyticsRows.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center text-muted-foreground py-8">No categories yet</TableCell>
+                        </TableRow>
+                      ) : (
+                        analyticsRows.map((row, i) => (
+                          <TableRow key={row.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full shrink-0" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
+                                <div className="w-6 h-6 rounded bg-secondary/50 flex items-center justify-center shrink-0 overflow-hidden">
+                                  {row.icon_url ? <img src={row.icon_url} alt="" className="w-full h-full object-contain" /> : row.icon ? <span className="text-xs">{row.icon}</span> : <FolderTree className="w-3 h-3 text-muted-foreground" />}
+                                </div>
+                                <span className="text-sm font-medium truncate">{row.name}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right tabular-nums">{row.productCount}</TableCell>
+                            <TableCell className="text-right tabular-nums">{row.orderCount}</TableCell>
+                            <TableCell className="text-right tabular-nums font-medium">{formatPrice(row.revenue)}</TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Card>
+
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
