@@ -108,9 +108,23 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
           className={`relative overflow-hidden cursor-zoom-in group ${
             isMinimal ? "rounded-2xl" : isEditorial ? "rounded-none aspect-[4/3]" : "rounded-3xl aspect-square glass"
           }`}
-          onMouseEnter={() => setIsZooming(true)}
+          onMouseEnter={(e) => {
+            setIsZooming(true);
+            const rect = imgRef.current?.getBoundingClientRect();
+            if (rect) {
+              setRipplePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+              setShowRipple(true);
+              setTimeout(() => setShowRipple(false), 600);
+            }
+          }}
           onMouseLeave={() => setIsZooming(false)}
           onMouseMove={handleMouseMove}
+          onWheel={(e) => {
+            if (isZooming) {
+              e.preventDefault();
+              setLensSize((s) => Math.min(300, Math.max(80, s + (e.deltaY < 0 ? 20 : -20))));
+            }
+          }}
           onClick={() => setLightboxOpen(true)}
         >
           <AnimatePresence mode="popLayout" initial={false}>
