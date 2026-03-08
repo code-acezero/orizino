@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/lib/app-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useProductSeoMeta } from "@/hooks/use-product-seo-meta";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -32,6 +33,9 @@ const ProductDetailPage: React.FC = () => {
     },
     enabled: !!slug,
   });
+
+  // Apply SEO metadata for product detail page
+  useProductSeoMeta(product);
 
   const { data: reviews } = useQuery({
     queryKey: ["reviews", product?.id],
