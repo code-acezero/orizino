@@ -8,6 +8,7 @@ import { useCategorySeoMeta } from "@/hooks/use-category-seo-meta";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 const sortOptions = [
   { label: "Newest", value: "newest" },

@@ -10,6 +10,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useProductSeoMeta } from "@/hooks/use-product-seo-meta";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
