@@ -729,7 +729,30 @@ const AdminProducts = () => {
                         <p className="text-xs text-muted-foreground mt-1">Add sizes/colors in Attributes tab, then click "Auto-Generate" to create all combinations.</p>
                       </div>
                     ) : (
-                      <div className="space-y-2">
+                      <div className="space-y-3">
+                        {/* Bulk drag-and-drop upload zone */}
+                        <div
+                          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                          onDragLeave={() => setDragOver(false)}
+                          onDrop={(e) => { e.preventDefault(); setDragOver(false); handleBulkImageUpload(e.dataTransfer.files); }}
+                          onClick={() => bulkInputRef.current?.click()}
+                          className={`border-2 border-dashed rounded-xl p-4 flex items-center justify-center gap-3 cursor-pointer transition-all ${dragOver ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
+                        >
+                          {bulkUploading ? (
+                            <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                          ) : (
+                            <ImagePlus className="w-5 h-5 text-muted-foreground" />
+                          )}
+                          <div>
+                            <p className="text-sm font-medium text-foreground">
+                              {bulkUploading ? "Uploading..." : "Drop images here to bulk-assign to variants"}
+                            </p>
+                            <p className="text-xs text-muted-foreground">Images are assigned in order to variants without images</p>
+                          </div>
+                          <input ref={bulkInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => { if (e.target.files) handleBulkImageUpload(e.target.files); e.target.value = ""; }} />
+                        </div>
+
+                        <div className="space-y-2">
                         <div className="grid grid-cols-[1fr_1fr_80px_80px_80px_60px_40px] gap-2 px-2 text-xs font-medium text-muted-foreground">
                           <span>Size</span><span>Color</span><span>SKU</span><span>Price ±</span><span>Stock</span><span>Image</span><span></span>
                         </div>
