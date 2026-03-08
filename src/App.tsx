@@ -2,16 +2,16 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/AdminRoute";
 import AdminLayout from "@/components/admin/AdminLayout";
 import LandingPage from "./pages/LandingPage";
 import HomePage from "./pages/HomePage";
-import AuthPage from "./pages/AuthPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ProfilePage from "./pages/ProfilePage";
+import SettingsPage from "./pages/SettingsPage";
 import ShopPage from "./pages/ShopPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import CartPage from "./pages/CartPage";
@@ -41,7 +41,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/home" element={<HomePage />} />
-            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/auth" element={<Navigate to="/home" replace />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/shop" element={<ShopPage />} />
             <Route path="/product/:slug" element={<ProductDetailPage />} />
@@ -50,6 +50,10 @@ const App = () => (
             <Route
               path="/profile"
               element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}
+            />
+            <Route
+              path="/settings"
+              element={<ProtectedRoute><SettingsPage /></ProtectedRoute>}
             />
             <Route
               path="/checkout"

@@ -45,7 +45,7 @@ const CartPage: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen pb-20 lg:pb-0">
         <Navbar />
         <div className="container mx-auto px-4 py-20 text-center">
           <ShoppingBag className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
@@ -68,7 +68,7 @@ const CartPage: React.FC = () => {
   const total = subtotal + shippingFee;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-20 lg:pb-0">
       <Navbar />
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold font-display text-foreground mb-8">Shopping Cart</h1>
