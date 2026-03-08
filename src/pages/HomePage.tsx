@@ -11,6 +11,7 @@ import HomePopup from "@/components/HomePopup";
 import SaleCountdown from "@/components/SaleCountdown";
 import SalePopup from "@/components/SalePopup";
 import { Sparkles } from "lucide-react";
+import { usePageViewTracker, useSectionTracker } from "@/hooks/use-analytics";
 
 interface SaleConfig {
   id: string;
