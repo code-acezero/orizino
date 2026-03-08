@@ -73,7 +73,7 @@ const OrdersPage: React.FC = () => {
                       <img src={item.product_image || "/placeholder.svg"} alt="" className="w-10 h-10 rounded-xl object-cover" />
                       <span className="text-sm text-foreground flex-1 line-clamp-1">{item.product_name}</span>
                       <span className="text-xs text-muted-foreground">x{item.quantity}</span>
-                      <span className="text-sm font-medium text-foreground">${item.total_price.toFixed(2)}</span>
+                      <span className="text-sm font-medium text-foreground">{formatPrice(item.total_price)}</span>
                     </div>
                   ))}
                   {(order.order_items as any[])?.length > 3 && (
