@@ -24,7 +24,7 @@ const Navbar: React.FC = () => {
   const { data: dbCategories = [] } = useQuery({
     queryKey: ["nav-categories"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("categories").select("id, name, slug, parent_id, icon").eq("is_active", true).order("sort_order");
+      const { data, error } = await supabase.from("categories").select("id, name, slug, parent_id, icon, icon_url").eq("is_active", true).order("sort_order");
       if (error) throw error;
       return data;
     },
