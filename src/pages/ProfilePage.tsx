@@ -16,6 +16,7 @@ const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [address, setAddress] = useState({ street: "", city: "", state: "", zip: "", country: "" });
   const [activeTab, setActiveTab] = useState("profile");
 
