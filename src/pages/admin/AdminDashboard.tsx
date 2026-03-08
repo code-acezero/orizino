@@ -79,8 +79,37 @@ const PIE_COLORS = [
 /* ── Main Component ── */
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  /* ── Date range state ── */
+  const [rangePreset, setRangePreset] = useState("7d");
+  const [customFrom, setCustomFrom] = useState<Date | undefined>();
+  const [customTo, setCustomTo] = useState<Date | undefined>();
 
-  /* ── Fetch core stats ── */
+  const dateRange = useMemo(() => {
+    if (rangePreset === "custom" && customFrom) {
+      return {
+        from: startOfDay(customFrom).toISOString(),
+        to: customTo ? new Date(startOfDay(customTo).getTime() + 86400000 - 1).toISOString() : new Date().toISOString(),
+        days: differenceInDays(customTo || new Date(), customFrom) + 1,
+        label: `${format(customFrom, "MMM dd")} – ${format(customTo || new Date(), "MMM dd")}`,
+      };
+    }
+    const presets: Record<string, number> = { "7d": 7, "14d": 14, "30d": 30, "90d": 90 };
+    const days = presets[rangePreset] || 7;
+    return {
+      from: subDays(new Date(), days).toISOString(),
+      to: new Date().toISOString(),
+      days,
+      label: `Last ${days} days`,
+    };
+  }, [rangePreset, customFrom, customTo]);
+
+  const prevRange = useMemo(() => {
+    const d = dateRange.days;
+    return {
+      from: subDays(new Date(dateRange.from), d).toISOString(),
+      to: dateRange.from,
+    };
+  }, [dateRange]);
   const { data: stats, isLoading } = useQuery({
     queryKey: ["admin-dashboard-stats"],
     queryFn: async () => {
