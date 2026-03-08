@@ -346,7 +346,8 @@ const HomePage: React.FC = () => {
                 )}
               </div>
             </div>
-            <a href={sale.button_link || "/shop"} className="btn-pill text-white font-semibold px-8 py-3 whitespace-nowrap" style={{ background: bgColor }}>
+            <a href={sale.button_link || "/shop"} className="btn-pill text-white font-semibold px-8 py-3 whitespace-nowrap" style={{ background: bgColor }}
+              onClick={() => trackClick("sale_cta", sale.id, "/home", { sale_title: sale.title, link: sale.button_link })}>
               {sale.button_text || "Shop Now"}
             </a>
           </div>
