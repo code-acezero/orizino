@@ -200,33 +200,160 @@ const AdminSettings = () => {
       <h1 className="text-3xl font-display font-bold">Site Settings</h1>
 
       <Tabs defaultValue="general">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="commerce">Commerce</TabsTrigger>
+          <TabsTrigger value="social">Social & Links</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
           <TabsTrigger value="theme">Site Theme</TabsTrigger>
           <TabsTrigger value="customizer" className="flex items-center gap-1">
             <PaintBucket className="w-3.5 h-3.5" /> Customizer
+          </TabsTrigger>
+          <TabsTrigger value="seo" className="flex items-center gap-1">
+            <Search className="w-3.5 h-3.5" /> SEO
           </TabsTrigger>
           <TabsTrigger value="currency" className="flex items-center gap-1">
             <DollarSign className="w-3.5 h-3.5" /> Currency
           </TabsTrigger>
         </TabsList>
 
+        {/* ── General ── */}
         <TabsContent value="general">
-          <Card className="glass">
-            <CardHeader><CardTitle>General Settings</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div><Label>Site Name</Label><Input value={form.site_name} onChange={(e) => setForm({ ...form, site_name: e.target.value })} /></div>
-              <div><Label>Description</Label><Input value={form.site_description} onChange={(e) => setForm({ ...form, site_description: e.target.value })} /></div>
-              <div>
-                <Label>Default Shipping Fee</Label>
-                <Input type="number" value={form.shipping_fee} onChange={(e) => setForm({ ...form, shipping_fee: e.target.value })} />
-              </div>
-              <Button className="w-full" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
-                {saveMutation.isPending ? "Saving..." : "Save Settings"}
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="space-y-6 max-w-3xl">
+            <Card className="glass">
+              <CardHeader><CardTitle>Site Identity</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div><Label>Site Name</Label><Input value={form.site_name} onChange={(e) => setForm({ ...form, site_name: e.target.value })} /></div>
+                <div>
+                  <Label>Site Description</Label>
+                  <Textarea value={form.site_description} onChange={(e) => setForm({ ...form, site_description: e.target.value })} rows={2} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><Label>Contact Email</Label><Input type="email" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} placeholder="support@yoursite.com" /></div>
+                  <div><Label>Contact Phone</Label><Input value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} placeholder="+1 234 567 890" /></div>
+                </div>
+                <div><Label>Support URL</Label><Input value={form.support_url} onChange={(e) => setForm({ ...form, support_url: e.target.value })} placeholder="https://support.yoursite.com" /></div>
+                <div><Label>Business Address</Label><Textarea value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} rows={2} placeholder="123 Main St, City, Country" /></div>
+              </CardContent>
+            </Card>
+
+            <Card className="glass">
+              <CardHeader><CardTitle>Site Behavior</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-3 rounded-xl border border-border/30">
+                  <div>
+                    <Label>Maintenance Mode</Label>
+                    <p className="text-xs text-muted-foreground">Show a maintenance page to all non-admin visitors</p>
+                  </div>
+                  <Switch checked={!!form.maintenance_mode} onCheckedChange={(v) => setForm({ ...form, maintenance_mode: v })} />
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl border border-border/30">
+                  <div>
+                    <Label>Announcement Bar</Label>
+                    <p className="text-xs text-muted-foreground">Show a message bar at the top of the site</p>
+                  </div>
+                  <Switch checked={!!form.announcement_bar_enabled} onCheckedChange={(v) => setForm({ ...form, announcement_bar_enabled: v })} />
+                </div>
+                {form.announcement_bar_enabled && (
+                  <div>
+                    <Label>Announcement Text</Label>
+                    <Input value={form.announcement_bar_text} onChange={(e) => setForm({ ...form, announcement_bar_text: e.target.value })} placeholder="🎉 Free shipping on orders over $50!" />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Button className="w-full" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+              {saveMutation.isPending ? "Saving..." : "Save General Settings"}
+            </Button>
+          </div>
+        </TabsContent>
+
+        {/* ── Commerce ── */}
+        <TabsContent value="commerce">
+          <div className="space-y-6 max-w-3xl">
+            <Card className="glass">
+              <CardHeader>
+                <CardTitle>Shipping & Tax</CardTitle>
+                <CardDescription>Configure shipping fees and tax rates</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div><Label>Default Shipping Fee</Label><Input type="number" value={form.shipping_fee} onChange={(e) => setForm({ ...form, shipping_fee: e.target.value })} /></div>
+                  <div><Label>Free Shipping Threshold</Label><Input type="number" value={form.free_shipping_threshold} onChange={(e) => setForm({ ...form, free_shipping_threshold: e.target.value })} placeholder="Orders above this get free shipping" /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><Label>Tax Rate (%)</Label><Input type="number" value={form.tax_rate} onChange={(e) => setForm({ ...form, tax_rate: e.target.value })} step="0.1" /></div>
+                  <div><Label>Order Number Prefix</Label><Input value={form.order_prefix} onChange={(e) => setForm({ ...form, order_prefix: e.target.value })} /></div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="glass">
+              <CardHeader>
+                <CardTitle>Store Behavior</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div><Label>Products Per Page</Label><Input type="number" value={form.items_per_page} onChange={(e) => setForm({ ...form, items_per_page: e.target.value })} /></div>
+                <div className="flex items-center justify-between p-3 rounded-xl border border-border/30">
+                  <div>
+                    <Label>Allow Guest Checkout</Label>
+                    <p className="text-xs text-muted-foreground">Let users checkout without creating an account</p>
+                  </div>
+                  <Switch checked={!!form.allow_guest_checkout} onCheckedChange={(v) => setForm({ ...form, allow_guest_checkout: v })} />
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl border border-border/30">
+                  <div>
+                    <Label>Show Stock Count</Label>
+                    <p className="text-xs text-muted-foreground">Display remaining stock on product pages</p>
+                  </div>
+                  <Switch checked={!!form.show_stock_count} onCheckedChange={(v) => setForm({ ...form, show_stock_count: v })} />
+                </div>
+                <div><Label>Low Stock Threshold</Label><Input type="number" value={form.low_stock_threshold} onChange={(e) => setForm({ ...form, low_stock_threshold: e.target.value })} placeholder="Alert when stock is below this number" /></div>
+              </CardContent>
+            </Card>
+
+            <Button className="w-full" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+              {saveMutation.isPending ? "Saving..." : "Save Commerce Settings"}
+            </Button>
+          </div>
+        </TabsContent>
+
+        {/* ── Social & Links ── */}
+        <TabsContent value="social">
+          <div className="space-y-6 max-w-3xl">
+            <Card className="glass">
+              <CardHeader>
+                <CardTitle>Social Media Links</CardTitle>
+                <CardDescription>Add your social profiles — shown in footer and OG tags</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div><Label>Facebook</Label><Input value={form.social_facebook} onChange={(e) => setForm({ ...form, social_facebook: e.target.value })} placeholder="https://facebook.com/yourpage" /></div>
+                  <div><Label>Instagram</Label><Input value={form.social_instagram} onChange={(e) => setForm({ ...form, social_instagram: e.target.value })} placeholder="https://instagram.com/yourpage" /></div>
+                  <div><Label>Twitter / X</Label><Input value={form.social_twitter} onChange={(e) => setForm({ ...form, social_twitter: e.target.value })} placeholder="https://x.com/yourhandle" /></div>
+                  <div><Label>YouTube</Label><Input value={form.social_youtube} onChange={(e) => setForm({ ...form, social_youtube: e.target.value })} placeholder="https://youtube.com/@channel" /></div>
+                  <div><Label>TikTok</Label><Input value={form.social_tiktok} onChange={(e) => setForm({ ...form, social_tiktok: e.target.value })} placeholder="https://tiktok.com/@yourpage" /></div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="glass">
+              <CardHeader>
+                <CardTitle>Legal Pages</CardTitle>
+                <CardDescription>Links to your legal & policy pages</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div><Label>Terms & Conditions URL</Label><Input value={form.terms_url} onChange={(e) => setForm({ ...form, terms_url: e.target.value })} placeholder="https://yoursite.com/terms" /></div>
+                <div><Label>Privacy Policy URL</Label><Input value={form.privacy_url} onChange={(e) => setForm({ ...form, privacy_url: e.target.value })} placeholder="https://yoursite.com/privacy" /></div>
+                <div><Label>Refund Policy URL</Label><Input value={form.refund_policy_url} onChange={(e) => setForm({ ...form, refund_policy_url: e.target.value })} placeholder="https://yoursite.com/refund" /></div>
+              </CardContent>
+            </Card>
+
+            <Button className="w-full" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+              {saveMutation.isPending ? "Saving..." : "Save Social & Links"}
+            </Button>
+          </div>
         </TabsContent>
 
         <TabsContent value="branding">
