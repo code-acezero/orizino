@@ -58,8 +58,8 @@ const ProductDetailPage: React.FC = () => {
     queryKey: ["reviews", product?.id],
     queryFn: async () => {
       const { data } = await supabase
-        .from("reviews")
-        .select("*")
+        .from("public_reviews" as any)
+        .select("id, product_id, rating, title, comment, created_at, is_approved")
         .eq("product_id", product!.id)
         .eq("is_approved", true)
         .order("created_at", { ascending: false });
