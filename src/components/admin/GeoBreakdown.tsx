@@ -1,23 +1,37 @@
 import { useMemo, useState } from "react";
+import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Globe, MapPin, Trophy, TrendingUp } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Globe, MapPin, Trophy, TrendingUp, CalendarIcon } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { cn } from "@/lib/utils";
 
 interface GeoBreakdownProps {
   analyticsData: any[];
 }
 
 const GeoBreakdown: React.FC<GeoBreakdownProps> = ({ analyticsData }) => {
-  const [leaderboardPeriod, setLeaderboardPeriod] = useState<7 | 30 | 90>(30);
+  const [leaderboardPeriod, setLeaderboardPeriod] = useState<7 | 30 | 90 | "custom">(30);
+  const [customFrom, setCustomFrom] = useState<Date | undefined>();
+  const [customTo, setCustomTo] = useState<Date | undefined>();
 
   // Filter data based on selected period
   const filteredAnalyticsForLeaderboard = useMemo(() => {
+    if (leaderboardPeriod === "custom") {
+      return analyticsData.filter((e) => {
+        const t = new Date(e.created_at).getTime();
+        if (customFrom && t < customFrom.getTime()) return false;
+        if (customTo && t > customTo.getTime() + 86400000) return false;
+        return true;
+      });
+    }
     const now = Date.now();
     const cutoff = now - leaderboardPeriod * 24 * 60 * 60 * 1000;
     return analyticsData.filter((e) => new Date(e.created_at).getTime() >= cutoff);
-  }, [analyticsData, leaderboardPeriod]);
+  }, [analyticsData, leaderboardPeriod, customFrom, customTo]);
 
   const geo = useMemo(() => {
     const countryMap: Record<string, { count: number; code: string; cities: Record<string, number> }> = {};
@@ -84,7 +98,7 @@ const GeoBreakdown: React.FC<GeoBreakdownProps> = ({ analyticsData }) => {
               )}
             </CardTitle>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {[7, 30, 90].map((period) => (
               <Button
                 key={period}
@@ -96,6 +110,41 @@ const GeoBreakdown: React.FC<GeoBreakdownProps> = ({ analyticsData }) => {
                 {period}d
               </Button>
             ))}
+            <Button
+              variant={leaderboardPeriod === "custom" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setLeaderboardPeriod("custom")}
+              className="text-xs"
+            >
+              Custom
+            </Button>
+            {leaderboardPeriod === "custom" && (
+              <div className="flex items-center gap-1.5">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className={cn("text-xs h-8 gap-1", !customFrom && "text-muted-foreground")}>
+                      <CalendarIcon className="h-3 w-3" />
+                      {customFrom ? format(customFrom, "MMM d") : "From"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={customFrom} onSelect={setCustomFrom} initialFocus className="p-3 pointer-events-auto" />
+                  </PopoverContent>
+                </Popover>
+                <span className="text-xs text-muted-foreground">–</span>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className={cn("text-xs h-8 gap-1", !customTo && "text-muted-foreground")}>
+                      <CalendarIcon className="h-3 w-3" />
+                      {customTo ? format(customTo, "MMM d") : "To"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={customTo} onSelect={setCustomTo} initialFocus className="p-3 pointer-events-auto" />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
           </div>
         </CardHeader>
         <CardContent>
