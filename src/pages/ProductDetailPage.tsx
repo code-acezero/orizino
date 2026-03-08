@@ -54,7 +54,7 @@ const ProductDetailPage: React.FC = () => {
     },
     enabled: !!productCat?.parent_id,
   });
-  const { data: reviews } = useQuery({
+  const { data: reviews } = useQuery<{ id: string; product_id: string; rating: number; title: string | null; comment: string | null; created_at: string }[]>({
     queryKey: ["reviews", product?.id],
     queryFn: async () => {
       const { data } = await supabase
@@ -63,7 +63,7 @@ const ProductDetailPage: React.FC = () => {
         .eq("product_id", product!.id)
         .eq("is_approved", true)
         .order("created_at", { ascending: false });
-      return data || [];
+      return (data as any) || [];
     },
     enabled: !!product?.id,
   });
