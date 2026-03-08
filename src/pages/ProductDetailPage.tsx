@@ -449,6 +449,14 @@ const ProductDetailPage: React.FC = () => {
                   addingToCart={addingToCart} inStock={effectiveStock > 0} layout={layout}
                 />
 
+                {effectiveStock === 0 && (
+                  <NotifyWhenAvailable
+                    productId={product.id}
+                    variantId={selectedVariant?.id}
+                    variantLabel={[selectedSize, selectedColor].filter(Boolean).join(" / ") || undefined}
+                  />
+                )}
+
                 {/* Trust badges (premium only) */}
                 {!isMinimal && (
                   <div className="grid grid-cols-2 gap-3">
