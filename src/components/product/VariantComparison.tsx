@@ -273,6 +273,38 @@ const VariantComparison: React.FC<VariantComparisonProps> = ({
                 </div>
                       )}
 
+                      {/* Quantity row */}
+                      {onAddToCart && (
+                        <tr className="border-b border-border/50">
+                          <td className="py-3 pr-4 text-xs text-muted-foreground font-medium">Quantity</td>
+                          {compared.map((v) => {
+                            const qty = quantities[v.id] || 1;
+                            const max = v.stock_quantity;
+                            return (
+                              <td key={v.id} className="py-3 px-2 text-center">
+                                <div className="flex items-center justify-center gap-1">
+                                  <button
+                                    disabled={qty <= 1 || max === 0}
+                                    onClick={() => setQuantities((p) => ({ ...p, [v.id]: Math.max(1, qty - 1) }))}
+                                    className="w-6 h-6 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                  >
+                                    <Minus className="w-3 h-3" />
+                                  </button>
+                                  <span className="w-6 text-center text-sm font-medium text-foreground">{max === 0 ? 0 : qty}</span>
+                                  <button
+                                    disabled={qty >= max}
+                                    onClick={() => setQuantities((p) => ({ ...p, [v.id]: Math.min(max, qty + 1) }))}
+                                    className="w-6 h-6 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                  >
+                                    <Plus className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      )}
+
                       {/* Add to Cart row */}
                       {onAddToCart && (
                         <tr>
@@ -280,6 +312,7 @@ const VariantComparison: React.FC<VariantComparisonProps> = ({
                           {compared.map((v) => {
                             const isAdding = addingToCartId === v.id;
                             const label = getLabel(v);
+                            const qty = quantities[v.id] || 1;
                             return (
                               <td key={v.id} className="py-3 px-2 text-center">
                                 <Button
@@ -287,7 +320,7 @@ const VariantComparison: React.FC<VariantComparisonProps> = ({
                                   disabled={v.stock_quantity === 0 || isAdding}
                                   onClick={async () => {
                                     setAddingToCartId(v.id);
-                                    await onAddToCart(v.id, label);
+                                    await onAddToCart(v.id, label, qty);
                                     setAddingToCartId(null);
                                   }}
                                   className="gap-1.5 text-xs w-full"
@@ -297,7 +330,7 @@ const VariantComparison: React.FC<VariantComparisonProps> = ({
                                   ) : (
                                     <ShoppingCart className="w-3 h-3" />
                                   )}
-                                  {v.stock_quantity === 0 ? "Sold Out" : "Add to Cart"}
+                                  {v.stock_quantity === 0 ? "Sold Out" : `Add ${qty > 1 ? `(${qty})` : ""}`}
                                 </Button>
                               </td>
                             );
