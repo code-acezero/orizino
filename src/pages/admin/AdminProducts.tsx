@@ -800,7 +800,12 @@ const AdminProducts = () => {
                           <p className="text-xs text-muted-foreground">
                             Total stock: <span className="font-bold text-foreground">{variants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0)}</span> units across {variants.length} variants
                           </p>
-                          <Button type="button" size="sm" onClick={saveVariants}>Save Variants</Button>
+                          <div className="flex gap-2">
+                            <Button type="button" size="sm" variant="outline" onClick={notifyRestockSubscribers} className="gap-1">
+                              <Bell className="w-3 h-3" /> Notify Subscribers
+                            </Button>
+                            <Button type="button" size="sm" onClick={saveVariants}>Save Variants</Button>
+                          </div>
                         </div>
                         </div>
                       </div>
