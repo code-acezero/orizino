@@ -27,7 +27,10 @@ const AdminCategories = () => {
   const [editing, setEditing] = useState<Record<string, any> | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
-
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [sortBy, setSortBy] = useState<"name" | "products" | "orders" | "revenue">("revenue");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const { formatPrice } = useCurrency();
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ["admin-categories"],
     queryFn: async () => {
