@@ -448,39 +448,123 @@ const AdminHome = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              {sectionOrder.map((section, idx) => (
-                <div
-                  key={section.id}
-                  {...getSectionOrderDragProps(idx)}
-                  className={`flex items-center gap-4 p-4 rounded-xl border border-border bg-secondary/20 cursor-grab active:cursor-grabbing transition-all ${secOverIdx === idx && secDragIdx !== idx ? "border-primary bg-primary/10 scale-[1.01]" : ""}`}
-                >
-                  <GripVertical className="w-5 h-5 text-muted-foreground shrink-0" />
-                  <span className="text-2xl">{section.icon}</span>
-                  <div className="flex-1">
-                    <p className="font-medium text-foreground">{section.label}</p>
-                    <p className="text-xs text-muted-foreground">Position {idx + 1}</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex flex-col items-end gap-1">
-                      <Label htmlFor={`visible-${section.id}`} className="text-xs font-medium">
-                        {(section as any).visible ? "Visible" : "Hidden"}
-                      </Label>
-                      <Switch
-                        id={`visible-${section.id}`}
-                        checked={(section as any).visible !== false}
-                        onCheckedChange={(checked) => {
-                          setSectionOrder(
-                            sectionOrder.map((s) =>
-                              s.id === section.id ? { ...s, visible: checked } : s
-                            )
-                          );
-                        }}
-                      />
+              {sectionOrder.map((section, idx) => {
+                const settingsCfg = sectionSettingsConfig[section.id] || { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false };
+                const hasSettings = Object.values(settingsCfg).some(Boolean);
+                const isExpanded = expandedSection === section.id;
+
+                const updateSectionField = (field: string, value: any) => {
+                  setSectionOrder(sectionOrder.map((s) => s.id === section.id ? { ...s, [field]: value } : s));
+                };
+
+                return (
+                  <div key={section.id} className="rounded-xl border border-border bg-secondary/20 transition-all overflow-hidden">
+                    <div
+                      {...getSectionOrderDragProps(idx)}
+                      className={`flex items-center gap-4 p-4 cursor-grab active:cursor-grabbing transition-all ${secOverIdx === idx && secDragIdx !== idx ? "border-primary bg-primary/10 scale-[1.01]" : ""}`}
+                    >
+                      <GripVertical className="w-5 h-5 text-muted-foreground shrink-0" />
+                      <span className="text-2xl">{section.icon}</span>
+                      <div className="flex-1">
+                        <p className="font-medium text-foreground">{section.title || section.label}</p>
+                        <p className="text-xs text-muted-foreground">Position {idx + 1}{section.subtitle ? ` · ${section.subtitle}` : ""}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {hasSettings && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={(e) => { e.stopPropagation(); setExpandedSection(isExpanded ? null : section.id); }}
+                          >
+                            <Settings2 className={`w-4 h-4 transition-transform ${isExpanded ? "text-primary" : "text-muted-foreground"}`} />
+                          </Button>
+                        )}
+                        <div className="flex flex-col items-end gap-1">
+                          <Label htmlFor={`visible-${section.id}`} className="text-xs font-medium">
+                            {(section as any).visible !== false ? "Visible" : "Hidden"}
+                          </Label>
+                          <Switch
+                            id={`visible-${section.id}`}
+                            checked={(section as any).visible !== false}
+                            onCheckedChange={(checked) => updateSectionField("visible", checked)}
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <Badge variant="outline" className="text-xs">{section.id}</Badge>
+
+                    {isExpanded && hasSettings && (
+                      <div className="px-4 pb-4 pt-2 border-t border-border/50 space-y-4 bg-secondary/10">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {settingsCfg.hasTitle && (
+                            <div className="space-y-1.5">
+                              <Label className="text-xs">Section Title</Label>
+                              <Input
+                                value={section.title || ""}
+                                onChange={(e) => updateSectionField("title", e.target.value)}
+                                placeholder={section.label}
+                                className="h-9"
+                              />
+                            </div>
+                          )}
+                          {settingsCfg.hasSubtitle && (
+                            <div className="space-y-1.5">
+                              <Label className="text-xs">Subtitle</Label>
+                              <Input
+                                value={section.subtitle || ""}
+                                onChange={(e) => updateSectionField("subtitle", e.target.value)}
+                                placeholder="Optional subtitle"
+                                className="h-9"
+                              />
+                            </div>
+                          )}
+                          {settingsCfg.hasProductCount && (
+                            <div className="space-y-1.5">
+                              <Label className="text-xs">Product Count</Label>
+                              <Input
+                                type="number"
+                                min={1}
+                                max={24}
+                                value={section.product_count || 8}
+                                onChange={(e) => updateSectionField("product_count", parseInt(e.target.value) || 8)}
+                                className="h-9"
+                              />
+                            </div>
+                          )}
+                          {settingsCfg.hasColumns && (
+                            <div className="space-y-1.5">
+                              <Label className="text-xs">Columns (Desktop)</Label>
+                              <Select value={String(section.columns || 4)} onValueChange={(v) => updateSectionField("columns", parseInt(v))}>
+                                <SelectTrigger className="h-9">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="2">2 Columns</SelectItem>
+                                  <SelectItem value="3">3 Columns</SelectItem>
+                                  <SelectItem value="4">4 Columns</SelectItem>
+                                  <SelectItem value="5">5 Columns</SelectItem>
+                                  <SelectItem value="6">6 Columns</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+                          {settingsCfg.hasViewAllLink && (
+                            <div className="space-y-1.5 md:col-span-2">
+                              <Label className="text-xs">"View All" Link</Label>
+                              <Input
+                                value={section.view_all_link || ""}
+                                onChange={(e) => updateSectionField("view_all_link", e.target.value)}
+                                placeholder="/shop"
+                                className="h-9"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
               <Button className="w-full mt-4" onClick={() => saveSectionOrder.mutate()} disabled={saveSectionOrder.isPending}>
                 {saveSectionOrder.isPending ? "Saving..." : "Save Section Order"}
               </Button>
