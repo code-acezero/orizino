@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 
@@ -14,6 +14,11 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const [isZooming, setIsZooming] = useState(false);
+  const [pinchScale, setPinchScale] = useState(1);
+  const [pinchOrigin, setPinchOrigin] = useState({ x: 50, y: 50 });
+  const pinchStartDist = useRef(0);
+  const pinchStartScale = useRef(1);
+  const lightboxImgRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLDivElement>(null);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -26,7 +31,45 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
 
   const navigate = (dir: 1 | -1) => {
     setSelected((p) => (p + dir + images.length) % images.length);
+    setPinchScale(1);
   };
+
+  // Pinch-to-zoom handlers for lightbox
+  const getTouchDist = (touches: React.TouchList) => {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      pinchStartDist.current = getTouchDist(e.touches);
+      pinchStartScale.current = pinchScale;
+      const rect = lightboxImgRef.current?.getBoundingClientRect();
+      if (rect) {
+        const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        setPinchOrigin({
+          x: ((cx - rect.left) / rect.width) * 100,
+          y: ((cy - rect.top) / rect.height) * 100,
+        });
+      }
+    }
+  }, [pinchScale]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const dist = getTouchDist(e.touches);
+      const newScale = Math.min(5, Math.max(1, pinchStartScale.current * (dist / pinchStartDist.current)));
+      setPinchScale(newScale);
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (pinchScale < 1.1) setPinchScale(1);
+  }, [pinchScale]);
 
   const isMinimal = layout === "minimal";
   const isEditorial = layout === "editorial";
@@ -134,16 +177,33 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
               </>
             )}
 
-            <motion.img
-              key={selected}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              src={images[selected]}
-              alt={productName}
-              className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl"
+            <div
+              ref={lightboxImgRef}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              className="touch-none"
               onClick={(e) => e.stopPropagation()}
-            />
+            >
+              <motion.img
+                key={selected}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: pinchScale }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                src={images[selected]}
+                alt={productName}
+                className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl"
+                style={{ transformOrigin: `${pinchOrigin.x}% ${pinchOrigin.y}%` }}
+                onDoubleClick={() => setPinchScale((s) => s > 1 ? 1 : 2.5)}
+              />
+            </div>
+
+            {/* Zoom level indicator */}
+            {pinchScale > 1 && (
+              <div className="absolute top-6 left-6 glass rounded-full px-3 py-1.5 text-xs text-foreground font-medium">
+                {pinchScale.toFixed(1)}x
+              </div>
+            )}
 
             {/* Lightbox thumbnails */}
             {images.length > 1 && (
