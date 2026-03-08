@@ -216,19 +216,13 @@ const AdminDashboard = () => {
 
   /* ── Sales funnel data ── */
   const { data: funnelData } = useQuery({
-    queryKey: ["admin-sales-funnel"],
+    queryKey: ["admin-sales-funnel", dateRange.from, dateRange.to],
     queryFn: async () => {
-      const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
-
       const [visitorsRes, cartRes, checkoutsRes, completedRes] = await Promise.all([
-        // Unique sessions visiting the site
-        supabase.from("page_analytics").select("session_id").eq("event_type", "page_view").gte("created_at", thirtyDaysAgo),
-        // Unique users who added to cart
-        supabase.from("cart_items").select("user_id").gte("created_at", thirtyDaysAgo),
-        // All orders (checkout completed)
-        supabase.from("orders").select("id, status").gte("created_at", thirtyDaysAgo),
-        // Delivered orders
-        supabase.from("orders").select("id").eq("status", "delivered").gte("created_at", thirtyDaysAgo),
+        supabase.from("page_analytics").select("session_id").eq("event_type", "page_view").gte("created_at", dateRange.from).lte("created_at", dateRange.to),
+        supabase.from("cart_items").select("user_id").gte("created_at", dateRange.from).lte("created_at", dateRange.to),
+        supabase.from("orders").select("id, status").gte("created_at", dateRange.from).lte("created_at", dateRange.to),
+        supabase.from("orders").select("id").eq("status", "delivered").gte("created_at", dateRange.from).lte("created_at", dateRange.to),
       ]);
 
       const uniqueVisitors = new Set((visitorsRes.data ?? []).map((r) => r.session_id)).size || 1;
