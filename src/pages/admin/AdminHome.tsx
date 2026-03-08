@@ -477,7 +477,7 @@ const AdminHome = () => {
     <div className="space-y-6">
       <h1 className="text-3xl font-display font-bold">Home Page Management</h1>
 
-      <Tabs defaultValue="dashboard">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex-wrap">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
