@@ -46,14 +46,13 @@ const AdminProducts = () => {
     mutationFn: async (product: Record<string, any>) => {
       const slug = product.slug || product.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
       const payload = { ...product, slug };
-      // Remove joined data
       delete payload.categories;
       if (product.id) {
-        const { error } = await supabase.from("products").update(payload).eq("id", product.id);
+        const { error } = await supabase.from("products").update(payload as any).eq("id", product.id);
         if (error) throw error;
       } else {
         delete payload.id;
-        const { error } = await supabase.from("products").insert(payload);
+        const { error } = await supabase.from("products").insert(payload as any);
         if (error) throw error;
       }
     },

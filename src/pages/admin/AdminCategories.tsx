@@ -36,13 +36,13 @@ const AdminCategories = () => {
     mutationFn: async (cat: Record<string, any>) => {
       const slug = cat.slug || cat.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
       const payload = { ...cat, slug };
-      delete payload.children; // remove virtual field
+      delete payload.children;
       if (cat.id) {
-        const { error } = await supabase.from("categories").update(payload).eq("id", cat.id);
+        const { error } = await supabase.from("categories").update(payload as any).eq("id", cat.id);
         if (error) throw error;
       } else {
         delete payload.id;
-        const { error } = await supabase.from("categories").insert(payload);
+        const { error } = await supabase.from("categories").insert(payload as any);
         if (error) throw error;
       }
     },
