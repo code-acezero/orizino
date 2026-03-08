@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { Star, Send } from "lucide-react";
+import { Star, Send, PackageCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/lib/app-toast";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -22,7 +22,41 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ productId }) => {
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Check if user has a delivered order containing this product
+  const { data: hasDeliveredOrder, isLoading: checkingEligibility } = useQuery({
+    queryKey: ["review-eligibility", user?.id, productId],
+    queryFn: async () => {
+      // Check orders with status 'delivered' then verify order_items contain this product
+      const { data: deliveredOrders } = await supabase
+        .from("orders")
+        .select("id")
+        .eq("user_id", user!.id)
+        .eq("status", "delivered");
+      if (!deliveredOrders || deliveredOrders.length === 0) return false;
+      const orderIds = deliveredOrders.map((o) => o.id);
+      const { data: items } = await supabase
+        .from("order_items")
+        .select("id")
+        .in("order_id", orderIds)
+        .eq("product_id", productId)
+        .limit(1);
+      return (items && items.length > 0) || false;
+    },
+    enabled: !!user,
+  });
+
   if (!user) return null;
+
+  if (checkingEligibility) return null;
+
+  if (!hasDeliveredOrder) {
+    return (
+      <div className="glass-strong rounded-3xl p-6 flex items-center gap-3 text-muted-foreground">
+        <PackageCheck className="w-5 h-5 shrink-0" />
+        <p className="text-sm">You can write a review after your order has been delivered.</p>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
