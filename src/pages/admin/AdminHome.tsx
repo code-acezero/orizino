@@ -220,6 +220,7 @@ const AdminHome = () => {
   const [layoutConfig, setLayoutConfig] = useState<LayoutConfig>({ ...defaultLayoutConfig });
   const [sectionOrder, setSectionOrder] = useState(defaultSectionOrder);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedTheme, setSelectedTheme] = useState("default");
   const [selectedMode, setSelectedMode] = useState("dark");
 
