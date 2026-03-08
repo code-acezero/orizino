@@ -120,9 +120,29 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
               exit={{ opacity: 0, x: -80 }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
               className="w-full h-full object-cover absolute inset-0"
-              style={isZooming ? { transform: "scale(2)", transformOrigin: `${zoomPos.x}% ${zoomPos.y}%` } : undefined}
             />
           </AnimatePresence>
+
+          {/* Liquid loupe magnifier */}
+          {isZooming && (
+            <div
+              className="absolute pointer-events-none z-10"
+              style={{
+                width: 160,
+                height: 160,
+                borderRadius: "50%",
+                left: mousePos.x - 80,
+                top: mousePos.y - 80,
+                backgroundImage: `url(${images[selected]})`,
+                backgroundSize: `${imgRef.current?.offsetWidth ? imgRef.current.offsetWidth * 2.5 : 1000}px ${imgRef.current?.offsetHeight ? imgRef.current.offsetHeight * 2.5 : 1000}px`,
+                backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
+                border: "3px solid hsl(var(--primary) / 0.4)",
+                boxShadow: "0 0 0 2px hsl(var(--background) / 0.6), 0 8px 32px hsl(var(--primary) / 0.2), inset 0 0 30px hsl(var(--primary) / 0.05)",
+                backdropFilter: "blur(1px)",
+                transition: "box-shadow 0.3s ease",
+              }}
+            />
+          )}
 
           {/* Zoom indicator */}
           <div className="absolute bottom-4 right-4 glass rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
