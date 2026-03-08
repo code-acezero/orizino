@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/app-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, GripVertical, Tag, Clock, Sparkles, Image, Bell, Layout, Layers, ChevronDown, ChevronUp, Settings2, Palette, Sun, Moon } from "lucide-react";
+import { Plus, Trash2, GripVertical, Tag, Clock, Sparkles, Image, Bell, Layout, Layers, ChevronDown, ChevronUp, Settings2, Palette, Sun, Moon, Star, Search, FolderOpen } from "lucide-react";
 import { useDragReorder } from "@/hooks/use-drag-reorder";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
@@ -204,18 +204,14 @@ const AdminHome = () => {
     { id: "category-sections", label: "Category Product Sections", icon: "📦", visible: true, title: "", subtitle: "", product_count: 8, columns: 4, view_all_link: "" },
     { id: "featured", label: "Featured Products", icon: "⭐", visible: true, title: "Featured Products", subtitle: "Handpicked just for you", product_count: 8, columns: 4, view_all_link: "/shop" },
     { id: "arrivals", label: "New Arrivals", icon: "✨", visible: true, title: "New Arrivals", subtitle: "Fresh drops just landed", product_count: 8, columns: 4, view_all_link: "/shop" },
-    { id: "featured-categories", label: "Featured Categories", icon: "🏷️", visible: true, title: "", subtitle: "", product_count: 0, columns: 0, view_all_link: "" },
-    { id: "featured-products", label: "Featured Products Selection", icon: "🌟", visible: true, title: "", subtitle: "", product_count: 0, columns: 0, view_all_link: "" },
   ];
 
-  const sectionSettingsConfig: Record<string, { hasTitle: boolean; hasSubtitle: boolean; hasProductCount: boolean; hasColumns: boolean; hasViewAllLink: boolean; hasFeaturedToggle: string }> = {
-    slider: { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: "" },
-    categories: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: false, hasFeaturedToggle: "" },
-    "category-sections": { hasTitle: false, hasSubtitle: false, hasProductCount: true, hasColumns: true, hasViewAllLink: false, hasFeaturedToggle: "" },
-    featured: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true, hasFeaturedToggle: "" },
-    arrivals: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true, hasFeaturedToggle: "" },
-    "featured-categories": { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: "categories" },
-    "featured-products": { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: "products" },
+  const sectionSettingsConfig: Record<string, { hasTitle: boolean; hasSubtitle: boolean; hasProductCount: boolean; hasColumns: boolean; hasViewAllLink: boolean }> = {
+    slider: { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false },
+    categories: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: false },
+    "category-sections": { hasTitle: false, hasSubtitle: false, hasProductCount: true, hasColumns: true, hasViewAllLink: false },
+    featured: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true },
+    arrivals: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true },
   };
 
   const [catSections, setCatSections] = useState<{ category_id: string; sort_order: number; product_count: number }[]>([]);
@@ -227,6 +223,8 @@ const AdminHome = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedTheme, setSelectedTheme] = useState("default");
   const [selectedMode, setSelectedMode] = useState("dark");
+  const [featCatSearch, setFeatCatSearch] = useState("");
+  const [featProdSearch, setFeatProdSearch] = useState("");
 
   // Fetch current theme/mode
   const { data: themeSettings } = useQuery({
@@ -487,6 +485,8 @@ const AdminHome = () => {
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="section-order">Section Order</TabsTrigger>
+          <TabsTrigger value="featured-categories">Featured Categories</TabsTrigger>
+          <TabsTrigger value="featured-products">Featured Products</TabsTrigger>
           <TabsTrigger value="cat-sections">Category Sections</TabsTrigger>
           <TabsTrigger value="sales">Sales</TabsTrigger>
           <TabsTrigger value="new-arrivals">New Arrivals</TabsTrigger>
@@ -678,8 +678,8 @@ const AdminHome = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               {sectionOrder.map((section, idx) => {
-                const settingsCfg = sectionSettingsConfig[section.id] || { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: "" };
-                const hasSettings = Object.values(settingsCfg).some(Boolean);
+                const settingsCfg = sectionSettingsConfig[section.id] || { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false };
+                const hasSettings = settingsCfg.hasTitle || settingsCfg.hasSubtitle || settingsCfg.hasProductCount || settingsCfg.hasColumns || settingsCfg.hasViewAllLink;
                 const isExpanded = expandedSection === section.id;
 
                 const updateSectionField = (field: string, value: any) => {
@@ -789,48 +789,6 @@ const AdminHome = () => {
                             </div>
                           )}
                         </div>
-
-                        {/* Featured Categories toggle */}
-                        {settingsCfg.hasFeaturedToggle === "categories" && (
-                          <div className="mt-4">
-                            <Label className="text-xs font-semibold mb-2 block">Featured Categories</Label>
-                            <p className="text-xs text-muted-foreground mb-3">Toggle which categories appear in the "Shop by Category" section.</p>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
-                              {categories.map((cat) => (
-                                <div key={cat.id} className="flex items-center gap-2 p-2 rounded-lg border border-border/30 bg-secondary/10">
-                                  <Switch
-                                    checked={cat.is_featured}
-                                    onCheckedChange={(v) => toggleCatFeatured.mutate({ id: cat.id, is_featured: v })}
-                                    className="scale-75"
-                                  />
-                                  <span className="text-xs font-medium text-foreground truncate">{cat.name}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Featured Products toggle */}
-                        {settingsCfg.hasFeaturedToggle === "products" && (
-                          <div className="mt-4">
-                            <Label className="text-xs font-semibold mb-2 block">Featured Products</Label>
-                            <p className="text-xs text-muted-foreground mb-3">Toggle which products appear in the "Featured Products" section.</p>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-64 overflow-y-auto">
-                              {localProducts.map((prod) => (
-                                <div key={prod.id} className="flex items-center gap-2 p-2 rounded-lg border border-border/30 bg-secondary/10">
-                                  <Switch
-                                    checked={prod.is_featured}
-                                    onCheckedChange={(v) => toggleProdFeatured.mutate({ id: prod.id, is_featured: v })}
-                                    className="scale-75"
-                                  />
-                                  {prod.thumbnail && <img src={prod.thumbnail} alt="" className="w-7 h-7 object-cover rounded" />}
-                                  <span className="text-xs font-medium text-foreground truncate flex-1">{prod.name}</span>
-                                  <span className="text-[10px] text-muted-foreground">${Number(prod.price).toFixed(2)}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
                       </div>
                     )}
                   </div>
@@ -839,6 +797,141 @@ const AdminHome = () => {
               <Button className="w-full mt-4" onClick={() => saveSectionOrder.mutate()} disabled={saveSectionOrder.isPending}>
                 {saveSectionOrder.isPending ? "Saving..." : "Save Section Order"}
               </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ── Featured Categories Tab ── */}
+        <TabsContent value="featured-categories">
+          <Card className="glass">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                  <FolderOpen className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle>Featured Categories</CardTitle>
+                  <p className="text-sm text-muted-foreground">Select which categories appear in the "Shop by Category" section on the homepage. Drag to reorder their display priority.</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 rounded-xl bg-secondary/30 border border-border/50 text-center">
+                  <p className="text-2xl font-bold text-foreground">{localCategories.length}</p>
+                  <p className="text-[10px] text-muted-foreground">Total Categories</p>
+                </div>
+                <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-center">
+                  <p className="text-2xl font-bold text-primary">{localCategories.filter(c => c.is_featured).length}</p>
+                  <p className="text-[10px] text-muted-foreground">Featured</p>
+                </div>
+                <div className="p-3 rounded-xl bg-secondary/30 border border-border/50 text-center">
+                  <p className="text-2xl font-bold text-muted-foreground">{localCategories.filter(c => !c.is_featured).length}</p>
+                  <p className="text-[10px] text-muted-foreground">Hidden</p>
+                </div>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input value={featCatSearch} onChange={(e) => setFeatCatSearch(e.target.value)} placeholder="Search categories..." className="pl-9 h-9" />
+              </div>
+              <div className="space-y-2">
+                {localCategories
+                  .filter(cat => !featCatSearch || cat.name.toLowerCase().includes(featCatSearch.toLowerCase()))
+                  .map((cat, idx) => {
+                    const isDragging = featCatDragIdx === idx;
+                    const isOver = featCatOverIdx === idx;
+                    return (
+                      <div key={cat.id} {...getFeatCatDragProps(idx)} className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-grab active:cursor-grabbing ${isDragging ? "opacity-50 scale-95 border-border" : isOver ? "ring-2 ring-primary/40 border-primary/30 bg-primary/5" : cat.is_featured ? "border-primary/20 bg-primary/5" : "border-border bg-secondary/10"}`}>
+                        <GripVertical className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0">{idx + 1}</div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{cat.name}</p>
+                          <p className="text-[10px] text-muted-foreground">/{cat.slug}</p>
+                        </div>
+                        <Badge variant={cat.is_featured ? "default" : "outline"} className={`text-[10px] shrink-0 ${cat.is_featured ? "" : "text-muted-foreground"}`}>{cat.is_featured ? "Featured" : "Hidden"}</Badge>
+                        <Switch checked={cat.is_featured} onCheckedChange={(v) => toggleCatFeatured.mutate({ id: cat.id, is_featured: v })} />
+                      </div>
+                    );
+                  })}
+              </div>
+              {localCategories.length === 0 && (
+                <div className="text-center py-12">
+                  <FolderOpen className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                  <h3 className="font-semibold mb-1">No categories yet</h3>
+                  <p className="text-sm text-muted-foreground">Create categories first from the Categories management page.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ── Featured Products Tab ── */}
+        <TabsContent value="featured-products">
+          <Card className="glass">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                  <Star className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle>Featured Products</CardTitle>
+                  <p className="text-sm text-muted-foreground">Select which products appear in the "Featured Products" section on the homepage. Drag to reorder their display priority.</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 rounded-xl bg-secondary/30 border border-border/50 text-center">
+                  <p className="text-2xl font-bold text-foreground">{localProducts.length}</p>
+                  <p className="text-[10px] text-muted-foreground">Total Products</p>
+                </div>
+                <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-center">
+                  <p className="text-2xl font-bold text-primary">{localProducts.filter(p => p.is_featured).length}</p>
+                  <p className="text-[10px] text-muted-foreground">Featured</p>
+                </div>
+                <div className="p-3 rounded-xl bg-secondary/30 border border-border/50 text-center">
+                  <p className="text-2xl font-bold text-muted-foreground">{localProducts.filter(p => !p.is_featured).length}</p>
+                  <p className="text-[10px] text-muted-foreground">Not Featured</p>
+                </div>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input value={featProdSearch} onChange={(e) => setFeatProdSearch(e.target.value)} placeholder="Search products..." className="pl-9 h-9" />
+              </div>
+              <div className="space-y-2">
+                {localProducts
+                  .filter(prod => !featProdSearch || prod.name.toLowerCase().includes(featProdSearch.toLowerCase()))
+                  .map((prod, idx) => {
+                    const isDragging = featProdDragIdx === idx;
+                    const isOver = featProdOverIdx === idx;
+                    return (
+                      <div key={prod.id} {...getFeatProdDragProps(idx)} className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-grab active:cursor-grabbing ${isDragging ? "opacity-50 scale-95 border-border" : isOver ? "ring-2 ring-primary/40 border-primary/30 bg-primary/5" : prod.is_featured ? "border-primary/20 bg-primary/5" : "border-border bg-secondary/10"}`}>
+                        <GripVertical className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0">{idx + 1}</div>
+                        {prod.thumbnail ? (
+                          <img src={prod.thumbnail} alt="" className="w-10 h-10 object-cover rounded-lg border border-border/30 shrink-0" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-secondary/40 flex items-center justify-center shrink-0">
+                            <Star className="w-4 h-4 text-muted-foreground/30" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{prod.name}</p>
+                          <p className="text-[10px] text-muted-foreground">${Number(prod.price).toFixed(2)}</p>
+                        </div>
+                        <Badge variant={prod.is_featured ? "default" : "outline"} className={`text-[10px] shrink-0 ${prod.is_featured ? "" : "text-muted-foreground"}`}>{prod.is_featured ? "Featured" : "Not Featured"}</Badge>
+                        <Switch checked={prod.is_featured} onCheckedChange={(v) => toggleProdFeatured.mutate({ id: prod.id, is_featured: v })} />
+                      </div>
+                    );
+                  })}
+              </div>
+              {localProducts.length === 0 && (
+                <div className="text-center py-12">
+                  <Star className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                  <h3 className="font-semibold mb-1">No products yet</h3>
+                  <p className="text-sm text-muted-foreground">Add products first from the Products management page.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
