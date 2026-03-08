@@ -254,7 +254,112 @@ const AdminCategories = () => {
         />
       </div>
 
-      {/* Category Cards Grid */}
+      {/* Category Analytics Card */}
+      <Card className="glass overflow-hidden">
+        <button
+          onClick={() => setShowAnalytics(!showAnalytics)}
+          className="w-full flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
+              <BarChart3 className="w-4 h-4 text-primary" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-semibold">Category Analytics</p>
+              <p className="text-xs text-muted-foreground">Products, orders & revenue per category</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-4 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1"><Package className="w-3.5 h-3.5" /> {products.length} products</span>
+              <span className="flex items-center gap-1"><ShoppingCart className="w-3.5 h-3.5" /> {orderItems.length} items sold</span>
+            </div>
+            {showAnalytics ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+          </div>
+        </button>
+
+        <AnimatePresence>
+          {showAnalytics && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="overflow-hidden"
+            >
+              <div className="px-4 pb-4 space-y-4">
+                {/* Revenue Bar Chart */}
+                {analyticsRows.some((r) => r.revenue > 0) && (
+                  <div className="h-48">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analyticsRows.slice(0, 8)} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+                        <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                        <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={50} />
+                        <RechartsTooltip
+                          contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
+                          formatter={(value: number) => [formatPrice(value), "Revenue"]}
+                        />
+                        <Bar dataKey="revenue" radius={[6, 6, 0, 0]}>
+                          {analyticsRows.slice(0, 8).map((_, i) => (
+                            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+
+                {/* Table */}
+                <div className="rounded-lg border border-border overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("name")}>
+                          <span className="flex items-center gap-1">Category <ArrowUpDown className="w-3 h-3" /></span>
+                        </TableHead>
+                        <TableHead className="cursor-pointer select-none text-right" onClick={() => toggleSort("products")}>
+                          <span className="flex items-center gap-1 justify-end"><Package className="w-3 h-3" /> Products <ArrowUpDown className="w-3 h-3" /></span>
+                        </TableHead>
+                        <TableHead className="cursor-pointer select-none text-right" onClick={() => toggleSort("orders")}>
+                          <span className="flex items-center gap-1 justify-end"><ShoppingCart className="w-3 h-3" /> Orders <ArrowUpDown className="w-3 h-3" /></span>
+                        </TableHead>
+                        <TableHead className="cursor-pointer select-none text-right" onClick={() => toggleSort("revenue")}>
+                          <span className="flex items-center gap-1 justify-end"><DollarSign className="w-3 h-3" /> Revenue <ArrowUpDown className="w-3 h-3" /></span>
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {analyticsRows.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center text-muted-foreground py-8">No categories yet</TableCell>
+                        </TableRow>
+                      ) : (
+                        analyticsRows.map((row, i) => (
+                          <TableRow key={row.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full shrink-0" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
+                                <div className="w-6 h-6 rounded bg-secondary/50 flex items-center justify-center shrink-0 overflow-hidden">
+                                  {row.icon_url ? <img src={row.icon_url} alt="" className="w-full h-full object-contain" /> : row.icon ? <span className="text-xs">{row.icon}</span> : <FolderTree className="w-3 h-3 text-muted-foreground" />}
+                                </div>
+                                <span className="text-sm font-medium truncate">{row.name}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right tabular-nums">{row.productCount}</TableCell>
+                            <TableCell className="text-right tabular-nums">{row.orderCount}</TableCell>
+                            <TableCell className="text-right tabular-nums font-medium">{formatPrice(row.revenue)}</TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Card>
+
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
