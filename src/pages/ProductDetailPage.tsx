@@ -13,6 +13,7 @@ import Footer from "@/components/Footer";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ProductCard from "@/components/ProductCard";
 import ReviewForm from "@/components/ReviewForm";
+import ReviewCard from "@/components/ReviewCard";
 
 const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
