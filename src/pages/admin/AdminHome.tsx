@@ -422,8 +422,9 @@ const AdminHome = () => {
     <div className="space-y-6">
       <h1 className="text-3xl font-display font-bold">Home Page Management</h1>
 
-      <Tabs defaultValue="section-order">
+      <Tabs defaultValue="dashboard">
         <TabsList className="flex-wrap">
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="section-order">Section Order</TabsTrigger>
           <TabsTrigger value="cat-sections">Category Sections</TabsTrigger>
           <TabsTrigger value="sales">Sales</TabsTrigger>
@@ -432,6 +433,167 @@ const AdminHome = () => {
           <TabsTrigger value="categories">Featured Categories</TabsTrigger>
           <TabsTrigger value="products">Featured Products</TabsTrigger>
         </TabsList>
+
+        {/* Dashboard */}
+        <TabsContent value="dashboard">
+          <div className="space-y-6">
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { label: "Visible Sections", value: sectionOrder.filter((s) => s.visible !== false).length, total: sectionOrder.length, icon: "👁️" },
+                { label: "Active Sales", value: sales.filter((s) => s.enabled).length, total: sales.length, icon: "🏷️" },
+                { label: "Category Sections", value: catSections.length, total: categories.length, icon: "📦" },
+                { label: "Featured Products", value: localProducts.filter((p) => p.is_featured).length, total: localProducts.length, icon: "⭐" },
+              ].map((stat) => (
+                <Card key={stat.label} className="glass">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{stat.icon}</span>
+                      <div>
+                        <p className="text-2xl font-bold text-foreground">{stat.value}<span className="text-sm font-normal text-muted-foreground">/{stat.total}</span></p>
+                        <p className="text-xs text-muted-foreground">{stat.label}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Section Status */}
+            <Card className="glass">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                    <Layout className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle>Homepage Sections Status</CardTitle>
+                    <p className="text-sm text-muted-foreground">Live view of all homepage sections and their current state</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {sectionOrder.map((section, idx) => {
+                    const isVisible = section.visible !== false;
+                    const hasCustomTitle = !!section.title && section.title !== section.label;
+                    const cols = section.columns || 4;
+                    const count = section.product_count || 0;
+
+                    return (
+                      <div
+                        key={section.id}
+                        className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${isVisible ? "border-border bg-secondary/20" : "border-border/40 bg-muted/20 opacity-60"}`}
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                          {idx + 1}
+                        </div>
+                        <span className="text-xl">{section.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-foreground truncate">{section.title || section.label}</p>
+                            {hasCustomTitle && (
+                              <Badge variant="outline" className="text-[10px] shrink-0">Custom Title</Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                            {section.subtitle && (
+                              <span className="text-xs text-muted-foreground truncate max-w-[200px]">{section.subtitle}</span>
+                            )}
+                            {count > 0 && (
+                              <Badge variant="secondary" className="text-[10px]">{count} items</Badge>
+                            )}
+                            {section.id !== "slider" && (
+                              <Badge variant="secondary" className="text-[10px]">{cols} cols</Badge>
+                            )}
+                            {section.view_all_link && (
+                              <Badge variant="secondary" className="text-[10px]">→ {section.view_all_link}</Badge>
+                            )}
+                          </div>
+                        </div>
+                        <Badge className={`shrink-0 ${isVisible ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-red-500/20 text-red-400 border-red-500/30"}`} variant="outline">
+                          {isVisible ? "Visible" : "Hidden"}
+                        </Badge>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Active Sales & Layout Summary side by side */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Sales Status */}
+              <Card className="glass">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                      <Tag className="w-5 h-5 text-primary" />
+                    </div>
+                    <CardTitle className="text-lg">Sales Banners</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {sales.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">No sales configured</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {sales.map((sale) => {
+                        const bgColor = sale.color?.startsWith("var") ? "hsl(var(--primary))" : `hsl(${sale.color})`;
+                        const posLabel = positionOptions.find((p) => p.value === sale.position)?.label || sale.position;
+                        return (
+                          <div key={sale.id} className={`flex items-center gap-3 p-3 rounded-lg border border-border ${sale.enabled ? "bg-secondary/20" : "bg-muted/20 opacity-60"}`}>
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg" style={{ background: `${bgColor}20` }}>
+                              {sale.icon}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">{sale.title}</p>
+                              <p className="text-xs text-muted-foreground">{posLabel}</p>
+                            </div>
+                            <Badge className={`shrink-0 text-[10px] ${sale.enabled ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-red-500/20 text-red-400 border-red-500/30"}`} variant="outline">
+                              {sale.enabled ? "Active" : "Inactive"}
+                            </Badge>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Layout Summary */}
+              <Card className="glass">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                      <Layers className="w-5 h-5 text-primary" />
+                    </div>
+                    <CardTitle className="text-lg">Layout Settings</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { label: "Spacing", value: `${layoutConfig.section_spacing}px` },
+                      { label: "Animation", value: layoutConfig.section_animation },
+                      { label: "Card Style", value: layoutConfig.card_style },
+                      { label: "Title Size", value: layoutConfig.section_title_size },
+                      { label: "Title Align", value: layoutConfig.section_title_align },
+                      { label: "Dividers", value: layoutConfig.show_section_dividers ? layoutConfig.divider_style : "off" },
+                      { label: "Page Pattern", value: layoutConfig.page_bg_pattern },
+                      { label: "Max Width", value: layoutConfig.container_max_width },
+                    ].map((item) => (
+                      <div key={item.label} className="p-2.5 rounded-lg bg-secondary/30 border border-border/50">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{item.label}</p>
+                        <p className="text-sm font-medium text-foreground capitalize">{item.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
 
         {/* Section Order */}
         <TabsContent value="section-order">
