@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, LogOut, Bell, Settings, LayoutGrid,
+  Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, LogOut, Bell, Settings,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -12,11 +12,10 @@ import BottomNav from "@/components/BottomNav";
 
 const Navbar: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [catOpen, setCatOpen] = useState(false);
+  const [hoveredCat, setHoveredCat] = useState<string | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [authOpen, setAuthOpen] = useState(false);
-  const catRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -45,15 +44,6 @@ const Navbar: React.FC = () => {
     refetchInterval: 30000,
   });
 
-  // Close category dropdown on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (catRef.current && !catRef.current.contains(e.target as Node)) setCatOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
@@ -70,112 +60,36 @@ const Navbar: React.FC = () => {
   return (
     <>
       <nav className="sticky top-0 z-50 w-full">
+        {/* Main bar */}
         <div className="glass-strong">
           <div className="w-full max-w-[1440px] mx-auto px-4 lg:px-6">
             <div className="flex items-center h-16 gap-4">
-              {/* Left: Logo + Home + Categories */}
-              <div className="flex items-center gap-1 shrink-0">
-                <Link to="/home" className="flex items-center gap-2 mr-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center">
-                    <span className="text-primary-foreground font-bold text-sm">Z</span>
-                  </div>
-                  <span className="font-display font-bold text-xl text-foreground hidden sm:inline">Zero</span>
-                </Link>
-
-                <div className="hidden lg:flex items-center gap-0.5">
-                  <Link to="/home"
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${location.pathname === "/home" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
-                    Home
-                  </Link>
-
-                  {/* Categories button - always visible */}
-                  <div ref={catRef} className="relative">
-                    <button
-                      onClick={() => setCatOpen(!catOpen)}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${catOpen ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                    >
-                      <LayoutGrid className="w-4 h-4" />
-                      Categories
-                      <ChevronDown className={`w-3 h-3 transition-transform ${catOpen ? "rotate-180" : ""}`} />
-                    </button>
-
-                    <AnimatePresence>
-                      {catOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 8 }}
-                          transition={{ duration: 0.2 }}
-                          className="absolute top-full left-0 pt-2 w-64 z-50"
-                        >
-                          <div className="glass-strong rounded-2xl p-3 shadow-lg border border-border/50">
-                            {parentCategories.length === 0 ? (
-                              <p className="text-sm text-muted-foreground text-center py-4">No categories available yet</p>
-                            ) : (
-                              <div className="space-y-1">
-                                {parentCategories.map((cat) => {
-                                  const children = getChildren(cat.id);
-                                  return (
-                                    <div key={cat.id}>
-                                      <Link
-                                        to={`/categories/${cat.slug}`}
-                                        onClick={() => setCatOpen(false)}
-                                        className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-foreground hover:bg-secondary/50 transition-colors"
-                                      >
-                                        {cat.icon_url ? (
-                                          <img src={cat.icon_url} alt="" className="w-5 h-5 rounded object-contain" />
-                                        ) : cat.icon ? (
-                                          <span className="text-base">{cat.icon}</span>
-                                        ) : null}
-                                        {cat.name}
-                                      </Link>
-                                      {children.length > 0 && (
-                                        <div className="ml-6 border-l border-border/50 pl-2 space-y-0.5">
-                                          {children.map((sub) => (
-                                            <Link
-                                              key={sub.id}
-                                              to={`/categories/${sub.slug}`}
-                                              onClick={() => setCatOpen(false)}
-                                              className="block px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
-                                            >
-                                              {sub.name}
-                                            </Link>
-                                          ))}
-                                        </div>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-                            <div className="border-t border-border/50 mt-2 pt-2">
-                              <Link
-                                to="/shop"
-                                onClick={() => setCatOpen(false)}
-                                className="block text-center text-xs font-medium text-primary hover:underline py-1"
-                              >
-                                View All Products
-                              </Link>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
+              {/* Logo */}
+              <Link to="/home" className="flex items-center gap-2 shrink-0">
+                <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold text-sm">Z</span>
                 </div>
+                <span className="font-display font-bold text-xl text-foreground hidden sm:inline">Zero</span>
+              </Link>
+
+              {/* Desktop nav links */}
+              <div className="hidden lg:flex items-center gap-0.5">
+                <Link to="/home"
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${location.pathname === "/home" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
+                  Home
+                </Link>
+                <Link to="/shop"
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${location.pathname === "/shop" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
+                  Shop
+                </Link>
               </div>
 
-              {/* Center: Search Bar */}
+              {/* Center: Search */}
               <div className="hidden lg:block flex-1 max-w-md mx-auto">
                 <form onSubmit={handleSearchSubmit} className="relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search products..."
-                    className="w-full pl-11 pr-4 py-2.5 rounded-full bg-secondary/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 transition-all"
-                  />
+                  <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search products..."
+                    className="w-full pl-11 pr-4 py-2.5 rounded-full bg-secondary/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 transition-all" />
                 </form>
               </div>
 
@@ -209,18 +123,10 @@ const Navbar: React.FC = () => {
                         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
                           className="absolute top-full right-0 pt-2 w-48">
                           <div className="glass-strong rounded-2xl p-2">
-                            <Link to="/profile" className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50">
-                              <User className="w-4 h-4" /> Profile
-                            </Link>
-                            <Link to="/orders" className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50">
-                              <ShoppingCart className="w-4 h-4" /> Orders
-                            </Link>
-                            <Link to="/settings" className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50">
-                              <Settings className="w-4 h-4" /> Settings
-                            </Link>
-                            <button onClick={handleSignOut} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-destructive hover:bg-secondary/50 w-full text-left">
-                              <LogOut className="w-4 h-4" /> Sign Out
-                            </button>
+                            <Link to="/profile" className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50"><User className="w-4 h-4" /> Profile</Link>
+                            <Link to="/orders" className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50"><ShoppingCart className="w-4 h-4" /> Orders</Link>
+                            <Link to="/settings" className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50"><Settings className="w-4 h-4" /> Settings</Link>
+                            <button onClick={handleSignOut} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-destructive hover:bg-secondary/50 w-full text-left"><LogOut className="w-4 h-4" /> Sign Out</button>
                           </div>
                         </motion.div>
                       )}
@@ -241,6 +147,78 @@ const Navbar: React.FC = () => {
           </div>
         </div>
 
+        {/* Category bar — desktop only */}
+        {parentCategories.length > 0 && (
+          <div className="hidden lg:block glass border-t border-border/30">
+            <div className="w-full max-w-[1440px] mx-auto px-4 lg:px-6">
+              <div className="flex items-center gap-1 h-11 overflow-x-auto scrollbar-none">
+                {parentCategories.map((cat) => {
+                  const children = getChildren(cat.id);
+                  const isActive = location.pathname === `/categories/${cat.slug}`;
+
+                  return (
+                    <div
+                      key={cat.id}
+                      className="relative"
+                      onMouseEnter={() => setHoveredCat(cat.id)}
+                      onMouseLeave={() => setHoveredCat(null)}
+                    >
+                      <Link
+                        to={`/categories/${cat.slug}`}
+                        className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                          isActive
+                            ? "bg-primary/15 text-primary"
+                            : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                        }`}
+                      >
+                        {cat.icon_url ? (
+                          <img src={cat.icon_url} alt="" className="w-4 h-4 rounded object-contain" />
+                        ) : cat.icon ? (
+                          <span className="text-sm">{cat.icon}</span>
+                        ) : null}
+                        {cat.name}
+                        {children.length > 0 && (
+                          <ChevronDown className={`w-3 h-3 transition-transform ${hoveredCat === cat.id ? "rotate-180" : ""}`} />
+                        )}
+                      </Link>
+
+                      {/* Subcategory dropdown */}
+                      <AnimatePresence>
+                        {hoveredCat === cat.id && children.length > 0 && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 4 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute top-full left-0 pt-1.5 z-50"
+                          >
+                            <div className="glass-strong rounded-xl p-1.5 shadow-lg border border-border/50 min-w-[160px]">
+                              {children.map((sub) => (
+                                <Link
+                                  key={sub.id}
+                                  to={`/categories/${sub.slug}`}
+                                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                                >
+                                  {sub.icon_url ? (
+                                    <img src={sub.icon_url} alt="" className="w-3.5 h-3.5 rounded object-contain" />
+                                  ) : sub.icon ? (
+                                    <span className="text-xs">{sub.icon}</span>
+                                  ) : null}
+                                  {sub.name}
+                                </Link>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Mobile menu */}
         <AnimatePresence>
           {mobileOpen && (
@@ -253,7 +231,7 @@ const Navbar: React.FC = () => {
                 </form>
                 <Link to="/home" className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>Home</Link>
 
-                {/* Categories section in mobile */}
+                {/* Categories in mobile */}
                 <div className="px-4 py-2">
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Categories</p>
                   {parentCategories.length === 0 ? (
@@ -263,11 +241,12 @@ const Navbar: React.FC = () => {
                       const children = getChildren(cat.id);
                       return (
                         <div key={cat.id} className="mb-1">
-                          <Link to={`/shop?category=${cat.slug}`} className="block py-1.5 text-sm text-foreground hover:text-primary" onClick={() => setMobileOpen(false)}>
-                            {cat.icon && <span className="mr-1.5">{cat.icon}</span>}{cat.name}
+                          <Link to={`/categories/${cat.slug}`} className="flex items-center gap-2 py-1.5 text-sm text-foreground hover:text-primary" onClick={() => setMobileOpen(false)}>
+                            {cat.icon_url ? <img src={cat.icon_url} alt="" className="w-4 h-4 rounded object-contain" /> : cat.icon ? <span>{cat.icon}</span> : null}
+                            {cat.name}
                           </Link>
                           {children.map((sub) => (
-                            <Link key={sub.id} to={`/shop?category=${sub.slug}`} className="block py-1 pl-5 text-xs text-muted-foreground hover:text-foreground" onClick={() => setMobileOpen(false)}>
+                            <Link key={sub.id} to={`/categories/${sub.slug}`} className="block py-1 pl-6 text-xs text-muted-foreground hover:text-foreground" onClick={() => setMobileOpen(false)}>
                               {sub.name}
                             </Link>
                           ))}
