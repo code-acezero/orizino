@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -19,8 +19,9 @@ import {
   Plus, Pencil, Trash2, Send, Bell, X, Megaphone, Tag,
   AlertTriangle, Info, Zap, Clock, MousePointerClick, ScrollText,
   ArrowDown, Maximize, PanelBottom, SlidersHorizontal, Eye, Copy,
-  MessageSquare, Activity, Calendar,
+  MessageSquare, Activity, Calendar, GripVertical,
 } from "lucide-react";
+import { useDragReorder } from "@/hooks/use-drag-reorder";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 
