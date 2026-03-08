@@ -78,6 +78,7 @@ const AdminReviews = () => {
               <TableHead>Product</TableHead>
               <TableHead>Rating</TableHead>
               <TableHead>Comment</TableHead>
+              <TableHead>Images</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Date</TableHead>
               <TableHead className="text-right">Actions</TableHead>
