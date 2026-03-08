@@ -269,7 +269,7 @@ const AdminProducts = () => {
     if (!editing?.id) { toast.error("Save the product first"); return; }
     try {
       for (const v of variants) {
-        const p = { product_id: editing.id, size: v.size || null, color: v.color || null, sku: v.sku || null, price_override: v.price_override || null, stock_quantity: v.stock_quantity || 0, is_active: v.is_active, sort_order: v.sort_order };
+        const p = { product_id: editing.id, size: v.size || null, color: v.color || null, sku: v.sku || null, price_override: v.price_override || null, stock_quantity: v.stock_quantity || 0, is_active: v.is_active, sort_order: v.sort_order, image_url: v.image_url || null };
         if (v.id) await supabase.from("product_variants" as any).update(p).eq("id", v.id);
         else await supabase.from("product_variants" as any).insert(p);
       }
