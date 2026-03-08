@@ -766,18 +766,38 @@ const AdminProducts = () => {
 
                         {variants.some((v) => v.image_url) && (
                           <div className="flex justify-end">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="text-xs text-destructive hover:text-destructive hover:bg-destructive/10 gap-1"
-                              onClick={() => {
-                                setVariants(variants.map((v) => ({ ...v, image_url: "" })));
-                                toast.success("All variant images cleared — save variants to apply");
-                              }}
-                            >
-                              <Trash2 className="w-3 h-3" /> Clear All Images
-                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-xs text-destructive hover:text-destructive hover:bg-destructive/10 gap-1"
+                                >
+                                  <Trash2 className="w-3 h-3" /> Clear All Images
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Clear all variant images?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will remove images from all {variants.filter((v) => v.image_url).length} variant(s). You'll need to save variants to apply the change. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    onClick={() => {
+                                      setVariants(variants.map((v) => ({ ...v, image_url: "" })));
+                                      toast.success("All variant images cleared — save variants to apply");
+                                    }}
+                                  >
+                                    Clear All
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         )}
 
