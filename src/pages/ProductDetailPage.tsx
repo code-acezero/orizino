@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/lib/app-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useProductSeoMeta } from "@/hooks/use-product-seo-meta";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -14,6 +15,22 @@ const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { user } = useAuth();
   const { formatPrice, currency, setCurrency, enabledCurrencies, config } = useCurrency();
+  
+  // Apply SEO metadata for product detail page
+  const { data: product, isLoading } = useQuery({
+    queryKey: ["product", slug],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("*, categories(name, slug)")
+        .eq("slug", slug!)
+        .eq("is_active", true)
+        .single();
+      return data;
+    },
+    enabled: !!slug,
+  });
+  useProductSeoMeta(product);
   
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
