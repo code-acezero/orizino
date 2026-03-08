@@ -69,6 +69,20 @@ const ProductDetailPage: React.FC = () => {
     enabled: !!product?.id,
   });
 
+  // Fetch user's own review IDs to enable edit/delete
+  const { data: ownReviewIds } = useQuery<string[]>({
+    queryKey: ["own-reviews", product?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("reviews")
+        .select("id")
+        .eq("product_id", product!.id)
+        .eq("user_id", user!.id);
+      return (data || []).map((r) => r.id);
+    },
+    enabled: !!product?.id && !!user,
+  });
+
   // Fetch related products from same category
   const { data: relatedProducts } = useQuery({
     queryKey: ["related-products", product?.category_id, product?.id],
