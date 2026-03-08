@@ -97,7 +97,11 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean
+          is_featured: boolean
           is_flash_sale: boolean
+          meta_description: string | null
+          meta_keywords: string | null
+          meta_title: string | null
           name: string
           parent_id: string | null
           slug: string
@@ -112,7 +116,11 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_featured?: boolean
           is_flash_sale?: boolean
+          meta_description?: string | null
+          meta_keywords?: string | null
+          meta_title?: string | null
           name: string
           parent_id?: string | null
           slug: string
@@ -127,7 +135,11 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_featured?: boolean
           is_flash_sale?: boolean
+          meta_description?: string | null
+          meta_keywords?: string | null
+          meta_title?: string | null
           name?: string
           parent_id?: string | null
           slug?: string
@@ -320,6 +332,9 @@ export type Database = {
           images: string[] | null
           is_active: boolean
           is_featured: boolean
+          meta_description: string | null
+          meta_keywords: string | null
+          meta_title: string | null
           name: string
           price: number
           review_count: number | null
@@ -331,6 +346,7 @@ export type Database = {
           tags: string[] | null
           thumbnail: string | null
           updated_at: string
+          video_url: string | null
         }
         Insert: {
           avg_rating?: number | null
@@ -342,6 +358,9 @@ export type Database = {
           images?: string[] | null
           is_active?: boolean
           is_featured?: boolean
+          meta_description?: string | null
+          meta_keywords?: string | null
+          meta_title?: string | null
           name: string
           price?: number
           review_count?: number | null
@@ -353,6 +372,7 @@ export type Database = {
           tags?: string[] | null
           thumbnail?: string | null
           updated_at?: string
+          video_url?: string | null
         }
         Update: {
           avg_rating?: number | null
@@ -364,6 +384,9 @@ export type Database = {
           images?: string[] | null
           is_active?: boolean
           is_featured?: boolean
+          meta_description?: string | null
+          meta_keywords?: string | null
+          meta_title?: string | null
           name?: string
           price?: number
           review_count?: number | null
@@ -375,6 +398,7 @@ export type Database = {
           tags?: string[] | null
           thumbnail?: string | null
           updated_at?: string
+          video_url?: string | null
         }
         Relationships: [
           {
