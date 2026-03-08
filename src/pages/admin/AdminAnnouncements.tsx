@@ -354,6 +354,9 @@ const AdminAnnouncements = () => {
                       <Button size="sm" variant="ghost" className="flex-1" onClick={() => openPopupEdit(p)}>
                         <Pencil className="w-3 h-3 mr-1" /> Edit
                       </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setPreviewPopup(p)} title="Preview">
+                        <Eye className="w-3 h-3 text-primary" />
+                      </Button>
                       <Button size="sm" variant="ghost" onClick={() => duplicatePopup(p)}>
                         <Plus className="w-3 h-3" />
                       </Button>
