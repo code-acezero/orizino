@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import ImageUpload from "@/components/ImageUpload";
 import LayoutPreview from "@/components/admin/LayoutPreview";
+import HomepageAnalytics from "@/components/admin/HomepageAnalytics";
 
 interface LayoutConfig {
   section_spacing: string;
