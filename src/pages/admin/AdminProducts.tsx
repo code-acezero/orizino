@@ -10,10 +10,11 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Search, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, X, LayoutTemplate } from "lucide-react";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 const PRODUCT_TYPES = [
   { value: "general", label: "General" },
