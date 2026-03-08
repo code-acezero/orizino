@@ -40,7 +40,81 @@ const AdminCategories = () => {
     },
   });
 
-  const parentCategories = categories.filter((c) => !c.parent_id);
+  // Analytics: fetch products + order_items with category info
+  const { data: products = [] } = useQuery({
+    queryKey: ["category-analytics-products"],
+    queryFn: async () => {
+      const { data } = await supabase.from("products").select("id, category_id").limit(5000);
+      return data || [];
+    },
+    staleTime: 60_000,
+  });
+
+  const { data: orderItems = [] } = useQuery({
+    queryKey: ["category-analytics-orders"],
+    queryFn: async () => {
+      const { data } = await supabase.from("order_items").select("product_id, quantity, total_price").limit(5000);
+      return data || [];
+    },
+    staleTime: 60_000,
+  });
+
+  const categoryAnalytics = useMemo(() => {
+    // Build product→category map
+    const prodCatMap = new Map<string, string>();
+    products.forEach((p: any) => { if (p.category_id) prodCatMap.set(p.id, p.category_id); });
+
+    // Aggregate
+    const map = new Map<string, { productCount: number; orderCount: number; revenue: number }>();
+    // Count products per category
+    products.forEach((p: any) => {
+      if (!p.category_id) return;
+      const entry = map.get(p.category_id) || { productCount: 0, orderCount: 0, revenue: 0 };
+      entry.productCount++;
+      map.set(p.category_id, entry);
+    });
+    // Count orders + revenue per category
+    orderItems.forEach((oi: any) => {
+      const catId = prodCatMap.get(oi.product_id);
+      if (!catId) return;
+      const entry = map.get(catId) || { productCount: 0, orderCount: 0, revenue: 0 };
+      entry.orderCount += oi.quantity || 1;
+      entry.revenue += Number(oi.total_price) || 0;
+      map.set(catId, entry);
+    });
+    return map;
+  }, [products, orderItems]);
+
+  const analyticsRows = useMemo(() => {
+    const rows = parentCategories.map((c) => {
+      // Sum parent + children stats
+      const children = getChildren(c.id);
+      const allIds = [c.id, ...children.map((ch) => ch.id)];
+      const stats = allIds.reduce(
+        (acc, id) => {
+          const s = categoryAnalytics.get(id);
+          if (s) { acc.productCount += s.productCount; acc.orderCount += s.orderCount; acc.revenue += s.revenue; }
+          return acc;
+        },
+        { productCount: 0, orderCount: 0, revenue: 0 }
+      );
+      return { id: c.id, name: c.name, icon: c.icon, icon_url: c.icon_url, accent_color: c.accent_color, ...stats };
+    });
+    rows.sort((a, b) => {
+      const key = sortBy === "name" ? "name" : sortBy === "products" ? "productCount" : sortBy === "orders" ? "orderCount" : "revenue";
+      if (key === "name") return sortDir === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+      return sortDir === "asc" ? (a as any)[key] - (b as any)[key] : (b as any)[key] - (a as any)[key];
+    });
+    return rows;
+  }, [parentCategories, categoryAnalytics, sortBy, sortDir, categories]);
+
+  const toggleSort = (col: typeof sortBy) => {
+    if (sortBy === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortBy(col); setSortDir("desc"); }
+  };
+
+  const CHART_COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(262 83% 58%)", "hsl(330 81% 60%)", "hsl(200 95% 50%)", "hsl(150 60% 45%)", "hsl(40 95% 55%)", "hsl(0 72% 51%)"];
+
   const getChildren = (parentId: string) => categories.filter((c) => c.parent_id === parentId);
 
   // Filter by search
