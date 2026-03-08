@@ -109,7 +109,7 @@ const getSlideVariants = (type: string, dur: number): Variants => {
 };
 
 /* ── Content animation variants ── */
-const getContentVariants = (anim: string): { initial: object; animate: object } => {
+const getContentVariants = (anim: string): { initial: Record<string, any>; animate: Record<string, any> } => {
   const base = { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] };
   switch (anim) {
     case "slide-left":
