@@ -151,6 +151,7 @@ const ProductDetailPage: React.FC = () => {
           ]}
           className="mb-6"
         />
+        <div className="grid md:grid-cols-2 gap-10">
           {/* Image Gallery */}
           <div>
             <div className="relative aspect-square rounded-3xl overflow-hidden glass mb-4">
