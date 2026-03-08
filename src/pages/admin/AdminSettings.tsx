@@ -216,6 +216,9 @@ const AdminSettings = () => {
           <TabsTrigger value="currency" className="flex items-center gap-1">
             <DollarSign className="w-3.5 h-3.5" /> Currency
           </TabsTrigger>
+          <TabsTrigger value="product-page" className="flex items-center gap-1">
+            <LayoutTemplate className="w-3.5 h-3.5" /> Product Page
+          </TabsTrigger>
         </TabsList>
 
         {/* ── General ── */}
