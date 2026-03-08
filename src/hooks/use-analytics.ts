@@ -34,9 +34,38 @@ const trackViaEdge = async (payload: Record<string, any>) => {
   }
 };
 
+/** Parse basic device/browser info from user agent */
+const getDeviceInfo = () => {
+  const ua = navigator.userAgent;
+  let browser = "Other";
+  if (ua.includes("Firefox/")) browser = "Firefox";
+  else if (ua.includes("Edg/")) browser = "Edge";
+  else if (ua.includes("OPR/") || ua.includes("Opera")) browser = "Opera";
+  else if (ua.includes("Chrome/") && !ua.includes("Edg/")) browser = "Chrome";
+  else if (ua.includes("Safari/") && !ua.includes("Chrome")) browser = "Safari";
+
+  let os = "Other";
+  if (ua.includes("Windows")) os = "Windows";
+  else if (ua.includes("Mac OS")) os = "macOS";
+  else if (ua.includes("Linux") && !ua.includes("Android")) os = "Linux";
+  else if (ua.includes("Android")) os = "Android";
+  else if (/iPhone|iPad|iPod/.test(ua)) os = "iOS";
+
+  let device = "Desktop";
+  if (/Mobi|Android/i.test(ua)) device = "Mobile";
+  else if (/Tablet|iPad/i.test(ua)) device = "Tablet";
+
+  return { browser, os, device };
+};
+
 /** Track a page view event (geo-enriched via edge function) */
 export const trackPageView = async (page: string) => {
-  await trackViaEdge({ event_type: "page_view", page });
+  const { browser, os, device } = getDeviceInfo();
+  await trackViaEdge({
+    event_type: "page_view",
+    page,
+    metadata: { browser, os, device_type: device },
+  });
 };
 
 /** Track a section becoming visible (engagement) */
