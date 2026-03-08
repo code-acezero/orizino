@@ -23,7 +23,8 @@ const Footer: React.FC = () => {
     staleTime: 10 * 60 * 1000,
   });
 
-  const siteName = (siteSettings?.site_name as string) || "Zero";
+  const rawName = siteSettings?.site_name;
+  const siteName = String(typeof rawName === "object" && rawName !== null ? (rawName as any).value ?? "Zero" : rawName ?? "Zero");
 
   const { data: footerCategories = [] } = useQuery({
     queryKey: ["footer-categories"],
