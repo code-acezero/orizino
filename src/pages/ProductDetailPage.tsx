@@ -18,6 +18,7 @@ import ProductActions from "@/components/product/ProductActions";
 import CurrencyWidget from "@/components/product/CurrencyWidget";
 import StickyAddToCart from "@/components/product/StickyAddToCart";
 import VariantSelector from "@/components/product/VariantSelector";
+import VariantComparison from "@/components/product/VariantComparison";
 
 type LayoutStyle = "minimal" | "premium" | "editorial";
 
@@ -340,6 +341,16 @@ const ProductDetailPage: React.FC = () => {
                       onColorChange={setSelectedColor}
                       layout="editorial"
                     />
+                   )}
+
+                  {hasVariants && product && (
+                    <VariantComparison
+                      productId={product.id}
+                      basePrice={product.price}
+                      compareAtPrice={product.compare_at_price}
+                      productName={product.name}
+                      productThumbnail={product.thumbnail}
+                    />
                   )}
 
                   <ProductActions
@@ -410,6 +421,16 @@ const ProductDetailPage: React.FC = () => {
                     onSizeChange={setSelectedSize}
                     onColorChange={setSelectedColor}
                     layout={layout}
+                  />
+                )}
+
+                {hasVariants && product && (
+                  <VariantComparison
+                    productId={product.id}
+                    basePrice={product.price}
+                    compareAtPrice={product.compare_at_price}
+                    productName={product.name}
+                    productThumbnail={product.thumbnail}
                   />
                 )}
 
