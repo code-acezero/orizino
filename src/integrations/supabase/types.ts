@@ -300,6 +300,54 @@ export type Database = {
         }
         Relationships: []
       }
+      popups: {
+        Row: {
+          created_at: string
+          display_type: string
+          duration_hours: number | null
+          ends_at: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          link_text: string | null
+          link_url: string | null
+          max_views: number | null
+          message: string | null
+          starts_at: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          display_type?: string
+          duration_hours?: number | null
+          ends_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          link_text?: string | null
+          link_url?: string | null
+          max_views?: number | null
+          message?: string | null
+          starts_at?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          display_type?: string
+          duration_hours?: number | null
+          ends_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          link_text?: string | null
+          link_url?: string | null
+          max_views?: number | null
+          message?: string | null
+          starts_at?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       product_requests: {
         Row: {
           admin_notes: string | null
