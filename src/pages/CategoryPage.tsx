@@ -124,7 +124,9 @@ const CategoryPage: React.FC = () => {
   return (
     <div className="min-h-screen pb-20 lg:pb-0">
       <Navbar />
-
+      <div className="container mx-auto px-4 pt-4">
+        <Breadcrumbs items={[{ label: "Home", href: "/home" }, { label: "Shop", href: "/shop" }, { label: category.name }]} className="mb-2" />
+      </div>
       {/* Banner Section with fading shadow */}
       <div className="relative w-full overflow-hidden" style={{ minHeight: "260px", maxHeight: "400px" }}>
         {/* Banner content */}

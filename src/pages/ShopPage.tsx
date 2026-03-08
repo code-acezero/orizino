@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 import catElectronics from "@/assets/icons/cat-electronics.png";
 import catFashion from "@/assets/icons/cat-fashion.png";
