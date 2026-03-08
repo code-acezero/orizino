@@ -955,6 +955,21 @@ const AdminHome = () => {
             </Card>
           </div>
 
+            {/* Live Preview */}
+            <div className="xl:sticky xl:top-4 self-start">
+              <Card className="glass">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Layout className="w-4 h-4" /> Live Preview
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-2">
+                  <LayoutPreview config={layoutConfig} />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
           <Button className="w-full mt-6" onClick={() => saveLayout.mutate()} disabled={saveLayout.isPending}>
             {saveLayout.isPending ? "Saving..." : "Save Layout Settings"}
           </Button>
