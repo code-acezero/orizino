@@ -529,6 +529,7 @@ const HomePage: React.FC = () => {
         {salesByPos("bottom").map(renderSaleBanner)}
       </main>
 
+      <LiveVisitorCounter page="/home" />
       <Footer />
     </div>
   );
