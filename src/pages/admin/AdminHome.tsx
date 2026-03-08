@@ -15,6 +15,7 @@ import { useDragReorder } from "@/hooks/use-drag-reorder";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import ImageUpload from "@/components/ImageUpload";
+import LayoutPreview from "@/components/admin/LayoutPreview";
 
 interface LayoutConfig {
   section_spacing: string;
@@ -774,8 +775,8 @@ const AdminHome = () => {
 
         {/* Layout & Style */}
         <TabsContent value="layout">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Spacing & Container */}
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-6">
+           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="glass">
               <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Layout className="w-5 h-5" /> Spacing & Container</CardTitle></CardHeader>
               <CardContent className="space-y-5">
@@ -952,6 +953,21 @@ const AdminHome = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+            {/* Live Preview */}
+            <div className="xl:sticky xl:top-4 self-start">
+              <Card className="glass">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Layout className="w-4 h-4" /> Live Preview
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-2">
+                  <LayoutPreview config={layoutConfig} />
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
           <Button className="w-full mt-6" onClick={() => saveLayout.mutate()} disabled={saveLayout.isPending}>
