@@ -6,6 +6,7 @@ import { Star, Heart, ShoppingCart, Minus, Plus, ChevronLeft, ChevronRight, Chec
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/lib/app-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
