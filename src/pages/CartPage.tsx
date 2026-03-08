@@ -104,8 +104,8 @@ const CartPage: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <Link to={`/product/${product.slug}`} className="font-medium text-foreground hover:text-primary transition-colors line-clamp-1">{product.name}</Link>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="font-bold text-foreground">${product.price.toFixed(2)}</span>
-                        {product.compare_at_price && <span className="text-sm text-muted-foreground line-through">${product.compare_at_price.toFixed(2)}</span>}
+                        <span className="font-bold text-foreground">{formatPrice(product.price)}</span>
+                        {product.compare_at_price && <span className="text-sm text-muted-foreground line-through">{formatPrice(product.compare_at_price)}</span>}
                       </div>
                       <div className="flex items-center justify-between mt-3">
                         <div className="flex items-center gap-1 glass rounded-full px-1 py-0.5">
