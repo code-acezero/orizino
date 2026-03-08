@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Star, Heart, ShoppingCart, Minus, Plus, ChevronLeft, ChevronRight, Check, Globe } from "lucide-react";
@@ -11,6 +11,7 @@ import { useProductSeoMeta } from "@/hooks/use-product-seo-meta";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ProductCard from "@/components/ProductCard";
 
 const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -66,6 +67,22 @@ const ProductDetailPage: React.FC = () => {
     enabled: !!product?.id,
   });
 
+  // Fetch related products from same category
+  const { data: relatedProducts } = useQuery({
+    queryKey: ["related-products", product?.category_id, product?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("*")
+        .eq("category_id", product!.category_id!)
+        .eq("is_active", true)
+        .neq("id", product!.id)
+        .order("avg_rating", { ascending: false })
+        .limit(4);
+      return data || [];
+    },
+    enabled: !!product?.category_id && !!product?.id,
+  });
   const images = product?.images?.length ? product.images : [product?.thumbnail || "/placeholder.svg"];
   const discount = product?.compare_at_price
     ? Math.round(((product.compare_at_price - product.price) / product.compare_at_price) * 100)
@@ -326,6 +343,41 @@ const ProductDetailPage: React.FC = () => {
                   {review.comment && <p className="text-muted-foreground text-sm">{review.comment}</p>}
                   <p className="text-xs text-muted-foreground/60 mt-3">{new Date(review.created_at).toLocaleDateString()}</p>
                 </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Related Products */}
+        {relatedProducts && relatedProducts.length > 0 && (
+          <section className="mt-16">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold font-display text-foreground">You May Also Like</h2>
+              {productCat && (
+                <Link to={`/categories/${productCat.slug}`} className="text-sm text-primary hover:underline">
+                  View all in {productCat.name} →
+                </Link>
+              )}
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {relatedProducts.map((p, i) => (
+                <motion.div
+                  key={p.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                >
+                  <ProductCard
+                    id={p.id}
+                    name={p.name}
+                    price={p.price}
+                    compareAtPrice={p.compare_at_price ?? undefined}
+                    thumbnail={p.thumbnail ?? undefined}
+                    avgRating={p.avg_rating ?? undefined}
+                    reviewCount={p.review_count ?? undefined}
+                    slug={p.slug}
+                  />
+                </motion.div>
               ))}
             </div>
           </section>
