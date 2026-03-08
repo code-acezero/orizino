@@ -19,6 +19,7 @@ const statusColors: Record<string, string> = {
 
 const OrdersPage: React.FC = () => {
   const { user } = useAuth();
+  const { formatPrice } = useCurrency();
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ["orders", user?.id],
