@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 
 import catElectronics from "@/assets/icons/cat-electronics.png";
 import catFashion from "@/assets/icons/cat-fashion.png";

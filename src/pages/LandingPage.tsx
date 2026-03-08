@@ -12,6 +12,7 @@ const features = [
 ];
 
 const LandingPage: React.FC = () => {
+  useSeoMeta("landing", "Welcome | Ace Marketplace");
   return (
     <div className="min-h-screen">
       {/* Hero */}

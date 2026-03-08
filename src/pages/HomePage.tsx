@@ -13,6 +13,7 @@ import SalePopup from "@/components/SalePopup";
 import LiveVisitorCounter from "@/components/LiveVisitorCounter";
 import { Sparkles } from "lucide-react";
 import { usePageViewTracker, useSectionTracker, trackClick } from "@/hooks/use-analytics";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 
 interface SaleConfig {
   id: string;

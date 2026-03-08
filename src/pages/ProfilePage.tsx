@@ -9,6 +9,7 @@ import { toast } from "@/lib/app-toast";
 import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 
 const ProfilePage: React.FC = () => {
   const { user, signOut } = useAuth();

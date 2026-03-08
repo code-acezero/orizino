@@ -9,6 +9,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { toast } from "@/lib/app-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 
 const WishlistPage: React.FC = () => {
   const { user } = useAuth();
