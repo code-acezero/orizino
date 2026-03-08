@@ -99,7 +99,7 @@ const HomePage: React.FC = () => {
       if (error) throw error;
       return data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
   });
 
   const sectionCatIds = (catSectionsConfig || []).map((s: any) => s.category_id).filter(Boolean);
