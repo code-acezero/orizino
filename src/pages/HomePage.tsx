@@ -128,7 +128,7 @@ const HomePage: React.FC = () => {
       return result;
     },
     enabled: sectionCatIds.length > 0,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
   });
 
   const saleProductSources = salesConfig.filter((s: SaleConfig) => s.show_products && s.product_source).map((s: SaleConfig) => ({ id: s.id, source: s.product_source, count: s.product_count || 4 }));
