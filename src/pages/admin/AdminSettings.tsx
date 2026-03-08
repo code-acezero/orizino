@@ -28,7 +28,7 @@ const themes = [
   { id: "mint", label: "Fresh Mint", color: "170 70% 45%" },
 ];
 
-const defaultSettings = {
+const defaultSettings: Record<string, any> = {
   site_name: "Zero Marketplace",
   site_description: "Your premium online marketplace",
   logo_url: "",
@@ -37,6 +37,29 @@ const defaultSettings = {
   shipping_fee: "5.00",
   site_theme: "default",
   site_mode: "dark",
+  // New general fields
+  contact_email: "",
+  contact_phone: "",
+  support_url: "",
+  address: "",
+  maintenance_mode: false,
+  announcement_bar_text: "",
+  announcement_bar_enabled: false,
+  free_shipping_threshold: "",
+  tax_rate: "0",
+  order_prefix: "ORD",
+  items_per_page: "12",
+  allow_guest_checkout: true,
+  show_stock_count: true,
+  low_stock_threshold: "5",
+  social_facebook: "",
+  social_instagram: "",
+  social_twitter: "",
+  social_youtube: "",
+  social_tiktok: "",
+  terms_url: "",
+  privacy_url: "",
+  refund_policy_url: "",
 };
 
 const defaultCurrencyConfig: CurrencyConfig = {
