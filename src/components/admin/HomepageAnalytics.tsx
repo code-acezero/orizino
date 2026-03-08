@@ -153,12 +153,29 @@ const HomepageAnalytics = () => {
         : str;
     };
 
+    // Summary rows
+    const summaryRows = [
+      "# SUMMARY",
+      `# Time Range,${timeRanges.find((r) => r.value === range)?.label || range}`,
+      `# Page Views,${stats.totalPageViews}`,
+      `# Unique Visitors,${stats.uniqueSessions}`,
+      `# Section Impressions,${stats.totalSectionViews}`,
+      `# Total Clicks,${stats.totalClicks}`,
+      `# Click Rate,${stats.clickRate}%`,
+      `# Avg Sections/Visit,${stats.avgSectionsPerView}`,
+      "#",
+      ...stats.sectionBreakdown.map((s) => `# ${s.label},${s.views} views,${s.avgDuration}s avg time,${s.engagements} engagements`),
+      "#",
+      ...stats.clickBreakdown.map((c) => `# ${c.label},${c.count} clicks,${stats.totalPageViews > 0 ? ((c.count / stats.totalPageViews) * 100).toFixed(1) : 0}% conv. rate`),
+      "#",
+    ];
+
     const headers = ["event_type", "page", "section_id", "duration_ms", "session_id", "metadata", "created_at"];
     const rows = analyticsData.map((row: any) =>
       headers.map((h) => escapeCSV(h === "metadata" ? JSON.stringify(row[h]) : row[h])).join(",")
     );
 
-    const csv = [headers.join(","), ...rows].join("\n");
+    const csv = [...summaryRows, headers.join(","), ...rows].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
