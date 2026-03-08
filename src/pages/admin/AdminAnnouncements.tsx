@@ -132,7 +132,7 @@ const getPreviewAnimation = (style: string) => {
     case "slide-up": return { initial: { opacity: 0, y: 80 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: 80 } };
     case "slide-down": return { initial: { opacity: 0, y: -80 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -80 } };
     case "fade": return { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } };
-    case "bounce": return { initial: { opacity: 0, scale: 0.3 }, animate: { opacity: 1, scale: 1, transition: { type: "spring", stiffness: 300, damping: 15 } }, exit: { opacity: 0, scale: 0.3 } };
+    case "bounce": return { initial: { opacity: 0, scale: 0.3 }, animate: { opacity: 1, scale: 1, transition: { type: "spring" as const, stiffness: 300, damping: 15 } }, exit: { opacity: 0, scale: 0.3 } };
     case "flip": return { initial: { opacity: 0, rotateX: 90 }, animate: { opacity: 1, rotateX: 0 }, exit: { opacity: 0, rotateX: 90 } };
     case "zoom": return { initial: { opacity: 0, scale: 1.3 }, animate: { opacity: 1, scale: 1 }, exit: { opacity: 0, scale: 1.3 } };
     case "scale": default: return { initial: { opacity: 0, scale: 0.9, y: 20 }, animate: { opacity: 1, scale: 1, y: 0 }, exit: { opacity: 0, scale: 0.9, y: 20 } };
