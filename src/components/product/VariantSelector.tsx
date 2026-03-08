@@ -37,9 +37,10 @@ const getColorHex = (name: string): string => {
 };
 
 const VariantSelector: React.FC<VariantSelectorProps> = ({
-  productId, selectedSize, selectedColor, onSizeChange, onColorChange, layout = "premium",
-}) => {
-  const isMinimal = layout === "minimal";
+   productId, selectedSize, selectedColor, onSizeChange, onColorChange, layout = "premium",
+ }) => {
+   const isMinimal = layout === "minimal";
+   const [hoveredColor, setHoveredColor] = React.useState<string | null>(null);
 
   const { data: variants = [] } = useQuery<Variant[]>({
     queryKey: ["product-variants", productId],
