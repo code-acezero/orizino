@@ -121,7 +121,49 @@ const AdminCategories = () => {
     return rows;
   }, [parentCategories, categoryAnalytics, sortBy, sortDir, categories]);
 
-  const toggleSort = (col: typeof sortBy) => {
+  // Build daily sparkline data per parent category
+  const sparklineData = useMemo(() => {
+    const days = dateRange === "7d" ? 7 : dateRange === "30d" ? 30 : dateRange === "90d" ? 90 : 30;
+    const end = new Date();
+    const start = startOfDay(subDays(end, days - 1));
+    const dayList = eachDayOfInterval({ start, end });
+    const dayKeys = dayList.map((d) => fmtDate(d, "yyyy-MM-dd"));
+
+    const prodCatMap = new Map<string, string>();
+    products.forEach((p: any) => { if (p.category_id) prodCatMap.set(p.id, p.category_id); });
+
+    // parentCatId → { dayKey → revenue }
+    const catDayMap = new Map<string, Map<string, number>>();
+
+    // Map child category ids to parent ids
+    const childToParent = new Map<string, string>();
+    parentCategories.forEach((p) => {
+      getChildren(p.id).forEach((ch) => childToParent.set(ch.id, p.id));
+    });
+
+    const resolveParent = (catId: string) => childToParent.get(catId) || catId;
+
+    filteredOrderItems.forEach((oi: any) => {
+      const catId = prodCatMap.get(oi.product_id);
+      if (!catId) return;
+      const parentId = resolveParent(catId);
+      const orderDate = oi.orders?.created_at;
+      if (!orderDate) return;
+      const dayKey = orderDate.slice(0, 10);
+      if (!catDayMap.has(parentId)) catDayMap.set(parentId, new Map());
+      const dm = catDayMap.get(parentId)!;
+      dm.set(dayKey, (dm.get(dayKey) || 0) + (Number(oi.total_price) || 0));
+    });
+
+    // Convert to array format per category
+    const result = new Map<string, { day: string; rev: number }[]>();
+    parentCategories.forEach((c) => {
+      const dm = catDayMap.get(c.id);
+      result.set(c.id, dayKeys.map((dk) => ({ day: dk, rev: dm?.get(dk) || 0 })));
+    });
+    return result;
+  }, [products, filteredOrderItems, dateRange, parentCategories, categories]);
+
     if (sortBy === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortBy(col); setSortDir("desc"); }
   };
