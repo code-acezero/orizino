@@ -11,6 +11,7 @@ interface Variant {
   stock_quantity: number;
   price_override: number | null;
   is_active: boolean;
+  image_url: string | null;
 }
 
 interface VariantSelectorProps {
@@ -37,9 +38,10 @@ const getColorHex = (name: string): string => {
 };
 
 const VariantSelector: React.FC<VariantSelectorProps> = ({
-  productId, selectedSize, selectedColor, onSizeChange, onColorChange, layout = "premium",
-}) => {
-  const isMinimal = layout === "minimal";
+   productId, selectedSize, selectedColor, onSizeChange, onColorChange, layout = "premium",
+ }) => {
+   const isMinimal = layout === "minimal";
+   const [hoveredColor, setHoveredColor] = React.useState<string | null>(null);
 
   const { data: variants = [] } = useQuery<Variant[]>({
     queryKey: ["product-variants", productId],
@@ -115,43 +117,63 @@ const VariantSelector: React.FC<VariantSelectorProps> = ({
         </div>
       )}
 
-      {/* Color selector */}
-      {colors.length > 0 && (
-        <div>
-          <label className="text-sm font-medium text-foreground mb-2 block">
-            Color{selectedColor && <span className="text-muted-foreground ml-1">— {selectedColor}</span>}
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {colors.map((color) => {
-              const inStock = isComboInStock(selectedSize, color);
-              const isSelected = selectedColor === color;
-              const hex = getColorHex(color);
-              const isLight = ["white", "cream", "beige", "yellow", "khaki", "lavender"].includes(color.toLowerCase());
-              return (
-                <button
-                  key={color}
-                  onClick={() => onColorChange(isSelected ? null : color)}
-                  disabled={!inStock}
-                  title={color}
-                  className={cn(
-                    "w-9 h-9 rounded-full border-2 transition-all flex items-center justify-center",
-                    isSelected
-                      ? "border-primary ring-2 ring-primary/30 scale-110"
-                      : inStock
-                        ? "border-border hover:scale-105"
-                        : "opacity-30 cursor-not-allowed"
-                  )}
-                  style={{ backgroundColor: hex }}
-                >
-                  {isSelected && (
-                    <Check className={cn("w-4 h-4", isLight ? "text-gray-800" : "text-white")} />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+       {/* Color selector */}
+       {colors.length > 0 && (
+         <div>
+           <label className="text-sm font-medium text-foreground mb-2 block">
+             Color{selectedColor && <span className="text-muted-foreground ml-1">— {selectedColor}</span>}
+           </label>
+           <div className="flex flex-wrap gap-2">
+             {colors.map((color) => {
+               const inStock = isComboInStock(selectedSize, color);
+               const isSelected = selectedColor === color;
+               const hex = getColorHex(color);
+               const isLight = ["white", "cream", "beige", "yellow", "khaki", "lavender"].includes(color.toLowerCase());
+               const variantImage = variants.find(
+                 (v) => v.color === color && v.image_url && 
+                 (selectedSize === null || v.size === selectedSize)
+               )?.image_url;
+               const isHovered = hoveredColor === color;
+               
+               return (
+                 <div key={color} className="relative">
+                   <button
+                     onClick={() => onColorChange(isSelected ? null : color)}
+                     onMouseEnter={() => setHoveredColor(color)}
+                     onMouseLeave={() => setHoveredColor(null)}
+                     disabled={!inStock}
+                     title={color}
+                     className={cn(
+                       "w-9 h-9 rounded-full border-2 transition-all flex items-center justify-center",
+                       isSelected
+                         ? "border-primary ring-2 ring-primary/30 scale-110"
+                         : inStock
+                           ? "border-border hover:scale-105"
+                           : "opacity-30 cursor-not-allowed"
+                     )}
+                     style={{ backgroundColor: hex }}
+                   >
+                     {isSelected && (
+                       <Check className={cn("w-4 h-4", isLight ? "text-gray-800" : "text-white")} />
+                     )}
+                   </button>
+                   
+                   {/* Preview thumbnail on hover */}
+                   {isHovered && variantImage && (
+                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 pointer-events-none">
+                       <img
+                         src={variantImage}
+                         alt={`${color} preview`}
+                         className="w-16 h-16 object-cover rounded border border-border shadow-md"
+                       />
+                     </div>
+                   )}
+                 </div>
+               );
+             })}
+           </div>
+         </div>
+       )}
 
       {/* Stock info for selected combo */}
       {(selectedSize || selectedColor) && (
