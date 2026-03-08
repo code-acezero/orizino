@@ -31,7 +31,45 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
 
   const navigate = (dir: 1 | -1) => {
     setSelected((p) => (p + dir + images.length) % images.length);
+    setPinchScale(1);
   };
+
+  // Pinch-to-zoom handlers for lightbox
+  const getTouchDist = (touches: React.TouchList) => {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      pinchStartDist.current = getTouchDist(e.touches);
+      pinchStartScale.current = pinchScale;
+      const rect = lightboxImgRef.current?.getBoundingClientRect();
+      if (rect) {
+        const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        setPinchOrigin({
+          x: ((cx - rect.left) / rect.width) * 100,
+          y: ((cy - rect.top) / rect.height) * 100,
+        });
+      }
+    }
+  }, [pinchScale]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const dist = getTouchDist(e.touches);
+      const newScale = Math.min(5, Math.max(1, pinchStartScale.current * (dist / pinchStartDist.current)));
+      setPinchScale(newScale);
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (pinchScale < 1.1) setPinchScale(1);
+  }, [pinchScale]);
 
   const isMinimal = layout === "minimal";
   const isEditorial = layout === "editorial";
