@@ -49,6 +49,7 @@ const VariantComparison: React.FC<VariantComparisonProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [addingToCartId, setAddingToCartId] = useState<string | null>(null);
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
 
   const { data: variants = [] } = useQuery<Variant[]>({
     queryKey: ["product-variants-compare", productId],
