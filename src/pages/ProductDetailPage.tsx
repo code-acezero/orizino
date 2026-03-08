@@ -362,7 +362,7 @@ const ProductDetailPage: React.FC = () => {
                 {/* Price */}
                 <div className="flex items-baseline gap-3">
                   <span className={`font-bold ${isMinimal ? "text-3xl text-foreground" : "text-4xl text-gradient"}`}>
-                    {formatPrice(product.price)}
+                    {formatPrice(effectivePrice)}
                   </span>
                   {product.compare_at_price && (
                     <span className="text-xl text-muted-foreground line-through">{formatPrice(product.compare_at_price)}</span>
