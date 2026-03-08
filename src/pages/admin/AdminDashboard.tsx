@@ -190,20 +190,20 @@ const AdminDashboard = () => {
     staleTime: 60_000,
   });
 
-  /* ── Revenue chart data (last 14 days) ── */
+  /* ── Revenue chart data (selected range) ── */
   const revenueChart = useMemo(() => {
-    if (!stats?.allOrders) return [];
+    if (!stats?.rangeOrders) return [];
     const days: Record<string, number> = {};
-    for (let i = 13; i >= 0; i--) {
-      const d = format(subDays(new Date(), i), "MMM dd");
+    for (let i = dateRange.days - 1; i >= 0; i--) {
+      const d = format(subDays(new Date(dateRange.to), i), "MMM dd");
       days[d] = 0;
     }
-    stats.allOrders.forEach((o) => {
+    stats.rangeOrders.forEach((o: any) => {
       const d = format(new Date(o.created_at), "MMM dd");
       if (d in days) days[d] += Number(o.total);
     });
     return Object.entries(days).map(([date, revenue]) => ({ date, revenue: +revenue.toFixed(2) }));
-  }, [stats?.allOrders]);
+  }, [stats?.rangeOrders, dateRange]);
 
   /* ── Order status pie data ── */
   const pieData = useMemo(() => {
