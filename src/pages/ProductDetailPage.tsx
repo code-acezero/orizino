@@ -368,6 +368,7 @@ const ProductDetailPage: React.FC = () => {
                       compareAtPrice={product.compare_at_price}
                       productName={product.name}
                       productThumbnail={product.thumbnail}
+                      onAddToCart={addVariantToCart}
                     />
                   )}
 
