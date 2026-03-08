@@ -164,6 +164,7 @@ const AdminCategories = () => {
     return result;
   }, [products, filteredOrderItems, dateRange, parentCategories, categories]);
 
+  const toggleSort = (col: typeof sortBy) => {
     if (sortBy === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortBy(col); setSortDir("desc"); }
   };
