@@ -207,10 +207,19 @@ const HomePage: React.FC = () => {
       const val = data.value as any;
       const order = val?.value ?? val;
       if (Array.isArray(order)) {
-        const ids = order.map((o: any) => o.id || o).filter(Boolean);
+        // Handle both old string format and new object format with visibility
+        const normalizedOrder = order.map((item: any) => {
+          if (typeof item === "string") {
+            // Legacy format: convert string ID to object
+            return defaultSectionOrder.find((d) => d.id === item) || { id: item, visible: true };
+          }
+          // New format: merge with defaults to ensure all properties
+          const defaultSection = defaultSectionOrder.find((d) => d.id === item.id);
+          return defaultSection ? { ...defaultSection, ...item } : item;
+        });
         // Add any missing default sections
-        const missing = defaultSectionOrder.filter((d) => !ids.includes(d));
-        return [...ids, ...missing];
+        const missing = defaultSectionOrder.filter((d) => !normalizedOrder.some((o: any) => o.id === d.id));
+        return [...normalizedOrder, ...missing];
       }
       return defaultSectionOrder;
     },
