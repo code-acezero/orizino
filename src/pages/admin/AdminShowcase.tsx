@@ -14,7 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import ImageUpload from "@/components/ImageUpload";
 import { toast } from "@/lib/app-toast";
-import { Plus, Pencil, Trash2, Settings2, Layers } from "lucide-react";
+import { Plus, Pencil, Trash2, Settings2, Layers, GripVertical } from "lucide-react";
+import { useDragReorder } from "@/hooks/use-drag-reorder";
 
 interface ShowcaseConfig {
   autoplay_speed: number;
@@ -153,6 +154,21 @@ const AdminShowcase = () => {
     setDialogOpen(true);
   };
 
+  const reorderSlides = async (reordered: any[]) => {
+    // Update sort_order based on new position
+    const updated = reordered.map((s, i) => ({ ...s, sort_order: i }));
+    // Optimistically update cache
+    qc.setQueryData(["admin-showcase"], updated);
+    // Persist each slide's new sort_order
+    for (const s of updated) {
+      await supabase.from("showcase_slides").update({ sort_order: s.sort_order }).eq("id", s.id);
+    }
+    qc.invalidateQueries({ queryKey: ["admin-showcase"] });
+    qc.invalidateQueries({ queryKey: ["showcase-slides"] });
+  };
+
+  const { dragIndex: slideDragIdx, overIndex: slideOverIdx, getDragProps: getSlideDragProps } = useDragReorder(slides, reorderSlides);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -172,6 +188,7 @@ const AdminShowcase = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-8"></TableHead>
                     <TableHead>Image</TableHead>
                     <TableHead>Title</TableHead>
                     <TableHead>Subtitle</TableHead>
@@ -181,8 +198,13 @@ const AdminShowcase = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {slides.map((slide) => (
-                    <TableRow key={slide.id}>
+                  {slides.map((slide, idx) => (
+                    <TableRow
+                      key={slide.id}
+                      {...getSlideDragProps(idx)}
+                      className={`cursor-grab active:cursor-grabbing transition-colors ${slideOverIdx === idx && slideDragIdx !== idx ? "bg-primary/10" : ""}`}
+                    >
+                      <TableCell><GripVertical className="w-4 h-4 text-muted-foreground" /></TableCell>
                       <TableCell>{slide.image_url && <img src={slide.image_url} alt="" className="w-20 h-12 object-cover rounded-lg" />}</TableCell>
                       <TableCell className="font-medium">{slide.title}</TableCell>
                       <TableCell className="text-muted-foreground">{slide.subtitle}</TableCell>

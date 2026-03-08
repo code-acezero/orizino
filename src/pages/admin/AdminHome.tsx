@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/app-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Trash2, GripVertical, Tag, Clock, Sparkles, Image, Bell } from "lucide-react";
+import { useDragReorder } from "@/hooks/use-drag-reorder";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ImageUpload from "@/components/ImageUpload";
 
@@ -246,6 +247,17 @@ const AdminHome = () => {
 
   const getSaleColor = (sale: SaleConfig) => sale.color?.startsWith("var") ? `hsl(var(--primary))` : `hsl(${sale.color})`;
 
+  const handleCatReorder = useCallback((reordered: typeof catSections) => {
+    setCatSections(reordered.map((s, i) => ({ ...s, sort_order: i })));
+  }, []);
+
+  const handleSaleReorder = useCallback((reordered: SaleConfig[]) => {
+    setSales(reordered.map((s, i) => ({ ...s, sort_order: i })));
+  }, []);
+
+  const { dragIndex: catDragIdx, overIndex: catOverIdx, getDragProps: getCatDragProps } = useDragReorder(catSections, handleCatReorder);
+  const { dragIndex: saleDragIdx, overIndex: saleOverIdx, getDragProps: getSaleDragProps } = useDragReorder(sales, handleSaleReorder);
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-display font-bold">Home Page Management</h1>
@@ -276,7 +288,7 @@ const AdminHome = () => {
             <CardContent className="space-y-3">
               {catSections.length === 0 && <p className="text-center text-muted-foreground py-8">No category sections added yet.</p>}
               {catSections.map((section, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 rounded-xl border border-border bg-secondary/20">
+                <div key={index} {...getCatDragProps(index)} className={`flex items-center gap-3 p-3 rounded-xl border border-border bg-secondary/20 cursor-grab active:cursor-grabbing transition-colors ${catOverIdx === index && catDragIdx !== index ? "border-primary bg-primary/10" : ""}`}>
                   <GripVertical className="w-4 h-4 text-muted-foreground shrink-0" />
                   <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
@@ -331,9 +343,10 @@ const AdminHome = () => {
               {sales.length === 0 && <p className="text-center text-muted-foreground py-8">No sale sections added. Click "Add Sale" to create one.</p>}
 
               {sales.map((sale, idx) => (
-                <div key={sale.id} className="border border-border rounded-2xl p-4 space-y-4 bg-secondary/10">
+                <div key={sale.id} {...getSaleDragProps(idx)} className={`border border-border rounded-2xl p-4 space-y-4 bg-secondary/10 cursor-grab active:cursor-grabbing transition-colors ${saleOverIdx === idx && saleDragIdx !== idx ? "border-primary bg-primary/10" : ""}`}>
                   <div className="flex items-center justify-between">
                     <h4 className="font-semibold text-foreground flex items-center gap-2">
+                      <GripVertical className="w-4 h-4 text-muted-foreground shrink-0" />
                       {sale.custom_icon_url ? <img src={sale.custom_icon_url} className="w-6 h-6 object-contain" alt="" /> : <span className="text-xl">{sale.icon}</span>}
                       Sale #{idx + 1}: {sale.title || "Untitled"}
                     </h4>
