@@ -567,10 +567,9 @@ Deno.serve(async (req) => {
       };
     }
 
-    // Initialize WASM and fetch fonts
-    const [font, boldFont] = await Promise.all([
+    // Initialize WASM and fetch font
+    const [font] = await Promise.all([
       getFont(),
-      getBoldFont(),
       ensureWasm(),
     ]);
 
@@ -585,8 +584,8 @@ Deno.serve(async (req) => {
       width: 1200,
       height: 630,
       fonts: [
-        { name: "Inter", data: font, weight: 400, style: "normal" },
-        { name: "Inter", data: boldFont, weight: 700, style: "normal" },
+        { name: "Inter", data: font, weight: 400, style: "normal" as const },
+        { name: "Inter", data: font, weight: 700, style: "normal" as const },
       ],
     });
 
