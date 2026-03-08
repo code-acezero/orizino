@@ -424,6 +424,9 @@ const AdminCategories = () => {
                         <TableHead className="cursor-pointer select-none text-right" onClick={() => toggleSort("revenue")}>
                           <span className="flex items-center gap-1 justify-end"><DollarSign className="w-3 h-3" /> Revenue <ArrowUpDown className="w-3 h-3" /></span>
                         </TableHead>
+                        <TableHead className="text-right w-[120px]">
+                          <span className="text-xs">Trend</span>
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
