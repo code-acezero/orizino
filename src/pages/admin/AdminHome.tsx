@@ -442,6 +442,20 @@ const AdminHome = () => {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-home-products"] }); toast.success("Updated"); },
   });
 
+  const bulkToggleCategoriesFeatured = async (featured: boolean) => {
+    const filtered = localCategories.filter(cat => !featCatSearch || cat.name.toLowerCase().includes(featCatSearch.toLowerCase()));
+    for (const cat of filtered) {
+      await toggleCatFeatured.mutateAsync({ id: cat.id, is_featured: featured });
+    }
+  };
+
+  const bulkToggleProductsFeatured = async (featured: boolean) => {
+    const filtered = localProducts.filter(prod => !featProdSearch || prod.name.toLowerCase().includes(featProdSearch.toLowerCase()));
+    for (const prod of filtered) {
+      await toggleProdFeatured.mutateAsync({ id: prod.id, is_featured: featured });
+    }
+  };
+
   const getCatName = (id: string) => categories.find((c) => c.id === id)?.name || "Unknown";
   const availableCategories = categories.filter((c) => !catSections.some((s) => s.category_id === c.id));
 
@@ -836,6 +850,10 @@ const AdminHome = () => {
                       <p className="text-xs text-muted-foreground">Hidden</p>
                     </div>
                   </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => bulkToggleCategoriesFeatured(true)} className="flex-1">Feature All</Button>
+                    <Button size="sm" variant="outline" onClick={() => bulkToggleCategoriesFeatured(false)} className="flex-1">Unfeature All</Button>
+                  </div>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input value={featCatSearch} onChange={(e) => setFeatCatSearch(e.target.value)} placeholder="Search categories..." className="pl-9" />
@@ -884,12 +902,16 @@ const AdminHome = () => {
                     <div className="p-3 rounded-lg bg-secondary/30 border border-border/50 text-center">
                       <p className="text-2xl font-bold text-muted-foreground">{localProducts.filter(p => !p.is_featured).length}</p>
                       <p className="text-xs text-muted-foreground">Not Featured</p>
-                    </div>
-                  </div>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input value={featProdSearch} onChange={(e) => setFeatProdSearch(e.target.value)} placeholder="Search products..." className="pl-9" />
-                  </div>
+                     </div>
+                   </div>
+                   <div className="flex gap-2">
+                     <Button size="sm" variant="outline" onClick={() => bulkToggleProductsFeatured(true)} className="flex-1">Feature All</Button>
+                     <Button size="sm" variant="outline" onClick={() => bulkToggleProductsFeatured(false)} className="flex-1">Unfeature All</Button>
+                   </div>
+                   <div className="relative">
+                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                     <Input value={featProdSearch} onChange={(e) => setFeatProdSearch(e.target.value)} placeholder="Search products..." className="pl-9" />
+                   </div>
                   <div className="space-y-2">
                     {localProducts
                       .filter(prod => !featProdSearch || prod.name.toLowerCase().includes(featProdSearch.toLowerCase()))
