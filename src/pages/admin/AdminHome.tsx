@@ -206,12 +206,12 @@ const AdminHome = () => {
     { id: "arrivals", label: "New Arrivals", icon: "✨", visible: true, title: "New Arrivals", subtitle: "Fresh drops just landed", product_count: 8, columns: 4, view_all_link: "/shop" },
   ];
 
-  const sectionSettingsConfig: Record<string, { hasTitle: boolean; hasSubtitle: boolean; hasProductCount: boolean; hasColumns: boolean; hasViewAllLink: boolean }> = {
-    slider: { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false },
-    categories: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: false },
-    "category-sections": { hasTitle: false, hasSubtitle: false, hasProductCount: true, hasColumns: true, hasViewAllLink: false },
-    featured: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true },
-    arrivals: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true },
+  const sectionSettingsConfig: Record<string, { hasTitle: boolean; hasSubtitle: boolean; hasProductCount: boolean; hasColumns: boolean; hasViewAllLink: boolean; hasFeaturedToggle: boolean }> = {
+    slider: { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: false },
+    categories: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: false, hasFeaturedToggle: true },
+    "category-sections": { hasTitle: false, hasSubtitle: false, hasProductCount: true, hasColumns: true, hasViewAllLink: false, hasFeaturedToggle: false },
+    featured: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true, hasFeaturedToggle: true },
+    arrivals: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true, hasFeaturedToggle: false },
   };
 
   const [catSections, setCatSections] = useState<{ category_id: string; sort_order: number; product_count: number }[]>([]);
@@ -487,8 +487,6 @@ const AdminHome = () => {
           <TabsTrigger value="sales">Sales</TabsTrigger>
           <TabsTrigger value="new-arrivals">New Arrivals</TabsTrigger>
           <TabsTrigger value="layout">Layout & Style</TabsTrigger>
-          <TabsTrigger value="categories">Featured Categories</TabsTrigger>
-          <TabsTrigger value="products">Featured Products</TabsTrigger>
         </TabsList>
 
         {/* Dashboard */}
@@ -676,7 +674,7 @@ const AdminHome = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               {sectionOrder.map((section, idx) => {
-                const settingsCfg = sectionSettingsConfig[section.id] || { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false };
+                const settingsCfg = sectionSettingsConfig[section.id] || { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: false };
                 const hasSettings = Object.values(settingsCfg).some(Boolean);
                 const isExpanded = expandedSection === section.id;
 
@@ -787,6 +785,47 @@ const AdminHome = () => {
                             </div>
                           )}
                         </div>
+
+                        {/* Featured toggle for categories/products */}
+                        {settingsCfg.hasFeaturedToggle && section.id === "categories" && (
+                          <div className="mt-4 border-t border-border/30 pt-4">
+                            <Label className="text-xs font-semibold mb-2 block">Featured Categories</Label>
+                            <p className="text-xs text-muted-foreground mb-3">Toggle which categories appear in the "Shop by Category" section.</p>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+                              {categories.map((cat) => (
+                                <div key={cat.id} className="flex items-center gap-2 p-2 rounded-lg border border-border/30 bg-secondary/10">
+                                  <Switch
+                                    checked={cat.is_featured}
+                                    onCheckedChange={(v) => toggleCatFeatured.mutate({ id: cat.id, is_featured: v })}
+                                    className="scale-75"
+                                  />
+                                  <span className="text-xs font-medium text-foreground truncate">{cat.name}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {settingsCfg.hasFeaturedToggle && section.id === "featured" && (
+                          <div className="mt-4 border-t border-border/30 pt-4">
+                            <Label className="text-xs font-semibold mb-2 block">Featured Products</Label>
+                            <p className="text-xs text-muted-foreground mb-3">Toggle which products appear in the "Featured Products" section.</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+                              {localProducts.map((prod) => (
+                                <div key={prod.id} className="flex items-center gap-2 p-2 rounded-lg border border-border/30 bg-secondary/10">
+                                  <Switch
+                                    checked={prod.is_featured}
+                                    onCheckedChange={(v) => toggleProdFeatured.mutate({ id: prod.id, is_featured: v })}
+                                    className="scale-75"
+                                  />
+                                  {prod.thumbnail && <img src={prod.thumbnail} alt="" className="w-7 h-7 object-cover rounded" />}
+                                  <span className="text-xs font-medium text-foreground truncate flex-1">{prod.name}</span>
+                                  <span className="text-[10px] text-muted-foreground">${Number(prod.price).toFixed(2)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1059,60 +1098,6 @@ const AdminHome = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="categories">
-          <Card className="glass">
-            <CardHeader>
-              <CardTitle>Categories on Home Page</CardTitle>
-              <p className="text-sm text-muted-foreground">Toggle which categories appear in the "Shop by Category" section. Drag to reorder.</p>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader><TableRow>
-                  <TableHead className="w-8"></TableHead><TableHead>Name</TableHead><TableHead>Sort Order</TableHead><TableHead>Featured</TableHead><TableHead>Status</TableHead>
-                </TableRow></TableHeader>
-                <TableBody>
-                  {categories.map((cat, idx) => (
-                    <TableRow key={cat.id} {...getFeatCatDragProps(idx)} className={`cursor-grab active:cursor-grabbing transition-colors ${featCatOverIdx === idx && featCatDragIdx !== idx ? "bg-primary/10" : ""}`}>
-                      <TableCell><GripVertical className="w-4 h-4 text-muted-foreground" /></TableCell>
-                      <TableCell className="font-medium">{cat.name}</TableCell>
-                      <TableCell>{cat.sort_order}</TableCell>
-                      <TableCell><Switch checked={cat.is_featured} onCheckedChange={(v) => toggleCatFeatured.mutate({ id: cat.id, is_featured: v })} /></TableCell>
-                      <TableCell><Badge variant={cat.is_active ? "default" : "secondary"}>{cat.is_active ? "Active" : "Inactive"}</Badge></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="products">
-          <Card className="glass">
-            <CardHeader>
-              <CardTitle>Products on Home Page</CardTitle>
-              <p className="text-sm text-muted-foreground">Toggle which products appear in the "Featured Products" section. Drag to reorder.</p>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader><TableRow>
-                  <TableHead className="w-8"></TableHead><TableHead>Image</TableHead><TableHead>Name</TableHead><TableHead>Price</TableHead><TableHead>Featured</TableHead><TableHead>Status</TableHead>
-                </TableRow></TableHeader>
-                <TableBody>
-                  {localProducts.map((prod, idx) => (
-                    <TableRow key={prod.id} {...getFeatProdDragProps(idx)} className={`cursor-grab active:cursor-grabbing transition-colors ${featProdOverIdx === idx && featProdDragIdx !== idx ? "bg-primary/10" : ""}`}>
-                      <TableCell><GripVertical className="w-4 h-4 text-muted-foreground" /></TableCell>
-                      <TableCell>{prod.thumbnail && <img src={prod.thumbnail} alt="" className="w-10 h-10 object-cover rounded-lg" />}</TableCell>
-                      <TableCell className="font-medium">{prod.name}</TableCell>
-                      <TableCell>${Number(prod.price).toFixed(2)}</TableCell>
-                      <TableCell><Switch checked={prod.is_featured} onCheckedChange={(v) => toggleProdFeatured.mutate({ id: prod.id, is_featured: v })} /></TableCell>
-                      <TableCell><Badge variant={prod.is_active ? "default" : "secondary"}>{prod.is_active ? "Active" : "Inactive"}</Badge></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         {/* Layout & Style */}
         <TabsContent value="layout">
