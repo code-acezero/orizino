@@ -11,8 +11,11 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
 import { ALL_CURRENCIES, type CurrencyConfig } from "@/contexts/CurrencyContext";
-import { DollarSign, Globe, Check, RefreshCw, Clock, Zap, PaintBucket } from "lucide-react";
+import { DollarSign, Globe, Check, RefreshCw, Clock, Zap, PaintBucket, Search } from "lucide-react";
 import SiteCustomizer from "@/components/admin/SiteCustomizer";
+import AdminSeoSettings from "@/components/admin/AdminSeoSettings";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 
 const themes = [
   { id: "default", label: "Cyber Emerald", color: "160 84% 45%" },
