@@ -50,7 +50,7 @@ const HomePage: React.FC = () => {
       if (error) throw error;
       return data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
   });
 
   const { data: catSectionsConfig } = useQuery({
