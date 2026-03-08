@@ -16,22 +16,6 @@ const ProductDetailPage: React.FC = () => {
   const { user } = useAuth();
   const { formatPrice, currency, setCurrency, enabledCurrencies, config } = useCurrency();
   
-  // Apply SEO metadata for product detail page
-  const { data: product, isLoading } = useQuery({
-    queryKey: ["product", slug],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("products")
-        .select("*, categories(name, slug)")
-        .eq("slug", slug!)
-        .eq("is_active", true)
-        .single();
-      return data;
-    },
-    enabled: !!slug,
-  });
-  useProductSeoMeta(product);
-  
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
@@ -49,6 +33,9 @@ const ProductDetailPage: React.FC = () => {
     },
     enabled: !!slug,
   });
+
+  // Apply SEO metadata for product detail page
+  useProductSeoMeta(product);
 
   const { data: reviews } = useQuery({
     queryKey: ["reviews", product?.id],
