@@ -67,16 +67,21 @@ const AdminReviews = () => {
     pending: reviews.filter((r: any) => !r.is_approved).length,
   };
 
+  const withImages = reviews.filter((r: any) => r.images && r.images.length > 0).length;
+
   const filtered = filterStatus === "all"
     ? reviews
     : filterStatus === "approved"
       ? reviews.filter((r: any) => r.is_approved)
-      : reviews.filter((r: any) => !r.is_approved);
+      : filterStatus === "pending"
+        ? reviews.filter((r: any) => !r.is_approved)
+        : reviews.filter((r: any) => r.images && r.images.length > 0);
 
   const filterOptions = [
     { value: "all", label: "All", count: reviews.length },
     { value: "pending", label: "Pending", count: statusCounts.pending },
     { value: "approved", label: "Approved", count: statusCounts.approved },
+    { value: "with-images", label: "With Images", count: withImages },
   ];
 
   const toggleSelect = (id: string) => {
