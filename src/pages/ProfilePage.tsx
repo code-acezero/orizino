@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, Phone, MapPin, Save, LogOut, ShoppingCart, Package, Star, Bell, Settings, ChevronRight } from "lucide-react";
+import { User, Phone, MapPin, Save, LogOut, ShoppingCart, Package, Star, Bell, Settings, ChevronRight, Camera } from "lucide-react";
+import ImageUpload from "@/components/ImageUpload";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +16,7 @@ const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [address, setAddress] = useState({ street: "", city: "", state: "", zip: "", country: "" });
   const [activeTab, setActiveTab] = useState("profile");
 
@@ -24,6 +26,7 @@ const ProfilePage: React.FC = () => {
       if (data) {
         setFullName(data.full_name || "");
         setPhone(data.phone || "");
+        setAvatarUrl(data.avatar_url || "");
         const addr = (data.address as Record<string, string>) || {};
         setAddress({ street: addr.street || "", city: addr.city || "", state: addr.state || "", zip: addr.zip || "", country: addr.country || "" });
       }
@@ -69,7 +72,7 @@ const ProfilePage: React.FC = () => {
   const handleSave = async () => {
     if (!user) return;
     setLoading(true);
-    const { error } = await supabase.from("profiles").update({ full_name: fullName, phone, address }).eq("id", user.id);
+    const { error } = await supabase.from("profiles").update({ full_name: fullName, phone, address, avatar_url: avatarUrl }).eq("id", user.id);
     setLoading(false);
     if (error) toast({ title: "Error saving", description: error.message, variant: "destructive" });
     else toast({ title: "Profile updated!" });
@@ -104,8 +107,29 @@ const ProfilePage: React.FC = () => {
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-2xl font-display">
-                {user?.email?.charAt(0).toUpperCase()}
+              <div className="relative group">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Avatar" className="w-16 h-16 rounded-full object-cover border-2 border-primary" />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-2xl font-display">
+                    {user?.email?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <label className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                  <Camera className="w-5 h-5 text-white" />
+                  <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file || !user) return;
+                    const ext = file.name.split(".").pop();
+                    const path = `${user.id}/${Date.now()}.${ext}`;
+                    const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+                    if (error) { toast({ title: "Upload failed", description: error.message, variant: "destructive" }); return; }
+                    const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+                    setAvatarUrl(urlData.publicUrl);
+                    await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("id", user.id);
+                    toast({ title: "Avatar updated!" });
+                  }} />
+                </label>
               </div>
               <div>
                 <h1 className="text-2xl font-bold font-display text-foreground">{fullName || "User"}</h1>

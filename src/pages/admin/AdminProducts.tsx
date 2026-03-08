@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { toast } from "sonner";
+import ImageUpload from "@/components/ImageUpload";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 type Product = Tables<"products">;
@@ -135,7 +136,10 @@ const AdminProducts = () => {
                 <div><Label>Price</Label><Input type="number" value={editing.price ?? 0} onChange={(e) => setEditing({ ...editing, price: +e.target.value })} /></div>
                 <div><Label>Stock</Label><Input type="number" value={editing.stock_quantity ?? 0} onChange={(e) => setEditing({ ...editing, stock_quantity: +e.target.value })} /></div>
               </div>
-              <div><Label>Thumbnail URL</Label><Input value={editing.thumbnail ?? ""} onChange={(e) => setEditing({ ...editing, thumbnail: e.target.value })} /></div>
+              <div>
+                <Label>Thumbnail</Label>
+                <ImageUpload bucket="products" folder="thumbnails" value={editing.thumbnail ?? ""} onUploaded={(url) => setEditing({ ...editing, thumbnail: url })} />
+              </div>
               <div><Label>Short Description</Label><Input value={editing.short_description ?? ""} onChange={(e) => setEditing({ ...editing, short_description: e.target.value })} /></div>
               <div><Label>Description</Label><Textarea value={editing.description ?? ""} onChange={(e) => setEditing({ ...editing, description: e.target.value })} rows={3} /></div>
               <div className="flex items-center gap-6">
