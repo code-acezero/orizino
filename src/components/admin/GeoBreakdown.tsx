@@ -1,6 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Globe, MapPin, Trophy, TrendingUp } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
@@ -9,11 +10,20 @@ interface GeoBreakdownProps {
 }
 
 const GeoBreakdown: React.FC<GeoBreakdownProps> = ({ analyticsData }) => {
+  const [leaderboardPeriod, setLeaderboardPeriod] = useState<7 | 30 | 90>(30);
+
+  // Filter data based on selected period
+  const filteredAnalyticsForLeaderboard = useMemo(() => {
+    const now = Date.now();
+    const cutoff = now - leaderboardPeriod * 24 * 60 * 60 * 1000;
+    return analyticsData.filter((e) => new Date(e.created_at).getTime() >= cutoff);
+  }, [analyticsData, leaderboardPeriod]);
+
   const geo = useMemo(() => {
     const countryMap: Record<string, { count: number; code: string; cities: Record<string, number> }> = {};
     let geoTracked = 0;
 
-    analyticsData.forEach((e: any) => {
+    filteredAnalyticsForLeaderboard.forEach((e: any) => {
       const country = e.metadata?.country;
       if (!country) return;
       geoTracked++;
@@ -50,7 +60,7 @@ const GeoBreakdown: React.FC<GeoBreakdownProps> = ({ analyticsData }) => {
     });
 
     return { countries, chartData, geoTracked, countryCodeMap };
-  }, [analyticsData]);
+  }, [filteredAnalyticsForLeaderboard]);
 
   const maxCount = Math.max(...geo.countries.map((c) => c.count), 1);
 
@@ -62,16 +72,31 @@ const GeoBreakdown: React.FC<GeoBreakdownProps> = ({ analyticsData }) => {
       {/* Top Countries Leaderboard */}
       <Card className="glass">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-primary" />
-            Top Countries
-            {totalVisitors > 0 && (
-              <Badge variant="secondary" className="text-xs ml-auto">
-                <TrendingUp className="w-3 h-3 mr-1" />
-                {totalVisitors} total
-              </Badge>
-            )}
-          </CardTitle>
+          <div className="flex items-center justify-between mb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-primary" />
+              Top Countries
+              {totalVisitors > 0 && (
+                <Badge variant="secondary" className="text-xs ml-auto">
+                  <TrendingUp className="w-3 h-3 mr-1" />
+                  {totalVisitors} total
+                </Badge>
+              )}
+            </CardTitle>
+          </div>
+          <div className="flex gap-2">
+            {[7, 30, 90].map((period) => (
+              <Button
+                key={period}
+                variant={leaderboardPeriod === period ? "default" : "outline"}
+                size="sm"
+                onClick={() => setLeaderboardPeriod(period as 7 | 30 | 90)}
+                className="text-xs"
+              >
+                {period}d
+              </Button>
+            ))}
+          </div>
         </CardHeader>
         <CardContent>
           {top5.length > 0 ? (
