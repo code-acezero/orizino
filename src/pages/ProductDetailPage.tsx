@@ -367,7 +367,16 @@ const ProductDetailPage: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.1 }}
                 >
-                  <ProductCard product={p} />
+                  <ProductCard
+                    id={p.id}
+                    name={p.name}
+                    price={p.price}
+                    compareAtPrice={p.compare_at_price ?? undefined}
+                    thumbnail={p.thumbnail ?? undefined}
+                    avgRating={p.avg_rating ?? undefined}
+                    reviewCount={p.review_count ?? undefined}
+                    slug={p.slug}
+                  />
                 </motion.div>
               ))}
             </div>
