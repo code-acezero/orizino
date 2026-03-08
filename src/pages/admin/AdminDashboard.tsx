@@ -11,11 +11,11 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import DeviceBrowserBreakdown from "@/components/admin/DeviceBrowserBreakdown";
-import { format, subDays, startOfDay, isAfter, differenceInDays } from "date-fns";
+import GeoBreakdown from "@/components/admin/GeoBreakdown";
+import { format, subDays, startOfDay, differenceInDays } from "date-fns";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar,
-  FunnelChart, Funnel, LabelList,
+  ResponsiveContainer, PieChart, Pie, Cell,
 } from "recharts";
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
@@ -202,6 +202,23 @@ const AdminDashboard = () => {
         .lt("stock_quantity", 10)
         .order("stock_quantity", { ascending: true })
         .limit(10);
+      return data ?? [];
+    },
+    staleTime: 60_000,
+  });
+
+  // Fetch analytics data for the geo map
+  const { data: analyticsData = [] } = useQuery({
+    queryKey: ["dashboard-analytics-geo", dateRange.from, dateRange.to],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("page_analytics")
+        .select("metadata")
+        .gte("created_at", dateRange.from)
+        .lte("created_at", dateRange.to)
+        .not("metadata", "is", null)
+        .limit(5000);
+      if (error) throw error;
       return data ?? [];
     },
     staleTime: 60_000,
@@ -587,6 +604,9 @@ const AdminDashboard = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Visitor World Map */}
+      <GeoBreakdown analyticsData={analyticsData} />
 
       {/* Bottom Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
