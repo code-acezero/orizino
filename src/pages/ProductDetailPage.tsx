@@ -12,6 +12,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ProductCard from "@/components/ProductCard";
+import ReviewForm from "@/components/ReviewForm";
 
 const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -328,9 +329,12 @@ const ProductDetailPage: React.FC = () => {
         </div>
 
         {/* Reviews */}
-        {reviews && reviews.length > 0 && (
-          <section className="mt-16">
-            <h2 className="text-2xl font-bold font-display text-foreground mb-6">Customer Reviews</h2>
+        <section className="mt-16">
+          <h2 className="text-2xl font-bold font-display text-foreground mb-6">Customer Reviews</h2>
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <ReviewForm productId={product.id} />
+          </div>
+          {reviews && reviews.length > 0 && (
             <div className="grid md:grid-cols-2 gap-4">
               {reviews.map((review) => (
                 <div key={review.id} className="glass rounded-3xl p-6">
@@ -345,8 +349,8 @@ const ProductDetailPage: React.FC = () => {
                 </div>
               ))}
             </div>
-          </section>
-        )}
+          )}
+        </section>
 
         {/* Related Products */}
         {relatedProducts && relatedProducts.length > 0 && (
