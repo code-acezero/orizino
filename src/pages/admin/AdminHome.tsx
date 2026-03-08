@@ -187,12 +187,20 @@ const AdminHome = () => {
   });
 
   const defaultSectionOrder = [
-    { id: "slider", label: "Showcase Slider", icon: "🎠", visible: true },
-    { id: "categories", label: "Category Grid", icon: "📂", visible: true },
-    { id: "category-sections", label: "Category Product Sections", icon: "📦", visible: true },
-    { id: "featured", label: "Featured Products", icon: "⭐", visible: true },
-    { id: "arrivals", label: "New Arrivals", icon: "✨", visible: true },
+    { id: "slider", label: "Showcase Slider", icon: "🎠", visible: true, title: "", subtitle: "", product_count: 0, columns: 4, view_all_link: "" },
+    { id: "categories", label: "Category Grid", icon: "📂", visible: true, title: "Shop by Category", subtitle: "", product_count: 6, columns: 3, view_all_link: "" },
+    { id: "category-sections", label: "Category Product Sections", icon: "📦", visible: true, title: "", subtitle: "", product_count: 8, columns: 4, view_all_link: "" },
+    { id: "featured", label: "Featured Products", icon: "⭐", visible: true, title: "Featured Products", subtitle: "Handpicked just for you", product_count: 8, columns: 4, view_all_link: "/shop" },
+    { id: "arrivals", label: "New Arrivals", icon: "✨", visible: true, title: "New Arrivals", subtitle: "Fresh drops just landed", product_count: 8, columns: 4, view_all_link: "/shop" },
   ];
+
+  const sectionSettingsConfig: Record<string, { hasTitle: boolean; hasSubtitle: boolean; hasProductCount: boolean; hasColumns: boolean; hasViewAllLink: boolean }> = {
+    slider: { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false },
+    categories: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: false },
+    "category-sections": { hasTitle: false, hasSubtitle: false, hasProductCount: true, hasColumns: true, hasViewAllLink: false },
+    featured: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true },
+    arrivals: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true },
+  };
 
   const [catSections, setCatSections] = useState<{ category_id: string; sort_order: number; product_count: number }[]>([]);
   const [sales, setSales] = useState<SaleConfig[]>([]);
