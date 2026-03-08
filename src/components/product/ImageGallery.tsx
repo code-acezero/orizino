@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, ZoomIn, Minus, Plus } from "lucide-react";
 
 interface ImageGalleryProps {
   images: string[];
@@ -14,6 +14,9 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const [isZooming, setIsZooming] = useState(false);
+  const [lensSize, setLensSize] = useState(160);
+  const [showRipple, setShowRipple] = useState(false);
+  const [ripplePos, setRipplePos] = useState({ x: 0, y: 0 });
   const [pinchScale, setPinchScale] = useState(1);
   const [pinchOrigin, setPinchOrigin] = useState({ x: 50, y: 50 });
   const pinchStartDist = useRef(0);
@@ -105,9 +108,23 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
           className={`relative overflow-hidden cursor-zoom-in group ${
             isMinimal ? "rounded-2xl" : isEditorial ? "rounded-none aspect-[4/3]" : "rounded-3xl aspect-square glass"
           }`}
-          onMouseEnter={() => setIsZooming(true)}
+          onMouseEnter={(e) => {
+            setIsZooming(true);
+            const rect = imgRef.current?.getBoundingClientRect();
+            if (rect) {
+              setRipplePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+              setShowRipple(true);
+              setTimeout(() => setShowRipple(false), 600);
+            }
+          }}
           onMouseLeave={() => setIsZooming(false)}
           onMouseMove={handleMouseMove}
+          onWheel={(e) => {
+            if (isZooming) {
+              e.preventDefault();
+              setLensSize((s) => Math.min(300, Math.max(80, s + (e.deltaY < 0 ? 20 : -20))));
+            }
+          }}
           onClick={() => setLightboxOpen(true)}
         >
           <AnimatePresence mode="popLayout" initial={false}>
@@ -123,25 +140,60 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
             />
           </AnimatePresence>
 
+          {/* Ripple effect on hover start */}
+          <AnimatePresence>
+            {showRipple && (
+              <motion.div
+                className="absolute pointer-events-none z-20 rounded-full border-2 border-primary/40"
+                style={{ left: ripplePos.x, top: ripplePos.y }}
+                initial={{ width: 0, height: 0, x: 0, y: 0, opacity: 0.8 }}
+                animate={{ width: 200, height: 200, x: -100, y: -100, opacity: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+              />
+            )}
+          </AnimatePresence>
+
           {/* Liquid loupe magnifier */}
           {isZooming && (
-            <div
+            <motion.div
               className="absolute pointer-events-none z-10"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", damping: 20, stiffness: 300 }}
               style={{
-                width: 160,
-                height: 160,
+                width: lensSize,
+                height: lensSize,
                 borderRadius: "50%",
-                left: mousePos.x - 80,
-                top: mousePos.y - 80,
+                left: mousePos.x - lensSize / 2,
+                top: mousePos.y - lensSize / 2,
                 backgroundImage: `url(${images[selected]})`,
                 backgroundSize: `${imgRef.current?.offsetWidth ? imgRef.current.offsetWidth * 2.5 : 1000}px ${imgRef.current?.offsetHeight ? imgRef.current.offsetHeight * 2.5 : 1000}px`,
                 backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
                 border: "3px solid hsl(var(--primary) / 0.4)",
                 boxShadow: "0 0 0 2px hsl(var(--background) / 0.6), 0 8px 32px hsl(var(--primary) / 0.2), inset 0 0 30px hsl(var(--primary) / 0.05)",
-                backdropFilter: "blur(1px)",
-                transition: "box-shadow 0.3s ease",
+                transition: "width 0.2s ease, height 0.2s ease, left 0.05s linear, top 0.05s linear",
               }}
             />
+          )}
+
+          {/* Lens size controls */}
+          {isZooming && (
+            <div className="absolute top-3 right-3 z-20 flex items-center gap-1 glass rounded-full px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={(e) => { e.stopPropagation(); setLensSize((s) => Math.max(80, s - 30)); }}
+                className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Minus className="w-3 h-3" />
+              </button>
+              <span className="text-[10px] text-muted-foreground font-medium w-6 text-center">{Math.round(lensSize)}</span>
+              <button
+                onClick={(e) => { e.stopPropagation(); setLensSize((s) => Math.min(300, s + 30)); }}
+                className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Plus className="w-3 h-3" />
+              </button>
+            </div>
           )}
 
           {/* Zoom indicator */}
