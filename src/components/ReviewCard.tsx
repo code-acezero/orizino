@@ -5,6 +5,7 @@ import { toast } from "@/lib/app-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ReviewCardProps {
   review: {
@@ -14,6 +15,7 @@ interface ReviewCardProps {
     comment: string | null;
     created_at: string;
     is_approved?: boolean;
+    images?: string[];
   };
   isOwn: boolean;
   productId: string;
@@ -26,6 +28,9 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, isOwn, productId }) => 
   const [title, setTitle] = useState(review.title || "");
   const [comment, setComment] = useState(review.comment || "");
   const [saving, setSaving] = useState(false);
+  const [lightboxImg, setLightboxImg] = useState<string | null>(null);
+
+  const images = review.images || [];
 
   const handleSave = async () => {
     if (rating === 0) {
@@ -85,34 +90,81 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, isOwn, productId }) => 
   }
 
   return (
-    <div className="glass rounded-3xl p-6 relative group">
-      {isOwn && (
-        <div className="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={() => setEditing(true)} className="p-1.5 rounded-full hover:bg-secondary/50 text-muted-foreground hover:text-foreground">
-            <Pencil className="w-4 h-4" />
-          </button>
-          <button onClick={handleDelete} className="p-1.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
-            <Trash2 className="w-4 h-4" />
-          </button>
+    <>
+      <div className="glass rounded-3xl p-6 relative group">
+        {isOwn && (
+          <div className="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button onClick={() => setEditing(true)} className="p-1.5 rounded-full hover:bg-secondary/50 text-muted-foreground hover:text-foreground">
+              <Pencil className="w-4 h-4" />
+            </button>
+            <button onClick={handleDelete} className="p-1.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+        <div className="flex items-center gap-1 mb-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Star key={i} className={`w-4 h-4 ${i < review.rating ? "fill-primary text-primary" : "text-muted-foreground/30"}`} />
+          ))}
         </div>
-      )}
-      <div className="flex items-center gap-1 mb-2">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Star key={i} className={`w-4 h-4 ${i < review.rating ? "fill-primary text-primary" : "text-muted-foreground/30"}`} />
-        ))}
-      </div>
-      {review.title && <h4 className="font-semibold text-foreground mb-1">{review.title}</h4>}
-      {review.comment && <p className="text-muted-foreground text-sm">{review.comment}</p>}
-      <div className="flex items-center gap-2 mt-3">
-        <p className="text-xs text-muted-foreground/60">{new Date(review.created_at).toLocaleDateString()}</p>
-        {isOwn && review.is_approved === false && (
-          <span className="text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full">Pending approval</span>
+        {review.title && <h4 className="font-semibold text-foreground mb-1">{review.title}</h4>}
+        {review.comment && <p className="text-muted-foreground text-sm">{review.comment}</p>}
+
+        {/* Review Images */}
+        {images.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {images.map((img, i) => (
+              <button
+                key={i}
+                onClick={() => setLightboxImg(img)}
+                className="w-16 h-16 rounded-xl overflow-hidden hover:ring-2 ring-primary/40 transition-all"
+              >
+                <img src={img} alt={`Review photo ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
+              </button>
+            ))}
+          </div>
         )}
-        {isOwn && review.is_approved !== false && (
-          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Your review</span>
-        )}
+
+        <div className="flex items-center gap-2 mt-3">
+          <p className="text-xs text-muted-foreground/60">{new Date(review.created_at).toLocaleDateString()}</p>
+          {isOwn && review.is_approved === false && (
+            <span className="text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full">Pending approval</span>
+          )}
+          {isOwn && review.is_approved !== false && (
+            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Your review</span>
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Image Lightbox */}
+      <AnimatePresence>
+        {lightboxImg && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-background/90 backdrop-blur-xl flex items-center justify-center"
+            onClick={() => setLightboxImg(null)}
+          >
+            <button
+              className="absolute top-6 right-6 glass rounded-full p-3 text-foreground hover:text-primary z-10"
+              onClick={() => setLightboxImg(null)}
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <motion.img
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              src={lightboxImg}
+              alt="Review photo"
+              className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
