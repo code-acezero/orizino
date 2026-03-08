@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Star, Heart, ShoppingCart, Minus, Plus, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { Star, Heart, ShoppingCart, Minus, Plus, ChevronLeft, ChevronRight, Check, Globe } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/lib/app-toast";
