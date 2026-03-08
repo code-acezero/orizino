@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Star, Heart, ShoppingCart, Minus, Plus, ChevronLeft, ChevronRight, Check, Globe } from "lucide-react";
