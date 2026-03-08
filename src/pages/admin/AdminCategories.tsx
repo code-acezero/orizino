@@ -476,6 +476,7 @@ const AdminCategories = () => {
                                 );
                               })()}
                             </TableCell>
+                          </TableRow>
                         ))
                       )}
                     </TableBody>
