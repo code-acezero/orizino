@@ -2,6 +2,9 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users } from "lucide-react";
 import { useRealtimeVisitors } from "@/hooks/use-realtime-visitors";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LiveVisitorCounterProps {
   page?: string;
@@ -12,7 +15,22 @@ const LiveVisitorCounter: React.FC<LiveVisitorCounterProps> = ({
   page = "/home",
   variant = "floating",
 }) => {
+  const { user } = useAuth();
+  const { data: isAdmin } = useQuery({
+    queryKey: ["user-role", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("has_role", {
+        _user_id: user!.id,
+        _role: "admin",
+      });
+      return data ?? false;
+    },
+    enabled: !!user,
+  });
+
   const count = useRealtimeVisitors(page);
+
+  if (!isAdmin) return null;
 
   if (variant === "badge") {
     return (
