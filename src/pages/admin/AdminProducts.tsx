@@ -475,106 +475,67 @@ const AdminProducts = () => {
                   <p className="text-xs text-muted-foreground mt-1">Select the product type to show relevant attribute fields.</p>
                 </div>
 
-                {/* Colors — available for all types except grocery */}
-                {productType !== "grocery" && (
+                {/* Colors */}
+                {showsColors && (
                   <div>
                     <Label>Available Colors</Label>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {COMMON_COLORS.map((c) => {
                         const selected = (specs.colors || []).includes(c.name);
                         return (
-                          <button
-                            key={c.name}
-                            type="button"
-                            onClick={() => toggleColor(c.name)}
-                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 text-xs font-medium transition-all ${
-                              selected ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:border-primary/30"
-                            }`}
-                          >
+                          <button key={c.name} type="button" onClick={() => toggleColor(c.name)}
+                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 text-xs font-medium transition-all ${selected ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:border-primary/30"}`}>
                             <span className="w-3.5 h-3.5 rounded-full border border-border/50 shrink-0" style={{ background: c.hex }} />
                             {c.name}
                           </button>
                         );
                       })}
                     </div>
-                    <div className="mt-2">
-                      <Input
-                        placeholder="Add custom color name..."
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim()) {
-                            toggleColor((e.target as HTMLInputElement).value.trim());
-                            (e.target as HTMLInputElement).value = "";
-                          }
-                        }}
-                        className="h-8 text-sm"
-                      />
-                    </div>
+                    <Input placeholder="Add custom color name (press Enter)..." className="h-8 text-sm mt-2"
+                      onKeyDown={(e) => { if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim()) { toggleColor((e.target as HTMLInputElement).value.trim()); (e.target as HTMLInputElement).value = ""; } }} />
                   </div>
                 )}
 
-                {/* Sizes — for clothing */}
-                {(productType === "clothing") && (
+                {/* Clothing Sizes */}
+                {productType === "clothing" && (
                   <div>
                     <Label>Available Sizes</Label>
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {CLOTHING_SIZES.map((size) => {
-                        const selected = (specs.sizes || []).includes(size);
-                        return (
-                          <button
-                            key={size}
-                            type="button"
-                            onClick={() => toggleSize(size)}
-                            className={`px-3 py-1.5 rounded-lg border-2 text-xs font-bold transition-all ${
-                              selected ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:border-primary/30"
-                            }`}
-                          >
-                            {size}
-                          </button>
-                        );
-                      })}
+                      {CLOTHING_SIZES.map((size) => (
+                        <button key={size} type="button" onClick={() => toggleSize(size)}
+                          className={`px-3 py-1.5 rounded-lg border-2 text-xs font-bold transition-all ${(specs.sizes || []).includes(size) ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:border-primary/30"}`}>
+                          {size}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 )}
 
-                {/* Sizes — for shoes */}
-                {(productType === "shoes") && (
+                {/* Shoe Sizes */}
+                {productType === "shoes" && (
                   <div>
                     <Label>Available Sizes (EU)</Label>
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {SHOE_SIZES.map((size) => {
-                        const selected = (specs.sizes || []).includes(size);
-                        return (
-                          <button
-                            key={size}
-                            type="button"
-                            onClick={() => toggleSize(size)}
-                            className={`px-3 py-1.5 rounded-lg border-2 text-xs font-bold transition-all ${
-                              selected ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:border-primary/30"
-                            }`}
-                          >
-                            {size}
-                          </button>
-                        );
-                      })}
+                      {SHOE_SIZES.map((size) => (
+                        <button key={size} type="button" onClick={() => toggleSize(size)}
+                          className={`px-3 py-1.5 rounded-lg border-2 text-xs font-bold transition-all ${(specs.sizes || []).includes(size) ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:border-primary/30"}`}>
+                          {size}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 )}
 
-                {/* Weight — for grocery */}
-                {(productType === "grocery") && (
+                {/* Weight / Volume — grocery, liquid, cosmetics */}
+                {needsWeight && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label>Weight</Label>
-                      <Input
-                        type="number"
-                        value={specs.weight || ""}
-                        onChange={(e) => updateSpec("weight", e.target.value)}
-                        placeholder="e.g. 500"
-                      />
+                      <Label>{productType === "liquid" ? "Volume" : "Weight"}</Label>
+                      <Input type="number" value={specs.weight || ""} onChange={(e) => updateSpec("weight", e.target.value)} placeholder="e.g. 500" />
                     </div>
                     <div>
                       <Label>Unit</Label>
-                      <Select value={specs.weight_unit || "kg"} onValueChange={(v) => updateSpec("weight_unit", v)}>
+                      <Select value={specs.weight_unit || (productType === "liquid" ? "ml" : "kg")} onValueChange={(v) => updateSpec("weight_unit", v)}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="g">Grams (g)</SelectItem>
@@ -583,69 +544,171 @@ const AdminProducts = () => {
                           <SelectItem value="oz">Ounces (oz)</SelectItem>
                           <SelectItem value="ml">Milliliters (ml)</SelectItem>
                           <SelectItem value="l">Liters (L)</SelectItem>
+                          <SelectItem value="fl_oz">Fluid Ounces (fl oz)</SelectItem>
+                          <SelectItem value="gal">Gallons (gal)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
                 )}
 
-                {/* Specifications — for electronics */}
-                {(productType === "electronics") && (
+                {/* Material */}
+                {showsMaterial && (
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <Label>Technical Specifications</Label>
-                      <Button type="button" variant="outline" size="sm" onClick={addSpecRow} className="gap-1">
-                        <Plus className="w-3 h-3" /> Add Spec
-                      </Button>
-                    </div>
-                    <div className="space-y-2">
-                      {(specs.specs || []).map((spec: any, i: number) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <Input
-                            value={spec.key}
-                            onChange={(e) => updateSpecRow(i, "key", e.target.value)}
-                            placeholder="e.g. Processor"
-                            className="h-9 flex-1"
-                          />
-                          <Input
-                            value={spec.value}
-                            onChange={(e) => updateSpecRow(i, "value", e.target.value)}
-                            placeholder="e.g. Snapdragon 8 Gen 3"
-                            className="h-9 flex-1"
-                          />
-                          <Button type="button" variant="ghost" size="icon" className="shrink-0 h-9 w-9" onClick={() => removeSpecRow(i)}>
-                            <X className="w-3.5 h-3.5 text-destructive" />
-                          </Button>
-                        </div>
-                      ))}
-                      {(specs.specs || []).length === 0 && (
-                        <p className="text-sm text-muted-foreground text-center py-4">No specs added yet. Click "Add Spec" to start.</p>
-                      )}
+                    <Label>Material</Label>
+                    <Input value={specs.material || ""} onChange={(e) => updateSpec("material", e.target.value)} placeholder="e.g. Cotton, Leather, Stainless Steel" />
+                  </div>
+                )}
+
+                {/* Dimensions — furniture */}
+                {productType === "furniture" && (
+                  <div className="grid grid-cols-3 gap-4">
+                    <div><Label>Length (cm)</Label><Input type="number" value={specs.length || ""} onChange={(e) => updateSpec("length", e.target.value)} /></div>
+                    <div><Label>Width (cm)</Label><Input type="number" value={specs.width || ""} onChange={(e) => updateSpec("width", e.target.value)} /></div>
+                    <div><Label>Height (cm)</Label><Input type="number" value={specs.height || ""} onChange={(e) => updateSpec("height", e.target.value)} /></div>
+                  </div>
+                )}
+
+                {/* Cosmetics-specific fields */}
+                {productType === "cosmetics" && (
+                  <div className="space-y-3">
+                    <div><Label>Skin Type</Label><Input value={specs.skin_type || ""} onChange={(e) => updateSpec("skin_type", e.target.value)} placeholder="e.g. Oily, Dry, All" /></div>
+                    <div><Label>Ingredients</Label><Textarea value={specs.ingredients || ""} onChange={(e) => updateSpec("ingredients", e.target.value)} placeholder="Key ingredients..." rows={2} /></div>
+                    <div className="flex items-center gap-2">
+                      <Switch checked={specs.is_organic || false} onCheckedChange={(v) => updateSpec("is_organic", v)} />
+                      <Label>Organic / Natural</Label>
                     </div>
                   </div>
                 )}
 
-                {/* Custom key-value pairs for any type */}
+                {/* Liquid-specific fields */}
+                {productType === "liquid" && (
+                  <div className="space-y-3">
+                    <div><Label>Flavor / Scent</Label><Input value={specs.flavor || ""} onChange={(e) => updateSpec("flavor", e.target.value)} placeholder="e.g. Vanilla, Unscented" /></div>
+                    <div><Label>Ingredients</Label><Textarea value={specs.ingredients || ""} onChange={(e) => updateSpec("ingredients", e.target.value)} placeholder="Key ingredients..." rows={2} /></div>
+                  </div>
+                )}
+
+                {/* Books-specific fields */}
+                {productType === "books" && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div><Label>Author</Label><Input value={specs.author || ""} onChange={(e) => updateSpec("author", e.target.value)} /></div>
+                      <div><Label>ISBN</Label><Input value={specs.isbn || ""} onChange={(e) => updateSpec("isbn", e.target.value)} /></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div><Label>Publisher</Label><Input value={specs.publisher || ""} onChange={(e) => updateSpec("publisher", e.target.value)} /></div>
+                      <div><Label>Pages</Label><Input type="number" value={specs.pages || ""} onChange={(e) => updateSpec("pages", e.target.value)} /></div>
+                    </div>
+                    <div><Label>Language</Label><Input value={specs.language || ""} onChange={(e) => updateSpec("language", e.target.value)} placeholder="e.g. English" /></div>
+                  </div>
+                )}
+
+                {/* Accessories-specific */}
+                {productType === "accessories" && (
+                  <div>
+                    <Label>Accessory Type</Label>
+                    <Input value={specs.accessory_type || ""} onChange={(e) => updateSpec("accessory_type", e.target.value)} placeholder="e.g. Necklace, Ring, Watch, Belt" />
+                  </div>
+                )}
+
+                {/* Technical Specs — electronics, furniture */}
+                {showsSpecs && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label>Technical Specifications</Label>
+                      <Button type="button" variant="outline" size="sm" onClick={addSpecRow} className="gap-1"><Plus className="w-3 h-3" /> Add Spec</Button>
+                    </div>
+                    <div className="space-y-2">
+                      {(specs.specs || []).map((spec: any, i: number) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <Input value={spec.key} onChange={(e) => updateSpecRow(i, "key", e.target.value)} placeholder="e.g. Processor" className="h-9 flex-1" />
+                          <Input value={spec.value} onChange={(e) => updateSpecRow(i, "value", e.target.value)} placeholder="e.g. Snapdragon 8 Gen 3" className="h-9 flex-1" />
+                          <Button type="button" variant="ghost" size="icon" className="shrink-0 h-9 w-9" onClick={() => removeSpecRow(i)}><X className="w-3.5 h-3.5 text-destructive" /></Button>
+                        </div>
+                      ))}
+                      {(specs.specs || []).length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No specs added. Click "Add Spec" to start.</p>}
+                    </div>
+                  </div>
+                )}
+
+                {/* Custom key-value pairs for general */}
                 {productType === "general" && (
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <Label>Custom Attributes</Label>
-                      <Button type="button" variant="outline" size="sm" onClick={addSpecRow} className="gap-1">
-                        <Plus className="w-3 h-3" /> Add Attribute
-                      </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={addSpecRow} className="gap-1"><Plus className="w-3 h-3" /> Add Attribute</Button>
                     </div>
                     <div className="space-y-2">
                       {(specs.specs || []).map((spec: any, i: number) => (
                         <div key={i} className="flex items-center gap-2">
                           <Input value={spec.key} onChange={(e) => updateSpecRow(i, "key", e.target.value)} placeholder="Attribute name" className="h-9 flex-1" />
                           <Input value={spec.value} onChange={(e) => updateSpecRow(i, "value", e.target.value)} placeholder="Value" className="h-9 flex-1" />
-                          <Button type="button" variant="ghost" size="icon" className="shrink-0 h-9 w-9" onClick={() => removeSpecRow(i)}>
-                            <X className="w-3.5 h-3.5 text-destructive" />
-                          </Button>
+                          <Button type="button" variant="ghost" size="icon" className="shrink-0 h-9 w-9" onClick={() => removeSpecRow(i)}><X className="w-3.5 h-3.5 text-destructive" /></Button>
                         </div>
                       ))}
                     </div>
                   </div>
+                )}
+              </TabsContent>
+
+              {/* Variants Tab */}
+              <TabsContent value="variants" className="space-y-4 mt-4">
+                {!editing?.id ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Save the product first to manage variants.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Size / Color Variants</p>
+                        <p className="text-xs text-muted-foreground">Track inventory per size and color combination.</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button type="button" variant="outline" size="sm" onClick={generateVariants} className="gap-1 text-xs">
+                          ⚡ Auto-Generate
+                        </Button>
+                        <Button type="button" variant="outline" size="sm" onClick={addVariant} className="gap-1">
+                          <Plus className="w-3 h-3" /> Add Variant
+                        </Button>
+                      </div>
+                    </div>
+
+                    {variantsLoading ? (
+                      <p className="text-center text-muted-foreground py-8">Loading variants...</p>
+                    ) : variants.length === 0 ? (
+                      <div className="text-center py-8 border-2 border-dashed border-border rounded-xl">
+                        <p className="text-muted-foreground text-sm">No variants yet.</p>
+                        <p className="text-xs text-muted-foreground mt-1">Add sizes/colors in Attributes tab, then click "Auto-Generate" to create all combinations.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-[1fr_1fr_80px_80px_80px_40px] gap-2 px-2 text-xs font-medium text-muted-foreground">
+                          <span>Size</span><span>Color</span><span>SKU</span><span>Price ±</span><span>Stock</span><span></span>
+                        </div>
+                        {variants.map((v, i) => (
+                          <div key={i} className={`grid grid-cols-[1fr_1fr_80px_80px_80px_40px] gap-2 items-center p-2 rounded-lg border transition-all ${v.is_active ? "border-border bg-secondary/10" : "border-border/40 bg-muted/20 opacity-60"}`}>
+                            <Input value={v.size || ""} onChange={(e) => updateVariant(i, "size", e.target.value)} placeholder="Size" className="h-8 text-sm" />
+                            <Input value={v.color || ""} onChange={(e) => updateVariant(i, "color", e.target.value)} placeholder="Color" className="h-8 text-sm" />
+                            <Input value={v.sku || ""} onChange={(e) => updateVariant(i, "sku", e.target.value)} placeholder="SKU" className="h-8 text-xs" />
+                            <Input type="number" value={v.price_override ?? ""} onChange={(e) => updateVariant(i, "price_override", e.target.value ? +e.target.value : null)} placeholder="—" className="h-8 text-sm" />
+                            <Input type="number" value={v.stock_quantity} onChange={(e) => updateVariant(i, "stock_quantity", +e.target.value)} className="h-8 text-sm" />
+                            <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeVariant(i)}>
+                              <X className="w-3.5 h-3.5 text-destructive" />
+                            </Button>
+                          </div>
+                        ))}
+
+                        <div className="flex items-center justify-between pt-2">
+                          <p className="text-xs text-muted-foreground">
+                            Total stock: <span className="font-bold text-foreground">{variants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0)}</span> units across {variants.length} variants
+                          </p>
+                          <Button type="button" size="sm" onClick={saveVariants}>Save Variants</Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </TabsContent>
 
