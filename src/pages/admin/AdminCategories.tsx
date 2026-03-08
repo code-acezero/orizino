@@ -33,7 +33,7 @@ const AdminCategories = () => {
   const getChildren = (parentId: string) => categories.filter((c) => c.parent_id === parentId);
 
   const saveMutation = useMutation({
-    mutationFn: async (cat: Record<string, any>) => {
+    mutationFn: async (cat: any) => {
       const slug = cat.slug || cat.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
       const payload = { ...cat, slug };
       delete payload.children;

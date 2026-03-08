@@ -43,7 +43,7 @@ const AdminProducts = () => {
   const getChildren = (parentId: string) => categories.filter((c) => c.parent_id === parentId);
 
   const saveMutation = useMutation({
-    mutationFn: async (product: Record<string, any>) => {
+    mutationFn: async (product: any) => {
       const slug = product.slug || product.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
       const payload = { ...product, slug };
       delete payload.categories;
