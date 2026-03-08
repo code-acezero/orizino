@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
 import { ALL_CURRENCIES, type CurrencyConfig } from "@/contexts/CurrencyContext";
-import { DollarSign, Globe, Check } from "lucide-react";
+import { DollarSign, Globe, Check, RefreshCw, Clock, Zap } from "lucide-react";
 
 const themes = [
   { id: "default", label: "Cyber Emerald", color: "160 84% 45%" },
@@ -117,6 +117,25 @@ const AdminSettings = () => {
       toast.success("Currency settings saved");
     },
     onError: (e) => toast.error(e.message),
+  });
+
+  const fetchRatesMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("fetch-exchange-rates");
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Failed to fetch rates");
+      return data;
+    },
+    onSuccess: (data) => {
+      setCurrencyConfig((prev) => ({
+        ...prev,
+        exchange_rates: data.rates,
+      }));
+      qc.invalidateQueries({ queryKey: ["admin-settings"] });
+      qc.invalidateQueries({ queryKey: ["currency-config"] });
+      toast.success("Exchange rates updated from live API");
+    },
+    onError: (e) => toast.error(`Failed to fetch rates: ${e.message}`),
   });
 
   const toggleCurrency = (code: string) => {
@@ -279,6 +298,36 @@ const AdminSettings = () => {
                     </button>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Live Exchange Rates */}
+            <Card className="glass border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Zap className="w-5 h-5 text-primary" /> Live Exchange Rates</CardTitle>
+                <CardDescription>
+                  Fetch live rates from open.er-api.com (free, no API key). Rates are relative to {currencyConfig.default_currency}.
+                  {(currencyConfig as any).rates_last_updated && (
+                    <span className="flex items-center gap-1 mt-1 text-primary">
+                      <Clock className="w-3 h-3" />
+                      Last updated: {new Date((currencyConfig as any).rates_last_updated).toLocaleString()}
+                    </span>
+                  )}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => fetchRatesMutation.mutate()}
+                  disabled={fetchRatesMutation.isPending || currencyConfig.enabled_currencies.length <= 1}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${fetchRatesMutation.isPending ? "animate-spin" : ""}`} />
+                  {fetchRatesMutation.isPending ? "Fetching live rates..." : "Fetch Live Rates"}
+                </Button>
+                {currencyConfig.enabled_currencies.length <= 1 && (
+                  <p className="text-xs text-muted-foreground mt-2">Enable at least 2 currencies to fetch exchange rates.</p>
+                )}
               </CardContent>
             </Card>
 
