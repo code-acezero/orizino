@@ -219,6 +219,49 @@ const AdminHome = () => {
   const [layoutConfig, setLayoutConfig] = useState<LayoutConfig>({ ...defaultLayoutConfig });
   const [sectionOrder, setSectionOrder] = useState(defaultSectionOrder);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [selectedTheme, setSelectedTheme] = useState("default");
+  const [selectedMode, setSelectedMode] = useState("dark");
+
+  // Fetch current theme/mode
+  const { data: themeSettings } = useQuery({
+    queryKey: ["admin-theme-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("site_settings").select("*").in("key", ["site_theme", "site_mode"]);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  useEffect(() => {
+    if (themeSettings) {
+      themeSettings.forEach((s) => {
+        const val = typeof s.value === "object" && s.value !== null ? (s.value as any).value ?? s.value : s.value;
+        if (s.key === "site_theme") setSelectedTheme(String(val || "default"));
+        if (s.key === "site_mode") setSelectedMode(String(val || "dark"));
+      });
+    }
+  }, [themeSettings]);
+
+  const saveTheme = useMutation({
+    mutationFn: async () => {
+      for (const [key, value] of [["site_theme", selectedTheme], ["site_mode", selectedMode]] as const) {
+        const existing = themeSettings?.find((s) => s.key === key);
+        const jsonValue = { value } as any;
+        if (existing) {
+          await supabase.from("site_settings").update({ value: jsonValue }).eq("id", existing.id);
+        } else {
+          await supabase.from("site_settings").insert({ key, value: jsonValue });
+        }
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-theme-settings"] });
+      qc.invalidateQueries({ queryKey: ["site-settings"] });
+      qc.invalidateQueries({ queryKey: ["admin-settings"] });
+      toast.success("Theme applied successfully");
+    },
+    onError: (e) => toast.error(e.message),
+  });
 
   useEffect(() => {
     if (settingsRow?.value) {
