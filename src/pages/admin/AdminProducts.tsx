@@ -791,6 +791,7 @@ const AdminProducts = () => {
                           </p>
                           <Button type="button" size="sm" onClick={saveVariants}>Save Variants</Button>
                         </div>
+                        </div>
                       </div>
                     )}
                   </>
