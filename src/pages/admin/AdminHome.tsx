@@ -442,6 +442,20 @@ const AdminHome = () => {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-home-products"] }); toast.success("Updated"); },
   });
 
+  const bulkToggleCategoriesFeatured = async (featured: boolean) => {
+    const filtered = localCategories.filter(cat => !featCatSearch || cat.name.toLowerCase().includes(featCatSearch.toLowerCase()));
+    for (const cat of filtered) {
+      await toggleCatFeatured.mutateAsync({ id: cat.id, is_featured: featured });
+    }
+  };
+
+  const bulkToggleProductsFeatured = async (featured: boolean) => {
+    const filtered = localProducts.filter(prod => !featProdSearch || prod.name.toLowerCase().includes(featProdSearch.toLowerCase()));
+    for (const prod of filtered) {
+      await toggleProdFeatured.mutateAsync({ id: prod.id, is_featured: featured });
+    }
+  };
+
   const getCatName = (id: string) => categories.find((c) => c.id === id)?.name || "Unknown";
   const availableCategories = categories.filter((c) => !catSections.some((s) => s.category_id === c.id));
 
