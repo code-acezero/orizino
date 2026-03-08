@@ -562,7 +562,7 @@ const AdminSettings = () => {
             </Button>
           </div>
         </TabsContent>
-      </Tabs>
+
         {/* ── Product Page Layout ── */}
         <TabsContent value="product-page">
           <div className="space-y-6 max-w-3xl">
