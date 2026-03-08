@@ -159,33 +159,33 @@ const ParallaxSlider: React.FC<ParallaxSliderProps> = ({ slides = defaultSlides 
         </motion.div>
       </AnimatePresence>
 
-      {/* Navigation arrows */}
-      <button
-        onClick={prev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 glass rounded-full p-3 text-foreground hover:text-primary transition-colors z-10"
-      >
-        <ChevronLeft className="w-6 h-6" />
-      </button>
-      <button
-        onClick={next}
-        className="absolute right-4 top-1/2 -translate-y-1/2 glass rounded-full p-3 text-foreground hover:text-primary transition-colors z-10"
-      >
-        <ChevronRight className="w-6 h-6" />
-      </button>
-
-      {/* Dots */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-        {slides.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => goTo(i)}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              i === current
-                ? "w-8 bg-primary glow-primary"
-                : "w-2 bg-muted-foreground/40 hover:bg-muted-foreground/60"
-            }`}
-          />
-        ))}
+      {/* Bottom controls: arrows + dots */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 z-10">
+        <button
+          onClick={prev}
+          className="glass rounded-full p-2 text-foreground hover:text-primary transition-colors"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <div className="flex gap-2">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                i === current
+                  ? "w-8 bg-primary glow-primary"
+                  : "w-2 bg-muted-foreground/40 hover:bg-muted-foreground/60"
+              }`}
+            />
+          ))}
+        </div>
+        <button
+          onClick={next}
+          className="glass rounded-full p-2 text-foreground hover:text-primary transition-colors"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
       </div>
     </div>
   );
