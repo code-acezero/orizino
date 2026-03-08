@@ -341,6 +341,16 @@ const ProductDetailPage: React.FC = () => {
                       onColorChange={setSelectedColor}
                       layout="editorial"
                     />
+                   )}
+
+                  {hasVariants && product && (
+                    <VariantComparison
+                      productId={product.id}
+                      basePrice={product.price}
+                      compareAtPrice={product.compare_at_price}
+                      productName={product.name}
+                      productThumbnail={product.thumbnail}
+                    />
                   )}
 
                   <ProductActions
