@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { trackClick } from "@/hooks/use-analytics";
 import heroImg from "@/assets/hero-bg.jpg";
 import fashionImg from "@/assets/slide-fashion.jpg";
 import electronicsImg from "@/assets/slide-electronics.jpg";
