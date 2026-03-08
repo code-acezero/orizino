@@ -639,7 +639,7 @@ const AdminAnnouncements = () => {
                             </div>
                           </CardContent>
                         </Card>
-                      </motion.div>
+                      </div>
                     );
                   })}
                 </AnimatePresence>
