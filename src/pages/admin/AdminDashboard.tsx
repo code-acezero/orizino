@@ -179,6 +179,38 @@ const AdminDashboard = () => {
       .map((s) => ({ name: statusConfig[s]?.label ?? s, value: stats.statusBreakdown[s] }));
   }, [stats?.statusBreakdown]);
 
+  /* ── Sales funnel data ── */
+  const { data: funnelData } = useQuery({
+    queryKey: ["admin-sales-funnel"],
+    queryFn: async () => {
+      const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
+
+      const [visitorsRes, cartRes, checkoutsRes, completedRes] = await Promise.all([
+        // Unique sessions visiting the site
+        supabase.from("page_analytics").select("session_id").eq("event_type", "page_view").gte("created_at", thirtyDaysAgo),
+        // Unique users who added to cart
+        supabase.from("cart_items").select("user_id").gte("created_at", thirtyDaysAgo),
+        // All orders (checkout completed)
+        supabase.from("orders").select("id, status").gte("created_at", thirtyDaysAgo),
+        // Delivered orders
+        supabase.from("orders").select("id").eq("status", "delivered").gte("created_at", thirtyDaysAgo),
+      ]);
+
+      const uniqueVisitors = new Set((visitorsRes.data ?? []).map((r) => r.session_id)).size || 1;
+      const uniqueCartUsers = new Set((cartRes.data ?? []).map((r) => r.user_id)).size;
+      const checkouts = checkoutsRes.data?.length ?? 0;
+      const completed = completedRes.data?.length ?? 0;
+
+      return [
+        { name: "Visitors", value: uniqueVisitors, fill: "hsl(var(--primary))" },
+        { name: "Cart Adds", value: uniqueCartUsers, fill: "hsl(210, 80%, 55%)" },
+        { name: "Checkouts", value: checkouts, fill: "hsl(270, 70%, 55%)" },
+        { name: "Completed", value: completed, fill: "hsl(45, 90%, 55%)" },
+      ];
+    },
+    staleTime: 60_000,
+  });
+
   /* ── Quick actions ── */
   const quickActions = [
     { label: "Add Product", icon: Package, path: "/admin/products", color: "text-primary" },
