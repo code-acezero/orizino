@@ -264,7 +264,23 @@ const AdminHome = () => {
     onError: (e) => toast.error(e.message),
   });
 
-  const addSection = () => setCatSections([...catSections, { category_id: "", sort_order: catSections.length, product_count: 8 }]);
+  const saveLayout = useMutation({
+    mutationFn: async () => {
+      const jsonValue = { value: layoutConfig } as any;
+      if (layoutRow) {
+        await supabase.from("site_settings").update({ value: jsonValue }).eq("id", layoutRow.id);
+      } else {
+        await supabase.from("site_settings").insert({ key: "home_layout_config", value: jsonValue });
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-home-layout"] });
+      qc.invalidateQueries({ queryKey: ["home-layout-config"] });
+      toast.success("Layout settings saved");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   const removeSection = (index: number) => setCatSections(catSections.filter((_, i) => i !== index));
   const updateSection = (index: number, field: string, value: any) => {
     const updated = [...catSections];
