@@ -357,9 +357,9 @@ const ProductDetailPage: React.FC = () => {
           <div className="grid md:grid-cols-2 gap-6 mb-6">
             <ReviewForm productId={product.id} />
           </div>
-          {reviews && reviews.length > 0 && (
+          {mergedReviews.length > 0 && (
             <div className="grid md:grid-cols-2 gap-4">
-              {reviews.map((review) => (
+              {mergedReviews.map((review) => (
                 <ReviewCard
                   key={review.id}
                   review={review}
