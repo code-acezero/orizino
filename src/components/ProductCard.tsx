@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { trackClick } from "@/hooks/use-analytics";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 export interface ProductCardProps {
   id: string;
@@ -26,6 +27,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   slug,
   className = "",
 }) => {
+  const { formatPrice } = useCurrency();
   const discount = compareAtPrice
     ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
     : 0;
@@ -88,10 +90,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <span className="text-xs text-muted-foreground ml-1">({reviewCount})</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-bold text-foreground">${price.toFixed(2)}</span>
+            <span className="font-bold text-foreground">{formatPrice(price)}</span>
             {compareAtPrice && (
               <span className="text-sm text-muted-foreground line-through">
-                ${compareAtPrice.toFixed(2)}
+                {formatPrice(compareAtPrice)}
               </span>
             )}
           </div>

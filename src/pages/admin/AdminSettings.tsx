@@ -4,10 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
+import { ALL_CURRENCIES, type CurrencyConfig } from "@/contexts/CurrencyContext";
+import { DollarSign, Globe, Check } from "lucide-react";
 
 const themes = [
   { id: "default", label: "Cyber Emerald", color: "160 84% 45%" },
@@ -25,15 +29,22 @@ const defaultSettings = {
   site_description: "Your premium online marketplace",
   logo_url: "",
   site_icon_url: "",
-  currency: "USD",
+  currency: "BDT",
   shipping_fee: "5.00",
   site_theme: "default",
   site_mode: "dark",
 };
 
+const defaultCurrencyConfig: CurrencyConfig = {
+  default_currency: "BDT",
+  enabled_currencies: ["BDT"],
+  exchange_rates: {},
+};
+
 const AdminSettings = () => {
   const qc = useQueryClient();
   const [form, setForm] = useState(defaultSettings);
+  const [currencyConfig, setCurrencyConfig] = useState<CurrencyConfig>({ ...defaultCurrencyConfig });
 
   const { data: settings } = useQuery({
     queryKey: ["admin-settings"],
@@ -51,10 +62,18 @@ const AdminSettings = () => {
         map[s.key] = typeof s.value === "object" && s.value !== null ? (s.value as any).value ?? s.value : s.value;
       });
       setForm((prev) => ({ ...prev, ...map }));
+
+      // Load currency config
+      const ccRow = settings.find((s) => s.key === "currency_config");
+      if (ccRow?.value) {
+        const val = (ccRow.value as any)?.value ?? ccRow.value;
+        if (val && typeof val === "object") {
+          setCurrencyConfig((prev) => ({ ...prev, ...val }));
+        }
+      }
     }
   }, [settings]);
 
-  // Apply site theme/mode from settings
   useEffect(() => {
     document.documentElement.classList.toggle("light", form.site_mode === "light");
     document.documentElement.className = document.documentElement.className.replace(/theme-\w+/g, "");
@@ -82,15 +101,67 @@ const AdminSettings = () => {
     onError: (e) => toast.error(e.message),
   });
 
+  const saveCurrencyConfig = useMutation({
+    mutationFn: async () => {
+      const existing = settings?.find((s) => s.key === "currency_config");
+      const jsonValue = { value: currencyConfig } as any;
+      if (existing) {
+        await supabase.from("site_settings").update({ value: jsonValue }).eq("id", existing.id);
+      } else {
+        await supabase.from("site_settings").insert({ key: "currency_config", value: jsonValue });
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-settings"] });
+      qc.invalidateQueries({ queryKey: ["currency-config"] });
+      toast.success("Currency settings saved");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const toggleCurrency = (code: string) => {
+    const enabled = currencyConfig.enabled_currencies.includes(code);
+    if (enabled && code === currencyConfig.default_currency) {
+      toast.error("Cannot disable the default currency");
+      return;
+    }
+    setCurrencyConfig((prev) => ({
+      ...prev,
+      enabled_currencies: enabled
+        ? prev.enabled_currencies.filter((c) => c !== code)
+        : [...prev.enabled_currencies, code],
+    }));
+  };
+
+  const setExchangeRate = (code: string, rate: string) => {
+    setCurrencyConfig((prev) => ({
+      ...prev,
+      exchange_rates: { ...prev.exchange_rates, [code]: parseFloat(rate) || 0 },
+    }));
+  };
+
+  const setDefaultCurrency = (code: string) => {
+    setCurrencyConfig((prev) => ({
+      ...prev,
+      default_currency: code,
+      enabled_currencies: prev.enabled_currencies.includes(code)
+        ? prev.enabled_currencies
+        : [...prev.enabled_currencies, code],
+    }));
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-display font-bold">Site Settings</h1>
 
-      <Tabs defaultValue="general" className="max-w-2xl">
+      <Tabs defaultValue="general" className="max-w-3xl">
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
           <TabsTrigger value="theme">Site Theme</TabsTrigger>
+          <TabsTrigger value="currency" className="flex items-center gap-1">
+            <DollarSign className="w-3.5 h-3.5" /> Currency
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="general">
@@ -99,9 +170,9 @@ const AdminSettings = () => {
             <CardContent className="space-y-4">
               <div><Label>Site Name</Label><Input value={form.site_name} onChange={(e) => setForm({ ...form, site_name: e.target.value })} /></div>
               <div><Label>Description</Label><Input value={form.site_description} onChange={(e) => setForm({ ...form, site_description: e.target.value })} /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><Label>Currency</Label><Input value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} /></div>
-                <div><Label>Default Shipping Fee</Label><Input type="number" value={form.shipping_fee} onChange={(e) => setForm({ ...form, shipping_fee: e.target.value })} /></div>
+              <div>
+                <Label>Default Shipping Fee</Label>
+                <Input type="number" value={form.shipping_fee} onChange={(e) => setForm({ ...form, shipping_fee: e.target.value })} />
               </div>
               <Button className="w-full" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? "Saving..." : "Save Settings"}
@@ -134,8 +205,6 @@ const AdminSettings = () => {
             <CardHeader><CardTitle>Site-wide Theme</CardTitle></CardHeader>
             <CardContent className="space-y-6">
               <p className="text-sm text-muted-foreground">This theme applies to the entire site (excluding category pages which use their own accent colors).</p>
-
-              {/* Mode */}
               <div>
                 <Label className="mb-2 block">Mode</Label>
                 <div className="flex gap-2">
@@ -152,8 +221,6 @@ const AdminSettings = () => {
                   ))}
                 </div>
               </div>
-
-              {/* Color Theme */}
               <div>
                 <Label className="mb-2 block">Color Theme</Label>
                 <div className="grid grid-cols-2 gap-2">
@@ -171,12 +238,110 @@ const AdminSettings = () => {
                   ))}
                 </div>
               </div>
-
               <Button className="w-full" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? "Saving..." : "Save Theme"}
               </Button>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ── Currency Tab ── */}
+        <TabsContent value="currency">
+          <div className="space-y-6">
+            {/* Default Currency */}
+            <Card className="glass">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Globe className="w-5 h-5 text-primary" /> Default Currency</CardTitle>
+                <CardDescription>
+                  All product prices are stored in this currency. Other currencies are converted using the exchange rates below.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                  {ALL_CURRENCIES.slice(0, 12).map((c) => (
+                    <button
+                      key={c.code}
+                      onClick={() => setDefaultCurrency(c.code)}
+                      className={`flex items-center gap-2 p-3 rounded-xl border text-left transition-all ${
+                        currencyConfig.default_currency === c.code
+                          ? "border-primary bg-primary/10"
+                          : "border-border/50 hover:border-primary/30"
+                      }`}
+                    >
+                      <span className="text-lg font-display">{c.symbol}</span>
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium">{c.code}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{c.name}</p>
+                      </div>
+                      {currencyConfig.default_currency === c.code && (
+                        <Check className="w-4 h-4 text-primary ml-auto shrink-0" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Enabled Currencies */}
+            <Card className="glass">
+              <CardHeader>
+                <CardTitle>Enabled Currencies</CardTitle>
+                <CardDescription>
+                  Toggle currencies on/off. Enabled currencies will automatically show for users from matching countries.
+                  {currencyConfig.enabled_currencies.length} of {ALL_CURRENCIES.length} enabled.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {ALL_CURRENCIES.map((c) => {
+                  const isEnabled = currencyConfig.enabled_currencies.includes(c.code);
+                  const isDefault = currencyConfig.default_currency === c.code;
+                  return (
+                    <div key={c.code} className={`flex items-center gap-4 p-3 rounded-xl border transition-all ${isEnabled ? "border-primary/20 bg-primary/5" : "border-border/30"}`}>
+                      <Switch
+                        checked={isEnabled}
+                        onCheckedChange={() => toggleCurrency(c.code)}
+                        disabled={isDefault}
+                      />
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <span className="text-lg font-display w-8">{c.symbol}</span>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">{c.code}</span>
+                            <span className="text-xs text-muted-foreground">{c.name}</span>
+                            {isDefault && <Badge variant="outline" className="text-[10px]">Default</Badge>}
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">
+                            Countries: {c.countries.join(", ")}
+                          </p>
+                        </div>
+                      </div>
+                      {/* Exchange rate (only for non-default enabled currencies) */}
+                      {isEnabled && !isDefault && (
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Label className="text-xs text-muted-foreground whitespace-nowrap">
+                            1 {currencyConfig.default_currency} =
+                          </Label>
+                          <Input
+                            type="number"
+                            step="0.0001"
+                            className="w-28 h-8 text-sm"
+                            value={currencyConfig.exchange_rates[c.code] || ""}
+                            onChange={(e) => setExchangeRate(c.code, e.target.value)}
+                            placeholder="Rate"
+                          />
+                          <span className="text-xs text-muted-foreground">{c.code}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+
+            <Button className="w-full" onClick={() => saveCurrencyConfig.mutate()} disabled={saveCurrencyConfig.isPending}>
+              {saveCurrencyConfig.isPending ? "Saving..." : "Save Currency Settings"}
+            </Button>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

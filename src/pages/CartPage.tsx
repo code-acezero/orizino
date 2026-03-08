@@ -5,11 +5,13 @@ import { motion } from "framer-motion";
 import { Trash2, Minus, Plus, ShoppingBag, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const CartPage: React.FC = () => {
   const { user } = useAuth();
+  const { formatPrice } = useCurrency();
   const queryClient = useQueryClient();
 
   const { data: cartItems, isLoading } = useQuery({
@@ -102,8 +104,8 @@ const CartPage: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <Link to={`/product/${product.slug}`} className="font-medium text-foreground hover:text-primary transition-colors line-clamp-1">{product.name}</Link>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="font-bold text-foreground">${product.price.toFixed(2)}</span>
-                        {product.compare_at_price && <span className="text-sm text-muted-foreground line-through">${product.compare_at_price.toFixed(2)}</span>}
+                        <span className="font-bold text-foreground">{formatPrice(product.price)}</span>
+                        {product.compare_at_price && <span className="text-sm text-muted-foreground line-through">{formatPrice(product.compare_at_price)}</span>}
                       </div>
                       <div className="flex items-center justify-between mt-3">
                         <div className="flex items-center gap-1 glass rounded-full px-1 py-0.5">
@@ -125,12 +127,12 @@ const CartPage: React.FC = () => {
             <div className="glass-strong rounded-3xl p-6 h-fit sticky top-24 space-y-4">
               <h3 className="font-display font-semibold text-foreground text-lg">Order Summary</h3>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="text-foreground">${subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span className="text-foreground">{shippingFee === 0 ? "Free" : `$${shippingFee.toFixed(2)}`}</span></div>
-                {shippingFee > 0 && <p className="text-xs text-primary">Free shipping on orders over $50</p>}
+                <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="text-foreground">{formatPrice(subtotal)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span className="text-foreground">{shippingFee === 0 ? "Free" : formatPrice(shippingFee)}</span></div>
+                {shippingFee > 0 && <p className="text-xs text-primary">Free shipping on orders over {formatPrice(50)}</p>}
               </div>
               <div className="border-t border-border pt-4 flex justify-between font-bold text-foreground">
-                <span>Total</span><span>${total.toFixed(2)}</span>
+                <span>Total</span><span>{formatPrice(total)}</span>
               </div>
               <Link to="/checkout" className="block">
                 <motion.span whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}

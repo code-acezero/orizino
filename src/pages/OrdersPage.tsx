@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Package, ChevronRight, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -18,6 +19,7 @@ const statusColors: Record<string, string> = {
 
 const OrdersPage: React.FC = () => {
   const { user } = useAuth();
+  const { formatPrice } = useCurrency();
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ["orders", user?.id],
@@ -71,7 +73,7 @@ const OrdersPage: React.FC = () => {
                       <img src={item.product_image || "/placeholder.svg"} alt="" className="w-10 h-10 rounded-xl object-cover" />
                       <span className="text-sm text-foreground flex-1 line-clamp-1">{item.product_name}</span>
                       <span className="text-xs text-muted-foreground">x{item.quantity}</span>
-                      <span className="text-sm font-medium text-foreground">${item.total_price.toFixed(2)}</span>
+                      <span className="text-sm font-medium text-foreground">{formatPrice(item.total_price)}</span>
                     </div>
                   ))}
                   {(order.order_items as any[])?.length > 3 && (
@@ -80,7 +82,7 @@ const OrdersPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center justify-between border-t border-border pt-3">
-                  <span className="font-bold text-foreground">Total: ${order.total.toFixed(2)}</span>
+                  <span className="font-bold text-foreground">Total: {formatPrice(order.total)}</span>
                   {order.tracking_number && (
                     <span className="text-xs text-primary">Tracking: {order.tracking_number}</span>
                   )}

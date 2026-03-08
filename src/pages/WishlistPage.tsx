@@ -5,12 +5,14 @@ import { motion } from "framer-motion";
 import { Heart, Trash2, ShoppingCart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { toast } from "@/lib/app-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const WishlistPage: React.FC = () => {
   const { user } = useAuth();
+  const { formatPrice } = useCurrency();
   
   const queryClient = useQueryClient();
 
@@ -86,8 +88,8 @@ const WishlistPage: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <Link to={`/product/${product.slug}`} className="font-medium text-foreground hover:text-primary line-clamp-1">{product.name}</Link>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="font-bold text-foreground">${product.price.toFixed(2)}</span>
-                      {product.compare_at_price && <span className="text-sm text-muted-foreground line-through">${product.compare_at_price.toFixed(2)}</span>}
+                      <span className="font-bold text-foreground">{formatPrice(product.price)}</span>
+                      {product.compare_at_price && <span className="text-sm text-muted-foreground line-through">{formatPrice(product.compare_at_price)}</span>}
                     </div>
                   </div>
                   <div className="flex gap-2">

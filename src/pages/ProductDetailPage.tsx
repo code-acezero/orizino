@@ -6,12 +6,14 @@ import { Star, Heart, ShoppingCart, Minus, Plus, ChevronLeft, ChevronRight, Chec
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/lib/app-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { user } = useAuth();
+  const { formatPrice } = useCurrency();
   
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -183,9 +185,9 @@ const ProductDetailPage: React.FC = () => {
 
             {/* Price */}
             <div className="flex items-baseline gap-3">
-              <span className="text-4xl font-bold text-foreground">${product.price.toFixed(2)}</span>
+              <span className="text-4xl font-bold text-foreground">{formatPrice(product.price)}</span>
               {product.compare_at_price && (
-                <span className="text-xl text-muted-foreground line-through">${product.compare_at_price.toFixed(2)}</span>
+                <span className="text-xl text-muted-foreground line-through">{formatPrice(product.compare_at_price)}</span>
               )}
             </div>
 
