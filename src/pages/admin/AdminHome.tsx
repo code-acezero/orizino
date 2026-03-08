@@ -860,9 +860,13 @@ const AdminHome = () => {
             <CardContent className="space-y-3">
               {catSections.length === 0 && <p className="text-center text-muted-foreground py-8">No category sections added yet.</p>}
               {catSections.map((section, index) => (
-                <div key={index} {...getCatDragProps(index)} className={`flex items-center gap-3 p-3 rounded-xl border border-border bg-secondary/20 cursor-grab active:cursor-grabbing transition-colors ${catOverIdx === index && catDragIdx !== index ? "border-primary bg-primary/10" : ""}`}>
-                  <GripVertical className="w-4 h-4 text-muted-foreground shrink-0" />
-                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div key={index} {...getCatDragProps(index)} className={`rounded-xl border border-border bg-secondary/20 cursor-grab active:cursor-grabbing transition-colors p-4 ${catOverIdx === index && catDragIdx !== index ? "border-primary bg-primary/10" : ""}`}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <GripVertical className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <span className="text-sm font-medium text-foreground flex-1">{section.category_id ? getCatName(section.category_id) : "Select a category"}</span>
+                    <Button size="icon" variant="ghost" onClick={() => removeSection(index)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                       <Label className="text-xs">Category</Label>
                       <Select value={section.category_id} onValueChange={(v) => updateSection(index, "category_id", v)}>
@@ -882,7 +886,6 @@ const AdminHome = () => {
                       <Input type="number" value={section.product_count} onChange={(e) => updateSection(index, "product_count", Number(e.target.value))} min={1} max={20} />
                     </div>
                   </div>
-                  <Button size="icon" variant="ghost" onClick={() => removeSection(index)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                 </div>
               ))}
               {catSections.length > 0 && (
