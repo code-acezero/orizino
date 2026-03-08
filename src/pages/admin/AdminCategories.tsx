@@ -449,7 +449,33 @@ const AdminCategories = () => {
                             <TableCell className="text-right tabular-nums">{row.productCount}</TableCell>
                             <TableCell className="text-right tabular-nums">{row.orderCount}</TableCell>
                             <TableCell className="text-right tabular-nums font-medium">{formatPrice(row.revenue)}</TableCell>
-                          </TableRow>
+                            <TableCell className="text-right p-1">
+                              {(() => {
+                                const data = sparklineData.get(row.id) || [];
+                                const hasData = data.some((d) => d.rev > 0);
+                                if (!hasData) return <span className="text-xs text-muted-foreground">—</span>;
+                                return (
+                                  <div className="w-[100px] h-[28px] ml-auto">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                      <LineChart data={data}>
+                                        <Line
+                                          type="monotone"
+                                          dataKey="rev"
+                                          stroke={CHART_COLORS[i % CHART_COLORS.length]}
+                                          strokeWidth={1.5}
+                                          dot={false}
+                                        />
+                                        <RechartsTooltip
+                                          contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 6, fontSize: 10, padding: "2px 6px" }}
+                                          formatter={(v: number) => [formatPrice(v), ""]}
+                                          labelFormatter={(l) => l}
+                                        />
+                                      </LineChart>
+                                    </ResponsiveContainer>
+                                  </div>
+                                );
+                              })()}
+                            </TableCell>
                         ))
                       )}
                     </TableBody>
