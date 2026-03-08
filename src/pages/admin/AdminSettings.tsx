@@ -119,6 +119,25 @@ const AdminSettings = () => {
     onError: (e) => toast.error(e.message),
   });
 
+  const fetchRatesMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("fetch-exchange-rates");
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Failed to fetch rates");
+      return data;
+    },
+    onSuccess: (data) => {
+      setCurrencyConfig((prev) => ({
+        ...prev,
+        exchange_rates: data.rates,
+      }));
+      qc.invalidateQueries({ queryKey: ["admin-settings"] });
+      qc.invalidateQueries({ queryKey: ["currency-config"] });
+      toast.success("Exchange rates updated from live API");
+    },
+    onError: (e) => toast.error(`Failed to fetch rates: ${e.message}`),
+  });
+
   const toggleCurrency = (code: string) => {
     const enabled = currencyConfig.enabled_currencies.includes(code);
     if (enabled && code === currencyConfig.default_currency) {
