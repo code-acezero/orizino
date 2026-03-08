@@ -13,6 +13,7 @@ interface ReviewCardProps {
     title: string | null;
     comment: string | null;
     created_at: string;
+    is_approved?: boolean;
   };
   isOwn: boolean;
   productId: string;
@@ -104,7 +105,12 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, isOwn, productId }) => 
       {review.comment && <p className="text-muted-foreground text-sm">{review.comment}</p>}
       <div className="flex items-center gap-2 mt-3">
         <p className="text-xs text-muted-foreground/60">{new Date(review.created_at).toLocaleDateString()}</p>
-        {isOwn && <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Your review</span>}
+        {isOwn && review.is_approved === false && (
+          <span className="text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full">Pending approval</span>
+        )}
+        {isOwn && review.is_approved !== false && (
+          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Your review</span>
+        )}
       </div>
     </div>
   );
