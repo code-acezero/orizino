@@ -1,61 +1,506 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, ShoppingCart, Users, DollarSign, TrendingUp, Star } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Package, ShoppingCart, Users, DollarSign, TrendingUp, TrendingDown,
+  Star, ArrowRight, Clock, CheckCircle2, XCircle, Truck, Eye,
+  BarChart3, Activity, Layers,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { format, subDays, startOfDay, isAfter } from "date-fns";
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar,
+} from "recharts";
+import { motion } from "framer-motion";
+import { useMemo } from "react";
 
+/* ── Stat card with trend indicator ── */
+const StatCard = ({
+  title, value, icon: Icon, trend, trendLabel, color = "text-primary",
+}: {
+  title: string; value: string | number; icon: any;
+  trend?: number; trendLabel?: string; color?: string;
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: 12 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.35 }}
+  >
+    <Card className="glass group hover:border-primary/30 transition-colors">
+      <CardContent className="pt-5 pb-4 px-5">
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</p>
+            <p className="text-2xl font-display font-bold">{value}</p>
+            {trend !== undefined && (
+              <div className={`flex items-center gap-1 text-xs ${trend >= 0 ? "text-primary" : "text-destructive"}`}>
+                {trend >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                <span>{trend >= 0 ? "+" : ""}{trend}%</span>
+                {trendLabel && <span className="text-muted-foreground">{trendLabel}</span>}
+              </div>
+            )}
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-secondary/60 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+            <Icon className={`w-5 h-5 ${color}`} />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </motion.div>
+);
+
+/* ── Order status helpers ── */
+const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
+  pending:    { label: "Pending",    color: "bg-amber-500/10 text-amber-400 border-amber-500/20",      icon: Clock },
+  confirmed:  { label: "Confirmed",  color: "bg-blue-500/10 text-blue-400 border-blue-500/20",         icon: CheckCircle2 },
+  shipped:    { label: "Shipped",    color: "bg-violet-500/10 text-violet-400 border-violet-500/20",    icon: Truck },
+  delivered:  { label: "Delivered",  color: "bg-primary/10 text-primary border-primary/20",             icon: CheckCircle2 },
+  cancelled:  { label: "Cancelled",  color: "bg-destructive/10 text-destructive border-destructive/20", icon: XCircle },
+};
+
+const PIE_COLORS = [
+  "hsl(45, 90%, 55%)",   // pending → amber
+  "hsl(210, 80%, 55%)",  // confirmed → blue
+  "hsl(270, 70%, 55%)",  // shipped → violet
+  "hsl(160, 84%, 45%)",  // delivered → primary
+  "hsl(0, 72%, 51%)",    // cancelled → destructive
+];
+
+/* ── Main Component ── */
 const AdminDashboard = () => {
-  const { data: stats } = useQuery({
-    queryKey: ["admin-stats"],
+  const navigate = useNavigate();
+
+  /* ── Fetch core stats ── */
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ["admin-dashboard-stats"],
     queryFn: async () => {
-      const [products, orders, profiles, reviews] = await Promise.all([
+      const now = new Date();
+      const sevenDaysAgo = subDays(now, 7).toISOString();
+      const fourteenDaysAgo = subDays(now, 14).toISOString();
+
+      const [products, orders, profiles, reviews, recentOrders, previousOrders] = await Promise.all([
         supabase.from("products").select("id", { count: "exact", head: true }),
-        supabase.from("orders").select("id, total, status", { count: "exact" }),
+        supabase.from("orders").select("id, total, status, created_at"),
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("reviews").select("id", { count: "exact", head: true }),
+        supabase.from("orders").select("id, total, created_at").gte("created_at", sevenDaysAgo),
+        supabase.from("orders").select("id, total, created_at").gte("created_at", fourteenDaysAgo).lt("created_at", sevenDaysAgo),
       ]);
 
-      const totalRevenue = orders.data?.reduce((sum, o) => sum + Number(o.total), 0) ?? 0;
-      const pendingOrders = orders.data?.filter((o) => o.status === "pending").length ?? 0;
+      const allOrders = orders.data ?? [];
+      const totalRevenue = allOrders.reduce((sum, o) => sum + Number(o.total), 0);
+      const pendingOrders = allOrders.filter((o) => o.status === "pending").length;
+
+      const recentRevenue = (recentOrders.data ?? []).reduce((s, o) => s + Number(o.total), 0);
+      const prevRevenue = (previousOrders.data ?? []).reduce((s, o) => s + Number(o.total), 0);
+      const revenueTrend = prevRevenue > 0 ? Math.round(((recentRevenue - prevRevenue) / prevRevenue) * 100) : 0;
+
+      const recentOrderCount = recentOrders.data?.length ?? 0;
+      const prevOrderCount = previousOrders.data?.length ?? 0;
+      const orderTrend = prevOrderCount > 0 ? Math.round(((recentOrderCount - prevOrderCount) / prevOrderCount) * 100) : 0;
+
+      // Status breakdown
+      const statusBreakdown: Record<string, number> = {};
+      allOrders.forEach((o) => {
+        statusBreakdown[o.status] = (statusBreakdown[o.status] || 0) + 1;
+      });
 
       return {
         products: products.count ?? 0,
-        orders: orders.count ?? 0,
+        orders: allOrders.length,
         users: profiles.count ?? 0,
         reviews: reviews.count ?? 0,
         revenue: totalRevenue,
         pendingOrders,
+        revenueTrend,
+        orderTrend,
+        statusBreakdown,
+        allOrders,
       };
     },
+    staleTime: 30_000,
   });
 
-  const cards = [
-    { title: "Total Revenue", value: `$${(stats?.revenue ?? 0).toFixed(2)}`, icon: DollarSign, color: "text-primary" },
-    { title: "Orders", value: stats?.orders ?? 0, icon: ShoppingCart, color: "text-accent" },
-    { title: "Products", value: stats?.products ?? 0, icon: Package, color: "text-primary" },
-    { title: "Users", value: stats?.users ?? 0, icon: Users, color: "text-accent" },
-    { title: "Pending Orders", value: stats?.pendingOrders ?? 0, icon: TrendingUp, color: "text-destructive" },
-    { title: "Reviews", value: stats?.reviews ?? 0, icon: Star, color: "text-primary" },
+  /* ── Fetch recent orders for the table ── */
+  const { data: latestOrders } = useQuery({
+    queryKey: ["admin-latest-orders"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("orders")
+        .select("id, order_number, total, status, created_at, shipping_address")
+        .order("created_at", { ascending: false })
+        .limit(8);
+      return data ?? [];
+    },
+    staleTime: 30_000,
+  });
+
+  /* ── Fetch top products ── */
+  const { data: topProducts } = useQuery({
+    queryKey: ["admin-top-products"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("id, name, thumbnail, price, stock_quantity, avg_rating, review_count")
+        .eq("is_active", true)
+        .order("review_count", { ascending: false })
+        .limit(5);
+      return data ?? [];
+    },
+    staleTime: 60_000,
+  });
+
+  /* ── Revenue chart data (last 14 days) ── */
+  const revenueChart = useMemo(() => {
+    if (!stats?.allOrders) return [];
+    const days: Record<string, number> = {};
+    for (let i = 13; i >= 0; i--) {
+      const d = format(subDays(new Date(), i), "MMM dd");
+      days[d] = 0;
+    }
+    stats.allOrders.forEach((o) => {
+      const d = format(new Date(o.created_at), "MMM dd");
+      if (d in days) days[d] += Number(o.total);
+    });
+    return Object.entries(days).map(([date, revenue]) => ({ date, revenue: +revenue.toFixed(2) }));
+  }, [stats?.allOrders]);
+
+  /* ── Order status pie data ── */
+  const pieData = useMemo(() => {
+    if (!stats?.statusBreakdown) return [];
+    const order = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
+    return order
+      .filter((s) => (stats.statusBreakdown[s] || 0) > 0)
+      .map((s) => ({ name: statusConfig[s]?.label ?? s, value: stats.statusBreakdown[s] }));
+  }, [stats?.statusBreakdown]);
+
+  /* ── Quick actions ── */
+  const quickActions = [
+    { label: "Add Product", icon: Package, path: "/admin/products", color: "text-primary" },
+    { label: "View Orders", icon: ShoppingCart, path: "/admin/orders", color: "text-accent" },
+    { label: "Manage Users", icon: Users, path: "/admin/users", color: "text-primary" },
+    { label: "Homepage", icon: Layers, path: "/admin/home", color: "text-accent" },
   ];
 
+  const containerVariants = {
+    hidden: {},
+    show: { transition: { staggerChildren: 0.06 } },
+  };
+
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-display font-bold">Dashboard</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {cards.map((card) => (
-          <Card key={card.title} className="glass">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {card.title}
-              </CardTitle>
-              <card.icon className={`h-5 w-5 ${card.color}`} />
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="space-y-6"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-display font-bold">Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Overview of your store performance
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-xs">
+            <Activity className="w-3 h-3 mr-1" />
+            Last 7 days
+          </Badge>
+        </div>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Total Revenue"
+          value={`$${(stats?.revenue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          icon={DollarSign}
+          trend={stats?.revenueTrend}
+          trendLabel="vs last week"
+          color="text-primary"
+        />
+        <StatCard
+          title="Total Orders"
+          value={stats?.orders ?? 0}
+          icon={ShoppingCart}
+          trend={stats?.orderTrend}
+          trendLabel="vs last week"
+          color="text-accent"
+        />
+        <StatCard
+          title="Products"
+          value={stats?.products ?? 0}
+          icon={Package}
+          color="text-primary"
+        />
+        <StatCard
+          title="Customers"
+          value={stats?.users ?? 0}
+          icon={Users}
+          color="text-accent"
+        />
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Revenue Chart (2 cols) */}
+        <Card className="glass lg:col-span-2">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-primary" />
+                  Revenue (14 days)
+                </CardTitle>
+                <CardDescription>Daily revenue breakdown</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[260px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={revenueChart} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(160, 84%, 45%)" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="hsl(160, 84%, 45%)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 15%, 18%)" />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 11, fill: "hsl(215, 15%, 55%)" }}
+                    axisLine={{ stroke: "hsl(220, 15%, 18%)" }}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: "hsl(215, 15%, 55%)" }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(v) => `$${v}`}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(220, 20%, 10%)",
+                      border: "1px solid hsl(220, 15%, 18%)",
+                      borderRadius: "12px",
+                      fontSize: "12px",
+                    }}
+                    formatter={(value: number) => [`$${value.toFixed(2)}`, "Revenue"]}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="hsl(160, 84%, 45%)"
+                    strokeWidth={2}
+                    fill="url(#revenueGrad)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Order Status Pie */}
+        <Card className="glass">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Eye className="w-4 h-4 text-accent" />
+              Order Status
+            </CardTitle>
+            <CardDescription>Breakdown by status</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {pieData.length > 0 ? (
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={80}
+                      paddingAngle={4}
+                      dataKey="value"
+                      strokeWidth={0}
+                    >
+                      {pieData.map((_, i) => (
+                        <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(220, 20%, 10%)",
+                        border: "1px solid hsl(220, 15%, 18%)",
+                        borderRadius: "12px",
+                        fontSize: "12px",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-[200px] flex items-center justify-center text-sm text-muted-foreground">
+                No orders yet
+              </div>
+            )}
+            {/* Legend */}
+            <div className="flex flex-wrap gap-2 mt-2">
+              {pieData.map((entry, i) => (
+                <div key={entry.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                  {entry.name} ({entry.value})
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Bottom Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Recent Orders (2 cols) */}
+        <Card className="glass lg:col-span-2">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base">Recent Orders</CardTitle>
+                <CardDescription>{stats?.pendingOrders ?? 0} pending</CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground"
+                onClick={() => navigate("/admin/orders")}
+              >
+                View all <ArrowRight className="w-3 h-3 ml-1" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ScrollArea className="h-[320px]">
+              <div className="divide-y divide-border">
+                {(latestOrders ?? []).map((order) => {
+                  const sc = statusConfig[order.status] || statusConfig.pending;
+                  const StatusIcon = sc.icon;
+                  const address = order.shipping_address as any;
+                  return (
+                    <div
+                      key={order.id}
+                      className="flex items-center justify-between px-5 py-3 hover:bg-secondary/20 transition-colors cursor-pointer"
+                      onClick={() => navigate("/admin/orders")}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${sc.color}`}>
+                          <StatusIcon className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">#{order.order_number}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {address?.name || address?.full_name || "Customer"} · {format(new Date(order.created_at), "MMM dd, HH:mm")}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0 ml-3">
+                        <p className="text-sm font-display font-semibold">${Number(order.total).toFixed(2)}</p>
+                        <Badge variant="outline" className={`text-[10px] ${sc.color}`}>{sc.label}</Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+                {(!latestOrders || latestOrders.length === 0) && (
+                  <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">
+                    No orders yet
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        {/* Right column: Top Products + Quick Actions */}
+        <div className="space-y-4">
+          {/* Quick Actions */}
+          <Card className="glass">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-display font-bold">{card.value}</div>
+            <CardContent className="grid grid-cols-2 gap-2">
+              {quickActions.map((action) => (
+                <Button
+                  key={action.label}
+                  variant="outline"
+                  className="h-auto py-3 flex flex-col items-center gap-1.5 border-border/50 hover:border-primary/30 hover:bg-secondary/30"
+                  onClick={() => navigate(action.path)}
+                >
+                  <action.icon className={`w-4 h-4 ${action.color}`} />
+                  <span className="text-xs">{action.label}</span>
+                </Button>
+              ))}
             </CardContent>
           </Card>
-        ))}
+
+          {/* Top Products */}
+          <Card className="glass">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">Top Products</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-muted-foreground"
+                  onClick={() => navigate("/admin/products")}
+                >
+                  View all <ArrowRight className="w-3 h-3 ml-1" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(topProducts ?? []).map((product, i) => (
+                <div key={product.id} className="flex items-center gap-3">
+                  <span className="text-xs font-display font-bold text-muted-foreground w-4 text-right">
+                    {i + 1}
+                  </span>
+                  <div className="w-9 h-9 rounded-lg bg-secondary/60 overflow-hidden shrink-0">
+                    {product.thumbnail ? (
+                      <img src={product.thumbnail} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{product.name}</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>${Number(product.price).toFixed(2)}</span>
+                      {(product.avg_rating ?? 0) > 0 && (
+                        <span className="flex items-center gap-0.5">
+                          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                          {Number(product.avg_rating).toFixed(1)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] shrink-0">
+                    {product.stock_quantity} in stock
+                  </Badge>
+                </div>
+              ))}
+              {(!topProducts || topProducts.length === 0) && (
+                <p className="text-sm text-muted-foreground text-center py-4">No products yet</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
