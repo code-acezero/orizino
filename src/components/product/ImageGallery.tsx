@@ -177,16 +177,33 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
               </>
             )}
 
-            <motion.img
-              key={selected}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              src={images[selected]}
-              alt={productName}
-              className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl"
+            <div
+              ref={lightboxImgRef}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              className="touch-none"
               onClick={(e) => e.stopPropagation()}
-            />
+            >
+              <motion.img
+                key={selected}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: pinchScale }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                src={images[selected]}
+                alt={productName}
+                className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl"
+                style={{ transformOrigin: `${pinchOrigin.x}% ${pinchOrigin.y}%` }}
+                onDoubleClick={() => setPinchScale((s) => s > 1 ? 1 : 2.5)}
+              />
+            </div>
+
+            {/* Zoom level indicator */}
+            {pinchScale > 1 && (
+              <div className="absolute top-6 left-6 glass rounded-full px-3 py-1.5 text-xs text-foreground font-medium">
+                {pinchScale.toFixed(1)}x
+              </div>
+            )}
 
             {/* Lightbox thumbnails */}
             {images.length > 1 && (
