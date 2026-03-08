@@ -111,14 +111,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
             isMobile ? "cursor-default" : "cursor-zoom-in"
           } ${isMinimal ? "rounded-2xl" : isEditorial ? "rounded-none aspect-[4/3]" : "rounded-3xl aspect-square glass"}`}
           {...(!isMobile ? {
-            onMouseEnter: (e: React.MouseEvent) => {
+            onMouseEnter: () => {
               setIsZooming(true);
-              const rect = imgRef.current?.getBoundingClientRect();
-              if (rect) {
-                setRipplePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-                setShowRipple(true);
-                setTimeout(() => setShowRipple(false), 600);
-              }
             },
             onMouseLeave: () => setIsZooming(false),
             onMouseMove: handleMouseMove,
