@@ -123,40 +123,89 @@ const AdminReviews = () => {
               {selected.size} selected
             </span>
             <div className="flex gap-2 ml-auto">
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-1.5"
-                onClick={() => bulkAction.mutate({ ids: Array.from(selected), action: "approve" })}
-                disabled={bulkAction.isPending}
-              >
-                <CheckCheck className="w-4 h-4 text-primary" />
-                Approve
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-1.5"
-                onClick={() => bulkAction.mutate({ ids: Array.from(selected), action: "reject" })}
-                disabled={bulkAction.isPending}
-              >
-                <XCircle className="w-4 h-4" />
-                Reject
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-1.5 text-destructive hover:text-destructive"
-                onClick={() => {
-                  if (confirm(`Delete ${selected.size} review(s)?`)) {
-                    bulkAction.mutate({ ids: Array.from(selected), action: "delete" });
-                  }
-                }}
-                disabled={bulkAction.isPending}
-              >
-                <Trash2 className="w-4 h-4" />
-                Delete
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
+                    disabled={bulkAction.isPending}
+                  >
+                    <CheckCheck className="w-4 h-4 text-primary" />
+                    Approve
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Approve reviews?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will approve {selected.size} review{selected.size > 1 ? "s" : ""} and make them visible to customers.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => bulkAction.mutate({ ids: Array.from(selected), action: "approve" })}>
+                      Approve
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
+                    disabled={bulkAction.isPending}
+                  >
+                    <XCircle className="w-4 h-4" />
+                    Reject
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Reject reviews?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will reject {selected.size} review{selected.size > 1 ? "s" : ""} and keep them hidden from customers.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => bulkAction.mutate({ ids: Array.from(selected), action: "reject" })}>
+                      Reject
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5 text-destructive hover:text-destructive"
+                    disabled={bulkAction.isPending}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete reviews?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete {selected.size} review{selected.size > 1 ? "s" : ""}. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => bulkAction.mutate({ ids: Array.from(selected), action: "delete" })}>
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </motion.div>
         )}
