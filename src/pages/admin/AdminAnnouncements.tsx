@@ -652,8 +652,16 @@ const AdminAnnouncements = () => {
 
               {/* Right: More options + Preview */}
               <div className="space-y-4">
-                {/* Preview */}
+                {/* Mini Preview + Live Preview Button */}
                 <PopupPreview popup={editingPopup} />
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={() => setPreviewPopup({ ...editingPopup })}
+                >
+                  <Eye className="w-4 h-4 text-primary" />
+                  Preview Live
+                </Button>
 
                 {/* Trigger */}
                 <Card className="border-border/50">
