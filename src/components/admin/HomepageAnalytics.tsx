@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, CartesianGrid } from "recharts";
 import { useState, useMemo } from "react";
-import { Eye, MousePointerClick, Clock, TrendingUp, BarChart3, Target } from "lucide-react";
+import { Eye, MousePointerClick, Clock, TrendingUp, BarChart3, Target, Users } from "lucide-react";
+import { useRealtimeVisitors } from "@/hooks/use-realtime-visitors";
 
 const timeRanges = [
   { value: "24h", label: "Last 24 Hours", hours: 24 },
@@ -24,6 +25,7 @@ const sectionLabels: Record<string, string> = {
 
 const HomepageAnalytics = () => {
   const [range, setRange] = useState("7d");
+  const liveVisitors = useRealtimeVisitors("/home");
   const rangeHours = timeRanges.find((r) => r.value === range)?.hours || 168;
 
   const { data: analyticsData = [], isLoading } = useQuery({
@@ -152,6 +154,15 @@ const HomepageAnalytics = () => {
           <div>
             <h3 className="font-semibold text-foreground">Homepage Analytics</h3>
             <p className="text-xs text-muted-foreground">Track page views and section engagement metrics</p>
+          </div>
+          <div className="flex items-center gap-2 ml-4 px-3 py-1.5 rounded-full bg-secondary/50 border border-border/50">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+            </span>
+            <Users className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-sm font-semibold text-foreground">{liveVisitors}</span>
+            <span className="text-xs text-muted-foreground">live</span>
           </div>
         </div>
         <Select value={range} onValueChange={setRange}>
