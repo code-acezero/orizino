@@ -201,22 +201,32 @@ const AdminCategories = () => {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredParents.map((c) => {
+          {filteredParents.map((c, idx) => {
             const children = getChildren(c.id);
+            const isDragging = dragIndex === idx;
+            const isOver = overIndex === idx;
             return (
               <motion.div
                 key={c.id}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25 }}
+                {...(search ? {} : getDragProps(idx))}
+                className={isDragging ? "opacity-50" : isOver ? "scale-[1.02]" : ""}
+                style={{ transition: "transform 0.15s ease" }}
               >
-                <Card className={`glass group hover:border-primary/30 transition-all relative overflow-hidden ${selected.has(c.id) ? "ring-2 ring-primary/50 border-primary/40" : ""}`}>
+                <Card className={`glass group hover:border-primary/30 transition-all relative overflow-hidden ${selected.has(c.id) ? "ring-2 ring-primary/50 border-primary/40" : ""} ${isOver ? "border-primary/50" : ""}`}>
                   {/* Accent strip */}
                   <div className="absolute top-0 left-0 right-0 h-1" style={{ background: c.accent_color || "hsl(var(--primary))" }} />
 
                   <CardContent className="pt-5 pb-4 px-5">
-                    {/* Top row: checkbox + icon + name + actions */}
+                    {/* Top row: drag handle + checkbox + icon + name + actions */}
                     <div className="flex items-start gap-3">
+                      {!search && (
+                        <div className="cursor-grab active:cursor-grabbing mt-1 text-muted-foreground hover:text-foreground transition-colors">
+                          <GripVertical className="w-4 h-4" />
+                        </div>
+                      )}
                       <Checkbox
                         checked={selected.has(c.id)}
                         onCheckedChange={() => toggleSelect(c.id)}
