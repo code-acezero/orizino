@@ -145,12 +145,13 @@ const AdminProducts = () => {
   const openEdit = (product?: any) => {
     setEditing(
       product
-        ? { ...product }
+        ? { ...product, specifications: product.specifications || {} }
         : {
             name: "", slug: "", price: 0, stock_quantity: 0, description: "",
             short_description: "", is_active: true, is_featured: false,
             thumbnail: "", images: [], tags: [], category_id: null,
             video_url: "", meta_title: "", meta_description: "", meta_keywords: "",
+            specifications: { product_type: "general", sizes: [], colors: [], weight: "", weight_unit: "kg", specs: [] },
           }
     );
     setDialogOpen(true);
