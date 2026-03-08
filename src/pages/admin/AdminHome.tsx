@@ -497,12 +497,12 @@ const AdminHome = () => {
             {/* Quick Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: "Visible Sections", value: sectionOrder.filter((s) => s.visible !== false).length, total: sectionOrder.length, icon: "👁️" },
-                { label: "Active Sales", value: sales.filter((s) => s.enabled).length, total: sales.length, icon: "🏷️" },
-                { label: "Category Sections", value: catSections.length, total: categories.length, icon: "📦" },
-                { label: "Featured Products", value: localProducts.filter((p) => p.is_featured).length, total: localProducts.length, icon: "⭐" },
+                { label: "Visible Sections", value: sectionOrder.filter((s) => s.visible !== false).length, total: sectionOrder.length, icon: "👁️", tab: "section-order" },
+                { label: "Active Sales", value: sales.filter((s) => s.enabled).length, total: sales.length, icon: "🏷️", tab: "sales" },
+                { label: "Category Sections", value: catSections.length, total: categories.length, icon: "📦", tab: "cat-sections" },
+                { label: "Featured Products", value: localProducts.filter((p) => p.is_featured).length, total: localProducts.length, icon: "⭐", tab: "products" },
               ].map((stat) => (
-                <Card key={stat.label} className="glass">
+                <Card key={stat.label} className="glass cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all" onClick={() => setActiveTab(stat.tab)}>
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{stat.icon}</span>
