@@ -10,7 +10,7 @@ type AuthMode = "login" | "signup" | "forgot";
 
 const AuthPage: React.FC = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

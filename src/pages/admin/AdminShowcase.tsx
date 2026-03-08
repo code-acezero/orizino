@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import ImageUpload from "@/components/ImageUpload";
-import { toast } from "sonner";
+import { toast } from "@/lib/app-toast";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 
 const emptySlide = {

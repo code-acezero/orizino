@@ -11,7 +11,7 @@ import Footer from "@/components/Footer";
 
 const CheckoutPage: React.FC = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [address, setAddress] = useState({ full_name: "", phone: "", street: "", city: "", state: "", zip: "", country: "" });

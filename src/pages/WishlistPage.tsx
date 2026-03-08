@@ -11,7 +11,7 @@ import Footer from "@/components/Footer";
 
 const WishlistPage: React.FC = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  
   const queryClient = useQueryClient();
 
   const { data: items, isLoading } = useQuery({

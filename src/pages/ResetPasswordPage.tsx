@@ -7,7 +7,7 @@ import { toast } from "@/lib/app-toast";
 
 const ResetPasswordPage: React.FC = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);

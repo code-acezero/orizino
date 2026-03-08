@@ -12,7 +12,7 @@ import Footer from "@/components/Footer";
 
 const ProfilePage: React.FC = () => {
   const { user, signOut } = useAuth();
-  const { toast } = useToast();
+  
   const [loading, setLoading] = useState(false);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");

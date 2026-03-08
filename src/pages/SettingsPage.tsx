@@ -20,7 +20,7 @@ const themes = [
 
 const SettingsPage: React.FC = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  
   const [mode, setMode] = useState<"dark" | "light">("dark");
   const [theme, setTheme] = useState("default");
   const [notifications, setNotifications] = useState(true);
