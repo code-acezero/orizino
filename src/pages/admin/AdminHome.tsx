@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/app-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, GripVertical, Tag, Clock, Sparkles, Image, Bell, Layout } from "lucide-react";
+import { Plus, Trash2, GripVertical, Tag, Clock, Sparkles, Image, Bell, Layout, Layers } from "lucide-react";
 import { useDragReorder } from "@/hooks/use-drag-reorder";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
@@ -176,10 +176,28 @@ const AdminHome = () => {
     },
   });
 
+  const { data: sectionOrderRow } = useQuery({
+    queryKey: ["admin-section-order"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("site_settings").select("*").eq("key", "home_section_order").maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const defaultSectionOrder = [
+    { id: "slider", label: "Showcase Slider", icon: "🎠" },
+    { id: "categories", label: "Category Grid", icon: "📂" },
+    { id: "category-sections", label: "Category Product Sections", icon: "📦" },
+    { id: "featured", label: "Featured Products", icon: "⭐" },
+    { id: "arrivals", label: "New Arrivals", icon: "✨" },
+  ];
+
   const [catSections, setCatSections] = useState<{ category_id: string; sort_order: number; product_count: number }[]>([]);
   const [sales, setSales] = useState<SaleConfig[]>([]);
   const [newArrivals, setNewArrivals] = useState({ enabled: true, title: "New Arrivals", subtitle: "Fresh drops just landed", product_count: 8 });
   const [layoutConfig, setLayoutConfig] = useState<LayoutConfig>({ ...defaultLayoutConfig });
+  const [sectionOrder, setSectionOrder] = useState(defaultSectionOrder);
 
   useEffect(() => {
     if (settingsRow?.value) {
@@ -212,6 +230,19 @@ const AdminHome = () => {
       if (config && typeof config === "object") setLayoutConfig((prev) => ({ ...prev, ...config }));
     }
   }, [layoutRow]);
+
+  useEffect(() => {
+    if (sectionOrderRow?.value) {
+      const val = sectionOrderRow.value as any;
+      const order = val?.value ?? val;
+      if (Array.isArray(order) && order.length > 0) {
+        // Merge saved order with defaults (in case new sections were added)
+        const merged = order.map((o: any) => defaultSectionOrder.find((d) => d.id === o.id) || o).filter(Boolean);
+        const missing = defaultSectionOrder.filter((d) => !order.some((o: any) => o.id === d.id));
+        setSectionOrder([...merged, ...missing]);
+      }
+    }
+  }, [sectionOrderRow]);
 
   const saveCatSections = useMutation({
     mutationFn: async (sections: typeof catSections) => {
@@ -280,6 +311,29 @@ const AdminHome = () => {
     },
     onError: (e) => toast.error(e.message),
   });
+
+  const saveSectionOrder = useMutation({
+    mutationFn: async () => {
+      const jsonValue = { value: sectionOrder } as any;
+      if (sectionOrderRow) {
+        await supabase.from("site_settings").update({ value: jsonValue }).eq("id", sectionOrderRow.id);
+      } else {
+        await supabase.from("site_settings").insert({ key: "home_section_order", value: jsonValue });
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-section-order"] });
+      qc.invalidateQueries({ queryKey: ["home-section-order"] });
+      toast.success("Section order saved");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const handleSectionOrderReorder = useCallback((reordered: typeof sectionOrder) => {
+    setSectionOrder(reordered);
+  }, []);
+
+  const { getDragProps: getSectionOrderDragProps, dragIndex: secDragIdx, overIndex: secOverIdx } = useDragReorder(sectionOrder, handleSectionOrderReorder);
 
   const addSection = () => setCatSections([...catSections, { category_id: "", sort_order: catSections.length, product_count: 8 }]);
   const removeSection = (index: number) => setCatSections(catSections.filter((_, i) => i !== index));
@@ -355,8 +409,9 @@ const AdminHome = () => {
     <div className="space-y-6">
       <h1 className="text-3xl font-display font-bold">Home Page Management</h1>
 
-      <Tabs defaultValue="cat-sections">
+      <Tabs defaultValue="section-order">
         <TabsList className="flex-wrap">
+          <TabsTrigger value="section-order">Section Order</TabsTrigger>
           <TabsTrigger value="cat-sections">Category Sections</TabsTrigger>
           <TabsTrigger value="sales">Sales</TabsTrigger>
           <TabsTrigger value="new-arrivals">New Arrivals</TabsTrigger>
@@ -364,6 +419,43 @@ const AdminHome = () => {
           <TabsTrigger value="categories">Featured Categories</TabsTrigger>
           <TabsTrigger value="products">Featured Products</TabsTrigger>
         </TabsList>
+
+        {/* Section Order */}
+        <TabsContent value="section-order">
+          <Card className="glass">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                  <Layers className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Homepage Section Order</CardTitle>
+                  <p className="text-sm text-muted-foreground">Drag to rearrange the order of sections on the homepage. Sale banners appear relative to the sections they're assigned to.</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {sectionOrder.map((section, idx) => (
+                <div
+                  key={section.id}
+                  {...getSectionOrderDragProps(idx)}
+                  className={`flex items-center gap-4 p-4 rounded-xl border border-border bg-secondary/20 cursor-grab active:cursor-grabbing transition-all ${secOverIdx === idx && secDragIdx !== idx ? "border-primary bg-primary/10 scale-[1.01]" : ""}`}
+                >
+                  <GripVertical className="w-5 h-5 text-muted-foreground shrink-0" />
+                  <span className="text-2xl">{section.icon}</span>
+                  <div className="flex-1">
+                    <p className="font-medium text-foreground">{section.label}</p>
+                    <p className="text-xs text-muted-foreground">Position {idx + 1}</p>
+                  </div>
+                  <Badge variant="outline" className="text-xs">{section.id}</Badge>
+                </div>
+              ))}
+              <Button className="w-full mt-4" onClick={() => saveSectionOrder.mutate()} disabled={saveSectionOrder.isPending}>
+                {saveSectionOrder.isPending ? "Saving..." : "Save Section Order"}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Category Sections */}
         <TabsContent value="cat-sections">
