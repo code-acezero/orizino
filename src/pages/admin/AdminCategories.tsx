@@ -327,6 +327,22 @@ const AdminCategories = () => {
               className="overflow-hidden"
             >
               <div className="px-4 pb-4 space-y-4">
+                {/* Date Range Filter */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                  {(["7d", "30d", "90d", "all"] as const).map((range) => (
+                    <Button
+                      key={range}
+                      variant={dateRange === range ? "default" : "outline"}
+                      size="sm"
+                      className="h-7 text-xs px-3"
+                      onClick={() => setDateRange(range)}
+                    >
+                      {range === "7d" ? "Last 7 days" : range === "30d" ? "Last 30 days" : range === "90d" ? "Last 90 days" : "All time"}
+                    </Button>
+                  ))}
+                </div>
+
                 {/* Revenue Bar Chart */}
                 {analyticsRows.some((r) => r.revenue > 0) && (
                   <div className="h-48">
