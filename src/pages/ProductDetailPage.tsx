@@ -129,7 +129,7 @@ const ProductDetailPage: React.FC = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("product_variants")
-        .select("id, size, color, stock_quantity, price_override, is_active")
+        .select("id, size, color, stock_quantity, price_override, is_active, image_url")
         .eq("product_id", product!.id)
         .eq("is_active", true)
         .order("sort_order");

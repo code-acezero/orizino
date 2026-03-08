@@ -684,16 +684,17 @@ const AdminProducts = () => {
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <div className="grid grid-cols-[1fr_1fr_80px_80px_80px_40px] gap-2 px-2 text-xs font-medium text-muted-foreground">
-                          <span>Size</span><span>Color</span><span>SKU</span><span>Price ±</span><span>Stock</span><span></span>
+                        <div className="grid grid-cols-[1fr_1fr_80px_80px_80px_1fr_40px] gap-2 px-2 text-xs font-medium text-muted-foreground">
+                          <span>Size</span><span>Color</span><span>SKU</span><span>Price ±</span><span>Stock</span><span>Image URL</span><span></span>
                         </div>
                         {variants.map((v, i) => (
-                          <div key={i} className={`grid grid-cols-[1fr_1fr_80px_80px_80px_40px] gap-2 items-center p-2 rounded-lg border transition-all ${v.is_active ? "border-border bg-secondary/10" : "border-border/40 bg-muted/20 opacity-60"}`}>
+                          <div key={i} className={`grid grid-cols-[1fr_1fr_80px_80px_80px_1fr_40px] gap-2 items-center p-2 rounded-lg border transition-all ${v.is_active ? "border-border bg-secondary/10" : "border-border/40 bg-muted/20 opacity-60"}`}>
                             <Input value={v.size || ""} onChange={(e) => updateVariant(i, "size", e.target.value)} placeholder="Size" className="h-8 text-sm" />
                             <Input value={v.color || ""} onChange={(e) => updateVariant(i, "color", e.target.value)} placeholder="Color" className="h-8 text-sm" />
                             <Input value={v.sku || ""} onChange={(e) => updateVariant(i, "sku", e.target.value)} placeholder="SKU" className="h-8 text-xs" />
                             <Input type="number" value={v.price_override ?? ""} onChange={(e) => updateVariant(i, "price_override", e.target.value ? +e.target.value : null)} placeholder="—" className="h-8 text-sm" />
                             <Input type="number" value={v.stock_quantity} onChange={(e) => updateVariant(i, "stock_quantity", +e.target.value)} className="h-8 text-sm" />
+                            <Input value={(v as any).image_url || ""} onChange={(e) => updateVariant(i, "image_url", e.target.value)} placeholder="https://..." className="h-8 text-xs" />
                             <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeVariant(i)}>
                               <X className="w-3.5 h-3.5 text-destructive" />
                             </Button>
