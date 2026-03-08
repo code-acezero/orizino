@@ -12,6 +12,7 @@ import Footer from "@/components/Footer";
 
 const WishlistPage: React.FC = () => {
   const { user } = useAuth();
+  const { formatPrice } = useCurrency();
   
   const queryClient = useQueryClient();
 
