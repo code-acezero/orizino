@@ -409,6 +409,9 @@ const HomepageAnalytics = () => {
         </CardContent>
       </Card>
 
+      {/* Geographic Breakdown */}
+      <GeoBreakdown analyticsData={analyticsData} />
+
       {/* Live Activity Feed */}
       <LiveActivityFeed />
     </div>
