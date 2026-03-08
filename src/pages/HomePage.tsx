@@ -249,7 +249,8 @@ const HomePage: React.FC = () => {
   const titleAlign = layout.section_title_align === "center" ? "text-center justify-center" : "justify-between";
   const cardExtra = cardStyleMap[layout.card_style] || "";
 
-  const newArrivalsCount = newArrivalsConfig?.product_count || 8;
+  const arrivalsCfg = getSectionCfg("arrivals");
+  const newArrivalsCount = arrivalsCfg.product_count || newArrivalsConfig?.product_count || 8;
   const { data: newArrivals = [] } = useQuery({
     queryKey: ["new-arrival-products", newArrivalsCount],
     queryFn: async () => {
