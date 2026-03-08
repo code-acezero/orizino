@@ -130,11 +130,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
               }
             },
           } : {})}
-          {...(isMobile ? {
-            onTouchStart: handleMainTouchStart,
-            onTouchMove: handleMainTouchMove,
-            onTouchEnd: handleMainTouchEnd,
-          } : {})}
           onClick={() => { if (!longPressZoom) setLightboxOpen(true); }}
         >
           <AnimatePresence mode="popLayout" initial={false}>
