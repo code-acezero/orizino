@@ -26,6 +26,7 @@ const ProfilePage: React.FC = () => {
       if (data) {
         setFullName(data.full_name || "");
         setPhone(data.phone || "");
+        setAvatarUrl(data.avatar_url || "");
         const addr = (data.address as Record<string, string>) || {};
         setAddress({ street: addr.street || "", city: addr.city || "", state: addr.state || "", zip: addr.zip || "", country: addr.country || "" });
       }
