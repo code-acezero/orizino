@@ -15,7 +15,6 @@ import { DollarSign, Globe, Check, RefreshCw, Clock, Zap, PaintBucket, Search } 
 import SiteCustomizer from "@/components/admin/SiteCustomizer";
 import AdminSeoSettings from "@/components/admin/AdminSeoSettings";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 
 const themes = [
   { id: "default", label: "Cyber Emerald", color: "160 84% 45%" },
