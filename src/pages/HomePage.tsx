@@ -50,7 +50,7 @@ const HomePage: React.FC = () => {
       if (error) throw error;
       return data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
   });
 
   const { data: catSectionsConfig } = useQuery({
@@ -63,7 +63,7 @@ const HomePage: React.FC = () => {
       const sections = val?.value ?? val;
       return Array.isArray(sections) ? sections.sort((a: any, b: any) => a.sort_order - b.sort_order) : [];
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
   });
 
   const { data: salesConfig = [] } = useQuery({
@@ -76,7 +76,7 @@ const HomePage: React.FC = () => {
       const sales = val?.value ?? val;
       return Array.isArray(sales) ? sales.filter(isSaleActive).sort((a: any, b: any) => a.sort_order - b.sort_order) : [];
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
   });
 
   const { data: newArrivalsConfig } = useQuery({
@@ -88,7 +88,7 @@ const HomePage: React.FC = () => {
       const val = data.value as any;
       return val?.value ?? val;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
   });
 
   const newArrivalsCount = newArrivalsConfig?.product_count || 8;
@@ -99,7 +99,7 @@ const HomePage: React.FC = () => {
       if (error) throw error;
       return data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
   });
 
   const sectionCatIds = (catSectionsConfig || []).map((s: any) => s.category_id).filter(Boolean);
@@ -112,7 +112,7 @@ const HomePage: React.FC = () => {
       return data;
     },
     enabled: sectionCatIds.length > 0,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
   });
 
   const { data: sectionProducts = {} } = useQuery({
@@ -128,7 +128,7 @@ const HomePage: React.FC = () => {
       return result;
     },
     enabled: sectionCatIds.length > 0,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
   });
 
   const saleProductSources = salesConfig.filter((s: SaleConfig) => s.show_products && s.product_source).map((s: SaleConfig) => ({ id: s.id, source: s.product_source, count: s.product_count || 4 }));
@@ -147,7 +147,7 @@ const HomePage: React.FC = () => {
       return result;
     },
     enabled: saleProductSources.length > 0,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
   });
 
   const renderSaleBanner = (sale: SaleConfig) => {
