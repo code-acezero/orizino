@@ -37,7 +37,7 @@ const NotifyWhenAvailable: React.FC<NotifyWhenAvailableProps> = ({
       }
 
       const { data } = await query.maybeSingle();
-      return data as { id: string; is_notified: boolean } | null;
+      return data as unknown as { id: string; is_notified: boolean } | null;
     },
     enabled: !!user,
   });
