@@ -31,6 +31,7 @@ const AdminCategories = () => {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [sortBy, setSortBy] = useState<"name" | "products" | "orders" | "revenue">("revenue");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [dateRange, setDateRange] = useState<"7d" | "30d" | "90d" | "all">("all");
   const { formatPrice } = useCurrency();
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ["admin-categories"],
