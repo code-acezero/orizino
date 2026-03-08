@@ -223,6 +223,69 @@ const AdminProducts = () => {
     updateSpec("specs", current);
   };
 
+  // --- Variants ---
+  const [variants, setVariants] = useState<any[]>([]);
+  const [variantsLoading, setVariantsLoading] = useState(false);
+
+  const loadVariants = async (productId: string) => {
+    setVariantsLoading(true);
+    const { data } = await supabase.from("product_variants" as any).select("*").eq("product_id", productId).order("sort_order");
+    setVariants((data as any[]) || []);
+    setVariantsLoading(false);
+  };
+
+  useEffect(() => {
+    if (editing?.id && dialogOpen) loadVariants(editing.id);
+    else setVariants([]);
+  }, [editing?.id, dialogOpen]);
+
+  const addVariant = () => {
+    setVariants([...variants, { id: null, product_id: editing?.id, size: "", color: "", sku: "", price_override: null, stock_quantity: 0, is_active: true, sort_order: variants.length }]);
+  };
+
+  const updateVariant = (idx: number, field: string, value: any) => {
+    const u = [...variants]; u[idx] = { ...u[idx], [field]: value }; setVariants(u);
+  };
+
+  const removeVariant = (idx: number) => {
+    const v = variants[idx];
+    if (v.id) supabase.from("product_variants" as any).delete().eq("id", v.id).then(() => { setVariants(variants.filter((_, i) => i !== idx)); toast.success("Variant deleted"); });
+    else setVariants(variants.filter((_, i) => i !== idx));
+  };
+
+  const saveVariants = async () => {
+    if (!editing?.id) { toast.error("Save the product first"); return; }
+    try {
+      for (const v of variants) {
+        const p = { product_id: editing.id, size: v.size || null, color: v.color || null, sku: v.sku || null, price_override: v.price_override || null, stock_quantity: v.stock_quantity || 0, is_active: v.is_active, sort_order: v.sort_order };
+        if (v.id) await supabase.from("product_variants" as any).update(p).eq("id", v.id);
+        else await supabase.from("product_variants" as any).insert(p);
+      }
+      toast.success("Variants saved"); loadVariants(editing.id);
+    } catch (e: any) { toast.error(e.message); }
+  };
+
+  const generateVariants = () => {
+    if (!editing?.id) { toast.error("Save the product first"); return; }
+    const sizes = specs.sizes || []; const colors = specs.colors || [];
+    const nv: any[] = []; let ord = variants.length;
+    if (sizes.length > 0 && colors.length > 0) {
+      for (const s of sizes) for (const c of colors) if (!variants.some((v) => v.size === s && v.color === c)) nv.push({ id: null, product_id: editing.id, size: s, color: c, sku: "", price_override: null, stock_quantity: 0, is_active: true, sort_order: ord++ });
+    } else if (sizes.length > 0) {
+      for (const s of sizes) if (!variants.some((v) => v.size === s && !v.color)) nv.push({ id: null, product_id: editing.id, size: s, color: "", sku: "", price_override: null, stock_quantity: 0, is_active: true, sort_order: ord++ });
+    } else if (colors.length > 0) {
+      for (const c of colors) if (!variants.some((v) => v.color === c && !v.size)) nv.push({ id: null, product_id: editing.id, size: "", color: c, sku: "", price_override: null, stock_quantity: 0, is_active: true, sort_order: ord++ });
+    }
+    if (nv.length === 0) { toast.error("No new combos. Add sizes/colors in Attributes first."); return; }
+    setVariants([...variants, ...nv]); toast.success(`Generated ${nv.length} variant(s)`);
+  };
+
+  const needsWeight = ["grocery", "liquid", "cosmetics"].includes(productType);
+  const showsColors = !["grocery", "books"].includes(productType);
+  const showsSizes = ["clothing", "shoes"].includes(productType);
+  const showsSpecs = ["electronics", "furniture"].includes(productType);
+  const showsMaterial = ["clothing", "shoes", "furniture", "accessories"].includes(productType);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
