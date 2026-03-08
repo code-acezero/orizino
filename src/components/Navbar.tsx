@@ -214,16 +214,7 @@ const Navbar: React.FC = () => {
                   <ShoppingCart className="w-5 h-5" />
                 </Link>
 
-                {user && (
-                  <Link to="/profile" className="p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all relative">
-                    <Bell className="w-5 h-5" />
-                    {(unreadCount || 0) > 0 && (
-                      <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-destructive text-[10px] text-destructive-foreground flex items-center justify-center font-bold">
-                        {unreadCount}
-                      </span>
-                    )}
-                  </Link>
-                )}
+                {user && <NotificationBell />}
 
                 {user ? (
                   <div className="relative hidden lg:block" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)}>
