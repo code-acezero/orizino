@@ -201,12 +201,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
             </div>
           )}
 
-          {/* Mobile long-press hint */}
-          {isMobile && longPressZoom && (
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 glass rounded-full px-3 py-1">
-              <span className="text-[10px] text-muted-foreground font-medium">Drag to inspect</span>
-            </div>
-          )}
 
           {/* Zoom indicator */}
           <div className="absolute bottom-4 right-4 glass rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
