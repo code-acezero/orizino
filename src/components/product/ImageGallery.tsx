@@ -202,22 +202,39 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
             </div>
           )}
 
-          {/* Lens size controls — desktop only */}
+          {/* Lens controls — desktop only */}
           {!isMobile && isZooming && (
-            <div className="absolute top-3 right-3 z-20 flex items-center gap-1 glass rounded-full px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                onClick={(e) => { e.stopPropagation(); setLensSize((s) => Math.max(80, s - 30)); }}
-                className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <Minus className="w-3 h-3" />
-              </button>
-              <span className="text-[10px] text-muted-foreground font-medium w-6 text-center">{Math.round(lensSize)}</span>
-              <button
-                onClick={(e) => { e.stopPropagation(); setLensSize((s) => Math.min(300, s + 30)); }}
-                className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <Plus className="w-3 h-3" />
-              </button>
+            <div className="absolute top-3 right-3 z-20 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+              {/* Size control */}
+              <div className="flex items-center gap-1 glass rounded-full px-2 py-1">
+                <button
+                  onClick={() => setLensSize((s) => Math.max(80, s - 30))}
+                  className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Minus className="w-3 h-3" />
+                </button>
+                <span className="text-[10px] text-muted-foreground font-medium w-6 text-center">{Math.round(lensSize)}</span>
+                <button
+                  onClick={() => setLensSize((s) => Math.min(300, s + 30))}
+                  className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Plus className="w-3 h-3" />
+                </button>
+              </div>
+              {/* Magnification power slider */}
+              <div className="flex items-center gap-1.5 glass rounded-full px-2.5 py-1.5">
+                <ZoomIn className="w-3 h-3 text-muted-foreground shrink-0" />
+                <input
+                  type="range"
+                  min="1.5"
+                  max="5"
+                  step="0.5"
+                  value={zoomPower}
+                  onChange={(e) => setZoomPower(parseFloat(e.target.value))}
+                  className="w-16 h-1 accent-primary bg-muted rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
+                />
+                <span className="text-[10px] text-muted-foreground font-medium w-7 text-center">{zoomPower}x</span>
+              </div>
             </div>
           )}
 
