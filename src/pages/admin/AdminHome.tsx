@@ -204,14 +204,18 @@ const AdminHome = () => {
     { id: "category-sections", label: "Category Product Sections", icon: "📦", visible: true, title: "", subtitle: "", product_count: 8, columns: 4, view_all_link: "" },
     { id: "featured", label: "Featured Products", icon: "⭐", visible: true, title: "Featured Products", subtitle: "Handpicked just for you", product_count: 8, columns: 4, view_all_link: "/shop" },
     { id: "arrivals", label: "New Arrivals", icon: "✨", visible: true, title: "New Arrivals", subtitle: "Fresh drops just landed", product_count: 8, columns: 4, view_all_link: "/shop" },
+    { id: "featured-categories", label: "Featured Categories", icon: "🏷️", visible: true, title: "", subtitle: "", product_count: 0, columns: 0, view_all_link: "" },
+    { id: "featured-products", label: "Featured Products Selection", icon: "🌟", visible: true, title: "", subtitle: "", product_count: 0, columns: 0, view_all_link: "" },
   ];
 
-  const sectionSettingsConfig: Record<string, { hasTitle: boolean; hasSubtitle: boolean; hasProductCount: boolean; hasColumns: boolean; hasViewAllLink: boolean }> = {
-    slider: { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false },
-    categories: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: false },
-    "category-sections": { hasTitle: false, hasSubtitle: false, hasProductCount: true, hasColumns: true, hasViewAllLink: false },
-    featured: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true },
-    arrivals: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true },
+  const sectionSettingsConfig: Record<string, { hasTitle: boolean; hasSubtitle: boolean; hasProductCount: boolean; hasColumns: boolean; hasViewAllLink: boolean; hasFeaturedToggle: string }> = {
+    slider: { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: "" },
+    categories: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: false, hasFeaturedToggle: "" },
+    "category-sections": { hasTitle: false, hasSubtitle: false, hasProductCount: true, hasColumns: true, hasViewAllLink: false, hasFeaturedToggle: "" },
+    featured: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true, hasFeaturedToggle: "" },
+    arrivals: { hasTitle: true, hasSubtitle: true, hasProductCount: true, hasColumns: true, hasViewAllLink: true, hasFeaturedToggle: "" },
+    "featured-categories": { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: "categories" },
+    "featured-products": { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: "products" },
   };
 
   const [catSections, setCatSections] = useState<{ category_id: string; sort_order: number; product_count: number }[]>([]);
@@ -485,8 +489,6 @@ const AdminHome = () => {
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="section-order">Section Order</TabsTrigger>
-          <TabsTrigger value="featured-categories">Featured Categories</TabsTrigger>
-          <TabsTrigger value="featured-products">Featured Products</TabsTrigger>
           <TabsTrigger value="cat-sections">Category Sections</TabsTrigger>
           <TabsTrigger value="sales">Sales</TabsTrigger>
           <TabsTrigger value="new-arrivals">New Arrivals</TabsTrigger>
@@ -678,8 +680,8 @@ const AdminHome = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               {sectionOrder.map((section, idx) => {
-                const settingsCfg = sectionSettingsConfig[section.id] || { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false };
-                const hasSettings = settingsCfg.hasTitle || settingsCfg.hasSubtitle || settingsCfg.hasProductCount || settingsCfg.hasColumns || settingsCfg.hasViewAllLink;
+                const settingsCfg = sectionSettingsConfig[section.id] || { hasTitle: false, hasSubtitle: false, hasProductCount: false, hasColumns: false, hasViewAllLink: false, hasFeaturedToggle: "" };
+                const hasSettings = settingsCfg.hasTitle || settingsCfg.hasSubtitle || settingsCfg.hasProductCount || settingsCfg.hasColumns || settingsCfg.hasViewAllLink || !!settingsCfg.hasFeaturedToggle;
                 const isExpanded = expandedSection === section.id;
 
                 const updateSectionField = (field: string, value: any) => {
@@ -789,6 +791,90 @@ const AdminHome = () => {
                             </div>
                           )}
                         </div>
+
+                        {/* Featured Categories inline management */}
+                        {settingsCfg.hasFeaturedToggle === "categories" && (
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-3 gap-2">
+                              <div className="p-2 rounded-lg bg-secondary/30 border border-border/50 text-center">
+                                <p className="text-lg font-bold text-foreground">{localCategories.length}</p>
+                                <p className="text-[9px] text-muted-foreground">Total</p>
+                              </div>
+                              <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-center">
+                                <p className="text-lg font-bold text-primary">{localCategories.filter(c => c.is_featured).length}</p>
+                                <p className="text-[9px] text-muted-foreground">Featured</p>
+                              </div>
+                              <div className="p-2 rounded-lg bg-secondary/30 border border-border/50 text-center">
+                                <p className="text-lg font-bold text-muted-foreground">{localCategories.filter(c => !c.is_featured).length}</p>
+                                <p className="text-[9px] text-muted-foreground">Hidden</p>
+                              </div>
+                            </div>
+                            <div className="relative">
+                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                              <Input value={featCatSearch} onChange={(e) => setFeatCatSearch(e.target.value)} placeholder="Search categories..." className="pl-8 h-8 text-xs" />
+                            </div>
+                            <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                              {localCategories
+                                .filter(cat => !featCatSearch || cat.name.toLowerCase().includes(featCatSearch.toLowerCase()))
+                                .map((cat, catIdx) => (
+                                  <div key={cat.id} {...getFeatCatDragProps(catIdx)} className={`flex items-center gap-2.5 p-2 rounded-lg border transition-all cursor-grab active:cursor-grabbing ${featCatDragIdx === catIdx ? "opacity-50 scale-95" : featCatOverIdx === catIdx ? "ring-2 ring-primary/40 bg-primary/5" : cat.is_featured ? "border-primary/20 bg-primary/5" : "border-border/30 bg-secondary/10"}`}>
+                                    <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
+                                    <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">{catIdx + 1}</div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-medium text-foreground truncate">{cat.name}</p>
+                                    </div>
+                                    <Badge variant={cat.is_featured ? "default" : "outline"} className="text-[9px] shrink-0">{cat.is_featured ? "Featured" : "Hidden"}</Badge>
+                                    <Switch checked={cat.is_featured} onCheckedChange={(v) => toggleCatFeatured.mutate({ id: cat.id, is_featured: v })} className="scale-75" />
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Featured Products inline management */}
+                        {settingsCfg.hasFeaturedToggle === "products" && (
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-3 gap-2">
+                              <div className="p-2 rounded-lg bg-secondary/30 border border-border/50 text-center">
+                                <p className="text-lg font-bold text-foreground">{localProducts.length}</p>
+                                <p className="text-[9px] text-muted-foreground">Total</p>
+                              </div>
+                              <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-center">
+                                <p className="text-lg font-bold text-primary">{localProducts.filter(p => p.is_featured).length}</p>
+                                <p className="text-[9px] text-muted-foreground">Featured</p>
+                              </div>
+                              <div className="p-2 rounded-lg bg-secondary/30 border border-border/50 text-center">
+                                <p className="text-lg font-bold text-muted-foreground">{localProducts.filter(p => !p.is_featured).length}</p>
+                                <p className="text-[9px] text-muted-foreground">Not Featured</p>
+                              </div>
+                            </div>
+                            <div className="relative">
+                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                              <Input value={featProdSearch} onChange={(e) => setFeatProdSearch(e.target.value)} placeholder="Search products..." className="pl-8 h-8 text-xs" />
+                            </div>
+                            <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                              {localProducts
+                                .filter(prod => !featProdSearch || prod.name.toLowerCase().includes(featProdSearch.toLowerCase()))
+                                .map((prod, prodIdx) => (
+                                  <div key={prod.id} {...getFeatProdDragProps(prodIdx)} className={`flex items-center gap-2.5 p-2 rounded-lg border transition-all cursor-grab active:cursor-grabbing ${featProdDragIdx === prodIdx ? "opacity-50 scale-95" : featProdOverIdx === prodIdx ? "ring-2 ring-primary/40 bg-primary/5" : prod.is_featured ? "border-primary/20 bg-primary/5" : "border-border/30 bg-secondary/10"}`}>
+                                    <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
+                                    <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">{prodIdx + 1}</div>
+                                    {prod.thumbnail ? (
+                                      <img src={prod.thumbnail} alt="" className="w-7 h-7 object-cover rounded border border-border/30 shrink-0" />
+                                    ) : (
+                                      <div className="w-7 h-7 rounded bg-secondary/40 flex items-center justify-center shrink-0"><Star className="w-3 h-3 text-muted-foreground/30" /></div>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-medium text-foreground truncate">{prod.name}</p>
+                                      <p className="text-[9px] text-muted-foreground">${Number(prod.price).toFixed(2)}</p>
+                                    </div>
+                                    <Badge variant={prod.is_featured ? "default" : "outline"} className="text-[9px] shrink-0">{prod.is_featured ? "Featured" : "No"}</Badge>
+                                    <Switch checked={prod.is_featured} onCheckedChange={(v) => toggleProdFeatured.mutate({ id: prod.id, is_featured: v })} className="scale-75" />
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -797,141 +883,6 @@ const AdminHome = () => {
               <Button className="w-full mt-4" onClick={() => saveSectionOrder.mutate()} disabled={saveSectionOrder.isPending}>
                 {saveSectionOrder.isPending ? "Saving..." : "Save Section Order"}
               </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* ── Featured Categories Tab ── */}
-        <TabsContent value="featured-categories">
-          <Card className="glass">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                  <FolderOpen className="w-5 h-5 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <CardTitle>Featured Categories</CardTitle>
-                  <p className="text-sm text-muted-foreground">Select which categories appear in the "Shop by Category" section on the homepage. Drag to reorder their display priority.</p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-3 gap-3">
-                <div className="p-3 rounded-xl bg-secondary/30 border border-border/50 text-center">
-                  <p className="text-2xl font-bold text-foreground">{localCategories.length}</p>
-                  <p className="text-[10px] text-muted-foreground">Total Categories</p>
-                </div>
-                <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-center">
-                  <p className="text-2xl font-bold text-primary">{localCategories.filter(c => c.is_featured).length}</p>
-                  <p className="text-[10px] text-muted-foreground">Featured</p>
-                </div>
-                <div className="p-3 rounded-xl bg-secondary/30 border border-border/50 text-center">
-                  <p className="text-2xl font-bold text-muted-foreground">{localCategories.filter(c => !c.is_featured).length}</p>
-                  <p className="text-[10px] text-muted-foreground">Hidden</p>
-                </div>
-              </div>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input value={featCatSearch} onChange={(e) => setFeatCatSearch(e.target.value)} placeholder="Search categories..." className="pl-9 h-9" />
-              </div>
-              <div className="space-y-2">
-                {localCategories
-                  .filter(cat => !featCatSearch || cat.name.toLowerCase().includes(featCatSearch.toLowerCase()))
-                  .map((cat, idx) => {
-                    const isDragging = featCatDragIdx === idx;
-                    const isOver = featCatOverIdx === idx;
-                    return (
-                      <div key={cat.id} {...getFeatCatDragProps(idx)} className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-grab active:cursor-grabbing ${isDragging ? "opacity-50 scale-95 border-border" : isOver ? "ring-2 ring-primary/40 border-primary/30 bg-primary/5" : cat.is_featured ? "border-primary/20 bg-primary/5" : "border-border bg-secondary/10"}`}>
-                        <GripVertical className="w-4 h-4 text-muted-foreground/40 shrink-0" />
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0">{idx + 1}</div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{cat.name}</p>
-                          <p className="text-[10px] text-muted-foreground">/{cat.slug}</p>
-                        </div>
-                        <Badge variant={cat.is_featured ? "default" : "outline"} className={`text-[10px] shrink-0 ${cat.is_featured ? "" : "text-muted-foreground"}`}>{cat.is_featured ? "Featured" : "Hidden"}</Badge>
-                        <Switch checked={cat.is_featured} onCheckedChange={(v) => toggleCatFeatured.mutate({ id: cat.id, is_featured: v })} />
-                      </div>
-                    );
-                  })}
-              </div>
-              {localCategories.length === 0 && (
-                <div className="text-center py-12">
-                  <FolderOpen className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                  <h3 className="font-semibold mb-1">No categories yet</h3>
-                  <p className="text-sm text-muted-foreground">Create categories first from the Categories management page.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* ── Featured Products Tab ── */}
-        <TabsContent value="featured-products">
-          <Card className="glass">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                  <Star className="w-5 h-5 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <CardTitle>Featured Products</CardTitle>
-                  <p className="text-sm text-muted-foreground">Select which products appear in the "Featured Products" section on the homepage. Drag to reorder their display priority.</p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-3 gap-3">
-                <div className="p-3 rounded-xl bg-secondary/30 border border-border/50 text-center">
-                  <p className="text-2xl font-bold text-foreground">{localProducts.length}</p>
-                  <p className="text-[10px] text-muted-foreground">Total Products</p>
-                </div>
-                <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-center">
-                  <p className="text-2xl font-bold text-primary">{localProducts.filter(p => p.is_featured).length}</p>
-                  <p className="text-[10px] text-muted-foreground">Featured</p>
-                </div>
-                <div className="p-3 rounded-xl bg-secondary/30 border border-border/50 text-center">
-                  <p className="text-2xl font-bold text-muted-foreground">{localProducts.filter(p => !p.is_featured).length}</p>
-                  <p className="text-[10px] text-muted-foreground">Not Featured</p>
-                </div>
-              </div>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input value={featProdSearch} onChange={(e) => setFeatProdSearch(e.target.value)} placeholder="Search products..." className="pl-9 h-9" />
-              </div>
-              <div className="space-y-2">
-                {localProducts
-                  .filter(prod => !featProdSearch || prod.name.toLowerCase().includes(featProdSearch.toLowerCase()))
-                  .map((prod, idx) => {
-                    const isDragging = featProdDragIdx === idx;
-                    const isOver = featProdOverIdx === idx;
-                    return (
-                      <div key={prod.id} {...getFeatProdDragProps(idx)} className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-grab active:cursor-grabbing ${isDragging ? "opacity-50 scale-95 border-border" : isOver ? "ring-2 ring-primary/40 border-primary/30 bg-primary/5" : prod.is_featured ? "border-primary/20 bg-primary/5" : "border-border bg-secondary/10"}`}>
-                        <GripVertical className="w-4 h-4 text-muted-foreground/40 shrink-0" />
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0">{idx + 1}</div>
-                        {prod.thumbnail ? (
-                          <img src={prod.thumbnail} alt="" className="w-10 h-10 object-cover rounded-lg border border-border/30 shrink-0" />
-                        ) : (
-                          <div className="w-10 h-10 rounded-lg bg-secondary/40 flex items-center justify-center shrink-0">
-                            <Star className="w-4 h-4 text-muted-foreground/30" />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{prod.name}</p>
-                          <p className="text-[10px] text-muted-foreground">${Number(prod.price).toFixed(2)}</p>
-                        </div>
-                        <Badge variant={prod.is_featured ? "default" : "outline"} className={`text-[10px] shrink-0 ${prod.is_featured ? "" : "text-muted-foreground"}`}>{prod.is_featured ? "Featured" : "Not Featured"}</Badge>
-                        <Switch checked={prod.is_featured} onCheckedChange={(v) => toggleProdFeatured.mutate({ id: prod.id, is_featured: v })} />
-                      </div>
-                    );
-                  })}
-              </div>
-              {localProducts.length === 0 && (
-                <div className="text-center py-12">
-                  <Star className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                  <h3 className="font-semibold mb-1">No products yet</h3>
-                  <p className="text-sm text-muted-foreground">Add products first from the Products management page.</p>
-                </div>
-              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -990,26 +941,20 @@ const AdminHome = () => {
           </Card>
         </TabsContent>
 
-        {/* Sales (multi) */}
+        {/* Sales */}
         <TabsContent value="sales">
           <Card className="glass">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
-                    <Tag className="w-5 h-5 text-accent" />
-                  </div>
-                  <div>
-                    <CardTitle>Sale Banners</CardTitle>
-                    <p className="text-sm text-muted-foreground">Add multiple customizable sale sections to the home page.</p>
-                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center"><Tag className="w-5 h-5 text-accent" /></div>
+                  <div><CardTitle>Sale Banners</CardTitle><p className="text-sm text-muted-foreground">Add multiple customizable sale sections to the home page.</p></div>
                 </div>
                 <Button onClick={addSale} size="sm"><Plus className="w-4 h-4 mr-1" />Add Sale</Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
               {sales.length === 0 && <p className="text-center text-muted-foreground py-8">No sale sections added. Click "Add Sale" to create one.</p>}
-
               {sales.map((sale, idx) => (
                 <div key={sale.id} {...getSaleDragProps(idx)} className={`border border-border rounded-2xl p-4 space-y-4 bg-secondary/10 cursor-grab active:cursor-grabbing transition-colors ${saleOverIdx === idx && saleDragIdx !== idx ? "border-primary bg-primary/10" : ""}`}>
                   <div className="flex items-center justify-between">
@@ -1023,117 +968,39 @@ const AdminHome = () => {
                       <Button size="icon" variant="ghost" onClick={() => removeSale(sale.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                     </div>
                   </div>
-
-                  {/* Title & Subtitle */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div><Label>Title</Label><Input value={sale.title} onChange={(e) => updateSale(sale.id, "title", e.target.value)} /></div>
                     <div><Label>Subtitle</Label><Input value={sale.subtitle} onChange={(e) => updateSale(sale.id, "subtitle", e.target.value)} /></div>
                   </div>
-
-                  {/* Icon, Color, Sort, Position */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <div>
-                      <Label>Emoji Icon</Label>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {iconOptions.map((ic) => (
-                          <button key={ic} onClick={() => updateSale(sale.id, "icon", ic)}
-                            className={`w-8 h-8 rounded-lg text-lg flex items-center justify-center border transition-all ${sale.icon === ic ? "border-primary bg-primary/10" : "border-border hover:border-primary/30"}`}>
-                            {ic}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <Label>Color</Label>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {colorOptions.map((c) => (
-                          <button key={c.value} onClick={() => updateSale(sale.id, "color", c.value)}
-                            className={`w-6 h-6 rounded-full border-2 transition-all ${sale.color === c.value ? "border-foreground scale-110" : "border-transparent"}`}
-                            style={{ background: c.value.startsWith("var") ? `hsl(var(--primary))` : `hsl(${c.value})` }}
-                            title={c.label} />
-                        ))}
-                      </div>
-                    </div>
+                    <div><Label>Emoji Icon</Label><div className="flex flex-wrap gap-1 mt-1">{iconOptions.map((ic) => (<button key={ic} onClick={() => updateSale(sale.id, "icon", ic)} className={`w-8 h-8 rounded-lg text-lg flex items-center justify-center border transition-all ${sale.icon === ic ? "border-primary bg-primary/10" : "border-border hover:border-primary/30"}`}>{ic}</button>))}</div></div>
+                    <div><Label>Color</Label><div className="flex flex-wrap gap-1 mt-1">{colorOptions.map((c) => (<button key={c.value} onClick={() => updateSale(sale.id, "color", c.value)} className={`w-6 h-6 rounded-full border-2 transition-all ${sale.color === c.value ? "border-foreground scale-110" : "border-transparent"}`} style={{ background: c.value.startsWith("var") ? `hsl(var(--primary))` : `hsl(${c.value})` }} title={c.label} />))}</div></div>
                     <div><Label>Sort Order</Label><Input type="number" value={sale.sort_order} onChange={(e) => updateSale(sale.id, "sort_order", Number(e.target.value))} /></div>
-                    <div>
-                      <Label>Position</Label>
-                      <Select value={sale.position} onValueChange={(v) => updateSale(sale.id, "position", v)}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {positionOptions.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <div><Label>Position</Label><Select value={sale.position} onValueChange={(v) => updateSale(sale.id, "position", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{positionOptions.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}</SelectContent></Select></div>
                   </div>
-
-                  {/* Custom Icon Upload & Banner Image */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <Label className="flex items-center gap-1"><Image className="w-3 h-3" /> Custom Icon (optional, overrides emoji)</Label>
-                      <ImageUpload bucket="banners" folder="sale-icons" value={sale.custom_icon_url || ""} onUploaded={(url) => updateSale(sale.id, "custom_icon_url", url)} />
-                      {sale.custom_icon_url && <Button variant="ghost" size="sm" className="mt-1 text-xs" onClick={() => updateSale(sale.id, "custom_icon_url", "")}>Remove custom icon</Button>}
-                    </div>
-                    <div>
-                      <Label className="flex items-center gap-1"><Image className="w-3 h-3" /> Banner Image (optional background)</Label>
-                      <ImageUpload bucket="banners" folder="sale-banners" value={sale.banner_image || ""} onUploaded={(url) => updateSale(sale.id, "banner_image", url)} />
-                      {sale.banner_image && <Button variant="ghost" size="sm" className="mt-1 text-xs" onClick={() => updateSale(sale.id, "banner_image", "")}>Remove banner</Button>}
-                    </div>
+                    <div><Label className="flex items-center gap-1"><Image className="w-3 h-3" /> Custom Icon</Label><ImageUpload bucket="banners" folder="sale-icons" value={sale.custom_icon_url || ""} onUploaded={(url) => updateSale(sale.id, "custom_icon_url", url)} />{sale.custom_icon_url && <Button variant="ghost" size="sm" className="mt-1 text-xs" onClick={() => updateSale(sale.id, "custom_icon_url", "")}>Remove</Button>}</div>
+                    <div><Label className="flex items-center gap-1"><Image className="w-3 h-3" /> Banner Image</Label><ImageUpload bucket="banners" folder="sale-banners" value={sale.banner_image || ""} onUploaded={(url) => updateSale(sale.id, "banner_image", url)} />{sale.banner_image && <Button variant="ghost" size="sm" className="mt-1 text-xs" onClick={() => updateSale(sale.id, "banner_image", "")}>Remove</Button>}</div>
                   </div>
-
-                  {/* Button */}
                   <div className="grid grid-cols-2 gap-4">
                     <div><Label>Button Text</Label><Input value={sale.button_text} onChange={(e) => updateSale(sale.id, "button_text", e.target.value)} /></div>
                     <div><Label>Button Link</Label><Input value={sale.button_link} onChange={(e) => updateSale(sale.id, "button_link", e.target.value)} /></div>
                   </div>
-
-                  {/* Time limits */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="flex items-center gap-1"><Clock className="w-3 h-3" /> Starts At (optional)</Label>
-                      <Input type="datetime-local" value={sale.starts_at} onChange={(e) => updateSale(sale.id, "starts_at", e.target.value)} />
-                    </div>
-                    <div>
-                      <Label className="flex items-center gap-1"><Clock className="w-3 h-3" /> Ends At (optional)</Label>
-                      <Input type="datetime-local" value={sale.ends_at} onChange={(e) => updateSale(sale.id, "ends_at", e.target.value)} />
-                    </div>
+                    <div><Label className="flex items-center gap-1"><Clock className="w-3 h-3" /> Starts At</Label><Input type="datetime-local" value={sale.starts_at} onChange={(e) => updateSale(sale.id, "starts_at", e.target.value)} /></div>
+                    <div><Label className="flex items-center gap-1"><Clock className="w-3 h-3" /> Ends At</Label><Input type="datetime-local" value={sale.ends_at} onChange={(e) => updateSale(sale.id, "ends_at", e.target.value)} /></div>
                   </div>
-
-                  {/* Toggles row */}
                   <div className="flex flex-wrap items-center gap-6">
-                    <div className="flex items-center gap-2">
-                      <Switch checked={sale.show_countdown} onCheckedChange={(v) => updateSale(sale.id, "show_countdown", v)} />
-                      <Label className="text-sm">Show Countdown Timer</Label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Switch checked={sale.trigger_popup} onCheckedChange={(v) => updateSale(sale.id, "trigger_popup", v)} />
-                      <Label className="text-sm flex items-center gap-1"><Bell className="w-3 h-3" /> Trigger Popup on Visit</Label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Switch checked={sale.show_products} onCheckedChange={(v) => updateSale(sale.id, "show_products", v)} />
-                      <Label className="text-sm">Show Product Row</Label>
-                    </div>
+                    <div className="flex items-center gap-2"><Switch checked={sale.show_countdown} onCheckedChange={(v) => updateSale(sale.id, "show_countdown", v)} /><Label className="text-sm">Show Countdown</Label></div>
+                    <div className="flex items-center gap-2"><Switch checked={sale.trigger_popup} onCheckedChange={(v) => updateSale(sale.id, "trigger_popup", v)} /><Label className="text-sm flex items-center gap-1"><Bell className="w-3 h-3" /> Trigger Popup</Label></div>
+                    <div className="flex items-center gap-2"><Switch checked={sale.show_products} onCheckedChange={(v) => updateSale(sale.id, "show_products", v)} /><Label className="text-sm">Show Products</Label></div>
                   </div>
-
-                  {/* Product source */}
                   {sale.show_products && (
                     <div className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <Select value={sale.product_source} onValueChange={(v) => updateSale(sale.id, "product_source", v)}>
-                          <SelectTrigger><SelectValue placeholder="Select source" /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="featured">Featured Products</SelectItem>
-                            <SelectItem value="latest">Latest Products</SelectItem>
-                            {categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="w-20">
-                        <Input type="number" value={sale.product_count} onChange={(e) => updateSale(sale.id, "product_count", Number(e.target.value))} min={1} max={12} />
-                      </div>
+                      <div className="flex-1"><Select value={sale.product_source} onValueChange={(v) => updateSale(sale.id, "product_source", v)}><SelectTrigger><SelectValue placeholder="Select source" /></SelectTrigger><SelectContent><SelectItem value="featured">Featured Products</SelectItem><SelectItem value="latest">Latest Products</SelectItem>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
+                      <div className="w-20"><Input type="number" value={sale.product_count} onChange={(e) => updateSale(sale.id, "product_count", Number(e.target.value))} min={1} max={12} /></div>
                     </div>
                   )}
-
-                  {/* Preview */}
                   <div>
                     <Label className="text-xs text-muted-foreground mb-2 block">Preview</Label>
                     <div className="rounded-2xl p-5 relative overflow-hidden" style={sale.banner_image ? { backgroundImage: `url(${sale.banner_image})`, backgroundSize: "cover", backgroundPosition: "center" } : {}}>
@@ -1141,30 +1008,21 @@ const AdminHome = () => {
                       {sale.banner_image && <div className="absolute inset-0 bg-background/60" />}
                       <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
-                          {sale.custom_icon_url ? (
-                            <img src={sale.custom_icon_url} className="w-10 h-10 object-contain" alt="" />
-                          ) : (
-                            <span className="text-2xl">{sale.icon}</span>
-                          )}
+                          {sale.custom_icon_url ? <img src={sale.custom_icon_url} className="w-10 h-10 object-contain" alt="" /> : <span className="text-2xl">{sale.icon}</span>}
                           <div>
                             <h4 className="text-lg font-bold font-display text-foreground">{sale.title || "Sale"}</h4>
                             <p className="text-sm text-muted-foreground">{sale.subtitle || "Limited time"}</p>
                             {sale.show_countdown && sale.ends_at && <p className="text-xs text-primary font-mono mt-1">⏱ Countdown will show here</p>}
                           </div>
                         </div>
-                        <span className="btn-pill font-semibold px-6 py-2 text-sm text-white" style={{ background: getSaleColor(sale) }}>
-                          {sale.button_text || "Shop Now"}
-                        </span>
+                        <span className="btn-pill font-semibold px-6 py-2 text-sm text-white" style={{ background: getSaleColor(sale) }}>{sale.button_text || "Shop Now"}</span>
                       </div>
                     </div>
                   </div>
                 </div>
               ))}
-
               {sales.length > 0 && (
-                <Button className="w-full" onClick={() => saveSales.mutate()} disabled={saveSales.isPending}>
-                  {saveSales.isPending ? "Saving..." : "Save All Sales"}
-                </Button>
+                <Button className="w-full" onClick={() => saveSales.mutate()} disabled={saveSales.isPending}>{saveSales.isPending ? "Saving..." : "Save All Sales"}</Button>
               )}
             </CardContent>
           </Card>
@@ -1175,30 +1033,19 @@ const AdminHome = () => {
           <Card className="glass">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle>New Arrivals Section</CardTitle>
-                  <p className="text-sm text-muted-foreground">Show the latest added products on the home page.</p>
-                </div>
+                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center"><Sparkles className="w-5 h-5 text-primary" /></div>
+                <div><CardTitle>New Arrivals Section</CardTitle><p className="text-sm text-muted-foreground">Show the latest added products on the home page.</p></div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>Show New Arrivals</Label>
-                <Switch checked={newArrivals.enabled} onCheckedChange={(v) => setNewArrivals({ ...newArrivals, enabled: v })} />
-              </div>
+              <div className="flex items-center justify-between"><Label>Show New Arrivals</Label><Switch checked={newArrivals.enabled} onCheckedChange={(v) => setNewArrivals({ ...newArrivals, enabled: v })} /></div>
               <div><Label>Title</Label><Input value={newArrivals.title} onChange={(e) => setNewArrivals({ ...newArrivals, title: e.target.value })} /></div>
               <div><Label>Subtitle</Label><Input value={newArrivals.subtitle} onChange={(e) => setNewArrivals({ ...newArrivals, subtitle: e.target.value })} /></div>
               <div><Label>Number of Products</Label><Input type="number" value={newArrivals.product_count} onChange={(e) => setNewArrivals({ ...newArrivals, product_count: Number(e.target.value) })} min={1} max={20} /></div>
-              <Button className="w-full" onClick={() => saveNewArrivals.mutate()} disabled={saveNewArrivals.isPending}>
-                {saveNewArrivals.isPending ? "Saving..." : "Save New Arrivals"}
-              </Button>
+              <Button className="w-full" onClick={() => saveNewArrivals.mutate()} disabled={saveNewArrivals.isPending}>{saveNewArrivals.isPending ? "Saving..." : "Save New Arrivals"}</Button>
             </CardContent>
           </Card>
         </TabsContent>
-
 
         {/* Layout & Style */}
         <TabsContent value="layout">
