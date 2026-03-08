@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Package, ShoppingCart, Users, DollarSign, TrendingUp, TrendingDown,
   Star, ArrowRight, Clock, CheckCircle2, XCircle, Truck, Eye,
-  BarChart3, Activity, Layers, Filter,
+  BarChart3, Activity, Layers, Filter, AlertTriangle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format, subDays, startOfDay, isAfter, differenceInDays } from "date-fns";
@@ -190,7 +190,22 @@ const AdminDashboard = () => {
     staleTime: 60_000,
   });
 
-  /* ── Revenue chart data (selected range) ── */
+  /* ── Low stock products ── */
+  const { data: lowStockProducts } = useQuery({
+    queryKey: ["admin-low-stock"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("id, name, thumbnail, price, stock_quantity")
+        .eq("is_active", true)
+        .lt("stock_quantity", 10)
+        .order("stock_quantity", { ascending: true })
+        .limit(10);
+      return data ?? [];
+    },
+    staleTime: 60_000,
+  });
+
   const revenueChart = useMemo(() => {
     if (!stats?.rangeOrders) return [];
     const days: Record<string, number> = {};
@@ -633,8 +648,68 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Right column: Top Products + Quick Actions */}
+        {/* Right column: Low Stock + Quick Actions + Top Products */}
         <div className="space-y-4">
+          {/* Low Stock Alert */}
+          <Card className="glass border-destructive/20">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-destructive" />
+                  Low Stock Alert
+                </CardTitle>
+                <Badge variant="outline" className="text-[10px] text-destructive border-destructive/30">
+                  {lowStockProducts?.length ?? 0} items
+                </Badge>
+              </div>
+              <CardDescription>Products with less than 10 units</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ScrollArea className="max-h-[200px]">
+                <div className="divide-y divide-border">
+                  {(lowStockProducts ?? []).map((product) => (
+                    <div
+                      key={product.id}
+                      className="flex items-center gap-3 px-5 py-2.5 hover:bg-secondary/20 transition-colors cursor-pointer"
+                      onClick={() => navigate("/admin/products")}
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-secondary/60 overflow-hidden shrink-0">
+                        {product.thumbnail ? (
+                          <img src={product.thumbnail} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="w-3.5 h-3.5 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{product.name}</p>
+                        <p className="text-xs text-muted-foreground">${Number(product.price).toFixed(2)}</p>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] shrink-0 ${
+                          product.stock_quantity === 0
+                            ? "text-destructive border-destructive/30 bg-destructive/10"
+                            : product.stock_quantity <= 3
+                            ? "text-amber-400 border-amber-500/30 bg-amber-500/10"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {product.stock_quantity === 0 ? "Out of stock" : `${product.stock_quantity} left`}
+                      </Badge>
+                    </div>
+                  ))}
+                  {(!lowStockProducts || lowStockProducts.length === 0) && (
+                    <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">
+                      All products are well-stocked 🎉
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+
           {/* Quick Actions */}
           <Card className="glass">
             <CardHeader className="pb-3">
