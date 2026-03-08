@@ -763,6 +763,23 @@ const AdminProducts = () => {
                           <input ref={bulkInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => { if (e.target.files) handleBulkImageUpload(e.target.files); e.target.value = ""; }} />
                         </div>
 
+                        {variants.some((v) => v.image_url) && (
+                          <div className="flex justify-end">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs text-destructive hover:text-destructive hover:bg-destructive/10 gap-1"
+                              onClick={() => {
+                                setVariants(variants.map((v) => ({ ...v, image_url: "" })));
+                                toast.success("All variant images cleared — save variants to apply");
+                              }}
+                            >
+                              <Trash2 className="w-3 h-3" /> Clear All Images
+                            </Button>
+                          </div>
+                        )}
+
                         <div className="space-y-2">
                         <div className="grid grid-cols-[1fr_1fr_80px_80px_80px_60px_40px] gap-2 px-2 text-xs font-medium text-muted-foreground">
                           <span>Size</span><span>Color</span><span>SKU</span><span>Price ±</span><span>Stock</span><span>Image</span><span></span>
