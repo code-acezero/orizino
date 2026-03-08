@@ -111,19 +111,15 @@ const AdminDashboard = () => {
     };
   }, [dateRange]);
   const { data: stats, isLoading } = useQuery({
-    queryKey: ["admin-dashboard-stats"],
+    queryKey: ["admin-dashboard-stats", dateRange.from, dateRange.to],
     queryFn: async () => {
-      const now = new Date();
-      const sevenDaysAgo = subDays(now, 7).toISOString();
-      const fourteenDaysAgo = subDays(now, 14).toISOString();
-
       const [products, orders, profiles, reviews, recentOrders, previousOrders] = await Promise.all([
         supabase.from("products").select("id", { count: "exact", head: true }),
         supabase.from("orders").select("id, total, status, created_at"),
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("reviews").select("id", { count: "exact", head: true }),
-        supabase.from("orders").select("id, total, created_at").gte("created_at", sevenDaysAgo),
-        supabase.from("orders").select("id, total, created_at").gte("created_at", fourteenDaysAgo).lt("created_at", sevenDaysAgo),
+        supabase.from("orders").select("id, total, created_at").gte("created_at", dateRange.from).lte("created_at", dateRange.to),
+        supabase.from("orders").select("id, total, created_at").gte("created_at", prevRange.from).lt("created_at", prevRange.to),
       ]);
 
       const allOrders = orders.data ?? [];
@@ -138,10 +134,14 @@ const AdminDashboard = () => {
       const prevOrderCount = previousOrders.data?.length ?? 0;
       const orderTrend = prevOrderCount > 0 ? Math.round(((recentOrderCount - prevOrderCount) / prevOrderCount) * 100) : 0;
 
-      // Status breakdown
       const statusBreakdown: Record<string, number> = {};
       allOrders.forEach((o) => {
         statusBreakdown[o.status] = (statusBreakdown[o.status] || 0) + 1;
+      });
+
+      const rangeOrders = allOrders.filter(o => {
+        const d = new Date(o.created_at);
+        return d >= new Date(dateRange.from) && d <= new Date(dateRange.to);
       });
 
       return {
@@ -155,6 +155,7 @@ const AdminDashboard = () => {
         orderTrend,
         statusBreakdown,
         allOrders,
+        rangeOrders,
       };
     },
     staleTime: 30_000,
