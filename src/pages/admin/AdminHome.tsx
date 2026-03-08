@@ -790,9 +790,9 @@ const AdminHome = () => {
                           )}
                         </div>
 
-                        {/* Featured toggle for categories/products */}
-                        {settingsCfg.hasFeaturedToggle && section.id === "categories" && (
-                          <div className="mt-4 border-t border-border/30 pt-4">
+                        {/* Featured Categories toggle */}
+                        {settingsCfg.hasFeaturedToggle === "categories" && (
+                          <div className="mt-4">
                             <Label className="text-xs font-semibold mb-2 block">Featured Categories</Label>
                             <p className="text-xs text-muted-foreground mb-3">Toggle which categories appear in the "Shop by Category" section.</p>
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
@@ -810,8 +810,9 @@ const AdminHome = () => {
                           </div>
                         )}
 
-                        {settingsCfg.hasFeaturedToggle && section.id === "featured" && (
-                          <div className="mt-4 border-t border-border/30 pt-4">
+                        {/* Featured Products toggle */}
+                        {settingsCfg.hasFeaturedToggle === "products" && (
+                          <div className="mt-4">
                             <Label className="text-xs font-semibold mb-2 block">Featured Products</Label>
                             <p className="text-xs text-muted-foreground mb-3">Toggle which products appear in the "Featured Products" section.</p>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-64 overflow-y-auto">
