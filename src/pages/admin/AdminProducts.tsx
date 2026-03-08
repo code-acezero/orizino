@@ -184,6 +184,40 @@ const AdminProducts = () => {
     updateField("images", current);
   };
 
+  const specs = editing?.specifications || {};
+  const productType = specs.product_type || "general";
+
+  const updateSpec = (key: string, value: any) => {
+    updateField("specifications", { ...specs, [key]: value });
+  };
+
+  const toggleSize = (size: string) => {
+    const current = specs.sizes || [];
+    updateSpec("sizes", current.includes(size) ? current.filter((s: string) => s !== size) : [...current, size]);
+  };
+
+  const toggleColor = (color: string) => {
+    const current = specs.colors || [];
+    updateSpec("colors", current.includes(color) ? current.filter((c: string) => c !== color) : [...current, color]);
+  };
+
+  const addSpecRow = () => {
+    const current = specs.specs || [];
+    updateSpec("specs", [...current, { key: "", value: "" }]);
+  };
+
+  const updateSpecRow = (index: number, field: string, value: string) => {
+    const current = [...(specs.specs || [])];
+    current[index] = { ...current[index], [field]: value };
+    updateSpec("specs", current);
+  };
+
+  const removeSpecRow = (index: number) => {
+    const current = [...(specs.specs || [])];
+    current.splice(index, 1);
+    updateSpec("specs", current);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -191,46 +225,103 @@ const AdminProducts = () => {
         <Button onClick={() => openEdit()} className="gap-2"><Plus className="h-4 w-4" /> Add Product</Button>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search products..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
-      </div>
+      <Tabs value={activeMainTab} onValueChange={setActiveMainTab}>
+        <TabsList>
+          <TabsTrigger value="list">All Products</TabsTrigger>
+          <TabsTrigger value="page-layout" className="flex items-center gap-1">
+            <LayoutTemplate className="w-3.5 h-3.5" /> Page Layout
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="rounded-lg border border-border overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Stock</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
-            ) : filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No products found</TableCell></TableRow>
-            ) : filtered.map((p: any) => (
-              <TableRow key={p.id}>
-                <TableCell className="font-medium">{p.name}</TableCell>
-                <TableCell className="text-muted-foreground text-sm">{p.categories?.name || "—"}</TableCell>
-                <TableCell>${Number(p.price).toFixed(2)}</TableCell>
-                <TableCell>{p.stock_quantity}</TableCell>
-                <TableCell>
-                  <Badge variant={p.is_active ? "default" : "secondary"}>{p.is_active ? "Active" : "Inactive"}</Badge>
-                </TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Button variant="ghost" size="icon" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
-                  <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+        <TabsContent value="list" className="space-y-4 mt-4">
+          <div className="relative max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search products..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+          </div>
+
+          <div className="rounded-lg border border-border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Stock</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                ) : filtered.length === 0 ? (
+                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No products found</TableCell></TableRow>
+                ) : filtered.map((p: any) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium">{p.name}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm">{p.categories?.name || "—"}</TableCell>
+                    <TableCell>${Number(p.price).toFixed(2)}</TableCell>
+                    <TableCell>{p.stock_quantity}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs capitalize">
+                        {(p.specifications as any)?.product_type || "general"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={p.is_active ? "default" : "secondary"}>{p.is_active ? "Active" : "Inactive"}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+
+        {/* Product Page Layout */}
+        <TabsContent value="page-layout" className="mt-4">
+          <div className="space-y-6 max-w-3xl">
+            <Card className="glass">
+              <CardHeader>
+                <CardTitle>Product Page Layout</CardTitle>
+                <CardDescription>Choose the visual style for product detail pages.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {([
+                    { id: "minimal", label: "Apple-Style Minimal", desc: "Clean whitespace, large typography, no glass effects" },
+                    { id: "premium", label: "Premium E-Commerce", desc: "Glassmorphism, gradient accents, trust badges, micro-interactions" },
+                    { id: "editorial", label: "Editorial / Magazine", desc: "Full-width imagery, asymmetric layout, storytelling format" },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.id}
+                      onClick={() => setPageLayout(opt.id)}
+                      className={`text-left p-4 rounded-2xl border-2 transition-all ${
+                        pageLayout === opt.id
+                          ? "border-primary bg-primary/10"
+                          : "border-border/50 hover:border-primary/30"
+                      }`}
+                    >
+                      <p className="font-semibold text-foreground text-sm">{opt.label}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{opt.desc}</p>
+                      {pageLayout === opt.id && (
+                        <Badge variant="default" className="mt-2">Active</Badge>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            <Button className="w-full" onClick={() => saveLayoutMutation.mutate()} disabled={saveLayoutMutation.isPending}>
+              {saveLayoutMutation.isPending ? "Saving..." : "Save Product Page Settings"}
+            </Button>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
@@ -239,8 +330,9 @@ const AdminProducts = () => {
           </DialogHeader>
           {editing && (
             <Tabs defaultValue="general" className="w-full">
-              <TabsList className="w-full">
+              <TabsList className="w-full flex-wrap">
                 <TabsTrigger value="general" className="flex-1">General</TabsTrigger>
+                <TabsTrigger value="attributes" className="flex-1">Attributes</TabsTrigger>
                 <TabsTrigger value="media" className="flex-1">Media</TabsTrigger>
                 <TabsTrigger value="seo" className="flex-1">SEO</TabsTrigger>
               </TabsList>
@@ -297,6 +389,195 @@ const AdminProducts = () => {
                   <div className="flex items-center gap-2"><Switch checked={editing.is_active ?? true} onCheckedChange={(v) => updateField("is_active", v)} /><Label>Active</Label></div>
                   <div className="flex items-center gap-2"><Switch checked={editing.is_featured ?? false} onCheckedChange={(v) => updateField("is_featured", v)} /><Label>Featured</Label></div>
                 </div>
+              </TabsContent>
+
+              {/* Attributes Tab */}
+              <TabsContent value="attributes" className="space-y-4 mt-4">
+                <div>
+                  <Label>Product Type</Label>
+                  <Select value={productType} onValueChange={(v) => updateSpec("product_type", v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {PRODUCT_TYPES.map((t) => (
+                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">Select the product type to show relevant attribute fields.</p>
+                </div>
+
+                {/* Colors — available for all types except grocery */}
+                {productType !== "grocery" && (
+                  <div>
+                    <Label>Available Colors</Label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {COMMON_COLORS.map((c) => {
+                        const selected = (specs.colors || []).includes(c.name);
+                        return (
+                          <button
+                            key={c.name}
+                            type="button"
+                            onClick={() => toggleColor(c.name)}
+                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 text-xs font-medium transition-all ${
+                              selected ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:border-primary/30"
+                            }`}
+                          >
+                            <span className="w-3.5 h-3.5 rounded-full border border-border/50 shrink-0" style={{ background: c.hex }} />
+                            {c.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-2">
+                      <Input
+                        placeholder="Add custom color name..."
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim()) {
+                            toggleColor((e.target as HTMLInputElement).value.trim());
+                            (e.target as HTMLInputElement).value = "";
+                          }
+                        }}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Sizes — for clothing */}
+                {(productType === "clothing") && (
+                  <div>
+                    <Label>Available Sizes</Label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {CLOTHING_SIZES.map((size) => {
+                        const selected = (specs.sizes || []).includes(size);
+                        return (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => toggleSize(size)}
+                            className={`px-3 py-1.5 rounded-lg border-2 text-xs font-bold transition-all ${
+                              selected ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:border-primary/30"
+                            }`}
+                          >
+                            {size}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Sizes — for shoes */}
+                {(productType === "shoes") && (
+                  <div>
+                    <Label>Available Sizes (EU)</Label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {SHOE_SIZES.map((size) => {
+                        const selected = (specs.sizes || []).includes(size);
+                        return (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => toggleSize(size)}
+                            className={`px-3 py-1.5 rounded-lg border-2 text-xs font-bold transition-all ${
+                              selected ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:border-primary/30"
+                            }`}
+                          >
+                            {size}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Weight — for grocery */}
+                {(productType === "grocery") && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Weight</Label>
+                      <Input
+                        type="number"
+                        value={specs.weight || ""}
+                        onChange={(e) => updateSpec("weight", e.target.value)}
+                        placeholder="e.g. 500"
+                      />
+                    </div>
+                    <div>
+                      <Label>Unit</Label>
+                      <Select value={specs.weight_unit || "kg"} onValueChange={(v) => updateSpec("weight_unit", v)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="g">Grams (g)</SelectItem>
+                          <SelectItem value="kg">Kilograms (kg)</SelectItem>
+                          <SelectItem value="lb">Pounds (lb)</SelectItem>
+                          <SelectItem value="oz">Ounces (oz)</SelectItem>
+                          <SelectItem value="ml">Milliliters (ml)</SelectItem>
+                          <SelectItem value="l">Liters (L)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+
+                {/* Specifications — for electronics */}
+                {(productType === "electronics") && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label>Technical Specifications</Label>
+                      <Button type="button" variant="outline" size="sm" onClick={addSpecRow} className="gap-1">
+                        <Plus className="w-3 h-3" /> Add Spec
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      {(specs.specs || []).map((spec: any, i: number) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <Input
+                            value={spec.key}
+                            onChange={(e) => updateSpecRow(i, "key", e.target.value)}
+                            placeholder="e.g. Processor"
+                            className="h-9 flex-1"
+                          />
+                          <Input
+                            value={spec.value}
+                            onChange={(e) => updateSpecRow(i, "value", e.target.value)}
+                            placeholder="e.g. Snapdragon 8 Gen 3"
+                            className="h-9 flex-1"
+                          />
+                          <Button type="button" variant="ghost" size="icon" className="shrink-0 h-9 w-9" onClick={() => removeSpecRow(i)}>
+                            <X className="w-3.5 h-3.5 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                      {(specs.specs || []).length === 0 && (
+                        <p className="text-sm text-muted-foreground text-center py-4">No specs added yet. Click "Add Spec" to start.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Custom key-value pairs for any type */}
+                {productType === "general" && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label>Custom Attributes</Label>
+                      <Button type="button" variant="outline" size="sm" onClick={addSpecRow} className="gap-1">
+                        <Plus className="w-3 h-3" /> Add Attribute
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      {(specs.specs || []).map((spec: any, i: number) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <Input value={spec.key} onChange={(e) => updateSpecRow(i, "key", e.target.value)} placeholder="Attribute name" className="h-9 flex-1" />
+                          <Input value={spec.value} onChange={(e) => updateSpecRow(i, "value", e.target.value)} placeholder="Value" className="h-9 flex-1" />
+                          <Button type="button" variant="ghost" size="icon" className="shrink-0 h-9 w-9" onClick={() => removeSpecRow(i)}>
+                            <X className="w-3.5 h-3.5 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="media" className="space-y-4 mt-4">
