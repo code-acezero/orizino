@@ -34,11 +34,8 @@ const SettingsPage: React.FC = () => {
     });
   }, [user]);
 
-  useEffect(() => {
-    document.documentElement.classList.toggle("light", mode === "light");
-    document.documentElement.className = document.documentElement.className.replace(/theme-\w+/g, "");
-    if (theme !== "default") document.documentElement.classList.add(`theme-${theme}`);
-  }, [mode, theme]);
+  // NOTE: These theme changes apply ONLY to profile page frame/personalization
+  // The site-wide theme is controlled from admin settings
 
   const savePrefs = async (prefs: Record<string, string | boolean>) => {
     if (!user) return;
@@ -74,9 +71,10 @@ const SettingsPage: React.FC = () => {
           <h1 className="text-3xl font-bold font-display text-foreground mb-8">Settings</h1>
 
           <div className="space-y-4">
-            {/* Appearance */}
+            {/* Profile Theme */}
             <div className="glass-strong rounded-3xl p-6 space-y-4">
-              <h2 className="text-lg font-semibold font-display text-foreground">Appearance</h2>
+              <h2 className="text-lg font-semibold font-display text-foreground">Profile Theme</h2>
+              <p className="text-xs text-muted-foreground">These settings customize your profile page appearance only.</p>
 
               <button onClick={toggleMode} className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-secondary/30 transition-colors">
                 <div className="flex items-center gap-3">
@@ -94,7 +92,7 @@ const SettingsPage: React.FC = () => {
               <div>
                 <div className="flex items-center gap-2 mb-3 px-3">
                   <Palette className="w-5 h-5 text-primary" />
-                  <p className="text-sm font-medium text-foreground">Color Theme</p>
+                  <p className="text-sm font-medium text-foreground">Profile Color Theme</p>
                 </div>
                 <div className="grid grid-cols-2 gap-2 px-3">
                   {themes.map((t) => (

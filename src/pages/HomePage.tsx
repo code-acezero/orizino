@@ -7,6 +7,7 @@ import ParallaxSlider from "@/components/ParallaxSlider";
 import CategoryGrid from "@/components/CategoryGrid";
 import ProductCard from "@/components/ProductCard";
 import Footer from "@/components/Footer";
+import HomePopup from "@/components/HomePopup";
 import { Zap } from "lucide-react";
 
 const HomePage: React.FC = () => {
@@ -29,6 +30,7 @@ const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen pb-20 lg:pb-0">
       <Navbar />
+      <HomePopup />
 
       <main className="container mx-auto px-4 pt-6 space-y-16">
         <ParallaxSlider />
