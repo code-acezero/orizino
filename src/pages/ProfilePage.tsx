@@ -72,7 +72,7 @@ const ProfilePage: React.FC = () => {
   const handleSave = async () => {
     if (!user) return;
     setLoading(true);
-    const { error } = await supabase.from("profiles").update({ full_name: fullName, phone, address }).eq("id", user.id);
+    const { error } = await supabase.from("profiles").update({ full_name: fullName, phone, address, avatar_url: avatarUrl }).eq("id", user.id);
     setLoading(false);
     if (error) toast({ title: "Error saving", description: error.message, variant: "destructive" });
     else toast({ title: "Profile updated!" });
