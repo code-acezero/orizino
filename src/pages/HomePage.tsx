@@ -238,7 +238,10 @@ const HomePage: React.FC = () => {
     staleTime: 30 * 1000,
   });
 
-  const sectionOrder = sectionOrderConfig || defaultSectionOrder;
+  const sectionOrder: SectionConfig[] = (sectionOrderConfig || defaultSectionOrder) as SectionConfig[];
+
+  // Helper to get section config by ID
+  const getSectionCfg = (id: string): SectionConfig => sectionOrder.find((s) => s.id === id) || defaultSectionOrder.find((s) => s.id === id) || { id, label: id, icon: "", visible: true };
 
   const layout = layoutConfigRaw || defaultLayout;
   const anim = getAnimationVariants(layout.section_animation);
