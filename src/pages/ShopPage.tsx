@@ -1,12 +1,28 @@
 import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, SlidersHorizontal, X, ChevronDown } from "lucide-react";
+import { Search, X, ChevronDown, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+
+import catElectronics from "@/assets/icons/cat-electronics.png";
+import catFashion from "@/assets/icons/cat-fashion.png";
+import catHome from "@/assets/icons/cat-home.png";
+import catAccessories from "@/assets/icons/cat-accessories.png";
+import catGroceries from "@/assets/icons/cat-groceries.png";
+import catSports from "@/assets/icons/cat-sports.png";
+
+const fallbackIcons: Record<string, string> = {
+  electronics: catElectronics,
+  fashion: catFashion,
+  "home-living": catHome,
+  accessories: catAccessories,
+  groceries: catGroceries,
+  "sports-outdoors": catSports,
+};
 
 const sortOptions = [
   { label: "Newest", value: "newest" },
@@ -17,24 +33,41 @@ const sortOptions = [
 ];
 
 const ShopPage: React.FC = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [sort, setSort] = useState(searchParams.get("sort") || "newest");
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("cat") || "");
+  const [expandedParent, setExpandedParent] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [showFilters, setShowFilters] = useState(false);
+
+  const { data: siteSettings } = useQuery({
+    queryKey: ["site-settings-name"],
+    queryFn: async () => {
+      const { data } = await supabase.from("site_settings").select("key, value").in("key", ["site_name"]);
+      const map: Record<string, any> = {};
+      data?.forEach((s) => (map[s.key] = s.value));
+      return map;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const siteName = (siteSettings?.site_name as string) || "Zero";
 
   const { data: categories } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
       const { data } = await supabase
         .from("categories")
-        .select("id, name, slug, icon")
+        .select("id, name, slug, icon, icon_url, parent_id, accent_color")
         .eq("is_active", true)
         .order("sort_order");
       return data || [];
     },
   });
+
+  const parentCategories = categories?.filter((c) => !c.parent_id) || [];
+  const getChildren = (parentId: string) => categories?.filter((c) => c.parent_id === parentId) || [];
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["products", selectedCategory, sort],
@@ -70,6 +103,25 @@ const ShopPage: React.FC = () => {
     });
   }, [products, searchQuery, priceRange]);
 
+  const getCategoryIcon = (cat: { icon_url: string | null; icon: string | null; slug: string }) => {
+    if (cat.icon_url) return cat.icon_url;
+    return fallbackIcons[cat.slug] || null;
+  };
+
+  const handleParentClick = (catId: string) => {
+    if (expandedParent === catId) {
+      setExpandedParent(null);
+    } else {
+      setExpandedParent(catId);
+    }
+    // Also select this parent category
+    setSelectedCategory(catId);
+  };
+
+  const handleSubClick = (subId: string) => {
+    setSelectedCategory(subId);
+  };
+
   return (
     <div className="min-h-screen pb-20 lg:pb-0">
       <Navbar />
@@ -77,7 +129,9 @@ const ShopPage: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold font-display text-foreground">Shop</h1>
+            <h1 className="text-3xl md:text-4xl font-bold font-display text-foreground">
+              <span className="text-gradient">{siteName}</span> Mall
+            </h1>
             <p className="text-muted-foreground mt-1">{filteredProducts.length} products found</p>
           </div>
 
@@ -99,7 +153,7 @@ const ShopPage: React.FC = () => {
               )}
             </div>
             <button onClick={() => setShowFilters(!showFilters)} className="p-3 rounded-2xl glass text-muted-foreground hover:text-foreground md:hidden">
-              <SlidersHorizontal className="w-5 h-5" />
+              <ChevronDown className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -108,26 +162,78 @@ const ShopPage: React.FC = () => {
           {/* Sidebar Filters */}
           <aside className={`${showFilters ? "block" : "hidden"} md:block w-full md:w-64 shrink-0`}>
             <div className="glass-strong rounded-3xl p-6 space-y-6 sticky top-24">
-              {/* Categories */}
+              {/* Categories — collapsible parent/child */}
               <div>
                 <h3 className="font-display font-semibold text-foreground mb-3">Categories</h3>
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   <button
-                    onClick={() => setSelectedCategory("")}
-                    className={`block w-full text-left px-3 py-2 rounded-xl text-sm transition-colors ${!selectedCategory ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"}`}
+                    onClick={() => { setSelectedCategory(""); setExpandedParent(null); }}
+                    className={`flex items-center gap-2 w-full text-left px-3 py-2.5 rounded-xl text-sm transition-colors ${!selectedCategory ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"}`}
                   >
                     All Categories
                   </button>
-                  {categories?.map((cat) => (
-                    <button
-                      key={cat.id}
-                      onClick={() => setSelectedCategory(cat.id)}
-                      className={`block w-full text-left px-3 py-2 rounded-xl text-sm transition-colors ${selectedCategory === cat.id ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"}`}
-                    >
-                      {cat.icon && <span className="mr-2">{cat.icon}</span>}
-                      {cat.name}
-                    </button>
-                  ))}
+
+                  {parentCategories.map((cat) => {
+                    const children = getChildren(cat.id);
+                    const isExpanded = expandedParent === cat.id;
+                    const isSelected = selectedCategory === cat.id;
+                    const iconSrc = getCategoryIcon(cat);
+
+                    return (
+                      <div key={cat.id}>
+                        <button
+                          onClick={() => handleParentClick(cat.id)}
+                          className={`flex items-center gap-2.5 w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all group ${
+                            isSelected ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                          }`}
+                        >
+                          {iconSrc ? (
+                            <img src={iconSrc} alt="" className="w-6 h-6 rounded-lg object-contain" />
+                          ) : cat.icon ? (
+                            <span className="text-base">{cat.icon}</span>
+                          ) : (
+                            <span className="w-6 h-6 rounded-lg bg-secondary/50" />
+                          )}
+                          <span className="flex-1">{cat.name}</span>
+                          {children.length > 0 && (
+                            <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+                          )}
+                        </button>
+
+                        {/* Subcategories */}
+                        <AnimatePresence>
+                          {isExpanded && children.length > 0 && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="pl-4 mt-0.5 space-y-0.5 border-l-2 border-border/50 ml-5">
+                                {children.map((sub) => (
+                                  <button
+                                    key={sub.id}
+                                    onClick={() => handleSubClick(sub.id)}
+                                    className={`flex items-center gap-2 w-full text-left px-3 py-2 rounded-xl text-xs transition-colors ${
+                                      selectedCategory === sub.id ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                                    }`}
+                                  >
+                                    {sub.icon_url ? (
+                                      <img src={sub.icon_url} alt="" className="w-4 h-4 rounded object-contain" />
+                                    ) : sub.icon ? (
+                                      <span className="text-xs">{sub.icon}</span>
+                                    ) : null}
+                                    {sub.name}
+                                  </button>
+                                ))}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -153,7 +259,7 @@ const ShopPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Sort (mobile) */}
+              {/* Sort */}
               <div>
                 <h3 className="font-display font-semibold text-foreground mb-3">Sort By</h3>
                 <div className="space-y-1">
