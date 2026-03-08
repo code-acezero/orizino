@@ -62,7 +62,7 @@ export function AdminSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup defaultOpen>
+        <SidebarGroup>
           <SidebarGroupLabel>Management</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
