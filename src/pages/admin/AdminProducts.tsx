@@ -22,6 +22,11 @@ const PRODUCT_TYPES = [
   { value: "shoes", label: "Shoes & Footwear" },
   { value: "electronics", label: "Electronics" },
   { value: "grocery", label: "Grocery & Food" },
+  { value: "liquid", label: "Liquid / Beverage" },
+  { value: "cosmetics", label: "Cosmetics & Beauty" },
+  { value: "furniture", label: "Furniture & Home" },
+  { value: "books", label: "Books & Stationery" },
+  { value: "accessories", label: "Accessories & Jewelry" },
 ] as const;
 
 const CLOTHING_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];
