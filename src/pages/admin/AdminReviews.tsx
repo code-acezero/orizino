@@ -86,12 +86,34 @@ const AdminReviews = () => {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
             ) : filtered.map((r: any) => (
               <TableRow key={r.id}>
                 <TableCell className="font-medium">{r.products?.name ?? "—"}</TableCell>
                 <TableCell><div className="flex items-center gap-1"><Star className="h-3 w-3 fill-primary text-primary" />{r.rating}</div></TableCell>
                 <TableCell className="max-w-xs truncate">{r.comment || r.title || "—"}</TableCell>
+                <TableCell>
+                  {r.images && r.images.length > 0 ? (
+                    <div className="flex gap-1">
+                      {r.images.slice(0, 3).map((img: string, i: number) => (
+                        <button
+                          key={i}
+                          onClick={() => setLightboxImg(img)}
+                          className="w-10 h-10 rounded-lg overflow-hidden hover:ring-2 ring-primary/40 transition-all shrink-0"
+                        >
+                          <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
+                        </button>
+                      ))}
+                      {r.images.length > 3 && (
+                        <span className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-xs text-muted-foreground font-medium">
+                          +{r.images.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground/40"><ImageIcon className="w-4 h-4" /></span>
+                  )}
+                </TableCell>
                 <TableCell><Badge variant={r.is_approved ? "default" : "secondary"}>{r.is_approved ? "Approved" : "Pending"}</Badge></TableCell>
                 <TableCell>{format(new Date(r.created_at), "MMM d")}</TableCell>
                 <TableCell className="text-right space-x-1">
