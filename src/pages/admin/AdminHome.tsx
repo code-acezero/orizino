@@ -223,6 +223,8 @@ const AdminHome = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedTheme, setSelectedTheme] = useState("default");
   const [selectedMode, setSelectedMode] = useState("dark");
+  const [featCatSearch, setFeatCatSearch] = useState("");
+  const [featProdSearch, setFeatProdSearch] = useState("");
 
   // Fetch current theme/mode
   const { data: themeSettings } = useQuery({
