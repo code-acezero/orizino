@@ -25,6 +25,7 @@ const sectionLabels: Record<string, string> = {
 
 const HomepageAnalytics = () => {
   const [range, setRange] = useState("7d");
+  const liveVisitors = useRealtimeVisitors("/home");
   const rangeHours = timeRanges.find((r) => r.value === range)?.hours || 168;
 
   const { data: analyticsData = [], isLoading } = useQuery({
