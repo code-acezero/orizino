@@ -206,13 +206,9 @@ const AdminCategories = () => {
             const isDragging = dragIndex === idx;
             const isOver = overIndex === idx;
             return (
-              <motion.div
-                key={c.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25 }}
+              <div
                 {...(search ? {} : getDragProps(idx))}
-                className={isDragging ? "opacity-50" : isOver ? "scale-[1.02]" : ""}
+                className={`${isDragging ? "opacity-50" : isOver ? "scale-[1.02]" : ""}`}
                 style={{ transition: "transform 0.15s ease" }}
               >
                 <Card className={`glass group hover:border-primary/30 transition-all relative overflow-hidden ${selected.has(c.id) ? "ring-2 ring-primary/50 border-primary/40" : ""} ${isOver ? "border-primary/50" : ""}`}>
