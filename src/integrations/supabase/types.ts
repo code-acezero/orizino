@@ -736,7 +736,77 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          id: string | null
+          is_approved: boolean | null
+          product_id: string | null
+          rating: number | null
+          title: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_approved?: boolean | null
+          product_id?: string | null
+          rating?: number | null
+          title?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_approved?: boolean | null
+          product_id?: string | null
+          rating?: number | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_product_requests: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          product_name: string | null
+          reference_url: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          product_name?: string | null
+          reference_url?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          product_name?: string | null
+          reference_url?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
