@@ -187,11 +187,11 @@ const AdminHome = () => {
   });
 
   const defaultSectionOrder = [
-    { id: "slider", label: "Showcase Slider", icon: "🎠" },
-    { id: "categories", label: "Category Grid", icon: "📂" },
-    { id: "category-sections", label: "Category Product Sections", icon: "📦" },
-    { id: "featured", label: "Featured Products", icon: "⭐" },
-    { id: "arrivals", label: "New Arrivals", icon: "✨" },
+    { id: "slider", label: "Showcase Slider", icon: "🎠", visible: true },
+    { id: "categories", label: "Category Grid", icon: "📂", visible: true },
+    { id: "category-sections", label: "Category Product Sections", icon: "📦", visible: true },
+    { id: "featured", label: "Featured Products", icon: "⭐", visible: true },
+    { id: "arrivals", label: "New Arrivals", icon: "✨", visible: true },
   ];
 
   const [catSections, setCatSections] = useState<{ category_id: string; sort_order: number; product_count: number }[]>([]);
