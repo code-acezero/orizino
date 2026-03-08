@@ -1,25 +1,44 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  Shirt,
-  Headphones,
-  Home,
-  Watch,
-  ShoppingBasket,
-  Sparkles,
-} from "lucide-react";
-
-const categories = [
-  { name: "Fashion", slug: "fashion", icon: Shirt, color: "160 84% 45%" },
-  { name: "Electronics", slug: "electronics", icon: Headphones, color: "200 90% 50%" },
-  { name: "Home Appliance", slug: "home-appliance", icon: Home, color: "25 95% 55%" },
-  { name: "Accessories", slug: "accessories", icon: Watch, color: "280 70% 55%" },
-  { name: "Groceries", slug: "groceries", icon: ShoppingBasket, color: "140 60% 45%" },
-  { name: "Others", slug: "others", icon: Sparkles, color: "340 82% 55%" },
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Sparkles } from "lucide-react";
 
 const CategoryGrid: React.FC = () => {
+  const { data: categories = [], isLoading } = useQuery({
+    queryKey: ["featured-categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("id, name, slug, icon, icon_url, accent_color, image_url")
+        .eq("is_active", true)
+        .eq("is_featured", true)
+        .is("parent_id", null)
+        .order("sort_order")
+        .limit(6);
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  if (isLoading) {
+    return (
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="aspect-square rounded-3xl bg-secondary/30 animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (categories.length === 0) return null;
+
   return (
     <section className="py-16">
       <div className="container mx-auto px-4">
@@ -38,36 +57,42 @@ const CategoryGrid: React.FC = () => {
         </motion.div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {categories.map((cat, i) => (
-            <motion.div
-              key={cat.slug}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-            >
-              <Link
-                to={`/categories/${cat.slug}`}
-                className="group glass rounded-3xl p-6 flex flex-col items-center gap-4 hover:border-primary/30 transition-all duration-300"
+          {categories.map((cat, i) => {
+            const color = cat.accent_color || "#6366f1";
+            return (
+              <motion.div
+                key={cat.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
               >
-                <motion.div
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                  style={{
-                    background: `linear-gradient(135deg, hsl(${cat.color} / 0.2), hsl(${cat.color} / 0.05))`,
-                  }}
+                <Link
+                  to={`/categories/${cat.slug}`}
+                  className="group glass rounded-3xl p-6 flex flex-col items-center gap-4 hover:border-primary/30 transition-all duration-300"
                 >
-                  <cat.icon
-                    className="w-7 h-7"
-                    style={{ color: `hsl(${cat.color})` }}
-                  />
-                </motion.div>
-                <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
-                  {cat.name}
-                </span>
-              </Link>
-            </motion.div>
-          ))}
+                  <motion.div
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden"
+                    style={{
+                      background: `linear-gradient(135deg, ${color}33, ${color}11)`,
+                    }}
+                  >
+                    {cat.icon_url ? (
+                      <img src={cat.icon_url} alt={cat.name} className="w-8 h-8 object-contain" />
+                    ) : cat.icon ? (
+                      <span className="text-2xl">{cat.icon}</span>
+                    ) : (
+                      <Sparkles className="w-7 h-7" style={{ color }} />
+                    )}
+                  </motion.div>
+                  <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                    {cat.name}
+                  </span>
+                </Link>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>

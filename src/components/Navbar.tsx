@@ -24,7 +24,7 @@ const Navbar: React.FC = () => {
   const { data: dbCategories = [] } = useQuery({
     queryKey: ["nav-categories"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("categories").select("id, name, slug, parent_id, icon").eq("is_active", true).order("sort_order");
+      const { data, error } = await supabase.from("categories").select("id, name, slug, parent_id, icon, icon_url").eq("is_active", true).order("sort_order");
       if (error) throw error;
       return data;
     },
@@ -118,11 +118,15 @@ const Navbar: React.FC = () => {
                                   return (
                                     <div key={cat.id}>
                                       <Link
-                                        to={`/shop?category=${cat.slug}`}
+                                        to={`/categories/${cat.slug}`}
                                         onClick={() => setCatOpen(false)}
                                         className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-foreground hover:bg-secondary/50 transition-colors"
                                       >
-                                        {cat.icon && <span className="text-base">{cat.icon}</span>}
+                                        {cat.icon_url ? (
+                                          <img src={cat.icon_url} alt="" className="w-5 h-5 rounded object-contain" />
+                                        ) : cat.icon ? (
+                                          <span className="text-base">{cat.icon}</span>
+                                        ) : null}
                                         {cat.name}
                                       </Link>
                                       {children.length > 0 && (
@@ -130,7 +134,7 @@ const Navbar: React.FC = () => {
                                           {children.map((sub) => (
                                             <Link
                                               key={sub.id}
-                                              to={`/shop?category=${sub.slug}`}
+                                              to={`/categories/${sub.slug}`}
                                               onClick={() => setCatOpen(false)}
                                               className="block px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
                                             >
