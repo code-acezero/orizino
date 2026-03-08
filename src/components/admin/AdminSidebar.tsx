@@ -109,7 +109,7 @@ export function AdminSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <NavLink to="/">
+              <NavLink to="/home">
                 <ArrowLeft className="h-4 w-4" />
                 {!collapsed && <span>Back to Store</span>}
               </NavLink>
