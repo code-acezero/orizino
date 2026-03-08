@@ -8,6 +8,8 @@ import CategoryGrid from "@/components/CategoryGrid";
 import ProductCard from "@/components/ProductCard";
 import Footer from "@/components/Footer";
 import HomePopup from "@/components/HomePopup";
+import SaleCountdown from "@/components/SaleCountdown";
+import SalePopup from "@/components/SalePopup";
 import { Sparkles } from "lucide-react";
 
 interface SaleConfig {
@@ -16,16 +18,20 @@ interface SaleConfig {
   title: string;
   subtitle: string;
   icon: string;
+  custom_icon_url?: string;
+  banner_image?: string;
   color: string;
   button_text: string;
   button_link: string;
   position: string;
   starts_at: string;
   ends_at: string;
+  show_countdown: boolean;
   show_products: boolean;
   product_source: string;
   product_count: number;
   sort_order: number;
+  trigger_popup: boolean;
 }
 
 const isSaleActive = (sale: SaleConfig) => {
@@ -40,13 +46,7 @@ const HomePage: React.FC = () => {
   const { data: featuredProducts = [], isLoading } = useQuery({
     queryKey: ["featured-products"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("id, name, price, compare_at_price, thumbnail, avg_rating, review_count, slug")
-        .eq("is_active", true)
-        .eq("is_featured", true)
-        .order("created_at", { ascending: false })
-        .limit(8);
+      const { data, error } = await supabase.from("products").select("id, name, price, compare_at_price, thumbnail, avg_rating, review_count, slug").eq("is_active", true).eq("is_featured", true).order("created_at", { ascending: false }).limit(8);
       if (error) throw error;
       return data;
     },
@@ -66,7 +66,6 @@ const HomePage: React.FC = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Multi-sale config
   const { data: salesConfig = [] } = useQuery({
     queryKey: ["home-sales-config"],
     queryFn: async () => {
@@ -80,7 +79,6 @@ const HomePage: React.FC = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // New arrivals config
   const { data: newArrivalsConfig } = useQuery({
     queryKey: ["home-new-arrivals"],
     queryFn: async () => {
@@ -93,17 +91,11 @@ const HomePage: React.FC = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // New arrivals products
   const newArrivalsCount = newArrivalsConfig?.product_count || 8;
   const { data: newArrivals = [] } = useQuery({
     queryKey: ["new-arrival-products", newArrivalsCount],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("id, name, price, compare_at_price, thumbnail, avg_rating, review_count, slug")
-        .eq("is_active", true)
-        .order("created_at", { ascending: false })
-        .limit(newArrivalsCount);
+      const { data, error } = await supabase.from("products").select("id, name, price, compare_at_price, thumbnail, avg_rating, review_count, slug").eq("is_active", true).order("created_at", { ascending: false }).limit(newArrivalsCount);
       if (error) throw error;
       return data;
     },
@@ -130,13 +122,7 @@ const HomePage: React.FC = () => {
       const result: Record<string, any[]> = {};
       for (const section of catSectionsConfig || []) {
         const limit = section.product_count || 8;
-        const { data } = await supabase
-          .from("products")
-          .select("id, name, price, compare_at_price, thumbnail, avg_rating, review_count, slug")
-          .eq("is_active", true)
-          .eq("category_id", section.category_id)
-          .order("created_at", { ascending: false })
-          .limit(limit);
+        const { data } = await supabase.from("products").select("id, name, price, compare_at_price, thumbnail, avg_rating, review_count, slug").eq("is_active", true).eq("category_id", section.category_id).order("created_at", { ascending: false }).limit(limit);
         result[section.category_id] = data || [];
       }
       return result;
@@ -145,29 +131,16 @@ const HomePage: React.FC = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Sale product queries
-  const saleProductSources = salesConfig
-    .filter((s: SaleConfig) => s.show_products && s.product_source)
-    .map((s: SaleConfig) => ({ id: s.id, source: s.product_source, count: s.product_count || 4 }));
+  const saleProductSources = salesConfig.filter((s: SaleConfig) => s.show_products && s.product_source).map((s: SaleConfig) => ({ id: s.id, source: s.product_source, count: s.product_count || 4 }));
 
   const { data: saleProducts = {} } = useQuery({
     queryKey: ["sale-products", saleProductSources],
     queryFn: async () => {
       const result: Record<string, any[]> = {};
       for (const sp of saleProductSources) {
-        let query = supabase
-          .from("products")
-          .select("id, name, price, compare_at_price, thumbnail, avg_rating, review_count, slug")
-          .eq("is_active", true);
-
-        if (sp.source === "featured") {
-          query = query.eq("is_featured", true);
-        } else if (sp.source === "latest") {
-          // just latest
-        } else {
-          query = query.eq("category_id", sp.source);
-        }
-
+        let query = supabase.from("products").select("id, name, price, compare_at_price, thumbnail, avg_rating, review_count, slug").eq("is_active", true);
+        if (sp.source === "featured") query = query.eq("is_featured", true);
+        else if (sp.source !== "latest") query = query.eq("category_id", sp.source);
         const { data } = await query.order("created_at", { ascending: false }).limit(sp.count);
         result[sp.id] = data || [];
       }
@@ -186,20 +159,23 @@ const HomePage: React.FC = () => {
 
     return (
       <motion.section key={sale.id} initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}>
-        <div className="glass-strong rounded-3xl p-8 md:p-12 relative overflow-hidden">
+        <div
+          className="glass-strong rounded-3xl p-8 md:p-12 relative overflow-hidden"
+          style={sale.banner_image ? { backgroundImage: `url(${sale.banner_image})`, backgroundSize: "cover", backgroundPosition: "center" } : {}}
+        >
           <div className="absolute inset-0 opacity-20" style={{ background: gradBg }} />
+          {sale.banner_image && <div className="absolute inset-0 bg-background/50" />}
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl" style={{ background: `${bgColor}20` }}>
-                {sale.icon}
+                {sale.custom_icon_url ? <img src={sale.custom_icon_url} className="w-10 h-10 object-contain" alt="" /> : sale.icon}
               </div>
               <div>
                 <h3 className="text-2xl md:text-3xl font-bold font-display text-foreground">{sale.title}</h3>
                 <p className="text-muted-foreground">{sale.subtitle}</p>
-                {sale.ends_at && (
-                  <p className="text-xs text-muted-foreground/70 mt-1">
-                    Ends {new Date(sale.ends_at).toLocaleDateString()}
-                  </p>
+                {sale.show_countdown && sale.ends_at && <SaleCountdown endsAt={sale.ends_at} color={sale.color} />}
+                {!sale.show_countdown && sale.ends_at && (
+                  <p className="text-xs text-muted-foreground/70 mt-1">Ends {new Date(sale.ends_at).toLocaleDateString()}</p>
                 )}
               </div>
             </div>
@@ -221,30 +197,32 @@ const HomePage: React.FC = () => {
     );
   };
 
-  const salesAfterCategories = salesConfig.filter((s: SaleConfig) => s.position === "after-categories");
-  const salesAfterFeatured = salesConfig.filter((s: SaleConfig) => s.position === "after-featured");
-  const salesBottom = salesConfig.filter((s: SaleConfig) => s.position === "bottom");
-
+  const salesByPos = (pos: string) => salesConfig.filter((s: SaleConfig) => s.position === pos);
+  const popupSales = salesConfig.filter((s: SaleConfig) => s.trigger_popup);
   const showNewArrivals = newArrivalsConfig?.enabled !== false && newArrivals.length > 0;
 
   return (
     <div className="min-h-screen pb-20 lg:pb-0">
       <Navbar />
       <HomePopup />
+      {popupSales.map((sale: SaleConfig) => <SalePopup key={sale.id} sale={sale} />)}
 
       <main className="container mx-auto px-4 pt-6 space-y-16">
         <ParallaxSlider />
+
+        {/* Sales after slider */}
+        {salesByPos("after-slider").map(renderSaleBanner)}
+
         <CategoryGrid />
 
         {/* Sales after categories */}
-        {salesAfterCategories.map(renderSaleBanner)}
+        {salesByPos("after-categories").map(renderSaleBanner)}
 
         {/* Category Product Sections */}
         {(catSectionsConfig || []).map((section: any) => {
           const cat = sectionCategories.find((c) => c.id === section.category_id);
           const products = (sectionProducts as Record<string, any[]>)[section.category_id] || [];
           if (!cat || products.length === 0) return null;
-
           return (
             <section key={section.category_id}>
               <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="flex items-center justify-between mb-8">
@@ -288,7 +266,7 @@ const HomePage: React.FC = () => {
         )}
 
         {/* Sales after featured */}
-        {salesAfterFeatured.map(renderSaleBanner)}
+        {salesByPos("after-featured").map(renderSaleBanner)}
 
         {/* New Arrivals */}
         {showNewArrivals && (
@@ -313,8 +291,11 @@ const HomePage: React.FC = () => {
           </section>
         )}
 
+        {/* Sales after arrivals */}
+        {salesByPos("after-arrivals").map(renderSaleBanner)}
+
         {/* Sales at bottom */}
-        {salesBottom.map(renderSaleBanner)}
+        {salesByPos("bottom").map(renderSaleBanner)}
       </main>
 
       <Footer />
