@@ -15,6 +15,50 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { event_type, page, section_id, session_id, metadata, duration_ms } = body;
 
+    // --- Input validation ---
+    const ALLOWED_EVENT_TYPES = ["page_view", "section_view", "section_engagement", "click"];
+    const validatedEventType = ALLOWED_EVENT_TYPES.includes(event_type) ? event_type : null;
+    if (!validatedEventType) {
+      return new Response(JSON.stringify({ error: "Invalid event_type" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (typeof page !== "string" || page.length > 255 || !page.startsWith("/")) {
+      return new Response(JSON.stringify({ error: "Invalid page" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (session_id != null && (typeof session_id !== "string" || session_id.length > 64)) {
+      return new Response(JSON.stringify({ error: "Invalid session_id" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (section_id != null && (typeof section_id !== "string" || section_id.length > 100)) {
+      return new Response(JSON.stringify({ error: "Invalid section_id" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const validatedDuration = typeof duration_ms === "number" && duration_ms >= 0 && duration_ms <= 3600000
+      ? Math.round(duration_ms)
+      : 0;
+
+    // Limit metadata payload size (max 2KB serialized)
+    let validatedMetadata: Record<string, unknown> = {};
+    if (metadata && typeof metadata === "object" && !Array.isArray(metadata)) {
+      const serialized = JSON.stringify(metadata);
+      if (serialized.length <= 2048) {
+        validatedMetadata = metadata as Record<string, unknown>;
+      }
+    }
+
     // Get visitor IP from headers (Supabase edge functions expose this)
     const ip =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
