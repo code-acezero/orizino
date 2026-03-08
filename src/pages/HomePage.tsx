@@ -88,7 +88,7 @@ const HomePage: React.FC = () => {
       const val = data.value as any;
       return val?.value ?? val;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
   });
 
   const newArrivalsCount = newArrivalsConfig?.product_count || 8;
