@@ -174,30 +174,42 @@ export type Database = {
       notifications: {
         Row: {
           created_at: string
+          expires_at: string | null
+          icon: string | null
           id: string
           is_read: boolean
           link_url: string | null
           message: string | null
+          priority: string
+          scheduled_at: string | null
           title: string
           type: string
           user_id: string | null
         }
         Insert: {
           created_at?: string
+          expires_at?: string | null
+          icon?: string | null
           id?: string
           is_read?: boolean
           link_url?: string | null
           message?: string | null
+          priority?: string
+          scheduled_at?: string | null
           title: string
           type?: string
           user_id?: string | null
         }
         Update: {
           created_at?: string
+          expires_at?: string | null
+          icon?: string | null
           id?: string
           is_read?: boolean
           link_url?: string | null
           message?: string | null
+          priority?: string
+          scheduled_at?: string | null
           title?: string
           type?: string
           user_id?: string | null
@@ -335,6 +347,8 @@ export type Database = {
       }
       popups: {
         Row: {
+          animation_style: string
+          bg_color: string | null
           created_at: string
           display_type: string
           duration_hours: number | null
@@ -346,10 +360,16 @@ export type Database = {
           link_url: string | null
           max_views: number | null
           message: string | null
+          position: string
           starts_at: string | null
+          text_color: string | null
           title: string
+          trigger_type: string
+          trigger_value: number
         }
         Insert: {
+          animation_style?: string
+          bg_color?: string | null
           created_at?: string
           display_type?: string
           duration_hours?: number | null
@@ -361,10 +381,16 @@ export type Database = {
           link_url?: string | null
           max_views?: number | null
           message?: string | null
+          position?: string
           starts_at?: string | null
+          text_color?: string | null
           title: string
+          trigger_type?: string
+          trigger_value?: number
         }
         Update: {
+          animation_style?: string
+          bg_color?: string | null
           created_at?: string
           display_type?: string
           duration_hours?: number | null
@@ -376,8 +402,12 @@ export type Database = {
           link_url?: string | null
           max_views?: number | null
           message?: string | null
+          position?: string
           starts_at?: string | null
+          text_color?: string | null
           title?: string
+          trigger_type?: string
+          trigger_value?: number
         }
         Relationships: []
       }
@@ -592,7 +622,9 @@ export type Database = {
           product_id: string | null
           sort_order: number
           subtitle: string | null
+          text_color: string | null
           title: string
+          transition_type: string
         }
         Insert: {
           created_at?: string
@@ -605,7 +637,9 @@ export type Database = {
           product_id?: string | null
           sort_order?: number
           subtitle?: string | null
+          text_color?: string | null
           title: string
+          transition_type?: string
         }
         Update: {
           created_at?: string
@@ -618,7 +652,9 @@ export type Database = {
           product_id?: string | null
           sort_order?: number
           subtitle?: string | null
+          text_color?: string | null
           title?: string
+          transition_type?: string
         }
         Relationships: [
           {

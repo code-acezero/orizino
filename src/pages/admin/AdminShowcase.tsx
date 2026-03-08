@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -12,9 +12,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
 import ImageUpload from "@/components/ImageUpload";
 import { toast } from "@/lib/app-toast";
-import { Plus, Pencil, Trash2, Settings2, Layers, GripVertical } from "lucide-react";
+import { Plus, Pencil, Trash2, Settings2, Layers, GripVertical, Copy, Link2, Palette, Sparkles } from "lucide-react";
 import { useDragReorder } from "@/hooks/use-drag-reorder";
 
 interface ShowcaseConfig {
@@ -35,6 +36,10 @@ interface ShowcaseConfig {
   border_radius: string;
   autoplay: boolean;
   pause_on_hover: boolean;
+  transition_type: string;
+  parallax_intensity: number;
+  content_animation: string;
+  slide_gap: string;
 }
 
 const defaultConfig: ShowcaseConfig = {
@@ -55,6 +60,10 @@ const defaultConfig: ShowcaseConfig = {
   border_radius: "3xl",
   autoplay: true,
   pause_on_hover: true,
+  transition_type: "fade",
+  parallax_intensity: 20,
+  content_animation: "slide-up",
+  slide_gap: "0",
 };
 
 const emptySlide = {
@@ -66,6 +75,9 @@ const emptySlide = {
   cta_link: "/shop",
   sort_order: 0,
   is_active: true,
+  text_color: "",
+  transition_type: "fade",
+  product_id: null as string | null,
 };
 
 const AdminShowcase = () => {
@@ -78,6 +90,15 @@ const AdminShowcase = () => {
     queryKey: ["admin-showcase"],
     queryFn: async () => {
       const { data, error } = await supabase.from("showcase_slides").select("*").order("sort_order");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: products = [] } = useQuery({
+    queryKey: ["admin-products-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("products").select("id, name, thumbnail, slug").eq("is_active", true).order("name").limit(200);
       if (error) throw error;
       return data;
     },
@@ -150,16 +171,19 @@ const AdminShowcase = () => {
   });
 
   const openEdit = (slide?: any) => {
-    setEditing(slide ? { ...slide } : { ...emptySlide });
+    setEditing(slide ? { ...slide } : { ...emptySlide, sort_order: slides.length });
+    setDialogOpen(true);
+  };
+
+  const duplicateSlide = (slide: any) => {
+    const { id, created_at, ...rest } = slide;
+    setEditing({ ...rest, title: `${rest.title} (copy)`, sort_order: slides.length });
     setDialogOpen(true);
   };
 
   const reorderSlides = async (reordered: any[]) => {
-    // Update sort_order based on new position
     const updated = reordered.map((s, i) => ({ ...s, sort_order: i }));
-    // Optimistically update cache
     qc.setQueryData(["admin-showcase"], updated);
-    // Persist each slide's new sort_order
     for (const s of updated) {
       await supabase.from("showcase_slides").update({ sort_order: s.sort_order }).eq("id", s.id);
     }
@@ -169,17 +193,26 @@ const AdminShowcase = () => {
 
   const { dragIndex: slideDragIdx, overIndex: slideOverIdx, getDragProps: getSlideDragProps } = useDragReorder(slides, reorderSlides);
 
+  const linkedProduct = (productId: string | null) => {
+    if (!productId) return null;
+    return products.find((p) => p.id === productId);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-display font-bold">Showcase Slider</h1>
+        <div>
+          <h1 className="text-3xl font-display font-bold">Showcase Slider</h1>
+          <p className="text-sm text-muted-foreground mt-1">{slides.length} slide{slides.length !== 1 ? "s" : ""} · {slides.filter(s => s.is_active).length} active</p>
+        </div>
         <Button onClick={() => openEdit()}><Plus className="w-4 h-4 mr-2" />Add Slide</Button>
       </div>
 
       <Tabs defaultValue="slides">
         <TabsList>
           <TabsTrigger value="slides" className="flex items-center gap-1"><Layers className="w-4 h-4" /> Slides</TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-1"><Settings2 className="w-4 h-4" /> Advanced Settings</TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-1"><Settings2 className="w-4 h-4" /> Settings</TabsTrigger>
+          <TabsTrigger value="effects" className="flex items-center gap-1"><Sparkles className="w-4 h-4" /> Effects</TabsTrigger>
         </TabsList>
 
         <TabsContent value="slides">
@@ -191,35 +224,59 @@ const AdminShowcase = () => {
                     <TableHead className="w-8"></TableHead>
                     <TableHead>Image</TableHead>
                     <TableHead>Title</TableHead>
-                    <TableHead>Subtitle</TableHead>
-                    <TableHead>Order</TableHead>
+                    <TableHead>Linked Product</TableHead>
+                    <TableHead>Transition</TableHead>
                     <TableHead>Active</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {slides.map((slide, idx) => (
-                    <TableRow
-                      key={slide.id}
-                      {...getSlideDragProps(idx)}
-                      className={`cursor-grab active:cursor-grabbing transition-colors ${slideOverIdx === idx && slideDragIdx !== idx ? "bg-primary/10" : ""}`}
-                    >
-                      <TableCell><GripVertical className="w-4 h-4 text-muted-foreground" /></TableCell>
-                      <TableCell>{slide.image_url && <img src={slide.image_url} alt="" className="w-20 h-12 object-cover rounded-lg" />}</TableCell>
-                      <TableCell className="font-medium">{slide.title}</TableCell>
-                      <TableCell className="text-muted-foreground">{slide.subtitle}</TableCell>
-                      <TableCell>{slide.sort_order}</TableCell>
-                      <TableCell>{slide.is_active ? "✓" : "✗"}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button size="icon" variant="ghost" onClick={() => openEdit(slide)}><Pencil className="w-4 h-4" /></Button>
-                          <Button size="icon" variant="ghost" onClick={() => deleteMutation.mutate(slide.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {slides.map((slide: any, idx) => {
+                    const product = linkedProduct(slide.product_id);
+                    return (
+                      <TableRow
+                        key={slide.id}
+                        {...getSlideDragProps(idx)}
+                        className={`cursor-grab active:cursor-grabbing transition-colors ${slideOverIdx === idx && slideDragIdx !== idx ? "bg-primary/10" : ""}`}
+                      >
+                        <TableCell><GripVertical className="w-4 h-4 text-muted-foreground" /></TableCell>
+                        <TableCell>
+                          {slide.image_url && <img src={slide.image_url} alt="" className="w-20 h-12 object-cover rounded-lg" />}
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{slide.title}</p>
+                            {slide.subtitle && <p className="text-xs text-muted-foreground">{slide.subtitle}</p>}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {product ? (
+                            <div className="flex items-center gap-2">
+                              <Link2 className="w-3 h-3 text-primary" />
+                              <span className="text-xs">{product.name}</span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-[10px]">{slide.transition_type || "fade"}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className={slide.is_active ? "text-primary" : "text-muted-foreground"}>{slide.is_active ? "✓" : "✗"}</span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button size="icon" variant="ghost" onClick={() => openEdit(slide)} title="Edit"><Pencil className="w-4 h-4" /></Button>
+                            <Button size="icon" variant="ghost" onClick={() => duplicateSlide(slide)} title="Duplicate"><Copy className="w-4 h-4" /></Button>
+                            <Button size="icon" variant="ghost" onClick={() => deleteMutation.mutate(slide.id)} title="Delete"><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                   {slides.length === 0 && (
-                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No slides yet</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No slides yet</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>
@@ -231,7 +288,7 @@ const AdminShowcase = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Timing & Animation */}
             <Card className="glass">
-              <CardHeader><CardTitle className="text-lg">Timing & Animation</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-lg">Timing & Playback</CardTitle></CardHeader>
               <CardContent className="space-y-5">
                 <div className="flex items-center justify-between">
                   <Label>Autoplay</Label>
@@ -244,10 +301,6 @@ const AdminShowcase = () => {
                 <div>
                   <Label>Transition Duration: {config.transition_duration}ms</Label>
                   <Slider value={[config.transition_duration]} onValueChange={([v]) => setConfig({ ...config, transition_duration: v })} min={200} max={2000} step={100} className="mt-2" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label>Ken Burns Effect (zoom)</Label>
-                  <Switch checked={config.ken_burns} onCheckedChange={(v) => setConfig({ ...config, ken_burns: v })} />
                 </div>
                 <div className="flex items-center justify-between">
                   <Label>Pause on Hover</Label>
@@ -405,30 +458,205 @@ const AdminShowcase = () => {
             {saveConfig.isPending ? "Saving..." : "Save Showcase Settings"}
           </Button>
         </TabsContent>
+
+        {/* New Effects Tab */}
+        <TabsContent value="effects">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="glass">
+              <CardHeader>
+                <CardTitle className="text-lg">Transition Effects</CardTitle>
+                <CardDescription>Global default transition applied to all slides (can be overridden per slide)</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div>
+                  <Label>Default Transition Type</Label>
+                  <Select value={config.transition_type} onValueChange={(v) => setConfig({ ...config, transition_type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fade">Fade</SelectItem>
+                      <SelectItem value="slide">Slide</SelectItem>
+                      <SelectItem value="zoom">Zoom</SelectItem>
+                      <SelectItem value="flip">Flip</SelectItem>
+                      <SelectItem value="blur">Blur Fade</SelectItem>
+                      <SelectItem value="cube">Cube</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Content Animation</Label>
+                  <Select value={config.content_animation} onValueChange={(v) => setConfig({ ...config, content_animation: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="slide-up">Slide Up</SelectItem>
+                      <SelectItem value="slide-left">Slide Left</SelectItem>
+                      <SelectItem value="fade-in">Fade In</SelectItem>
+                      <SelectItem value="scale-up">Scale Up</SelectItem>
+                      <SelectItem value="typewriter">Typewriter</SelectItem>
+                      <SelectItem value="none">No Animation</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="glass">
+              <CardHeader>
+                <CardTitle className="text-lg">Visual Effects</CardTitle>
+                <CardDescription>Parallax and image effects</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="flex items-center justify-between">
+                  <Label>Ken Burns Effect (zoom)</Label>
+                  <Switch checked={config.ken_burns} onCheckedChange={(v) => setConfig({ ...config, ken_burns: v })} />
+                </div>
+                <div>
+                  <Label>Parallax Intensity: {config.parallax_intensity}%</Label>
+                  <Slider value={[config.parallax_intensity]} onValueChange={([v]) => setConfig({ ...config, parallax_intensity: v })} min={0} max={50} step={5} className="mt-2" />
+                </div>
+                <div>
+                  <Label>Slide Gap</Label>
+                  <Select value={config.slide_gap} onValueChange={(v) => setConfig({ ...config, slide_gap: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">No Gap</SelectItem>
+                      <SelectItem value="4">Small (4px)</SelectItem>
+                      <SelectItem value="8">Medium (8px)</SelectItem>
+                      <SelectItem value="16">Large (16px)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Live preview hint */}
+            <Card className="glass lg:col-span-2 border-primary/20">
+              <CardContent className="py-4 flex items-center gap-3">
+                <Sparkles className="w-5 h-5 text-primary shrink-0" />
+                <p className="text-sm text-muted-foreground">
+                  Changes are previewed in real-time on the homepage. Save your settings to persist them.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Button className="w-full mt-6" onClick={() => saveConfig.mutate()} disabled={saveConfig.isPending}>
+            {saveConfig.isPending ? "Saving..." : "Save Effects Settings"}
+          </Button>
+        </TabsContent>
       </Tabs>
 
+      {/* Slide editor dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editing?.id ? "Edit Slide" : "Add Slide"}</DialogTitle></DialogHeader>
           {editing && (
-            <div className="space-y-4">
-              <div><Label>Title</Label><Input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} /></div>
-              <div><Label>Subtitle</Label><Input value={editing.subtitle || ""} onChange={(e) => setEditing({ ...editing, subtitle: e.target.value })} /></div>
+            <div className="space-y-5">
+              {/* Preview */}
+              {editing.image_url && (
+                <div className="relative rounded-xl overflow-hidden h-40 bg-secondary/30">
+                  <img src={editing.image_url} alt="" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-background/60 to-transparent flex items-end p-4">
+                    <div>
+                      {editing.subtitle && <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">{editing.subtitle}</span>}
+                      <h3 className="text-lg font-display font-bold mt-1" style={editing.text_color ? { color: editing.text_color } : undefined}>{editing.title || "Slide Title"}</h3>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2"><Label>Title</Label><Input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} /></div>
+                <div><Label>Subtitle</Label><Input value={editing.subtitle || ""} onChange={(e) => setEditing({ ...editing, subtitle: e.target.value })} /></div>
+                <div>
+                  <Label>Transition Override</Label>
+                  <Select value={editing.transition_type || "fade"} onValueChange={(v) => setEditing({ ...editing, transition_type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fade">Fade (default)</SelectItem>
+                      <SelectItem value="slide">Slide</SelectItem>
+                      <SelectItem value="zoom">Zoom</SelectItem>
+                      <SelectItem value="flip">Flip</SelectItem>
+                      <SelectItem value="blur">Blur Fade</SelectItem>
+                      <SelectItem value="cube">Cube</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
               <div><Label>Description</Label><Textarea value={editing.description || ""} onChange={(e) => setEditing({ ...editing, description: e.target.value })} /></div>
               <div>
                 <Label>Image</Label>
                 <ImageUpload bucket="banners" folder="showcase" value={editing.image_url} onUploaded={(url) => setEditing({ ...editing, image_url: url })} />
               </div>
+
+              {/* Product Linking */}
+              <Card className="border-border/50">
+                <CardContent className="pt-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Link2 className="w-4 h-4 text-primary" />
+                    <Label className="font-medium">Link to Product</Label>
+                  </div>
+                  <Select
+                    value={editing.product_id || "none"}
+                    onValueChange={(v) => {
+                      const product = products.find(p => p.id === v);
+                      setEditing({
+                        ...editing,
+                        product_id: v === "none" ? null : v,
+                        cta_link: product ? `/product/${product.slug}` : editing.cta_link,
+                      });
+                    }}
+                  >
+                    <SelectTrigger><SelectValue placeholder="No product linked" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No product linked</SelectItem>
+                      {products.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
+
               <div className="grid grid-cols-2 gap-4">
                 <div><Label>CTA Text</Label><Input value={editing.cta_text || ""} onChange={(e) => setEditing({ ...editing, cta_text: e.target.value })} /></div>
                 <div><Label>CTA Link</Label><Input value={editing.cta_link || ""} onChange={(e) => setEditing({ ...editing, cta_link: e.target.value })} /></div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><Label>Sort Order</Label><Input type="number" value={editing.sort_order} onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })} /></div>
-                <div className="flex items-center gap-2 pt-6">
-                  <Switch checked={editing.is_active} onCheckedChange={(v) => setEditing({ ...editing, is_active: v })} />
-                  <Label>Active</Label>
-                </div>
+
+              {/* Style overrides */}
+              <Card className="border-border/50">
+                <CardContent className="pt-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-accent" />
+                    <Label className="font-medium">Style Overrides</Label>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Text Color (hex)</Label>
+                      <div className="flex gap-2 items-center">
+                        <Input
+                          value={editing.text_color || ""}
+                          onChange={(e) => setEditing({ ...editing, text_color: e.target.value })}
+                          placeholder="e.g. #ffffff"
+                          className="flex-1"
+                        />
+                        {editing.text_color && (
+                          <div className="w-8 h-8 rounded-lg border border-border" style={{ backgroundColor: editing.text_color }} />
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1">
+                        <Label className="text-xs text-muted-foreground">Sort Order</Label>
+                        <Input type="number" value={editing.sort_order} onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })} />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="flex items-center gap-2">
+                <Switch checked={editing.is_active} onCheckedChange={(v) => setEditing({ ...editing, is_active: v })} />
+                <Label>Active</Label>
               </div>
               <Button className="w-full" onClick={() => saveMutation.mutate(editing)} disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? "Saving..." : "Save Slide"}
