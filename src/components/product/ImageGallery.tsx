@@ -154,27 +154,34 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
         {/* Main image with zoom */}
         <div
           ref={imgRef}
-          className={`relative overflow-hidden cursor-zoom-in group ${
-            isMinimal ? "rounded-2xl" : isEditorial ? "rounded-none aspect-[4/3]" : "rounded-3xl aspect-square glass"
-          }`}
-          onMouseEnter={(e) => {
-            setIsZooming(true);
-            const rect = imgRef.current?.getBoundingClientRect();
-            if (rect) {
-              setRipplePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-              setShowRipple(true);
-              setTimeout(() => setShowRipple(false), 600);
-            }
-          }}
-          onMouseLeave={() => setIsZooming(false)}
-          onMouseMove={handleMouseMove}
-          onWheel={(e) => {
-            if (isZooming) {
-              e.preventDefault();
-              setLensSize((s) => Math.min(300, Math.max(80, s + (e.deltaY < 0 ? 20 : -20))));
-            }
-          }}
-          onClick={() => setLightboxOpen(true)}
+          className={`relative overflow-hidden group ${
+            isMobile ? "cursor-default" : "cursor-zoom-in"
+          } ${isMinimal ? "rounded-2xl" : isEditorial ? "rounded-none aspect-[4/3]" : "rounded-3xl aspect-square glass"}`}
+          {...(!isMobile ? {
+            onMouseEnter: (e: React.MouseEvent) => {
+              setIsZooming(true);
+              const rect = imgRef.current?.getBoundingClientRect();
+              if (rect) {
+                setRipplePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                setShowRipple(true);
+                setTimeout(() => setShowRipple(false), 600);
+              }
+            },
+            onMouseLeave: () => setIsZooming(false),
+            onMouseMove: handleMouseMove,
+            onWheel: (e: React.WheelEvent) => {
+              if (isZooming) {
+                e.preventDefault();
+                setLensSize((s) => Math.min(300, Math.max(80, s + (e.deltaY < 0 ? 20 : -20))));
+              }
+            },
+          } : {})}
+          {...(isMobile ? {
+            onTouchStart: handleMainTouchStart,
+            onTouchMove: handleMainTouchMove,
+            onTouchEnd: handleMainTouchEnd,
+          } : {})}
+          onClick={() => { if (!longPressZoom) setLightboxOpen(true); }}
         >
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.img
@@ -189,7 +196,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
             />
           </AnimatePresence>
 
-          {/* Ripple effect on hover start */}
+          {/* Ripple effect */}
           <AnimatePresence>
             {showRipple && (
               <motion.div
@@ -203,8 +210,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
             )}
           </AnimatePresence>
 
-          {/* Liquid loupe magnifier */}
-          {isZooming && (
+          {/* Liquid loupe magnifier — desktop hover OR mobile long-press */}
+          {((!isMobile && isZooming) || (isMobile && longPressZoom)) && (
             <motion.div
               className="absolute pointer-events-none z-10"
               initial={{ scale: 0, opacity: 0 }}
@@ -226,8 +233,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
             />
           )}
 
-          {/* Lens size controls */}
-          {isZooming && (
+          {/* Lens size controls — desktop only */}
+          {!isMobile && isZooming && (
             <div className="absolute top-3 right-3 z-20 flex items-center gap-1 glass rounded-full px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
                 onClick={(e) => { e.stopPropagation(); setLensSize((s) => Math.max(80, s - 30)); }}
@@ -242,6 +249,13 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
               >
                 <Plus className="w-3 h-3" />
               </button>
+            </div>
+          )}
+
+          {/* Mobile long-press hint */}
+          {isMobile && longPressZoom && (
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 glass rounded-full px-3 py-1">
+              <span className="text-[10px] text-muted-foreground font-medium">Drag to inspect</span>
             </div>
           )}
 
