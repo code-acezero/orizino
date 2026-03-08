@@ -10,13 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AuthModal from "@/components/AuthModal";
 import BottomNav from "@/components/BottomNav";
 
-const categories = [
-  { name: "Fashion", slug: "fashion", subs: ["Men", "Women", "Kids", "Shoes", "Bags"] },
-  { name: "Electronics", slug: "electronics", subs: ["Phones", "Laptops", "Audio", "Wearables"] },
-  { name: "Home Appliance", slug: "home-appliance", subs: ["Kitchen", "Cleaning", "Smart Home"] },
-  { name: "Accessories", slug: "accessories", subs: ["Watches", "Jewelry", "Sunglasses"] },
-  { name: "Groceries", slug: "groceries", subs: ["Fresh", "Pantry", "Beverages"] },
-];
+// Categories fetched from DB
 
 const Navbar: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
