@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Star, Heart, ShoppingCart, Minus, Plus, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/lib/app-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
