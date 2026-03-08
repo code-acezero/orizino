@@ -93,9 +93,9 @@ const getMiniAnimation = (style: string) => {
 
 const PopupPreview = ({ popup }: { popup: any }) => {
   const [animKey, setAnimKey] = useState(0);
+  const [device, setDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
   const prevRef = useRef({ position: popup.position, display_type: popup.display_type, animation_style: popup.animation_style });
 
-  // Re-trigger animation when position, display_type, or animation changes
   useEffect(() => {
     const prev = prevRef.current;
     if (prev.position !== popup.position || prev.display_type !== popup.display_type || prev.animation_style !== popup.animation_style) {
@@ -114,86 +114,112 @@ const PopupPreview = ({ popup }: { popup: any }) => {
 
   const anim = getMiniAnimation(popup.animation_style || "scale");
 
+  const deviceWidth = device === "desktop" ? "100%" : device === "tablet" ? "65%" : "40%";
+
   return (
-    <div className="relative w-full h-56 rounded-xl bg-secondary/30 border border-border/50 overflow-hidden flex flex-col">
-      {/* Simulated browser chrome */}
-      <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-secondary/40 border-b border-border/30">
-        <div className="flex gap-1">
-          <span className="w-2 h-2 rounded-full bg-destructive/60" />
-          <span className="w-2 h-2 rounded-full bg-amber-400/60" />
-          <span className="w-2 h-2 rounded-full bg-primary/60" />
+    <div className="space-y-2">
+      {/* Device toggle */}
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground font-medium">Preview</span>
+        <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-secondary/50">
+          {(["desktop", "tablet", "mobile"] as const).map((d) => (
+            <button
+              key={d}
+              onClick={() => { setDevice(d); setAnimKey((k) => k + 1); }}
+              className={`px-2 py-0.5 rounded-md text-[9px] font-medium transition-all ${
+                device === d ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {d === "desktop" ? "🖥" : d === "tablet" ? "📱" : "📲"} {d.charAt(0).toUpperCase() + d.slice(1)}
+            </button>
+          ))}
         </div>
-        <div className="flex-1 mx-2 h-3.5 rounded-md bg-secondary/60 flex items-center px-1.5">
-          <span className="text-[7px] text-muted-foreground">yoursite.com</span>
-        </div>
-        <Badge variant="outline" className="text-[7px] h-3.5 px-1 border-primary/30 text-primary">Live</Badge>
       </div>
 
-      {/* Preview area */}
-      <div className={`flex-1 flex ${positionClasses[popup.position || "center"] || positionClasses.center} p-2 relative`}>
-        {/* Backdrop for modal types */}
-        {popup.display_type !== "banner" && popup.display_type !== "slide-in" && (
-          <motion.div
-            key={`backdrop-${animKey}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="absolute inset-0 bg-background/30"
-          />
-        )}
-
-        <motion.div
-          key={animKey}
-          {...anim}
-          transition={anim.animate?.transition || { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className={`rounded-lg shadow-xl overflow-hidden relative z-10 ${
-            popup.position === "fullscreen" ? "w-full h-full" :
-            popup.display_type === "banner" ? "w-full max-h-14" :
-            popup.display_type === "slide-in" ? "w-2/5 max-h-28" : "w-3/5 max-h-32"
-          }`}
-          style={{
-            backgroundColor: popup.bg_color || "hsl(220, 20%, 10%)",
-            color: popup.text_color || "hsl(210, 40%, 95%)",
-          }}
+      <div className="relative w-full h-56 rounded-xl bg-secondary/30 border border-border/50 overflow-hidden flex items-start justify-center p-2">
+        <div
+          className="h-full rounded-lg border border-border/30 bg-background overflow-hidden flex flex-col transition-all duration-300"
+          style={{ width: deviceWidth, maxWidth: "100%" }}
         >
-          {/* Close button */}
-          <div className="absolute top-1 right-1 w-3 h-3 rounded-full bg-background/30 flex items-center justify-center">
-            <X className="w-1.5 h-1.5" />
-          </div>
-          {popup.image_url && (
-            <div className="h-10 bg-secondary/50">
-              <img src={popup.image_url} alt="" className="w-full h-full object-cover" />
+          {/* Simulated browser chrome */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-secondary/40 border-b border-border/30 shrink-0">
+            <div className="flex gap-1">
+              <span className="w-2 h-2 rounded-full bg-destructive/60" />
+              <span className="w-2 h-2 rounded-full bg-amber-400/60" />
+              <span className="w-2 h-2 rounded-full bg-primary/60" />
             </div>
-          )}
-          <div className="p-1.5">
-            <p className="text-[9px] font-bold truncate">{popup.title || "Popup Title"}</p>
-            {popup.message && <p className="text-[6px] opacity-70 line-clamp-2 leading-tight mt-0.5">{popup.message}</p>}
-            {popup.link_url && (
-              <div className="mt-1 inline-block text-[6px] px-1.5 py-0.5 rounded-md bg-primary/20 text-primary font-medium">
-                {popup.link_text || "Learn More"}
-              </div>
-            )}
+            <div className="flex-1 mx-2 h-3.5 rounded-md bg-secondary/60 flex items-center px-1.5">
+              <span className="text-[7px] text-muted-foreground">yoursite.com</span>
+            </div>
+            <Badge variant="outline" className="text-[7px] h-3.5 px-1 border-primary/30 text-primary">Live</Badge>
           </div>
-        </motion.div>
-      </div>
 
-      {/* Info badges */}
-      <div className="absolute bottom-1.5 left-2 right-2 flex items-center justify-between">
-        <div className="flex gap-1">
-          <Badge variant="outline" className="text-[7px] h-4 px-1">{popup.display_type || "popup"}</Badge>
-          <Badge variant="outline" className="text-[7px] h-4 px-1">{popup.position || "center"}</Badge>
+          {/* Preview area */}
+          <div className={`flex-1 flex ${positionClasses[popup.position || "center"] || positionClasses.center} p-2 relative`}>
+            {popup.display_type !== "banner" && popup.display_type !== "slide-in" && (
+              <motion.div
+                key={`backdrop-${animKey}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="absolute inset-0 bg-background/30"
+              />
+            )}
+
+            <motion.div
+              key={animKey}
+              {...anim}
+              transition={anim.animate?.transition || { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className={`rounded-lg shadow-xl overflow-hidden relative z-10 ${
+                popup.position === "fullscreen" ? "w-full h-full" :
+                popup.display_type === "banner" ? "w-full max-h-14" :
+                popup.display_type === "slide-in" ? (device === "mobile" ? "w-4/5 max-h-28" : "w-2/5 max-h-28") :
+                (device === "mobile" ? "w-[90%] max-h-32" : "w-3/5 max-h-32")
+              }`}
+              style={{
+                backgroundColor: popup.bg_color || "hsl(220, 20%, 10%)",
+                color: popup.text_color || "hsl(210, 40%, 95%)",
+              }}
+            >
+              <div className="absolute top-1 right-1 w-3 h-3 rounded-full bg-background/30 flex items-center justify-center">
+                <X className="w-1.5 h-1.5" />
+              </div>
+              {popup.image_url && (
+                <div className="h-10 bg-secondary/50">
+                  <img src={popup.image_url} alt="" className="w-full h-full object-cover" />
+                </div>
+              )}
+              <div className="p-1.5">
+                <p className="text-[9px] font-bold truncate">{popup.title || "Popup Title"}</p>
+                {popup.message && <p className="text-[6px] opacity-70 line-clamp-2 leading-tight mt-0.5">{popup.message}</p>}
+                {popup.link_url && (
+                  <div className="mt-1 inline-block text-[6px] px-1.5 py-0.5 rounded-md bg-primary/20 text-primary font-medium">
+                    {popup.link_text || "Learn More"}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Info badges */}
+          <div className="px-2 py-1 flex items-center justify-between border-t border-border/20 shrink-0">
+            <div className="flex gap-1">
+              <Badge variant="outline" className="text-[7px] h-4 px-1">{popup.display_type || "popup"}</Badge>
+              <Badge variant="outline" className="text-[7px] h-4 px-1">{popup.position || "center"}</Badge>
+            </div>
+            <button
+              onClick={() => setAnimKey((k) => k + 1)}
+              className="text-[7px] text-primary hover:text-primary/80 transition-colors flex items-center gap-0.5"
+            >
+              <motion.span
+                key={`replay-${animKey}`}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 0.4 }}
+                className="inline-block"
+              >↻</motion.span>
+              Replay
+            </button>
+          </div>
         </div>
-        <button
-          onClick={() => setAnimKey((k) => k + 1)}
-          className="text-[7px] text-primary hover:text-primary/80 transition-colors flex items-center gap-0.5"
-        >
-          <motion.span
-            key={`replay-${animKey}`}
-            animate={{ rotate: 360 }}
-            transition={{ duration: 0.4 }}
-            className="inline-block"
-          >↻</motion.span>
-          Replay {popup.animation_style || "scale"}
-        </button>
       </div>
     </div>
   );
