@@ -457,13 +457,19 @@ const HomePage: React.FC = () => {
       {popupSales.map((sale: SaleConfig) => <SalePopup key={sale.id} sale={sale} />)}
 
       <main className={`mx-auto px-4 pt-6 flex flex-col ${spacingClass}`} style={{ maxWidth: layout.container_max_width }}>
-        {sectionOrder.map((sectionId, idx) => (
-          <React.Fragment key={sectionId}>
-            {renderSection(sectionId)}
-            {sectionSaleMap[sectionId] && salesByPos(sectionSaleMap[sectionId]).map(renderSaleBanner)}
-            {idx < sectionOrder.length - 1 && divider}
-          </React.Fragment>
-        ))}
+        {sectionOrder.map((section, idx) => {
+          // Check visibility (default to visible if not specified)
+          const isVisible = (section as any).visible !== false;
+          if (!isVisible) return null;
+          
+          return (
+            <React.Fragment key={section.id}>
+              {renderSection(section.id)}
+              {sectionSaleMap[section.id] && salesByPos(sectionSaleMap[section.id]).map(renderSaleBanner)}
+              {idx < sectionOrder.length - 1 && divider}
+            </React.Fragment>
+          );
+        })}
         {salesByPos("bottom").map(renderSaleBanner)}
       </main>
 
