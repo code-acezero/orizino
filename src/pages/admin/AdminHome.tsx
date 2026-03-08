@@ -1057,60 +1057,6 @@ const AdminHome = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="categories">
-          <Card className="glass">
-            <CardHeader>
-              <CardTitle>Categories on Home Page</CardTitle>
-              <p className="text-sm text-muted-foreground">Toggle which categories appear in the "Shop by Category" section. Drag to reorder.</p>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader><TableRow>
-                  <TableHead className="w-8"></TableHead><TableHead>Name</TableHead><TableHead>Sort Order</TableHead><TableHead>Featured</TableHead><TableHead>Status</TableHead>
-                </TableRow></TableHeader>
-                <TableBody>
-                  {categories.map((cat, idx) => (
-                    <TableRow key={cat.id} {...getFeatCatDragProps(idx)} className={`cursor-grab active:cursor-grabbing transition-colors ${featCatOverIdx === idx && featCatDragIdx !== idx ? "bg-primary/10" : ""}`}>
-                      <TableCell><GripVertical className="w-4 h-4 text-muted-foreground" /></TableCell>
-                      <TableCell className="font-medium">{cat.name}</TableCell>
-                      <TableCell>{cat.sort_order}</TableCell>
-                      <TableCell><Switch checked={cat.is_featured} onCheckedChange={(v) => toggleCatFeatured.mutate({ id: cat.id, is_featured: v })} /></TableCell>
-                      <TableCell><Badge variant={cat.is_active ? "default" : "secondary"}>{cat.is_active ? "Active" : "Inactive"}</Badge></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="products">
-          <Card className="glass">
-            <CardHeader>
-              <CardTitle>Products on Home Page</CardTitle>
-              <p className="text-sm text-muted-foreground">Toggle which products appear in the "Featured Products" section. Drag to reorder.</p>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader><TableRow>
-                  <TableHead className="w-8"></TableHead><TableHead>Image</TableHead><TableHead>Name</TableHead><TableHead>Price</TableHead><TableHead>Featured</TableHead><TableHead>Status</TableHead>
-                </TableRow></TableHeader>
-                <TableBody>
-                  {localProducts.map((prod, idx) => (
-                    <TableRow key={prod.id} {...getFeatProdDragProps(idx)} className={`cursor-grab active:cursor-grabbing transition-colors ${featProdOverIdx === idx && featProdDragIdx !== idx ? "bg-primary/10" : ""}`}>
-                      <TableCell><GripVertical className="w-4 h-4 text-muted-foreground" /></TableCell>
-                      <TableCell>{prod.thumbnail && <img src={prod.thumbnail} alt="" className="w-10 h-10 object-cover rounded-lg" />}</TableCell>
-                      <TableCell className="font-medium">{prod.name}</TableCell>
-                      <TableCell>${Number(prod.price).toFixed(2)}</TableCell>
-                      <TableCell><Switch checked={prod.is_featured} onCheckedChange={(v) => toggleProdFeatured.mutate({ id: prod.id, is_featured: v })} /></TableCell>
-                      <TableCell><Badge variant={prod.is_active ? "default" : "secondary"}>{prod.is_active ? "Active" : "Inactive"}</Badge></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         {/* Layout & Style */}
         <TabsContent value="layout">
