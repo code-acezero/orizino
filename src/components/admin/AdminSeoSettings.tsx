@@ -8,8 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/lib/app-toast";
-import { Search, Globe, FileText, AlertCircle, Check, Eye } from "lucide-react";
+import { Search, Globe, FileText, AlertCircle, Check, Eye, FileSearch } from "lucide-react";
+import SeoAuditTool from "./SeoAuditTool";
 
 interface PageSEO {
   title: string;
