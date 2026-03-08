@@ -12,6 +12,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ProductCard from "@/components/ProductCard";
+import ReviewForm from "@/components/ReviewForm";
 
 const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
