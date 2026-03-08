@@ -396,6 +396,100 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
+      {/* Sales Conversion Funnel */}
+      <Card className="glass">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Filter className="w-4 h-4 text-primary" />
+                Sales Conversion Funnel
+              </CardTitle>
+              <CardDescription>Last 30 days: Visitors → Cart → Checkout → Completed</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {funnelData && funnelData[0]?.value > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Funnel bars */}
+              <div className="space-y-3">
+                {funnelData.map((step, i) => {
+                  const maxVal = funnelData[0].value;
+                  const pct = maxVal > 0 ? (step.value / maxVal) * 100 : 0;
+                  const convRate = i > 0 && funnelData[i - 1].value > 0
+                    ? ((step.value / funnelData[i - 1].value) * 100).toFixed(1)
+                    : "100";
+                  return (
+                    <div key={step.name} className="space-y-1">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium text-foreground">{step.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-display font-bold">{step.value.toLocaleString()}</span>
+                          {i > 0 && (
+                            <Badge variant="outline" className="text-[10px] font-mono">
+                              {convRate}%
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="h-8 rounded-xl bg-secondary/30 overflow-hidden relative">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.max(pct, 2)}%` }}
+                          transition={{ duration: 0.8, delay: i * 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+                          className="h-full rounded-xl"
+                          style={{ backgroundColor: step.fill }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Conversion summary */}
+              <div className="flex flex-col justify-center gap-4">
+                {[
+                  { from: "Visitors", to: "Cart", idx: 1 },
+                  { from: "Cart", to: "Checkout", idx: 2 },
+                  { from: "Checkout", to: "Completed", idx: 3 },
+                ].map(({ from, to, idx }) => {
+                  const prev = funnelData[idx - 1]?.value ?? 0;
+                  const curr = funnelData[idx]?.value ?? 0;
+                  const rate = prev > 0 ? ((curr / prev) * 100).toFixed(1) : "0";
+                  const drop = prev > 0 ? (((prev - curr) / prev) * 100).toFixed(1) : "0";
+                  return (
+                    <div key={to} className="flex items-center gap-3 p-3 rounded-xl border border-border/40 bg-secondary/10">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${funnelData[idx].fill}20` }}>
+                        <span className="text-sm font-display font-bold" style={{ color: funnelData[idx].fill }}>{rate}%</span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-foreground">{from} → {to}</p>
+                        <p className="text-xs text-muted-foreground">{drop}% drop-off · {curr.toLocaleString()} of {prev.toLocaleString()}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+                {/* Overall conversion */}
+                <div className="p-3 rounded-xl border border-primary/20 bg-primary/5 text-center">
+                  <p className="text-xs text-muted-foreground">Overall Conversion</p>
+                  <p className="text-2xl font-display font-bold text-primary">
+                    {funnelData[0].value > 0
+                      ? ((funnelData[3].value / funnelData[0].value) * 100).toFixed(2)
+                      : "0"}%
+                  </p>
+                  <p className="text-xs text-muted-foreground">Visitors to Completed Orders</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="h-[200px] flex items-center justify-center text-sm text-muted-foreground">
+              No data available yet
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Bottom Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Recent Orders (2 cols) */}
