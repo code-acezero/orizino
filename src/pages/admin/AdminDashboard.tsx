@@ -10,14 +10,19 @@ import {
   BarChart3, Activity, Layers, Filter,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { format, subDays, startOfDay, isAfter } from "date-fns";
+import { format, subDays, startOfDay, isAfter, differenceInDays } from "date-fns";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar,
   FunnelChart, Funnel, LabelList,
 } from "recharts";
 import { motion } from "framer-motion";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 /* ── Stat card with trend indicator ── */
 const StatCard = ({
@@ -74,22 +79,47 @@ const PIE_COLORS = [
 /* ── Main Component ── */
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  /* ── Date range state ── */
+  const [rangePreset, setRangePreset] = useState("7d");
+  const [customFrom, setCustomFrom] = useState<Date | undefined>();
+  const [customTo, setCustomTo] = useState<Date | undefined>();
 
-  /* ── Fetch core stats ── */
+  const dateRange = useMemo(() => {
+    if (rangePreset === "custom" && customFrom) {
+      return {
+        from: startOfDay(customFrom).toISOString(),
+        to: customTo ? new Date(startOfDay(customTo).getTime() + 86400000 - 1).toISOString() : new Date().toISOString(),
+        days: differenceInDays(customTo || new Date(), customFrom) + 1,
+        label: `${format(customFrom, "MMM dd")} – ${format(customTo || new Date(), "MMM dd")}`,
+      };
+    }
+    const presets: Record<string, number> = { "7d": 7, "14d": 14, "30d": 30, "90d": 90 };
+    const days = presets[rangePreset] || 7;
+    return {
+      from: subDays(new Date(), days).toISOString(),
+      to: new Date().toISOString(),
+      days,
+      label: `Last ${days} days`,
+    };
+  }, [rangePreset, customFrom, customTo]);
+
+  const prevRange = useMemo(() => {
+    const d = dateRange.days;
+    return {
+      from: subDays(new Date(dateRange.from), d).toISOString(),
+      to: dateRange.from,
+    };
+  }, [dateRange]);
   const { data: stats, isLoading } = useQuery({
-    queryKey: ["admin-dashboard-stats"],
+    queryKey: ["admin-dashboard-stats", dateRange.from, dateRange.to],
     queryFn: async () => {
-      const now = new Date();
-      const sevenDaysAgo = subDays(now, 7).toISOString();
-      const fourteenDaysAgo = subDays(now, 14).toISOString();
-
       const [products, orders, profiles, reviews, recentOrders, previousOrders] = await Promise.all([
         supabase.from("products").select("id", { count: "exact", head: true }),
         supabase.from("orders").select("id, total, status, created_at"),
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("reviews").select("id", { count: "exact", head: true }),
-        supabase.from("orders").select("id, total, created_at").gte("created_at", sevenDaysAgo),
-        supabase.from("orders").select("id, total, created_at").gte("created_at", fourteenDaysAgo).lt("created_at", sevenDaysAgo),
+        supabase.from("orders").select("id, total, created_at").gte("created_at", dateRange.from).lte("created_at", dateRange.to),
+        supabase.from("orders").select("id, total, created_at").gte("created_at", prevRange.from).lt("created_at", prevRange.to),
       ]);
 
       const allOrders = orders.data ?? [];
@@ -104,10 +134,14 @@ const AdminDashboard = () => {
       const prevOrderCount = previousOrders.data?.length ?? 0;
       const orderTrend = prevOrderCount > 0 ? Math.round(((recentOrderCount - prevOrderCount) / prevOrderCount) * 100) : 0;
 
-      // Status breakdown
       const statusBreakdown: Record<string, number> = {};
       allOrders.forEach((o) => {
         statusBreakdown[o.status] = (statusBreakdown[o.status] || 0) + 1;
+      });
+
+      const rangeOrders = allOrders.filter(o => {
+        const d = new Date(o.created_at);
+        return d >= new Date(dateRange.from) && d <= new Date(dateRange.to);
       });
 
       return {
@@ -121,6 +155,7 @@ const AdminDashboard = () => {
         orderTrend,
         statusBreakdown,
         allOrders,
+        rangeOrders,
       };
     },
     staleTime: 30_000,
@@ -155,20 +190,20 @@ const AdminDashboard = () => {
     staleTime: 60_000,
   });
 
-  /* ── Revenue chart data (last 14 days) ── */
+  /* ── Revenue chart data (selected range) ── */
   const revenueChart = useMemo(() => {
-    if (!stats?.allOrders) return [];
+    if (!stats?.rangeOrders) return [];
     const days: Record<string, number> = {};
-    for (let i = 13; i >= 0; i--) {
-      const d = format(subDays(new Date(), i), "MMM dd");
+    for (let i = dateRange.days - 1; i >= 0; i--) {
+      const d = format(subDays(new Date(dateRange.to), i), "MMM dd");
       days[d] = 0;
     }
-    stats.allOrders.forEach((o) => {
+    stats.rangeOrders.forEach((o: any) => {
       const d = format(new Date(o.created_at), "MMM dd");
       if (d in days) days[d] += Number(o.total);
     });
     return Object.entries(days).map(([date, revenue]) => ({ date, revenue: +revenue.toFixed(2) }));
-  }, [stats?.allOrders]);
+  }, [stats?.rangeOrders, dateRange]);
 
   /* ── Order status pie data ── */
   const pieData = useMemo(() => {
@@ -181,19 +216,13 @@ const AdminDashboard = () => {
 
   /* ── Sales funnel data ── */
   const { data: funnelData } = useQuery({
-    queryKey: ["admin-sales-funnel"],
+    queryKey: ["admin-sales-funnel", dateRange.from, dateRange.to],
     queryFn: async () => {
-      const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
-
       const [visitorsRes, cartRes, checkoutsRes, completedRes] = await Promise.all([
-        // Unique sessions visiting the site
-        supabase.from("page_analytics").select("session_id").eq("event_type", "page_view").gte("created_at", thirtyDaysAgo),
-        // Unique users who added to cart
-        supabase.from("cart_items").select("user_id").gte("created_at", thirtyDaysAgo),
-        // All orders (checkout completed)
-        supabase.from("orders").select("id, status").gte("created_at", thirtyDaysAgo),
-        // Delivered orders
-        supabase.from("orders").select("id").eq("status", "delivered").gte("created_at", thirtyDaysAgo),
+        supabase.from("page_analytics").select("session_id").eq("event_type", "page_view").gte("created_at", dateRange.from).lte("created_at", dateRange.to),
+        supabase.from("cart_items").select("user_id").gte("created_at", dateRange.from).lte("created_at", dateRange.to),
+        supabase.from("orders").select("id, status").gte("created_at", dateRange.from).lte("created_at", dateRange.to),
+        supabase.from("orders").select("id").eq("status", "delivered").gte("created_at", dateRange.from).lte("created_at", dateRange.to),
       ]);
 
       const uniqueVisitors = new Set((visitorsRes.data ?? []).map((r) => r.session_id)).size || 1;
@@ -231,18 +260,71 @@ const AdminDashboard = () => {
       animate="show"
       className="space-y-6"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header with Date Range Selector */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-3xl font-display font-bold">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Overview of your store performance
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Select value={rangePreset} onValueChange={(v) => setRangePreset(v)}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7d">Last 7 days</SelectItem>
+              <SelectItem value="14d">Last 14 days</SelectItem>
+              <SelectItem value="30d">Last 30 days</SelectItem>
+              <SelectItem value="90d">Last 90 days</SelectItem>
+              <SelectItem value="custom">Custom range</SelectItem>
+            </SelectContent>
+          </Select>
+          {rangePreset === "custom" && (
+            <div className="flex items-center gap-1.5">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className={cn("gap-1.5 text-xs", !customFrom && "text-muted-foreground")}>
+                    <CalendarIcon className="w-3.5 h-3.5" />
+                    {customFrom ? format(customFrom, "MMM dd, yyyy") : "From"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="single"
+                    selected={customFrom}
+                    onSelect={setCustomFrom}
+                    disabled={(date) => date > new Date()}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+              <span className="text-xs text-muted-foreground">–</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className={cn("gap-1.5 text-xs", !customTo && "text-muted-foreground")}>
+                    <CalendarIcon className="w-3.5 h-3.5" />
+                    {customTo ? format(customTo, "MMM dd, yyyy") : "To"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="single"
+                    selected={customTo}
+                    onSelect={setCustomTo}
+                    disabled={(date) => date > new Date() || (customFrom ? date < customFrom : false)}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
           <Badge variant="outline" className="text-xs">
             <Activity className="w-3 h-3 mr-1" />
-            Last 7 days
+            {dateRange.label}
           </Badge>
         </div>
       </div>
@@ -288,7 +370,7 @@ const AdminDashboard = () => {
               <div>
                 <CardTitle className="text-base flex items-center gap-2">
                   <BarChart3 className="w-4 h-4 text-primary" />
-                  Revenue (14 days)
+                  Revenue ({dateRange.label})
                 </CardTitle>
                 <CardDescription>Daily revenue breakdown</CardDescription>
               </div>
@@ -405,7 +487,7 @@ const AdminDashboard = () => {
                 <Filter className="w-4 h-4 text-primary" />
                 Sales Conversion Funnel
               </CardTitle>
-              <CardDescription>Last 30 days: Visitors → Cart → Checkout → Completed</CardDescription>
+              <CardDescription>{dateRange.label}: Visitors → Cart → Checkout → Completed</CardDescription>
             </div>
           </div>
         </CardHeader>
