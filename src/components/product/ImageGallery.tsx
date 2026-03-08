@@ -138,60 +138,27 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, productName, discou
             />
           </AnimatePresence>
 
-          {/* Ripple effect */}
-          <AnimatePresence>
-            {showRipple && (
-              <motion.div
-                className="absolute pointer-events-none z-20 rounded-full border-2 border-primary/40"
-                style={{ left: ripplePos.x, top: ripplePos.y }}
-                initial={{ width: 0, height: 0, x: 0, y: 0, opacity: 0.8 }}
-                animate={{ width: 200, height: 200, x: -100, y: -100, opacity: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-              />
-            )}
-          </AnimatePresence>
 
           {/* Liquid loupe magnifier — desktop only */}
           {!isMobile && isZooming && (
-            <div
-              className="absolute pointer-events-none z-10"
+            <motion.div
+              className="absolute pointer-events-none z-10 rounded-full"
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", damping: 25, stiffness: 250 }}
               style={{
                 left: mousePos.x - lensSize / 2,
                 top: mousePos.y - lensSize / 2,
                 width: lensSize,
                 height: lensSize,
+                backgroundImage: `url(${images[selected]})`,
+                backgroundSize: `${imgRef.current?.offsetWidth ? imgRef.current.offsetWidth * zoomPower : 1000}px ${imgRef.current?.offsetHeight ? imgRef.current.offsetHeight * zoomPower : 1000}px`,
+                backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
                 transition: "width 0.2s ease, height 0.2s ease, left 0.05s linear, top 0.05s linear",
+                mask: "radial-gradient(circle at center, black 40%, transparent 70%)",
+                WebkitMask: "radial-gradient(circle at center, black 40%, transparent 70%)",
               }}
-            >
-              {/* Pulsing ring */}
-              <motion.div
-                className="absolute inset-0 rounded-full border-2 border-primary/30"
-                initial={{ scale: 1, opacity: 0.6 }}
-                animate={{ scale: [1, 1.15, 1], opacity: [0.6, 0, 0.6] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <motion.div
-                className="absolute inset-0 rounded-full border border-primary/20"
-                initial={{ scale: 1, opacity: 0.4 }}
-                animate={{ scale: [1, 1.25, 1], opacity: [0.4, 0, 0.4] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
-              />
-              {/* Lens */}
-              <motion.div
-                className="w-full h-full rounded-full overflow-hidden"
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", damping: 20, stiffness: 300 }}
-                style={{
-                  backgroundImage: `url(${images[selected]})`,
-                  backgroundSize: `${imgRef.current?.offsetWidth ? imgRef.current.offsetWidth * zoomPower : 1000}px ${imgRef.current?.offsetHeight ? imgRef.current.offsetHeight * zoomPower : 1000}px`,
-                  backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
-                  border: "3px solid hsl(var(--primary) / 0.4)",
-                  boxShadow: "0 0 0 2px hsl(var(--background) / 0.6), 0 8px 32px hsl(var(--primary) / 0.2), inset 0 0 30px hsl(var(--primary) / 0.05)",
-                }}
-              />
-            </div>
+            />
           )}
 
           {/* Lens controls — desktop only */}
