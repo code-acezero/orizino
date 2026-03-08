@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Star, Heart, ShoppingCart, Minus, Plus, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { Star, Heart, ShoppingCart, Minus, Plus, ChevronLeft, ChevronRight, Check, Globe } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/lib/app-toast";
@@ -13,7 +13,7 @@ import Footer from "@/components/Footer";
 const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { user } = useAuth();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, currency, setCurrency, enabledCurrencies, config } = useCurrency();
   
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -190,6 +190,38 @@ const ProductDetailPage: React.FC = () => {
                 <span className="text-xl text-muted-foreground line-through">{formatPrice(product.compare_at_price)}</span>
               )}
             </div>
+
+            {/* Currency converter widget */}
+            {enabledCurrencies.length > 1 && (
+              <div className="rounded-2xl border border-border/50 bg-secondary/20 p-4 space-y-2">
+                <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5" /> Price in other currencies
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {enabledCurrencies
+                    .filter((c) => c.code !== currency)
+                    .map((c) => {
+                      const rate = config.exchange_rates[c.code];
+                      if (!rate && c.code !== config.default_currency) return null;
+                      const converted = c.code === config.default_currency ? product.price : product.price * rate;
+                      const noDecimal = ["JPY", "KRW", "VND", "IRR"].includes(c.code);
+                      return (
+                        <button
+                          key={c.code}
+                          onClick={() => setCurrency(c.code)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/40 bg-background/50 hover:border-primary/40 hover:bg-primary/5 transition-all text-sm"
+                        >
+                          <span className="font-display">{c.symbol}</span>
+                          <span className="text-foreground font-medium">
+                            {converted.toLocaleString(undefined, { minimumFractionDigits: noDecimal ? 0 : 2, maximumFractionDigits: noDecimal ? 0 : 2 })}
+                          </span>
+                          <span className="text-muted-foreground text-xs">{c.code}</span>
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
 
             {product.short_description && <p className="text-muted-foreground">{product.short_description}</p>}
 
