@@ -1,0 +1,1 @@
+UPDATE site_settings SET value = '{"value": "premium"}'::jsonb WHERE key = 'product_page_layout';
