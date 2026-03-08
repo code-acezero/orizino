@@ -134,6 +134,37 @@ const CartPage: React.FC = () => {
               <div className="border-t border-border pt-4 flex justify-between font-bold text-foreground">
                 <span>Total</span><span>{formatPrice(total)}</span>
               </div>
+              {/* Currency converter */}
+              {enabledCurrencies.length > 1 && (
+                <div className="rounded-2xl border border-border/50 bg-secondary/20 p-3 space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5" /> Total in other currencies
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {enabledCurrencies
+                      .filter((c) => c.code !== currency)
+                      .map((c) => {
+                        const rate = config.exchange_rates[c.code];
+                        if (!rate && c.code !== config.default_currency) return null;
+                        const converted = c.code === config.default_currency ? total : total * rate;
+                        const noDecimal = ["JPY", "KRW", "VND", "IRR"].includes(c.code);
+                        return (
+                          <button
+                            key={c.code}
+                            onClick={() => setCurrency(c.code)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/40 bg-background/50 hover:border-primary/40 hover:bg-primary/5 transition-all text-sm"
+                          >
+                            <span className="font-display">{c.symbol}</span>
+                            <span className="text-foreground font-medium">
+                              {converted.toLocaleString(undefined, { minimumFractionDigits: noDecimal ? 0 : 2, maximumFractionDigits: noDecimal ? 0 : 2 })}
+                            </span>
+                            <span className="text-muted-foreground text-xs">{c.code}</span>
+                          </button>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
               <Link to="/checkout" className="block">
                 <motion.span whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                   className="w-full btn-pill bg-gradient-primary text-primary-foreground font-semibold py-3 flex items-center justify-center gap-2">
