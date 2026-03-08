@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Star, Shield, Truck, RotateCcw, Package, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -363,24 +363,38 @@ const ProductDetailPage: React.FC = () => {
                    )}
 
                   {/* Selected variant badge */}
-                  {(selectedSize || selectedColor) && (
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs text-muted-foreground">Selected:</span>
-                      {selectedSize && (
-                        <Badge variant="secondary" className="gap-1 pl-2.5 pr-1.5 py-1">
-                          Size: {selectedSize}
-                          <button onClick={() => setSelectedSize(null)} className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-3 h-3" /></button>
-                        </Badge>
-                      )}
-                      {selectedColor && (
-                        <Badge variant="secondary" className="gap-1.5 pl-2 pr-1.5 py-1">
-                          <span className="w-3 h-3 rounded-full border border-border/50 inline-block shrink-0" style={{ backgroundColor: selectedColor.toLowerCase() }} />
-                          {selectedColor}
-                          <button onClick={() => setSelectedColor(null)} className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-3 h-3" /></button>
-                        </Badge>
-                      )}
-                    </div>
-                  )}
+                  <AnimatePresence>
+                    {(selectedSize || selectedColor) && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="flex flex-wrap items-center gap-2"
+                      >
+                        <span className="text-xs text-muted-foreground">Selected:</span>
+                        <AnimatePresence mode="popLayout">
+                          {selectedSize && (
+                            <motion.div key="size" layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.15 }}>
+                              <Badge variant="secondary" className="gap-1 pl-2.5 pr-1.5 py-1">
+                                Size: {selectedSize}
+                                <button onClick={() => setSelectedSize(null)} className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-3 h-3" /></button>
+                              </Badge>
+                            </motion.div>
+                          )}
+                          {selectedColor && (
+                            <motion.div key="color" layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.15 }}>
+                              <Badge variant="secondary" className="gap-1.5 pl-2 pr-1.5 py-1">
+                                <span className="w-3 h-3 rounded-full border border-border/50 inline-block shrink-0" style={{ backgroundColor: selectedColor.toLowerCase() }} />
+                                {selectedColor}
+                                <button onClick={() => setSelectedColor(null)} className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-3 h-3" /></button>
+                              </Badge>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
                   {hasVariants && product && (
                     <VariantComparison
@@ -473,24 +487,38 @@ const ProductDetailPage: React.FC = () => {
                 )}
 
                 {/* Selected variant badge */}
-                {(selectedSize || selectedColor) && (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs text-muted-foreground">Selected:</span>
-                    {selectedSize && (
-                      <Badge variant="secondary" className="gap-1 pl-2.5 pr-1.5 py-1">
-                        Size: {selectedSize}
-                        <button onClick={() => setSelectedSize(null)} className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-3 h-3" /></button>
-                      </Badge>
-                    )}
-                    {selectedColor && (
-                      <Badge variant="secondary" className="gap-1.5 pl-2 pr-1.5 py-1">
-                        <span className="w-3 h-3 rounded-full border border-border/50 inline-block shrink-0" style={{ backgroundColor: selectedColor.toLowerCase() }} />
-                        {selectedColor}
-                        <button onClick={() => setSelectedColor(null)} className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-3 h-3" /></button>
-                      </Badge>
-                    )}
-                  </div>
-                )}
+                <AnimatePresence>
+                  {(selectedSize || selectedColor) && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="flex flex-wrap items-center gap-2"
+                    >
+                      <span className="text-xs text-muted-foreground">Selected:</span>
+                      <AnimatePresence mode="popLayout">
+                        {selectedSize && (
+                          <motion.div key="size" layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.15 }}>
+                            <Badge variant="secondary" className="gap-1 pl-2.5 pr-1.5 py-1">
+                              Size: {selectedSize}
+                              <button onClick={() => setSelectedSize(null)} className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-3 h-3" /></button>
+                            </Badge>
+                          </motion.div>
+                        )}
+                        {selectedColor && (
+                          <motion.div key="color" layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.15 }}>
+                            <Badge variant="secondary" className="gap-1.5 pl-2 pr-1.5 py-1">
+                              <span className="w-3 h-3 rounded-full border border-border/50 inline-block shrink-0" style={{ backgroundColor: selectedColor.toLowerCase() }} />
+                              {selectedColor}
+                              <button onClick={() => setSelectedColor(null)} className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-3 h-3" /></button>
+                            </Badge>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {hasVariants && product && (
                   <VariantComparison
