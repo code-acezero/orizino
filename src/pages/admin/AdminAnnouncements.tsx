@@ -589,9 +589,21 @@ const AdminAnnouncements = () => {
                       <Button size="sm" variant="ghost" onClick={() => duplicatePopup(p)}>
                         <Plus className="w-3 h-3" />
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => deletePopup.mutate(p.id)}>
-                        <Trash2 className="w-3 h-3 text-destructive" />
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="ghost"><Trash2 className="w-3 h-3 text-destructive" /></Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete popup?</AlertDialogTitle>
+                            <AlertDialogDescription>This will permanently delete "{p.title}". This action cannot be undone.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deletePopup.mutate(p.id)}>Delete</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </CardContent>
                 </Card>

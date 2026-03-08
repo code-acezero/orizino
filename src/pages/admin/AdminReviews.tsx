@@ -227,7 +227,21 @@ const AdminReviews = () => {
                   <Button variant="ghost" size="icon" onClick={() => toggleApproval.mutate({ id: r.id, approved: !r.is_approved })}>
                     {r.is_approved ? <X className="h-4 w-4" /> : <Check className="h-4 w-4 text-primary" />}
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => deleteReview.mutate(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete review?</AlertDialogTitle>
+                        <AlertDialogDescription>This will permanently delete this review. This action cannot be undone.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deleteReview.mutate(r.id)}>Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </TableCell>
               </TableRow>
             ))}

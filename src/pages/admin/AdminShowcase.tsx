@@ -270,7 +270,21 @@ const AdminShowcase = () => {
                           <div className="flex gap-1">
                             <Button size="icon" variant="ghost" onClick={() => openEdit(slide)} title="Edit"><Pencil className="w-4 h-4" /></Button>
                             <Button size="icon" variant="ghost" onClick={() => duplicateSlide(slide)} title="Duplicate"><Copy className="w-4 h-4" /></Button>
-                            <Button size="icon" variant="ghost" onClick={() => deleteMutation.mutate(slide.id)} title="Delete"><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="icon" variant="ghost" title="Delete"><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete slide?</AlertDialogTitle>
+                                  <AlertDialogDescription>This will permanently delete "{slide.title}". This action cannot be undone.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deleteMutation.mutate(slide.id)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </TableCell>
                       </TableRow>
