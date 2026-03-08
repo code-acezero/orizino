@@ -5,6 +5,22 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Sparkles } from "lucide-react";
 
+import catElectronics from "@/assets/icons/cat-electronics.png";
+import catFashion from "@/assets/icons/cat-fashion.png";
+import catHome from "@/assets/icons/cat-home.png";
+import catAccessories from "@/assets/icons/cat-accessories.png";
+import catGroceries from "@/assets/icons/cat-groceries.png";
+import catSports from "@/assets/icons/cat-sports.png";
+
+const fallbackIcons: Record<string, string> = {
+  electronics: catElectronics,
+  fashion: catFashion,
+  "home-living": catHome,
+  accessories: catAccessories,
+  groceries: catGroceries,
+  "sports-outdoors": catSports,
+};
+
 const CategoryGrid: React.FC = () => {
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ["featured-categories"],
