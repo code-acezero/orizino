@@ -88,7 +88,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Cache-Control": "public, max-age=3600" },
     });
   } catch (error) {
-    return new Response(`<!-- Error generating sitemap: ${error.message} -->`, {
+    console.error("Sitemap generation error:", error);
+    return new Response(`<!-- Error generating sitemap -->`, {
       status: 500,
       headers: corsHeaders,
     });
