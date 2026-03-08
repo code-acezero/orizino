@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import { motion } from "framer-motion";
 
-interface ProductCardProps {
+export interface ProductCardProps {
   id: string;
   name: string;
   price: number;
@@ -12,6 +12,7 @@ interface ProductCardProps {
   avgRating?: number;
   reviewCount?: number;
   slug: string;
+  className?: string;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
