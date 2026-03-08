@@ -409,8 +409,9 @@ const AdminHome = () => {
     <div className="space-y-6">
       <h1 className="text-3xl font-display font-bold">Home Page Management</h1>
 
-      <Tabs defaultValue="cat-sections">
+      <Tabs defaultValue="section-order">
         <TabsList className="flex-wrap">
+          <TabsTrigger value="section-order">Section Order</TabsTrigger>
           <TabsTrigger value="cat-sections">Category Sections</TabsTrigger>
           <TabsTrigger value="sales">Sales</TabsTrigger>
           <TabsTrigger value="new-arrivals">New Arrivals</TabsTrigger>
@@ -418,6 +419,43 @@ const AdminHome = () => {
           <TabsTrigger value="categories">Featured Categories</TabsTrigger>
           <TabsTrigger value="products">Featured Products</TabsTrigger>
         </TabsList>
+
+        {/* Section Order */}
+        <TabsContent value="section-order">
+          <Card className="glass">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                  <Layers className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Homepage Section Order</CardTitle>
+                  <p className="text-sm text-muted-foreground">Drag to rearrange the order of sections on the homepage. Sale banners appear relative to the sections they're assigned to.</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {sectionOrder.map((section, idx) => (
+                <div
+                  key={section.id}
+                  {...getSectionOrderDragProps(idx)}
+                  className={`flex items-center gap-4 p-4 rounded-xl border border-border bg-secondary/20 cursor-grab active:cursor-grabbing transition-all ${secOverIdx === idx && secDragIdx !== idx ? "border-primary bg-primary/10 scale-[1.01]" : ""}`}
+                >
+                  <GripVertical className="w-5 h-5 text-muted-foreground shrink-0" />
+                  <span className="text-2xl">{section.icon}</span>
+                  <div className="flex-1">
+                    <p className="font-medium text-foreground">{section.label}</p>
+                    <p className="text-xs text-muted-foreground">Position {idx + 1}</p>
+                  </div>
+                  <Badge variant="outline" className="text-xs">{section.id}</Badge>
+                </div>
+              ))}
+              <Button className="w-full mt-4" onClick={() => saveSectionOrder.mutate()} disabled={saveSectionOrder.isPending}>
+                {saveSectionOrder.isPending ? "Saving..." : "Save Section Order"}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Category Sections */}
         <TabsContent value="cat-sections">
