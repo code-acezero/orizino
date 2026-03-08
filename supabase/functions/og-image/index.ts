@@ -19,13 +19,14 @@ async function ensureWasm() {
   wasmInitialized = true;
 }
 
-// Fetch a font for satori
+// Fetch fonts from Google Fonts (reliable direct TTF URLs)
 let fontData: ArrayBuffer | null = null;
 async function getFont(): Promise<ArrayBuffer> {
   if (fontData) return fontData;
   const res = await fetch(
-    "https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-400-normal.woff"
+    "https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZ9hiA.woff2"
   );
+  if (!res.ok) throw new Error(`Font fetch failed: ${res.status}`);
   fontData = await res.arrayBuffer();
   return fontData;
 }
@@ -34,8 +35,9 @@ let boldFontData: ArrayBuffer | null = null;
 async function getBoldFont(): Promise<ArrayBuffer> {
   if (boldFontData) return boldFontData;
   const res = await fetch(
-    "https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-700-normal.woff"
+    "https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYAZ9hiA.woff2"
   );
+  if (!res.ok) throw new Error(`Bold font fetch failed: ${res.status}`);
   boldFontData = await res.arrayBuffer();
   return boldFontData;
 }
