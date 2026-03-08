@@ -298,6 +298,49 @@ const HomepageAnalytics = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Click Tracking Breakdown */}
+      <Card className="glass">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Target className="w-5 h-5 text-rose-400" />
+            Click Tracking & Conversion
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {stats.clickBreakdown.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {stats.clickBreakdown.map((click) => (
+                <div key={click.type} className="p-4 rounded-xl bg-secondary/20 border border-border/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium text-foreground">{click.label}</p>
+                    <Badge variant="secondary" className="text-xs">{click.count}</Badge>
+                  </div>
+                  <div className="space-y-1.5">
+                    {click.topTargets.map(([target, count]) => (
+                      <div key={target} className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground truncate max-w-[140px]" title={target}>{target}</span>
+                        <span className="text-foreground font-medium">{count as number}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {stats.totalPageViews > 0 && (
+                    <div className="mt-3 pt-2 border-t border-border/30">
+                      <p className="text-xs text-muted-foreground">
+                        Conv. rate: <span className="text-primary font-medium">{((click.count / stats.totalPageViews) * 100).toFixed(1)}%</span>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-[120px] text-muted-foreground text-sm">
+              No click data yet. Interact with CTAs and product cards on the homepage to generate data.
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
