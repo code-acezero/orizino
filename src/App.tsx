@@ -42,6 +42,7 @@ const App = () => (
       <AppToastOverlay />
       <BrowserRouter>
         <AuthProvider>
+          <CurrencyProvider>
           <SiteThemeProvider />
           <Routes>
             <Route path="/" element={<LandingPage />} />
