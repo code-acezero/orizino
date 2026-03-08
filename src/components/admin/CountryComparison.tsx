@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, ArrowDownRight, Minus, GitCompareArrows } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Minus, GitCompareArrows, Download } from "lucide-react";
 
 interface CountryComparisonProps {
   analyticsData: any[];
