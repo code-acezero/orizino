@@ -54,41 +54,18 @@ const AdminUsers = () => {
 
   const filtered = filterRole === "all" ? profiles : profiles.filter((p) => getUserRole(p.id) === filterRole);
 
-  const roleFilters = [
-    { value: "all", label: "All" },
-    { value: "user", label: "User" },
-    { value: "moderator", label: "Moderator" },
-    { value: "admin", label: "Admin" },
+  const filterOptions = [
+    { value: "all", label: "All", count: profiles.length },
+    { value: "user", label: "User", count: roleCounts["user"] || 0 },
+    { value: "moderator", label: "Moderator", count: roleCounts["moderator"] || 0 },
+    { value: "admin", label: "Admin", count: roleCounts["admin"] || 0 },
   ];
 
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-display font-bold">Users</h1>
 
-      <div className="flex flex-wrap gap-2">
-        {roleFilters.map((f) => {
-          const count = f.value === "all" ? profiles.length : (roleCounts[f.value] || 0);
-          const isActive = filterRole === f.value;
-          return (
-            <button
-              key={f.value}
-              onClick={() => setFilterRole(f.value)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
-                isActive
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border/50 text-muted-foreground hover:bg-secondary/50 hover:border-primary/30"
-              }`}
-            >
-              {f.label}
-              <span className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-semibold ${
-                isActive ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
-              }`}>
-                {count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      <FilterChips options={filterOptions} value={filterRole} onChange={setFilterRole} />
 
       <div className="rounded-lg border border-border overflow-hidden">
         <Table>

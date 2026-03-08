@@ -57,40 +57,17 @@ const AdminReviews = () => {
     ratingCounts[key] = (ratingCounts[key] || 0) + 1;
   });
 
-  const filters = [
-    { value: "all", label: "All" },
-    { value: "pending", label: "Pending" },
-    { value: "approved", label: "Approved" },
+  const filterOptions = [
+    { value: "all", label: "All", count: reviews.length },
+    { value: "pending", label: "Pending", count: statusCounts.pending },
+    { value: "approved", label: "Approved", count: statusCounts.approved },
   ];
 
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-display font-bold">Reviews</h1>
 
-      <div className="flex flex-wrap gap-2">
-        {filters.map((f) => {
-          const count = f.value === "all" ? reviews.length : (statusCounts[f.value as keyof typeof statusCounts] || 0);
-          const isActive = filterStatus === f.value;
-          return (
-            <button
-              key={f.value}
-              onClick={() => setFilterStatus(f.value)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
-                isActive
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border/50 text-muted-foreground hover:bg-secondary/50 hover:border-primary/30"
-              }`}
-            >
-              {f.label}
-              <span className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-semibold ${
-                isActive ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
-              }`}>
-                {count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      <FilterChips options={filterOptions} value={filterStatus} onChange={setFilterStatus} />
 
       <div className="rounded-lg border border-border overflow-hidden">
         <Table>
