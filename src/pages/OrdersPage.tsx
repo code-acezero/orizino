@@ -82,7 +82,7 @@ const OrdersPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center justify-between border-t border-border pt-3">
-                  <span className="font-bold text-foreground">Total: ${order.total.toFixed(2)}</span>
+                  <span className="font-bold text-foreground">Total: {formatPrice(order.total)}</span>
                   {order.tracking_number && (
                     <span className="text-xs text-primary">Tracking: {order.tracking_number}</span>
                   )}
