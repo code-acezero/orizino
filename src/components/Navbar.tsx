@@ -70,77 +70,72 @@ const Navbar: React.FC = () => {
     <>
       <nav className="sticky top-0 z-50 w-full">
         <div className="glass-strong">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between h-16">
-              {/* Logo */}
-              <Link to="/home" className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-sm">Z</span>
-                </div>
-                <span className="font-display font-bold text-xl text-foreground">Zero</span>
-              </Link>
-
-              {/* Desktop Nav */}
-              <div className="hidden lg:flex items-center gap-1">
-                <Link to="/home"
-                  className={`btn-pill text-sm transition-colors ${location.pathname === "/home" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
-                  Home
+          <div className="w-full max-w-[1440px] mx-auto px-4 lg:px-6">
+            <div className="flex items-center h-16 gap-4">
+              {/* Left: Logo + Home + Categories */}
+              <div className="flex items-center gap-1 shrink-0">
+                <Link to="/home" className="flex items-center gap-2 mr-2">
+                  <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center">
+                    <span className="text-primary-foreground font-bold text-sm">Z</span>
+                  </div>
+                  <span className="font-display font-bold text-xl text-foreground hidden sm:inline">Zero</span>
                 </Link>
 
-                {parentCategories.map((cat) => {
-                  const children = getChildren(cat.id);
-                  return (
-                    <div key={cat.slug} className="relative"
-                      onMouseEnter={() => setHoveredCat(cat.slug)}
-                      onMouseLeave={() => setHoveredCat(null)}>
-                      <Link to={`/shop?category=${cat.slug}`}
-                        className="btn-pill text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
-                        {cat.name}{children.length > 0 && <ChevronDown className="w-3 h-3" />}
-                      </Link>
-                      {children.length > 0 && (
-                        <AnimatePresence>
-                          {hoveredCat === cat.slug && (
-                            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
-                              transition={{ duration: 0.2 }} className="absolute top-full left-0 pt-2 w-48">
-                              <div className="glass-strong rounded-2xl p-2">
-                                {children.map((sub) => (
-                                  <Link key={sub.id} to={`/shop?category=${sub.slug}`}
-                                    className="block px-4 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
-                                    {sub.name}
-                                  </Link>
-                                ))}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      )}
-                    </div>
-                  );
-                })}
+                <div className="hidden lg:flex items-center gap-0.5">
+                  <Link to="/home"
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${location.pathname === "/home" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
+                    Home
+                  </Link>
+
+                  {parentCategories.map((cat) => {
+                    const children = getChildren(cat.id);
+                    return (
+                      <div key={cat.slug} className="relative"
+                        onMouseEnter={() => setHoveredCat(cat.slug)}
+                        onMouseLeave={() => setHoveredCat(null)}>
+                        <Link to={`/shop?category=${cat.slug}`}
+                          className="px-3 py-1.5 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
+                          {cat.name}{children.length > 0 && <ChevronDown className="w-3 h-3" />}
+                        </Link>
+                        {children.length > 0 && (
+                          <AnimatePresence>
+                            {hoveredCat === cat.slug && (
+                              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
+                                transition={{ duration: 0.2 }} className="absolute top-full left-0 pt-2 w-48">
+                                <div className="glass-strong rounded-2xl p-2">
+                                  {children.map((sub) => (
+                                    <Link key={sub.id} to={`/shop?category=${sub.slug}`}
+                                      className="block px-4 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
+                                      {sub.name}
+                                    </Link>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex items-center gap-1">
-                {/* Animated Search */}
-                <div className="hidden lg:flex items-center">
-                  <AnimatePresence>
-                    {searchOpen && (
-                      <motion.form onSubmit={handleSearchSubmit}
-                        initial={{ width: 0, opacity: 0 }} animate={{ width: 220, opacity: 1 }} exit={{ width: 0, opacity: 0 }}
-                        transition={{ duration: 0.3, ease: "easeInOut" }} className="overflow-hidden">
-                        <input ref={searchRef} type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder="Search products..."
-                          className="w-full px-4 py-2 rounded-full bg-secondary/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                          onBlur={() => { if (!searchQuery) setSearchOpen(false); }} />
-                      </motion.form>
-                    )}
-                  </AnimatePresence>
-                  <button onClick={() => setSearchOpen(!searchOpen)}
-                    className="p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all">
-                    <Search className="w-5 h-5" />
-                  </button>
-                </div>
+              {/* Center: Search Bar */}
+              <div className="hidden lg:block flex-1 max-w-md mx-auto">
+                <form onSubmit={handleSearchSubmit} className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search products..."
+                    className="w-full pl-11 pr-4 py-2.5 rounded-full bg-secondary/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 transition-all"
+                  />
+                </form>
+              </div>
 
+              {/* Right: Actions */}
+              <div className="flex items-center gap-1 shrink-0 ml-auto lg:ml-0">
                 <Link to="/wishlist" className="hidden lg:flex p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all">
                   <Heart className="w-5 h-5" />
                 </Link>
@@ -148,9 +143,8 @@ const Navbar: React.FC = () => {
                   <ShoppingCart className="w-5 h-5" />
                 </Link>
 
-                {/* Notifications bell */}
                 {user && (
-                  <Link to="/profile" onClick={() => {}} className="p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all relative">
+                  <Link to="/profile" className="p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all relative">
                     <Bell className="w-5 h-5" />
                     {(unreadCount || 0) > 0 && (
                       <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-destructive text-[10px] text-destructive-foreground flex items-center justify-center font-bold">
@@ -160,7 +154,6 @@ const Navbar: React.FC = () => {
                   </Link>
                 )}
 
-                {/* User menu */}
                 {user ? (
                   <div className="relative hidden lg:block" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)}>
                     <button className="w-9 h-9 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-sm">
@@ -208,8 +201,7 @@ const Navbar: React.FC = () => {
           {mobileOpen && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
               className="lg:hidden glass-strong border-t border-border overflow-hidden">
-              <div className="container mx-auto px-4 py-4 space-y-2">
-                {/* Mobile search */}
+              <div className="w-full max-w-[1440px] mx-auto px-4 py-4 space-y-2">
                 <form onSubmit={(e) => { handleSearchSubmit(e); setMobileOpen(false); }}>
                   <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search products..."
                     className="w-full px-4 py-3 rounded-2xl bg-secondary/50 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 mb-2" />
