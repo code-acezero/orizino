@@ -370,7 +370,7 @@ const AdminDashboard = () => {
               <div>
                 <CardTitle className="text-base flex items-center gap-2">
                   <BarChart3 className="w-4 h-4 text-primary" />
-                  Revenue (14 days)
+                  Revenue ({dateRange.label})
                 </CardTitle>
                 <CardDescription>Daily revenue breakdown</CardDescription>
               </div>
