@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, ZoomIn, Minus, Plus } from "lucide-react";
 
 interface ImageGalleryProps {
   images: string[];
