@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, CartesianGrid } from "recharts";
 import { useState, useMemo } from "react";
-import { Eye, MousePointerClick, Clock, TrendingUp, BarChart3 } from "lucide-react";
+import { Eye, MousePointerClick, Clock, TrendingUp, BarChart3, Target } from "lucide-react";
 
 const timeRanges = [
   { value: "24h", label: "Last 24 Hours", hours: 24 },
@@ -53,6 +53,7 @@ const HomepageAnalytics = () => {
     const pageViews = analyticsData.filter((e: any) => e.event_type === "page_view");
     const sectionViews = analyticsData.filter((e: any) => e.event_type === "section_view");
     const engagements = analyticsData.filter((e: any) => e.event_type === "section_engagement");
+    const clicks = analyticsData.filter((e: any) => e.event_type === "click");
     const uniqueSessions = new Set(analyticsData.map((e: any) => e.session_id)).size;
 
     // Section engagement breakdown
@@ -80,6 +81,34 @@ const HomepageAnalytics = () => {
       }))
       .sort((a, b) => b.views - a.views);
 
+    // Click breakdown
+    const clickLabels: Record<string, string> = {
+      product_card: "Product Card Clicks",
+      slider_cta: "Slider CTA Clicks",
+      sale_cta: "Sale Banner CTA Clicks",
+      view_all: "View All Clicks",
+    };
+    const clickStats: Record<string, { count: number; targets: Record<string, number> }> = {};
+    clicks.forEach((e: any) => {
+      const clickType = e.metadata?.click_type || e.section_id || "unknown";
+      if (!clickStats[clickType]) clickStats[clickType] = { count: 0, targets: {} };
+      clickStats[clickType].count++;
+      const targetId = e.metadata?.target_id || "unknown";
+      clickStats[clickType].targets[targetId] = (clickStats[clickType].targets[targetId] || 0) + 1;
+    });
+
+    const clickBreakdown = Object.entries(clickStats)
+      .map(([type, s]) => ({
+        type,
+        label: clickLabels[type] || type,
+        count: s.count,
+        topTargets: Object.entries(s.targets).sort((a, b) => b[1] - a[1]).slice(0, 5),
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    const totalClicks = clicks.length;
+    const clickRate = pageViews.length > 0 ? ((totalClicks / pageViews.length) * 100).toFixed(1) : "0";
+
     // Time-series data for chart
     const timeGrouping = rangeHours <= 24 ? "hour" : "day";
     const timeMap: Record<string, number> = {};
@@ -104,6 +133,9 @@ const HomepageAnalytics = () => {
       avgSectionsPerView: uniqueSessions > 0 ? (sectionViews.length / uniqueSessions).toFixed(1) : "0",
       sectionBreakdown,
       timeSeries,
+      totalClicks,
+      clickRate,
+      clickBreakdown,
     };
   }, [analyticsData, rangeHours]);
 
@@ -135,12 +167,14 @@ const HomepageAnalytics = () => {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[
           { label: "Page Views", value: stats.totalPageViews, icon: Eye, color: "text-blue-400" },
           { label: "Unique Visitors", value: stats.uniqueSessions, icon: MousePointerClick, color: "text-emerald-400" },
           { label: "Section Impressions", value: stats.totalSectionViews, icon: TrendingUp, color: "text-violet-400" },
           { label: "Avg Sections/Visit", value: stats.avgSectionsPerView, icon: Clock, color: "text-amber-400" },
+          { label: "Total Clicks", value: stats.totalClicks, icon: Target, color: "text-rose-400" },
+          { label: "Click Rate", value: `${stats.clickRate}%`, icon: BarChart3, color: "text-cyan-400" },
         ].map((stat) => (
           <Card key={stat.label} className="glass">
             <CardContent className="p-4">
@@ -264,6 +298,49 @@ const HomepageAnalytics = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Click Tracking Breakdown */}
+      <Card className="glass">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Target className="w-5 h-5 text-rose-400" />
+            Click Tracking & Conversion
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {stats.clickBreakdown.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {stats.clickBreakdown.map((click) => (
+                <div key={click.type} className="p-4 rounded-xl bg-secondary/20 border border-border/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium text-foreground">{click.label}</p>
+                    <Badge variant="secondary" className="text-xs">{click.count}</Badge>
+                  </div>
+                  <div className="space-y-1.5">
+                    {click.topTargets.map(([target, count]) => (
+                      <div key={target} className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground truncate max-w-[140px]" title={target}>{target}</span>
+                        <span className="text-foreground font-medium">{count as number}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {stats.totalPageViews > 0 && (
+                    <div className="mt-3 pt-2 border-t border-border/30">
+                      <p className="text-xs text-muted-foreground">
+                        Conv. rate: <span className="text-primary font-medium">{((click.count / stats.totalPageViews) * 100).toFixed(1)}%</span>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-[120px] text-muted-foreground text-sm">
+              No click data yet. Interact with CTAs and product cards on the homepage to generate data.
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

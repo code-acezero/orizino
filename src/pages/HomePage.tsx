@@ -11,7 +11,7 @@ import HomePopup from "@/components/HomePopup";
 import SaleCountdown from "@/components/SaleCountdown";
 import SalePopup from "@/components/SalePopup";
 import { Sparkles } from "lucide-react";
-import { usePageViewTracker, useSectionTracker } from "@/hooks/use-analytics";
+import { usePageViewTracker, useSectionTracker, trackClick } from "@/hooks/use-analytics";
 
 interface SaleConfig {
   id: string;
@@ -346,7 +346,8 @@ const HomePage: React.FC = () => {
                 )}
               </div>
             </div>
-            <a href={sale.button_link || "/shop"} className="btn-pill text-white font-semibold px-8 py-3 whitespace-nowrap" style={{ background: bgColor }}>
+            <a href={sale.button_link || "/shop"} className="btn-pill text-white font-semibold px-8 py-3 whitespace-nowrap" style={{ background: bgColor }}
+              onClick={() => trackClick("sale_cta", sale.id, "/home", { sale_title: sale.title, link: sale.button_link })}>
               {sale.button_text || "Shop Now"}
             </a>
           </div>
@@ -408,7 +409,7 @@ const HomePage: React.FC = () => {
                   <p className="text-muted-foreground mt-1">Explore our {cat.name.toLowerCase()} collection</p>
                 </div>
                 {layout.section_title_align !== "center" && (
-                  <a href={`/categories/${cat.slug}`} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+                  <a href={`/categories/${cat.slug}`} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors" onClick={() => trackClick("view_all", cat.slug, "/home", { section: "category" })}>View All</a>
                 )}
               </motion.div>
               <div className={`grid grid-cols-2 md:grid-cols-3 ${sectionCols} gap-4`}>
@@ -440,7 +441,7 @@ const HomePage: React.FC = () => {
                 {featuredSubtitle && <p className="text-muted-foreground mt-1">{featuredSubtitle}</p>}
               </div>
               {layout.section_title_align !== "center" && (
-                <a href={featuredLink} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+                <a href={featuredLink} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors" onClick={() => trackClick("view_all", "featured", "/home")}>View All</a>
               )}
             </motion.div>
             <div className={`grid grid-cols-2 md:grid-cols-3 ${sectionCols} gap-4`}>
@@ -454,7 +455,7 @@ const HomePage: React.FC = () => {
             </div>
             {layout.section_title_align === "center" && (
               <div className="text-center mt-6">
-                <a href={featuredLink} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+                <a href={featuredLink} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors" onClick={() => trackClick("view_all", "featured", "/home")}>View All</a>
               </div>
             )}
           </section>
@@ -478,7 +479,7 @@ const HomePage: React.FC = () => {
                 </div>
               </div>
               {layout.section_title_align !== "center" && (
-                <a href={arrivalsLink} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+                <a href={arrivalsLink} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors" onClick={() => trackClick("view_all", "arrivals", "/home")}>View All</a>
               )}
             </motion.div>
             <div className={`grid grid-cols-2 md:grid-cols-3 ${arrivalsCols} gap-4`}>
@@ -490,7 +491,7 @@ const HomePage: React.FC = () => {
             </div>
             {layout.section_title_align === "center" && (
               <div className="text-center mt-6">
-                <a href={arrivalsLink} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors">View All</a>
+                <a href={arrivalsLink} className="btn-pill glass text-sm text-foreground hover:text-primary transition-colors" onClick={() => trackClick("view_all", "arrivals", "/home")}>View All</a>
               </div>
             )}
           </section>

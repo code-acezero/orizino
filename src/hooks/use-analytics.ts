@@ -58,6 +58,26 @@ export const trackSectionDuration = async (
   }
 };
 
+/** Track a click event (CTA, product card, link, etc.) */
+export const trackClick = async (
+  clickType: string,
+  targetId: string,
+  page = "/home",
+  metadata?: Record<string, any>
+) => {
+  try {
+    await (supabase as any).from("page_analytics").insert({
+      event_type: "click",
+      page,
+      section_id: clickType,
+      session_id: getSessionId(),
+      metadata: { target_id: targetId, click_type: clickType, ...metadata },
+    });
+  } catch {
+    // silently fail
+  }
+};
+
 /**
  * Hook: observe when a section scrolls into view and track engagement.
  * Returns a ref to attach to the section container.
