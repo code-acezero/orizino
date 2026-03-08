@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, X, ZoomIn, Minus, Plus } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ImageGalleryProps {
   images: string[];
