@@ -202,9 +202,9 @@ const ParallaxSlider: React.FC = () => {
   const titleClass = `text-4xl md:text-${cfg.title_size}`;
 
   const subtitleEl = (text: string) => {
-    if (cfg.subtitle_style === "badge") return <span className="inline-block btn-pill bg-primary/20 text-primary text-sm mb-4 border border-primary/30">{text}</span>;
-    if (cfg.subtitle_style === "underline") return <span className="inline-block text-primary text-sm mb-4 border-b-2 border-primary pb-1">{text}</span>;
-    return <span className="inline-block text-primary text-sm mb-4 font-medium">{text}</span>;
+    if (cfg.subtitle_style === "badge") return <span className="inline-block btn-pill bg-primary/20 text-primary text-sm mb-4 border border-primary/30 drop-shadow-[0_1px_4px_rgba(0,0,0,0.4)]">{text}</span>;
+    if (cfg.subtitle_style === "underline") return <span className="inline-block text-primary text-sm mb-4 border-b-2 border-primary pb-1 drop-shadow-[0_1px_4px_rgba(0,0,0,0.4)]">{text}</span>;
+    return <span className="inline-block text-primary text-sm mb-4 font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.4)]">{text}</span>;
   };
 
   const ctaClasses: Record<string, string> = {
@@ -254,7 +254,8 @@ const ParallaxSlider: React.FC = () => {
           </motion.div>
 
           <div className={`absolute inset-0 ${overlayClasses[cfg.overlay_style] || ""}`} style={overlayStyle} />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent" />
 
           <div className="absolute inset-0 flex items-center">
             <div className={`container mx-auto px-6 lg:px-12 ${textContainer}`}>
@@ -265,8 +266,8 @@ const ParallaxSlider: React.FC = () => {
                 className={`max-w-${cfg.text_max_width} ${textAlign}`}
               >
                 {subtitleEl(slide.subtitle)}
-                <h1 className={`${titleClass} font-bold font-display mb-4 leading-tight text-foreground`}>{slide.title}</h1>
-                <p className="text-lg text-muted-foreground mb-8 max-w-lg">{slide.description}</p>
+                <h1 className={`${titleClass} font-bold font-display mb-4 leading-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]`}>{slide.title}</h1>
+                <p className="text-lg text-white/80 mb-8 max-w-lg drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">{slide.description}</p>
                 <motion.a href={slide.ctaLink} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                   onClick={() => trackClick("slider_cta", slide.id, "/home", { cta_text: slide.cta, cta_link: slide.ctaLink })}
                   className={`inline-flex items-center btn-pill font-semibold text-lg px-8 py-3 ${ctaClasses[cfg.cta_style] || ctaClasses.gradient}`}>
