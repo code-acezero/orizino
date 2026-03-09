@@ -330,7 +330,7 @@ const HomePage: React.FC = () => {
     return (
       <motion.section key={sale.id} {...anim} viewport={{ once: true }}>
         <div
-          className="glass-strong rounded-3xl p-8 md:p-12 relative overflow-hidden"
+          className="glass-strong rounded-3xl p-5 md:p-8 relative overflow-hidden"
           style={sale.banner_image ? { backgroundImage: `url(${sale.banner_image})`, backgroundSize: "cover", backgroundPosition: "center" } : {}}
         >
           <div className="absolute inset-0 opacity-20" style={{ background: gradBg }} />
