@@ -30,6 +30,16 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
 
   const parentCategories = dbCategories.filter((c) => !c.parent_id);
 
+  const { data: cartCount = 0 } = useQuery({
+    queryKey: ["cart-count", user?.id],
+    queryFn: async () => {
+      const { count } = await supabase.from("cart_items").select("*", { count: "exact", head: true }).eq("user_id", user!.id);
+      return count || 0;
+    },
+    enabled: !!user,
+    staleTime: 30 * 1000,
+  });
+
   const items = [
     { icon: Home, label: "Home", path: "/home" },
     { icon: LayoutGrid, label: "Categories", path: "__categories__" },
