@@ -155,7 +155,7 @@ export default function BulkUpload({ mode, onComplete, categories, products }: B
 
   const processRawRows = useCallback((rawRows: Record<string, string>[]) => {
     const parsed: ParsedRow[] = rawRows.map((data) => {
-      const { status, errors } = validateRow(data, mode);
+      const { status, errors } = validateRow(data, mode, products);
       return { data, status, errors };
     });
     setRows(parsed);
