@@ -254,7 +254,8 @@ const ParallaxSlider: React.FC = () => {
           </motion.div>
 
           <div className={`absolute inset-0 ${overlayClasses[cfg.overlay_style] || ""}`} style={overlayStyle} />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent" />
 
           <div className="absolute inset-0 flex items-center">
             <div className={`container mx-auto px-6 lg:px-12 ${textContainer}`}>
