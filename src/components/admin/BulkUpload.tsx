@@ -326,7 +326,7 @@ export default function BulkUpload({ mode, onComplete, categories, products }: B
                   <FileSpreadsheet className="w-3.5 h-3.5" /> Download Sample CSV
                 </Button>
                 <p className="text-[11px] text-muted-foreground">
-                  Required columns: <strong>{mode === "categories" ? "name, slug" : "name, slug, price"}</strong>
+                  Required columns: <strong>{mode === "categories" ? "name, slug" : mode === "products" ? "name, slug, price" : "product, stock_quantity"}</strong>
                 </p>
               </div>
             </div>
