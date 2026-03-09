@@ -12,12 +12,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-type BulkUploadMode = "categories" | "products";
+type BulkUploadMode = "categories" | "products" | "variants";
 
 interface BulkUploadProps {
   mode: BulkUploadMode;
   onComplete: () => void;
   categories?: { id: string; name: string; slug: string }[];
+  products?: { id: string; name: string; slug: string }[];
 }
 
 type RowStatus = "valid" | "error" | "warning";
