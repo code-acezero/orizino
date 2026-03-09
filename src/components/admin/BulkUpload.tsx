@@ -31,6 +31,7 @@ interface ParsedRow {
 
 const CATEGORY_REQUIRED = ["name", "slug"];
 const PRODUCT_REQUIRED = ["name", "slug", "price"];
+const VARIANT_REQUIRED = ["product", "stock_quantity"];
 
 const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
