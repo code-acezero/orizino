@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/lib/app-toast";
-import { Bot, Sparkles, MessageCircle, Palette } from "lucide-react";
+import { Bot, Sparkles, MessageCircle, Upload, X, Image as ImageIcon } from "lucide-react";
 
 const DEFAULT_CONFIG = {
   name: "Ace Assistant",
