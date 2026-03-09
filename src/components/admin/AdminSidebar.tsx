@@ -39,6 +39,11 @@ const mainItems = [
   { title: "Users", url: "/admin/users", icon: Users },
 ];
 
+const commerceItems = [
+  { title: "Coupons", url: "/admin/coupons", icon: Tag },
+  { title: "Shipping", url: "/admin/shipping", icon: Truck },
+];
+
 const contentItems = [
   { title: "Home Page", url: "/admin/home", icon: Home },
   { title: "Showcase", url: "/admin/showcase", icon: Layers },
