@@ -152,7 +152,7 @@ export default function BulkUpload({ mode, onComplete, categories }: BulkUploadP
           const sheet = wb.Sheets[wb.SheetNames[0]];
           const raw: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
           processRawRows(parseSheetToRows(raw));
-        } catch { toast({ title: "Failed to parse Excel file", type: "error" }); }
+        } catch { toast.error("Failed to parse Excel file"); }
       };
       reader.readAsBinaryString(file);
     } else {
