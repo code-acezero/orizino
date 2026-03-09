@@ -120,6 +120,15 @@ const CheckoutPage: React.FC = () => {
     },
   });
 
+  // Fetch active delivery offers
+  const { data: deliveryOffers } = useQuery({
+    queryKey: ["delivery-offers"],
+    queryFn: async () => {
+      const { data } = await supabase.from("delivery_offers").select("*").eq("is_active", true);
+      return data || [];
+    },
+  });
+
   const subtotal = cartItems?.reduce((sum, item) => {
     const variant = (item as any).product_variants as any;
     const price = variant?.price_override ?? (item.products as any)?.price ?? 0;
@@ -138,7 +147,28 @@ const CheckoutPage: React.FC = () => {
 
   const shippingMethodId = cartState.shippingMethodId;
   const selectedShipping = shippingMethods?.find((m) => m.id === shippingMethodId) || shippingMethods?.[0];
-  const shippingFee = selectedShipping ? (selectedShipping.min_order_free && subtotal >= Number(selectedShipping.min_order_free) ? 0 : Number(selectedShipping.price)) : 0;
+  let baseShippingFee = selectedShipping ? (selectedShipping.min_order_free && subtotal >= Number(selectedShipping.min_order_free) ? 0 : Number(selectedShipping.price)) : 0;
+
+  // Apply best delivery offer
+  let deliveryDiscount = 0;
+  let appliedDeliveryOffer: any = null;
+  if (deliveryOffers && baseShippingFee > 0) {
+    for (const offer of deliveryOffers) {
+      if (Number(offer.min_order_amount) > 0 && subtotal < Number(offer.min_order_amount)) continue;
+      const areas: string[] = offer.target_areas || [];
+      if (areas.length > 0 && address.city) {
+        const cityLower = address.city.toLowerCase();
+        if (!areas.some((a: string) => cityLower.includes(a.toLowerCase()))) continue;
+      }
+      let disc = 0;
+      if (offer.offer_type === "free_delivery") disc = baseShippingFee;
+      else if (offer.offer_type === "reduced_delivery") disc = Math.min(Number(offer.discount_value), baseShippingFee);
+      else if (offer.offer_type === "flat_rate") disc = Math.max(0, baseShippingFee - Number(offer.discount_value));
+      if (disc > deliveryDiscount) { deliveryDiscount = disc; appliedDeliveryOffer = offer; }
+    }
+  }
+
+  const shippingFee = Math.max(0, baseShippingFee - deliveryDiscount);
   const giftWrapFee = giftWrap ? 50 : 0;
   const total = Math.max(0, subtotal - couponDiscount + shippingFee + giftWrapFee);
 
