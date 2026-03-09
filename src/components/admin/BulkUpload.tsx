@@ -142,7 +142,7 @@ export default function BulkUpload({ mode, onComplete, categories }: BulkUploadP
         skipEmptyLines: true,
         transformHeader: (h: string) => h.trim().toLowerCase().replace(/[\s_]+/g, "_").replace(/[^a-z0-9_]/g, ""),
         complete: (result) => processRawRows(result.data as Record<string, string>[]),
-        error: () => toast({ title: "Failed to parse CSV", type: "error" }),
+        error: () => toast.error("Failed to parse CSV"),
       });
     } else if (["xls", "xlsx"].includes(ext || "")) {
       const reader = new FileReader();
