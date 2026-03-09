@@ -128,7 +128,7 @@ export default function BulkUpload({ mode, onComplete, categories }: BulkUploadP
       return { data, status, errors };
     });
     setRows(parsed);
-    if (!parsed.length) toast({ title: "No data rows found", type: "warning" });
+    if (!parsed.length) toast.warning("No data rows found");
   }, [mode]);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
