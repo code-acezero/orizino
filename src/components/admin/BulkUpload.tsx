@@ -52,17 +52,24 @@ function parseSheetToRows(rawRows: string[][]): Record<string, string>[] {
   });
 }
 
-function validateRow(row: Record<string, string>, mode: BulkUploadMode): { status: RowStatus; errors: string[] } {
+function validateRow(row: Record<string, string>, mode: BulkUploadMode, products?: { id: string; name: string; slug: string }[]): { status: RowStatus; errors: string[] } {
   const errors: string[] = [];
-  const required = mode === "categories" ? CATEGORY_REQUIRED : PRODUCT_REQUIRED;
+  const required = mode === "categories" ? CATEGORY_REQUIRED : mode === "products" ? PRODUCT_REQUIRED : VARIANT_REQUIRED;
   required.forEach((f) => {
     if (!row[f]?.trim()) errors.push(`Missing "${f}"`);
   });
   if (mode === "products" && row.price && isNaN(Number(row.price))) {
     errors.push("Invalid price");
   }
-  if (mode === "products" && row.stock_quantity && isNaN(Number(row.stock_quantity))) {
+  if ((mode === "products" || mode === "variants") && row.stock_quantity && isNaN(Number(row.stock_quantity))) {
     errors.push("Invalid stock_quantity");
+  }
+  if (mode === "variants") {
+    if (row.price_override && isNaN(Number(row.price_override))) errors.push("Invalid price_override");
+    if (row.product && products?.length) {
+      const match = products.find(p => p.name.toLowerCase() === row.product.toLowerCase() || p.slug === row.product.toLowerCase());
+      if (!match) errors.push(`Product "${row.product}" not found`);
+    }
   }
   return { status: errors.length ? "error" : "valid", errors };
 }
