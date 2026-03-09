@@ -19,7 +19,7 @@ const Navbar: React.FC = () => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [authOpen, setAuthOpen] = useState(false);
-  const [mobileCatOpen, setMobileCatOpen] = useState(false);
+  
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
