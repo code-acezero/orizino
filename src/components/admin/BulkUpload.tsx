@@ -201,14 +201,14 @@ export default function BulkUpload({ mode, onComplete, categories }: BulkUploadP
     try {
       if (mode === "categories") {
         const inserts = validRows.map((r) => buildCategoryInsert(r.data));
-        const { error } = await supabase.from("categories").insert(inserts);
+        const { error } = await supabase.from("categories").upsert(inserts, { onConflict: "slug" });
         if (error) throw error;
       } else {
         const inserts = validRows.map((r) => buildProductInsert(r.data, categories));
-        const { error } = await supabase.from("products").insert(inserts);
+        const { error } = await supabase.from("products").upsert(inserts, { onConflict: "slug" });
         if (error) throw error;
       }
-      toast.success(`${validRows.length} ${mode} imported successfully!`);
+      toast.success(`${validRows.length} ${mode} imported/updated successfully!`);
       reset();
       setOpen(false);
       onComplete();
@@ -355,7 +355,7 @@ export default function BulkUpload({ mode, onComplete, categories }: BulkUploadP
                 <Button variant="ghost" onClick={reset}>Back</Button>
                 <Button onClick={handleImport} disabled={!validRows.length || importing} className="gap-2">
                   {importing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                  Import {validRows.length} {mode}
+                  Import / Update {validRows.length} {mode}
                 </Button>
               </div>
             </div>
