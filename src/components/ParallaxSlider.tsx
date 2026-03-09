@@ -132,6 +132,7 @@ const ParallaxSlider: React.FC = () => {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
 
   const { data: dbSlides = [] } = useQuery({
     queryKey: ["showcase-slides"],
