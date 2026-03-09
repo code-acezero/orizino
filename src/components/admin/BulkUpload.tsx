@@ -234,9 +234,13 @@ export default function BulkUpload({ mode, onComplete, categories, products }: B
         const inserts = validRows.map((r) => buildCategoryInsert(r.data));
         const { error } = await supabase.from("categories").upsert(inserts, { onConflict: "slug" });
         if (error) throw error;
-      } else {
+      } else if (mode === "products") {
         const inserts = validRows.map((r) => buildProductInsert(r.data, categories));
         const { error } = await supabase.from("products").upsert(inserts, { onConflict: "slug" });
+        if (error) throw error;
+      } else {
+        const inserts = validRows.map((r) => buildVariantInsert(r.data, products)).filter(v => v.product_id);
+        const { error } = await supabase.from("product_variants").upsert(inserts, { onConflict: "product_id,size,color", ignoreDuplicates: false } as any);
         if (error) throw error;
       }
       toast.success(`${validRows.length} ${mode} imported/updated successfully!`);
