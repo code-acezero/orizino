@@ -156,7 +156,7 @@ export default function BulkUpload({ mode, onComplete, categories }: BulkUploadP
       };
       reader.readAsBinaryString(file);
     } else {
-      toast({ title: "Unsupported file type. Use CSV, XLS, or XLSX.", type: "error" });
+      toast.error("Unsupported file type. Use CSV, XLS, or XLSX.");
     }
     if (fileRef.current) fileRef.current.value = "";
   };
