@@ -270,7 +270,7 @@ export default function BulkUpload({ mode, onComplete, categories, products }: B
   return (
     <>
       <Button variant="outline" onClick={() => { reset(); setOpen(true); }} className="gap-2">
-        <Upload className="w-4 h-4" /> Bulk Upload
+        <Upload className="w-4 h-4" /> {mode === "variants" ? "Upload Variants" : "Bulk Upload"}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
