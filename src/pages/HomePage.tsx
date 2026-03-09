@@ -330,19 +330,19 @@ const HomePage: React.FC = () => {
     return (
       <motion.section key={sale.id} {...anim} viewport={{ once: true }}>
         <div
-          className="glass-strong rounded-3xl p-8 md:p-12 relative overflow-hidden"
+          className="glass-strong rounded-3xl p-5 md:p-8 relative overflow-hidden"
           style={sale.banner_image ? { backgroundImage: `url(${sale.banner_image})`, backgroundSize: "cover", backgroundPosition: "center" } : {}}
         >
           <div className="absolute inset-0 opacity-20" style={{ background: gradBg }} />
           {sale.banner_image && <div className="absolute inset-0 bg-background/50" />}
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl" style={{ background: `${bgColor}20` }}>
-                {sale.custom_icon_url ? <img src={sale.custom_icon_url} className="w-10 h-10 object-contain" alt="" /> : sale.icon}
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center text-2xl" style={{ background: `${bgColor}20` }}>
+                {sale.custom_icon_url ? <img src={sale.custom_icon_url} className="w-8 h-8 object-contain" alt="" /> : sale.icon}
               </div>
               <div>
-                <h3 className="text-2xl md:text-3xl font-bold font-display text-foreground">{sale.title}</h3>
-                <p className="text-muted-foreground">{sale.subtitle}</p>
+                <h3 className="text-xl md:text-2xl font-bold font-display text-foreground">{sale.title}</h3>
+                <p className="text-sm text-muted-foreground">{sale.subtitle}</p>
                 {sale.show_countdown && sale.ends_at && <SaleCountdown endsAt={sale.ends_at} color={sale.color} />}
                 {!sale.show_countdown && sale.ends_at && (
                   <p className="text-xs text-muted-foreground/70 mt-1">Ends {new Date(sale.ends_at).toLocaleDateString()}</p>
