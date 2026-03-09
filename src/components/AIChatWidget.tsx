@@ -32,6 +32,18 @@ const AIChatWidget: React.FC = () => {
 
   const agentName = aiConfig?.name || "Ace Assistant";
   const welcomeMessage = aiConfig?.welcome_message || "Hi! I'm here to help you with products, orders, and more. How can I assist you?";
+  const avatarType = aiConfig?.avatar_type || "emoji";
+  const avatarUrl = aiConfig?.avatar_url || "";
+  const avatarEmoji = aiConfig?.avatar_emoji || "🤖";
+
+  const AgentAvatar = ({ size = "w-10 h-10", iconSize = "w-5 h-5" }: { size?: string; iconSize?: string }) =>
+    avatarType === "image" && avatarUrl ? (
+      <img src={avatarUrl} alt={agentName} className={`${size} rounded-full object-cover`} />
+    ) : (
+      <div className={`${size} rounded-full bg-primary/20 flex items-center justify-center`}>
+        {avatarEmoji ? <span className={iconSize === "w-5 h-5" ? "text-lg" : "text-sm"}>{avatarEmoji}</span> : <Bot className={`${iconSize} text-primary`} />}
+      </div>
+    );
 
   useEffect(() => {
     if (open && messages.length === 0) {
