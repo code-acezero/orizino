@@ -256,12 +256,25 @@ const ParallaxSlider: React.FC = () => {
     >
       <AnimatePresence custom={direction} mode="wait">
         <motion.div key={slide.id} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="absolute inset-0" style={{ transformStyle: activeTransition === "cube" || activeTransition === "flip" ? "preserve-3d" : undefined }}>
+          {/* Skeleton shimmer shown while image hasn't loaded yet */}
+          {!loadedImages.has(slide.image) && (
+            <div className="absolute inset-0 bg-muted animate-pulse">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-muted-foreground/10 to-transparent animate-[shimmer_1.5s_infinite]" style={{ backgroundSize: "200% 100%" }} />
+            </div>
+          )}
           <motion.div
             className="absolute inset-0"
             animate={cfg.ken_burns ? { scale: 1.05, y: [parallaxPx * -0.5, parallaxPx * 0.5] } : {}}
             transition={{ duration: cfg.autoplay_speed / 1000, ease: "linear", y: { duration: cfg.autoplay_speed / 1000, ease: "linear", repeat: 0 } }}
           >
-            <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
+            <motion.img
+              src={slide.image}
+              alt={slide.title}
+              className="w-full h-full object-cover"
+              initial={{ filter: "blur(12px)", opacity: 0.6 }}
+              animate={loadedImages.has(slide.image) ? { filter: "blur(0px)", opacity: 1 } : { filter: "blur(12px)", opacity: 0.6 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            />
           </motion.div>
 
           <div className={`absolute inset-0 ${overlayClasses[cfg.overlay_style] || ""}`} style={overlayStyle} />
