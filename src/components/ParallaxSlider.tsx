@@ -254,11 +254,36 @@ const ParallaxSlider: React.FC = () => {
           </motion.div>
 
           <div className={`absolute inset-0 ${overlayClasses[cfg.overlay_style] || ""}`} style={overlayStyle} />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent" />
 
-          <div className="absolute inset-0 flex items-center">
-            <div className={`container mx-auto px-6 lg:px-12 ${textContainer}`}>
+          {/* Cinematic smoky mist layers */}
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "radial-gradient(ellipse at 20% 80%, rgba(0,0,0,0.6) 0%, transparent 60%)" }}
+            animate={{ opacity: [0.5, 0.8, 0.5], x: [0, 15, 0] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.4) 0%, transparent 55%)" }}
+            animate={{ opacity: [0.4, 0.7, 0.4], x: [0, -20, 0] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          />
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.2) 40%, transparent 70%)" }}
+            animate={{ opacity: [0.8, 1, 0.8] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          />
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.5) 0%, transparent 50%)" }}
+            animate={{ scale: [1, 1.1, 1], opacity: [0.6, 0.9, 0.6] }}
+            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+          />
+
+          {/* Content */}
+          <div className="absolute inset-0 flex items-end md:items-center pb-14 md:pb-0">
+            <div className={`container mx-auto px-4 md:px-6 lg:px-12 ${textContainer}`}>
               <motion.div
                 key={`content-${slide.id}`}
                 initial={contentAnim.initial}
@@ -266,11 +291,11 @@ const ParallaxSlider: React.FC = () => {
                 className={`max-w-${cfg.text_max_width} ${textAlign}`}
               >
                 {subtitleEl(slide.subtitle)}
-                <h1 className={`${titleClass} font-bold font-display mb-4 leading-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]`}>{slide.title}</h1>
-                <p className="text-lg text-white/80 mb-8 max-w-lg drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">{slide.description}</p>
+                <h1 className={`text-2xl md:${titleClass} font-bold font-display mb-2 md:mb-4 leading-tight text-white`}>{slide.title}</h1>
+                <p className="text-sm md:text-lg text-white/80 mb-4 md:mb-8 max-w-lg line-clamp-2 md:line-clamp-none">{slide.description}</p>
                 <motion.a href={slide.ctaLink} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                   onClick={() => trackClick("slider_cta", slide.id, "/home", { cta_text: slide.cta, cta_link: slide.ctaLink })}
-                  className={`inline-flex items-center btn-pill font-semibold text-lg px-8 py-3 ${ctaClasses[cfg.cta_style] || ctaClasses.gradient}`}>
+                  className={`inline-flex items-center btn-pill font-semibold text-sm md:text-lg px-5 md:px-8 py-2 md:py-3 ${ctaClasses[cfg.cta_style] || ctaClasses.gradient}`}>
                   {slide.cta}
                 </motion.a>
               </motion.div>
