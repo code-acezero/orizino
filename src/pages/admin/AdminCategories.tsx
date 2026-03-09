@@ -350,9 +350,12 @@ const AdminCategories = () => {
             <p className="text-xs text-muted-foreground">{categories.length} total · {totalActive} active · {totalFeatured} featured</p>
           </div>
         </div>
-        <Button onClick={() => openEdit()} className="gap-2">
-          <Plus className="h-4 w-4" /> Add Category
-        </Button>
+        <div className="flex items-center gap-2">
+          <BulkUpload mode="categories" onComplete={() => qc.invalidateQueries({ queryKey: ["admin-categories"] })} />
+          <Button onClick={() => openEdit()} className="gap-2">
+            <Plus className="h-4 w-4" /> Add Category
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
