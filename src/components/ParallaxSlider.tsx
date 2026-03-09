@@ -41,7 +41,7 @@ interface ShowcaseConfig {
 const defaultConfig: ShowcaseConfig = {
   autoplay_speed: 6000,
   transition_duration: 800,
-  height: "85vh",
+  height: "65vh",
   overlay_style: "gradient-left",
   overlay_opacity: 80,
   text_position: "left",
