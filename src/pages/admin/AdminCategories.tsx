@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Pencil, Trash2, ChevronRight, Check, X, FolderTree, Search, Eye, EyeOff, Star, GripVertical, BarChart3, ChevronDown, ChevronUp, Package, ShoppingCart, DollarSign, ArrowUpDown, Download, CalendarDays, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import BulkUpload from "@/components/admin/BulkUpload";
+import { exportCategories } from "@/components/admin/bulkExport";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
@@ -351,6 +352,7 @@ const AdminCategories = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={exportCategories} className="gap-2"><Download className="h-4 w-4" /> Export</Button>
           <BulkUpload mode="categories" onComplete={() => qc.invalidateQueries({ queryKey: ["admin-categories"] })} />
           <Button onClick={() => openEdit()} className="gap-2">
             <Plus className="h-4 w-4" /> Add Category
