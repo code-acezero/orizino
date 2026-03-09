@@ -213,7 +213,7 @@ export default function BulkUpload({ mode, onComplete, categories }: BulkUploadP
       setOpen(false);
       onComplete();
     } catch (err: any) {
-      toast({ title: `Import failed: ${err.message}`, type: "error" });
+      toast.error(`Import failed: ${err.message}`);
     } finally {
       setImporting(false);
     }
