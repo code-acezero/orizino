@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -132,6 +132,7 @@ const ParallaxSlider: React.FC = () => {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
 
   const { data: dbSlides = [] } = useQuery({
     queryKey: ["showcase-slides"],
@@ -174,10 +175,12 @@ const ParallaxSlider: React.FC = () => {
   const prev = () => { setDirection(-1); setCurrent((c) => (c - 1 + slides.length) % slides.length); };
   const next = () => { setDirection(1); setCurrent((c) => (c + 1) % slides.length); };
 
-  // Preload all slide images so they're cached and don't reload on transition
+  // Preload all slide images and track which are loaded for skeleton/blur reveal
   useEffect(() => {
     slides.forEach((s) => {
+      if (loadedImages.has(s.image)) return;
       const img = new Image();
+      img.onload = () => setLoadedImages((prev) => new Set(prev).add(s.image));
       img.src = s.image;
     });
   }, [slides]);
@@ -253,12 +256,25 @@ const ParallaxSlider: React.FC = () => {
     >
       <AnimatePresence custom={direction} mode="wait">
         <motion.div key={slide.id} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="absolute inset-0" style={{ transformStyle: activeTransition === "cube" || activeTransition === "flip" ? "preserve-3d" : undefined }}>
+          {/* Skeleton shimmer shown while image hasn't loaded yet */}
+          {!loadedImages.has(slide.image) && (
+            <div className="absolute inset-0 bg-muted animate-pulse">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-muted-foreground/10 to-transparent animate-[shimmer_1.5s_infinite]" style={{ backgroundSize: "200% 100%" }} />
+            </div>
+          )}
           <motion.div
             className="absolute inset-0"
             animate={cfg.ken_burns ? { scale: 1.05, y: [parallaxPx * -0.5, parallaxPx * 0.5] } : {}}
             transition={{ duration: cfg.autoplay_speed / 1000, ease: "linear", y: { duration: cfg.autoplay_speed / 1000, ease: "linear", repeat: 0 } }}
           >
-            <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
+            <motion.img
+              src={slide.image}
+              alt={slide.title}
+              className="w-full h-full object-cover"
+              initial={{ filter: "blur(12px)", opacity: 0.6 }}
+              animate={loadedImages.has(slide.image) ? { filter: "blur(0px)", opacity: 1 } : { filter: "blur(12px)", opacity: 0.6 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            />
           </motion.div>
 
           <div className={`absolute inset-0 ${overlayClasses[cfg.overlay_style] || ""}`} style={overlayStyle} />
