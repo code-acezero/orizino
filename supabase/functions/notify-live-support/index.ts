@@ -12,13 +12,35 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // Authenticate the caller
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const token = authHeader.replace("Bearer ", "");
     const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const resendKey = Deno.env.get("RESEND_API_KEY");
 
-    const { conversation_id, user_id } = await req.json();
+    const { conversation_id } = await req.json();
+
+    // Use the authenticated user's ID, not a client-supplied one
+    const userId = user.id;
 
     // Get user profile
-    const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user_id).single();
+    const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", userId).single();
     const userName = profile?.full_name || "A customer";
 
     // Get admin/mod emails from user_roles + auth
@@ -28,7 +50,6 @@ serve(async (req) => {
       .in("role", ["admin", "moderator"]);
 
     if (adminRoles?.length && resendKey) {
-      // Get admin emails
       const adminIds = adminRoles.map((r: any) => r.user_id);
       const adminEmails: string[] = [];
 
@@ -73,7 +94,7 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("notify-live-support error:", e);
-    return new Response(JSON.stringify({ error: (e as Error).message }), {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
