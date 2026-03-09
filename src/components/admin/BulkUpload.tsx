@@ -114,12 +114,34 @@ function buildProductInsert(row: Record<string, string>, categories?: { id: stri
   };
 }
 
+function buildVariantInsert(row: Record<string, string>, products?: { id: string; name: string; slug: string }[]) {
+  let productId = "";
+  if (row.product && products?.length) {
+    const match = products.find(p => p.name.toLowerCase() === row.product.toLowerCase() || p.slug === row.product.toLowerCase());
+    if (match) productId = match.id;
+  }
+  return {
+    product_id: productId,
+    color: row.color || null,
+    size: row.size || null,
+    sku: row.sku || null,
+    stock_quantity: Number(row.stock_quantity) || 0,
+    price_override: row.price_override ? Number(row.price_override) : null,
+    is_active: row.is_active?.toLowerCase() !== "false",
+    image_url: row.image_url || null,
+  };
+}
+
 const SAMPLE_CATEGORIES = `name,slug,description,is_active,is_featured
 Electronics,electronics,Electronic gadgets,true,true
 Fashion,fashion,Clothing and accessories,true,false`;
 
 const SAMPLE_PRODUCTS = `name,slug,price,compare_at_price,category,sku,stock_quantity,description,is_active,is_featured,tags
 Sample Product,sample-product,29.99,39.99,Electronics,SKU001,100,A great product,true,false,"tag1,tag2"`;
+
+const SAMPLE_VARIANTS = `product,color,size,sku,stock_quantity,price_override,is_active
+sample-product,Black,M,SKU001-BK-M,50,29.99,true
+sample-product,White,L,SKU001-WH-L,30,,true`;
 
 export default function BulkUpload({ mode, onComplete, categories }: BulkUploadProps) {
   const [open, setOpen] = useState(false);
