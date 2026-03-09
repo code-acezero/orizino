@@ -143,9 +143,7 @@ const AIChatWidget: React.FC = () => {
           >
             {/* Header */}
             <div className="flex items-center gap-3 p-4 border-b border-border bg-primary/5">
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <Bot className="w-5 h-5 text-primary" />
-              </div>
+              <AgentAvatar />
               <div className="flex-1">
                 <p className="text-sm font-semibold text-foreground">{agentName}</p>
                 <p className="text-[10px] text-muted-foreground">AI-powered support</p>
