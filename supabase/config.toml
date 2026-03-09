@@ -17,3 +17,9 @@ verify_jwt = false
 
 [functions.notify-restock]
 verify_jwt = false
+
+[functions.ai-chat]
+verify_jwt = false
+
+[functions.notify-live-support]
+verify_jwt = false
