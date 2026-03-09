@@ -30,6 +30,8 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminShowcase from "./pages/admin/AdminShowcase";
 import AdminHome from "./pages/admin/AdminHome";
 import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
+import AdminCoupons from "./pages/admin/AdminCoupons";
+import AdminShipping from "./pages/admin/AdminShipping";
 import NotFound from "./pages/NotFound";
 import SiteThemeProvider from "./components/SiteThemeProvider";
 import AppToastOverlay from "./components/AppToastOverlay";
