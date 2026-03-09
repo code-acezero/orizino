@@ -208,7 +208,7 @@ export default function BulkUpload({ mode, onComplete, categories }: BulkUploadP
         const { error } = await supabase.from("products").insert(inserts);
         if (error) throw error;
       }
-      toast({ title: `${validRows.length} ${mode} imported successfully!`, type: "success" });
+      toast.success(`${validRows.length} ${mode} imported successfully!`);
       reset();
       setOpen(false);
       onComplete();
