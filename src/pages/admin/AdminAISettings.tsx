@@ -107,10 +107,64 @@ const AdminAISettings = () => {
               <Label>Agent Name</Label>
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ace Assistant" />
             </div>
-            <div className="space-y-2">
-              <Label>Avatar Emoji</Label>
-              <Input value={form.avatar_emoji} onChange={(e) => setForm({ ...form, avatar_emoji: e.target.value })} placeholder="🤖" maxLength={4} className="w-20 text-center text-xl" />
+
+            {/* Avatar Type Selector */}
+            <div className="space-y-3">
+              <Label>Avatar</Label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, avatar_type: "emoji" })}
+                  className={`px-3 py-1.5 rounded-lg border text-sm transition-colors ${
+                    form.avatar_type === "emoji" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
+                  }`}
+                >
+                  Emoji
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, avatar_type: "image" })}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm transition-colors ${
+                    form.avatar_type === "image" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
+                  }`}
+                >
+                  <ImageIcon className="w-3.5 h-3.5" /> Image
+                </button>
+              </div>
+
+              {form.avatar_type === "emoji" ? (
+                <Input value={form.avatar_emoji} onChange={(e) => setForm({ ...form, avatar_emoji: e.target.value })} placeholder="🤖" maxLength={4} className="w-20 text-center text-xl" />
+              ) : (
+                <div className="space-y-2">
+                  {form.avatar_url ? (
+                    <div className="relative inline-block">
+                      <img src={form.avatar_url} alt="Agent avatar" className="w-16 h-16 rounded-xl object-cover border border-border" />
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, avatar_url: "", avatar_type: "emoji" })}
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : null}
+                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="gap-1.5"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    {uploading ? "Uploading..." : form.avatar_url ? "Change Image" : "Upload Avatar"}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">Recommended: 128×128px, under 2MB</p>
+                </div>
+              )}
             </div>
+
             <div className="space-y-2">
               <Label>Personality</Label>
               <Input value={form.personality} onChange={(e) => setForm({ ...form, personality: e.target.value })} placeholder="friendly, helpful..." />
