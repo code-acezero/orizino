@@ -229,6 +229,48 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_offers: {
+        Row: {
+          created_at: string
+          description: string | null
+          discount_value: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          min_order_amount: number | null
+          offer_type: string
+          starts_at: string | null
+          target_areas: string[] | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          min_order_amount?: number | null
+          offer_type?: string
+          starts_at?: string | null
+          target_areas?: string[] | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          min_order_amount?: number | null
+          offer_type?: string
+          starts_at?: string | null
+          target_areas?: string[] | null
+          title?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -969,6 +1011,119 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_promo_claims: {
+        Row: {
+          claimed_at: string
+          dismissed: boolean
+          id: string
+          is_used: boolean
+          promo_id: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string
+          dismissed?: boolean
+          id?: string
+          is_used?: boolean
+          promo_id: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string
+          dismissed?: boolean
+          id?: string
+          is_used?: boolean
+          promo_id?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_promo_claims_promo_id_fkey"
+            columns: ["promo_id"]
+            isOneToOne: false
+            referencedRelation: "user_promos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_promos: {
+        Row: {
+          condition_type: string
+          condition_value: Json | null
+          coupon_code: string
+          created_at: string
+          description: string | null
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_discount_amount: number | null
+          min_order_amount: number | null
+          popup_bg_color: string | null
+          popup_image_url: string | null
+          popup_message: string | null
+          popup_text_color: string | null
+          popup_title: string | null
+          starts_at: string | null
+          target_user_ids: string[] | null
+          title: string
+          usage_limit: number | null
+          used_count: number | null
+        }
+        Insert: {
+          condition_type?: string
+          condition_value?: Json | null
+          coupon_code: string
+          created_at?: string
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_discount_amount?: number | null
+          min_order_amount?: number | null
+          popup_bg_color?: string | null
+          popup_image_url?: string | null
+          popup_message?: string | null
+          popup_text_color?: string | null
+          popup_title?: string | null
+          starts_at?: string | null
+          target_user_ids?: string[] | null
+          title: string
+          usage_limit?: number | null
+          used_count?: number | null
+        }
+        Update: {
+          condition_type?: string
+          condition_value?: Json | null
+          coupon_code?: string
+          created_at?: string
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_discount_amount?: number | null
+          min_order_amount?: number | null
+          popup_bg_color?: string | null
+          popup_image_url?: string | null
+          popup_message?: string | null
+          popup_text_color?: string | null
+          popup_title?: string | null
+          starts_at?: string | null
+          target_user_ids?: string[] | null
+          title?: string
+          usage_limit?: number | null
+          used_count?: number | null
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

@@ -36,10 +36,13 @@ import AdminShipping from "./pages/admin/AdminShipping";
 import AdminSupport from "./pages/admin/AdminSupport";
 import AdminApiKeys from "./pages/admin/AdminApiKeys";
 import AdminAISettings from "./pages/admin/AdminAISettings";
+import AdminUserPromos from "./pages/admin/AdminUserPromos";
+import AdminDeliveryOffers from "./pages/admin/AdminDeliveryOffers";
 import NotFound from "./pages/NotFound";
 import SiteThemeProvider from "./components/SiteThemeProvider";
 import AppToastOverlay from "./components/AppToastOverlay";
 import AIChatWidget from "./components/AIChatWidget";
+import PromoPopup from "./components/PromoPopup";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +55,7 @@ const App = () => (
           <CurrencyProvider>
           <SiteThemeProvider />
           <AIChatWidget />
+          <PromoPopup />
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/home" element={<HomePage />} />
@@ -100,6 +104,8 @@ const App = () => (
               <Route path="support" element={<AdminSupport />} />
               <Route path="api-keys" element={<AdminApiKeys />} />
               <Route path="ai-settings" element={<AdminAISettings />} />
+              <Route path="user-promos" element={<AdminUserPromos />} />
+              <Route path="delivery-offers" element={<AdminDeliveryOffers />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

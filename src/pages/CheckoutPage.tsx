@@ -120,6 +120,15 @@ const CheckoutPage: React.FC = () => {
     },
   });
 
+  // Fetch active delivery offers
+  const { data: deliveryOffers } = useQuery({
+    queryKey: ["delivery-offers"],
+    queryFn: async () => {
+      const { data } = await supabase.from("delivery_offers").select("*").eq("is_active", true);
+      return data || [];
+    },
+  });
+
   const subtotal = cartItems?.reduce((sum, item) => {
     const variant = (item as any).product_variants as any;
     const price = variant?.price_override ?? (item.products as any)?.price ?? 0;
@@ -138,7 +147,28 @@ const CheckoutPage: React.FC = () => {
 
   const shippingMethodId = cartState.shippingMethodId;
   const selectedShipping = shippingMethods?.find((m) => m.id === shippingMethodId) || shippingMethods?.[0];
-  const shippingFee = selectedShipping ? (selectedShipping.min_order_free && subtotal >= Number(selectedShipping.min_order_free) ? 0 : Number(selectedShipping.price)) : 0;
+  let baseShippingFee = selectedShipping ? (selectedShipping.min_order_free && subtotal >= Number(selectedShipping.min_order_free) ? 0 : Number(selectedShipping.price)) : 0;
+
+  // Apply best delivery offer
+  let deliveryDiscount = 0;
+  let appliedDeliveryOffer: any = null;
+  if (deliveryOffers && baseShippingFee > 0) {
+    for (const offer of deliveryOffers) {
+      if (Number(offer.min_order_amount) > 0 && subtotal < Number(offer.min_order_amount)) continue;
+      const areas: string[] = offer.target_areas || [];
+      if (areas.length > 0 && address.city) {
+        const cityLower = address.city.toLowerCase();
+        if (!areas.some((a: string) => cityLower.includes(a.toLowerCase()))) continue;
+      }
+      let disc = 0;
+      if (offer.offer_type === "free_delivery") disc = baseShippingFee;
+      else if (offer.offer_type === "reduced_delivery") disc = Math.min(Number(offer.discount_value), baseShippingFee);
+      else if (offer.offer_type === "flat_rate") disc = Math.max(0, baseShippingFee - Number(offer.discount_value));
+      if (disc > deliveryDiscount) { deliveryDiscount = disc; appliedDeliveryOffer = offer; }
+    }
+  }
+
+  const shippingFee = Math.max(0, baseShippingFee - deliveryDiscount);
   const giftWrapFee = giftWrap ? 50 : 0;
   const total = Math.max(0, subtotal - couponDiscount + shippingFee + giftWrapFee);
 
@@ -406,7 +436,13 @@ const CheckoutPage: React.FC = () => {
               <div className="border-t border-border pt-3 space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="text-foreground">{formatPrice(subtotal)}</span></div>
                 {couponDiscount > 0 && <div className="flex justify-between text-green-500"><span>Discount</span><span>-{formatPrice(couponDiscount)}</span></div>}
-                <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span className="text-foreground">{shippingFee === 0 ? <Badge variant="secondary" className="text-[10px]">Free</Badge> : formatPrice(shippingFee)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span className="text-foreground">{baseShippingFee === 0 ? <Badge variant="secondary" className="text-[10px]">Free</Badge> : formatPrice(baseShippingFee)}</span></div>
+                {deliveryDiscount > 0 && (
+                  <div className="flex justify-between text-green-500">
+                    <span className="flex items-center gap-1 text-xs"><Truck className="w-3 h-3" /> {appliedDeliveryOffer?.title || "Delivery Offer"}</span>
+                    <span>-{formatPrice(deliveryDiscount)}</span>
+                  </div>
+                )}
                 {giftWrap && <div className="flex justify-between"><span className="text-muted-foreground">Gift Wrap</span><span className="text-foreground">{formatPrice(giftWrapFee)}</span></div>}
               </div>
 
