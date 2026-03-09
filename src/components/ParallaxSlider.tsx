@@ -175,10 +175,9 @@ const ParallaxSlider: React.FC = () => {
   const prev = () => { setDirection(-1); setCurrent((c) => (c - 1 + slides.length) % slides.length); };
   const next = () => { setDirection(1); setCurrent((c) => (c + 1) % slides.length); };
 
-  // Preload all slide images and track which are loaded for skeleton/blur reveal
+  // Preload all slide images and track which are loaded for smooth transitions
   useEffect(() => {
     slides.forEach((s) => {
-      if (loadedImages.has(s.image)) return;
       const img = new Image();
       img.onload = () => setLoadedImages((prev) => new Set(prev).add(s.image));
       img.src = s.image;
