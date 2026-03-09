@@ -278,7 +278,7 @@ export default function BulkUpload({ mode, onComplete, categories, products }: B
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileSpreadsheet className="w-5 h-5 text-primary" />
-              Bulk Upload {mode === "categories" ? "Categories" : "Products"}
+              Bulk Upload {mode === "categories" ? "Categories" : mode === "products" ? "Products" : "Variants"}
             </DialogTitle>
           </DialogHeader>
 
