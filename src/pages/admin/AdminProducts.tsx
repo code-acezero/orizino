@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Pencil, Trash2, Search, X, LayoutTemplate, Upload, Loader2, ImagePlus, Bell, CheckCheck, Eye, EyeOff } from "lucide-react";
+import BulkUpload from "@/components/admin/BulkUpload";
 import { Checkbox } from "@/components/ui/checkbox";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/lib/app-toast";
@@ -385,7 +386,10 @@ const AdminProducts = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-display font-bold">Products</h1>
-        <Button onClick={() => openEdit()} className="gap-2"><Plus className="h-4 w-4" /> Add Product</Button>
+        <div className="flex items-center gap-2">
+          <BulkUpload mode="products" onComplete={() => qc.invalidateQueries({ queryKey: ["admin-products"] })} categories={categories.map(c => ({ id: c.id, name: c.name, slug: "" }))} />
+          <Button onClick={() => openEdit()} className="gap-2"><Plus className="h-4 w-4" /> Add Product</Button>
+        </div>
       </div>
 
       <Tabs value={activeMainTab} onValueChange={setActiveMainTab}>

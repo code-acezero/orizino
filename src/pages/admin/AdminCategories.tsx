@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Pencil, Trash2, ChevronRight, Check, X, FolderTree, Search, Eye, EyeOff, Star, GripVertical, BarChart3, ChevronDown, ChevronUp, Package, ShoppingCart, DollarSign, ArrowUpDown, Download, CalendarDays, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import BulkUpload from "@/components/admin/BulkUpload";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "@/lib/app-toast";
 import ImageUpload from "@/components/ImageUpload";
@@ -349,9 +350,12 @@ const AdminCategories = () => {
             <p className="text-xs text-muted-foreground">{categories.length} total · {totalActive} active · {totalFeatured} featured</p>
           </div>
         </div>
-        <Button onClick={() => openEdit()} className="gap-2">
-          <Plus className="h-4 w-4" /> Add Category
-        </Button>
+        <div className="flex items-center gap-2">
+          <BulkUpload mode="categories" onComplete={() => qc.invalidateQueries({ queryKey: ["admin-categories"] })} />
+          <Button onClick={() => openEdit()} className="gap-2">
+            <Plus className="h-4 w-4" /> Add Category
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
