@@ -387,6 +387,7 @@ const AdminProducts = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-display font-bold">Products</h1>
         <div className="flex items-center gap-2">
+          <BulkUpload mode="variants" onComplete={() => qc.invalidateQueries({ queryKey: ["admin-products"] })} products={products.map((p: any) => ({ id: p.id, name: p.name, slug: p.slug }))} />
           <BulkUpload mode="products" onComplete={() => qc.invalidateQueries({ queryKey: ["admin-products"] })} categories={categories.map(c => ({ id: c.id, name: c.name, slug: "" }))} />
           <Button onClick={() => openEdit()} className="gap-2"><Plus className="h-4 w-4" /> Add Product</Button>
         </div>
