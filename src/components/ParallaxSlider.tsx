@@ -174,6 +174,14 @@ const ParallaxSlider: React.FC = () => {
   const prev = () => { setDirection(-1); setCurrent((c) => (c - 1 + slides.length) % slides.length); };
   const next = () => { setDirection(1); setCurrent((c) => (c + 1) % slides.length); };
 
+  // Preload all slide images so they're cached and don't reload on transition
+  useEffect(() => {
+    slides.forEach((s) => {
+      const img = new Image();
+      img.src = s.image;
+    });
+  }, [slides]);
+
   const slide = slides[current];
   if (!slide) return null;
 
@@ -255,30 +263,30 @@ const ParallaxSlider: React.FC = () => {
 
           <div className={`absolute inset-0 ${overlayClasses[cfg.overlay_style] || ""}`} style={overlayStyle} />
 
-          {/* Cinematic smoky mist layers */}
+          {/* Cinematic smoky mist layers — subtle & slow */}
           <motion.div
             className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse at 20% 80%, rgba(0,0,0,0.6) 0%, transparent 60%)" }}
-            animate={{ opacity: [0.5, 0.8, 0.5], x: [0, 15, 0] }}
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.4) 0%, transparent 55%)" }}
-            animate={{ opacity: [0.4, 0.7, 0.4], x: [0, -20, 0] }}
-            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          />
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.2) 40%, transparent 70%)" }}
-            animate={{ opacity: [0.8, 1, 0.8] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          />
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.5) 0%, transparent 50%)" }}
-            animate={{ scale: [1, 1.1, 1], opacity: [0.6, 0.9, 0.6] }}
+            style={{ background: "radial-gradient(ellipse at 15% 85%, rgba(0,0,0,0.35) 0%, transparent 55%)" }}
+            animate={{ opacity: [0.3, 0.5, 0.3], x: [0, 10, 0] }}
             transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "radial-gradient(ellipse at 85% 90%, rgba(0,0,0,0.25) 0%, transparent 50%)" }}
+            animate={{ opacity: [0.2, 0.4, 0.2], x: [0, -12, 0] }}
+            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 3 }}
+          />
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.1) 35%, transparent 65%)" }}
+            animate={{ opacity: [0.6, 0.8, 0.6] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          />
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.3) 0%, transparent 45%)" }}
+            animate={{ scale: [1, 1.05, 1], opacity: [0.4, 0.6, 0.4] }}
+            transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
           />
 
           {/* Content */}
