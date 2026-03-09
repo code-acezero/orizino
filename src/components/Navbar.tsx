@@ -264,6 +264,7 @@ const Navbar: React.FC = () => {
 
                 {user && <NotificationBell />}
 
+                {/* Desktop user menu */}
                 {user ? (
                   <div className="relative hidden lg:block" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)}>
                     <button className="w-9 h-9 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-sm">
@@ -289,10 +290,41 @@ const Navbar: React.FC = () => {
                   </button>
                 )}
 
-                <button onClick={() => setMobileOpen(!mobileOpen)}
-                  className="lg:hidden p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all">
-                  {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                </button>
+                {/* Mobile profile icon + dropdown */}
+                <div className="relative lg:hidden">
+                  {user ? (
+                    <>
+                      <button
+                        onClick={() => setMobileOpen(!mobileOpen)}
+                        className="w-9 h-9 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-sm"
+                      >
+                        {user.email?.charAt(0).toUpperCase()}
+                      </button>
+                      <AnimatePresence>
+                        {mobileOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute top-full right-0 pt-2 w-48 z-50"
+                          >
+                            <div className="glass-strong rounded-2xl p-2 shadow-lg border border-border/50">
+                              <Link to="/profile" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50"><User className="w-4 h-4" /> Profile</Link>
+                              <Link to="/orders" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50"><ShoppingCart className="w-4 h-4" /> Orders</Link>
+                              <Link to="/settings" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50"><Settings className="w-4 h-4" /> Settings</Link>
+                              <button onClick={() => { handleSignOut(); setMobileOpen(false); }} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-destructive hover:bg-secondary/50 w-full text-left"><LogOut className="w-4 h-4" /> Sign Out</button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </>
+                  ) : (
+                    <button onClick={() => setAuthOpen(true)} className="p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all">
+                      <User className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
