@@ -305,7 +305,7 @@ const ParallaxSlider: React.FC = () => {
       </AnimatePresence>
 
       {(cfg.show_arrows || cfg.show_dots) && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 z-10">
+        <div className="absolute bottom-2 md:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 z-10">
           {cfg.show_arrows && <button onClick={prev} className="glass rounded-full p-2 text-foreground hover:text-primary transition-colors"><ChevronLeft className="w-5 h-5" /></button>}
           {cfg.show_dots && <div className="flex gap-2">{slides.map((_, i) => renderDot(i))}</div>}
           {cfg.show_arrows && <button onClick={next} className="glass rounded-full p-2 text-foreground hover:text-primary transition-colors"><ChevronRight className="w-5 h-5" /></button>}
