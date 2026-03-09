@@ -181,6 +181,54 @@ export type Database = {
           },
         ]
       }
+      coupons: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_discount_amount: number | null
+          min_order_amount: number | null
+          starts_at: string | null
+          usage_limit: number | null
+          used_count: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_discount_amount?: number | null
+          min_order_amount?: number | null
+          starts_at?: string | null
+          usage_limit?: number | null
+          used_count?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_discount_amount?: number | null
+          min_order_amount?: number | null
+          starts_at?: string | null
+          usage_limit?: number | null
+          used_count?: number | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -276,13 +324,18 @@ export type Database = {
       }
       orders: {
         Row: {
+          coupon_code: string | null
+          coupon_discount: number | null
           created_at: string
+          gift_message: string | null
+          gift_wrap: boolean | null
           id: string
           notes: string | null
           order_number: string
           payment_method: string
           shipping_address: Json
           shipping_fee: number
+          shipping_method_id: string | null
           status: string
           subtotal: number
           total: number
@@ -291,13 +344,18 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          coupon_code?: string | null
+          coupon_discount?: number | null
           created_at?: string
+          gift_message?: string | null
+          gift_wrap?: boolean | null
           id?: string
           notes?: string | null
           order_number: string
           payment_method?: string
           shipping_address?: Json
           shipping_fee?: number
+          shipping_method_id?: string | null
           status?: string
           subtotal?: number
           total?: number
@@ -306,13 +364,18 @@ export type Database = {
           user_id: string
         }
         Update: {
+          coupon_code?: string | null
+          coupon_discount?: number | null
           created_at?: string
+          gift_message?: string | null
+          gift_wrap?: boolean | null
           id?: string
           notes?: string | null
           order_number?: string
           payment_method?: string
           shipping_address?: Json
           shipping_fee?: number
+          shipping_method_id?: string | null
           status?: string
           subtotal?: number
           total?: number
@@ -320,7 +383,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_shipping_method_id_fkey"
+            columns: ["shipping_method_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_methods"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       page_analytics: {
         Row: {
@@ -672,6 +743,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      shipping_methods: {
+        Row: {
+          created_at: string
+          description: string | null
+          estimated_days: string | null
+          id: string
+          is_active: boolean
+          min_order_free: number | null
+          name: string
+          price: number
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          estimated_days?: string | null
+          id?: string
+          is_active?: boolean
+          min_order_free?: number | null
+          name: string
+          price?: number
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          estimated_days?: string | null
+          id?: string
+          is_active?: boolean
+          min_order_free?: number | null
+          name?: string
+          price?: number
+          sort_order?: number | null
+        }
+        Relationships: []
       }
       showcase_slides: {
         Row: {

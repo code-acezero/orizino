@@ -30,6 +30,8 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminShowcase from "./pages/admin/AdminShowcase";
 import AdminHome from "./pages/admin/AdminHome";
 import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
+import AdminCoupons from "./pages/admin/AdminCoupons";
+import AdminShipping from "./pages/admin/AdminShipping";
 import NotFound from "./pages/NotFound";
 import SiteThemeProvider from "./components/SiteThemeProvider";
 import AppToastOverlay from "./components/AppToastOverlay";
@@ -86,6 +88,8 @@ const App = () => (
               <Route path="showcase" element={<AdminShowcase />} />
               <Route path="home" element={<AdminHome />} />
               <Route path="announcements" element={<AdminAnnouncements />} />
+              <Route path="coupons" element={<AdminCoupons />} />
+              <Route path="shipping" element={<AdminShipping />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
