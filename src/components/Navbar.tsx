@@ -330,51 +330,8 @@ const Navbar: React.FC = () => {
           </div>
         </div>
 
-        {/* Mobile menu */}
-        <AnimatePresence>
-          {mobileOpen && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden glass-strong border-t border-border overflow-hidden">
-              <div className="w-full max-w-[1440px] mx-auto px-4 py-4 space-y-2">
-                <form onSubmit={(e) => { handleSearchSubmit(e); setMobileOpen(false); }}>
-                  <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search products..."
-                    className="w-full px-4 py-3 rounded-2xl bg-secondary/50 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 mb-2" />
-                </form>
-                <Link to="/home" className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>Home</Link>
-                <Link to="/shop" className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>Shop</Link>
 
-                {/* Categories in mobile */}
-                <button
-                  onClick={() => setMobileCatOpen(!mobileCatOpen)}
-                  className="w-full flex items-center justify-between px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50"
-                >
-                  <span className="flex items-center gap-2"><LayoutGrid className="w-4 h-4" /> Categories</span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${mobileCatOpen ? "rotate-180" : ""}`} />
-                </button>
-                <AnimatePresence>
-                  {mobileCatOpen && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                      <div className="pl-4 space-y-1">
-                        {parentCategories.map((cat) => {
-                          const children = getChildren(cat.id);
-                          return (
-                            <div key={cat.id}>
-                              <Link to={`/categories/${cat.slug}`} className="flex items-center gap-2 py-1.5 px-3 text-sm text-foreground hover:text-primary rounded-lg" onClick={() => setMobileOpen(false)}>
-                                {cat.icon_url ? <img src={cat.icon_url} alt="" className="w-4 h-4 rounded object-contain" /> : cat.icon ? <span>{cat.icon}</span> : null}
-                                {cat.name}
-                              </Link>
-                              {children.map((sub) => (
-                                <Link key={sub.id} to={`/categories/${sub.slug}`} className="block py-1 pl-9 text-xs text-muted-foreground hover:text-foreground" onClick={() => setMobileOpen(false)}>
-                                  {sub.name}
-                                </Link>
-                              ))}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+
 
                 {user ? (
                   <>
