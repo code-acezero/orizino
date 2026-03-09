@@ -143,7 +143,7 @@ const SAMPLE_VARIANTS = `product,color,size,sku,stock_quantity,price_override,is
 sample-product,Black,M,SKU001-BK-M,50,29.99,true
 sample-product,White,L,SKU001-WH-L,30,,true`;
 
-export default function BulkUpload({ mode, onComplete, categories }: BulkUploadProps) {
+export default function BulkUpload({ mode, onComplete, categories, products }: BulkUploadProps) {
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [importing, setImporting] = useState(false);
