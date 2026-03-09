@@ -202,9 +202,9 @@ const ParallaxSlider: React.FC = () => {
   const titleClass = `text-4xl md:text-${cfg.title_size}`;
 
   const subtitleEl = (text: string) => {
-    if (cfg.subtitle_style === "badge") return <span className="inline-block btn-pill bg-primary/20 text-primary text-sm mb-4 border border-primary/30">{text}</span>;
-    if (cfg.subtitle_style === "underline") return <span className="inline-block text-primary text-sm mb-4 border-b-2 border-primary pb-1">{text}</span>;
-    return <span className="inline-block text-primary text-sm mb-4 font-medium">{text}</span>;
+    if (cfg.subtitle_style === "badge") return <span className="inline-block btn-pill bg-primary/20 text-primary text-sm mb-4 border border-primary/30 drop-shadow-[0_1px_4px_rgba(0,0,0,0.4)]">{text}</span>;
+    if (cfg.subtitle_style === "underline") return <span className="inline-block text-primary text-sm mb-4 border-b-2 border-primary pb-1 drop-shadow-[0_1px_4px_rgba(0,0,0,0.4)]">{text}</span>;
+    return <span className="inline-block text-primary text-sm mb-4 font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.4)]">{text}</span>;
   };
 
   const ctaClasses: Record<string, string> = {
