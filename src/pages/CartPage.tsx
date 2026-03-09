@@ -72,6 +72,17 @@ const CartPage: React.FC = () => {
     },
   });
 
+  const moveToWishlist = async (productId: string, cartItemId: string) => {
+    if (!user) return;
+    const { data: existing } = await supabase.from("wishlist_items").select("id").eq("user_id", user.id).eq("product_id", productId).maybeSingle();
+    if (!existing) await supabase.from("wishlist_items").insert({ user_id: user.id, product_id: productId });
+    await supabase.from("cart_items").delete().eq("id", cartItemId);
+    queryClient.invalidateQueries({ queryKey: ["cart"] });
+    queryClient.invalidateQueries({ queryKey: ["cart-count"] });
+    queryClient.invalidateQueries({ queryKey: ["wishlist"] });
+    toast({ title: "Moved to wishlist" });
+  };
+
   const subtotal = cartItems?.reduce((sum, item) => {
     const product = item.products as any;
     const variant = (item as any).product_variants as any;
