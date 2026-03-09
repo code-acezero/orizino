@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, LogOut, Settings, LayoutGrid,
+  Search, ShoppingCart, Heart, User, ChevronDown, LogOut, Settings, LayoutGrid,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -19,7 +19,7 @@ const Navbar: React.FC = () => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [authOpen, setAuthOpen] = useState(false);
-  const [mobileCatOpen, setMobileCatOpen] = useState(false);
+  
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -264,6 +264,7 @@ const Navbar: React.FC = () => {
 
                 {user && <NotificationBell />}
 
+                {/* Desktop user menu */}
                 {user ? (
                   <div className="relative hidden lg:block" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)}>
                     <button className="w-9 h-9 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-sm">
@@ -289,75 +290,47 @@ const Navbar: React.FC = () => {
                   </button>
                 )}
 
-                <button onClick={() => setMobileOpen(!mobileOpen)}
-                  className="lg:hidden p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all">
-                  {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                </button>
+                {/* Mobile profile icon + dropdown */}
+                <div className="relative lg:hidden">
+                  {user ? (
+                    <>
+                      <button
+                        onClick={() => setMobileOpen(!mobileOpen)}
+                        className="w-9 h-9 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-sm"
+                      >
+                        {user.email?.charAt(0).toUpperCase()}
+                      </button>
+                      <AnimatePresence>
+                        {mobileOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute top-full right-0 pt-2 w-48 z-50"
+                          >
+                            <div className="glass-strong rounded-2xl p-2 shadow-lg border border-border/50">
+                              <Link to="/profile" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50"><User className="w-4 h-4" /> Profile</Link>
+                              <Link to="/orders" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50"><ShoppingCart className="w-4 h-4" /> Orders</Link>
+                              <Link to="/settings" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50"><Settings className="w-4 h-4" /> Settings</Link>
+                              <button onClick={() => { handleSignOut(); setMobileOpen(false); }} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-destructive hover:bg-secondary/50 w-full text-left"><LogOut className="w-4 h-4" /> Sign Out</button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </>
+                  ) : (
+                    <button onClick={() => setAuthOpen(true)} className="p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all">
+                      <User className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Mobile menu */}
-        <AnimatePresence>
-          {mobileOpen && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden glass-strong border-t border-border overflow-hidden">
-              <div className="w-full max-w-[1440px] mx-auto px-4 py-4 space-y-2">
-                <form onSubmit={(e) => { handleSearchSubmit(e); setMobileOpen(false); }}>
-                  <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search products..."
-                    className="w-full px-4 py-3 rounded-2xl bg-secondary/50 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 mb-2" />
-                </form>
-                <Link to="/home" className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>Home</Link>
-                <Link to="/shop" className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>Shop</Link>
-
-                {/* Categories in mobile */}
-                <button
-                  onClick={() => setMobileCatOpen(!mobileCatOpen)}
-                  className="w-full flex items-center justify-between px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50"
-                >
-                  <span className="flex items-center gap-2"><LayoutGrid className="w-4 h-4" /> Categories</span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${mobileCatOpen ? "rotate-180" : ""}`} />
-                </button>
-                <AnimatePresence>
-                  {mobileCatOpen && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                      <div className="pl-4 space-y-1">
-                        {parentCategories.map((cat) => {
-                          const children = getChildren(cat.id);
-                          return (
-                            <div key={cat.id}>
-                              <Link to={`/categories/${cat.slug}`} className="flex items-center gap-2 py-1.5 px-3 text-sm text-foreground hover:text-primary rounded-lg" onClick={() => setMobileOpen(false)}>
-                                {cat.icon_url ? <img src={cat.icon_url} alt="" className="w-4 h-4 rounded object-contain" /> : cat.icon ? <span>{cat.icon}</span> : null}
-                                {cat.name}
-                              </Link>
-                              {children.map((sub) => (
-                                <Link key={sub.id} to={`/categories/${sub.slug}`} className="block py-1 pl-9 text-xs text-muted-foreground hover:text-foreground" onClick={() => setMobileOpen(false)}>
-                                  {sub.name}
-                                </Link>
-                              ))}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {user ? (
-                  <>
-                    <Link to="/profile" className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>Profile</Link>
-                    <Link to="/settings" className="block px-4 py-2 rounded-xl text-foreground hover:bg-secondary/50" onClick={() => setMobileOpen(false)}>Settings</Link>
-                    <button onClick={() => { handleSignOut(); setMobileOpen(false); }} className="block px-4 py-2 rounded-xl text-destructive hover:bg-secondary/50 w-full text-left">Sign Out</button>
-                  </>
-                ) : (
-                  <button onClick={() => { setAuthOpen(true); setMobileOpen(false); }} className="block px-4 py-2 rounded-xl text-primary hover:bg-secondary/50 w-full text-left">Sign In</button>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </nav>
+
 
       <BottomNav onSearchClick={() => {}} onAuthClick={() => setAuthOpen(true)} />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
