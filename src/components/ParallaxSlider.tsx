@@ -266,8 +266,8 @@ const ParallaxSlider: React.FC = () => {
                 className={`max-w-${cfg.text_max_width} ${textAlign}`}
               >
                 {subtitleEl(slide.subtitle)}
-                <h1 className={`${titleClass} font-bold font-display mb-4 leading-tight text-foreground`}>{slide.title}</h1>
-                <p className="text-lg text-muted-foreground mb-8 max-w-lg">{slide.description}</p>
+                <h1 className={`${titleClass} font-bold font-display mb-4 leading-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]`}>{slide.title}</h1>
+                <p className="text-lg text-white/80 mb-8 max-w-lg drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">{slide.description}</p>
                 <motion.a href={slide.ctaLink} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                   onClick={() => trackClick("slider_cta", slide.id, "/home", { cta_text: slide.cta, cta_link: slide.ctaLink })}
                   className={`inline-flex items-center btn-pill font-semibold text-lg px-8 py-3 ${ctaClasses[cfg.cta_style] || ctaClasses.gradient}`}>
