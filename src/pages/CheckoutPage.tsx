@@ -436,7 +436,13 @@ const CheckoutPage: React.FC = () => {
               <div className="border-t border-border pt-3 space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="text-foreground">{formatPrice(subtotal)}</span></div>
                 {couponDiscount > 0 && <div className="flex justify-between text-green-500"><span>Discount</span><span>-{formatPrice(couponDiscount)}</span></div>}
-                <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span className="text-foreground">{shippingFee === 0 ? <Badge variant="secondary" className="text-[10px]">Free</Badge> : formatPrice(shippingFee)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span className="text-foreground">{baseShippingFee === 0 ? <Badge variant="secondary" className="text-[10px]">Free</Badge> : formatPrice(baseShippingFee)}</span></div>
+                {deliveryDiscount > 0 && (
+                  <div className="flex justify-between text-green-500">
+                    <span className="flex items-center gap-1 text-xs"><Truck className="w-3 h-3" /> {appliedDeliveryOffer?.title || "Delivery Offer"}</span>
+                    <span>-{formatPrice(deliveryDiscount)}</span>
+                  </div>
+                )}
                 {giftWrap && <div className="flex justify-between"><span className="text-muted-foreground">Gift Wrap</span><span className="text-foreground">{formatPrice(giftWrapFee)}</span></div>}
               </div>
 
