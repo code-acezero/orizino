@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
 
 interface BottomNavProps {
   onSearchClick: () => void;
@@ -28,6 +29,16 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
   });
 
   const parentCategories = dbCategories.filter((c) => !c.parent_id);
+
+  const { data: cartCount = 0 } = useQuery({
+    queryKey: ["cart-count", user?.id],
+    queryFn: async () => {
+      const { count } = await supabase.from("cart_items").select("*", { count: "exact", head: true }).eq("user_id", user!.id);
+      return count || 0;
+    },
+    enabled: !!user,
+    staleTime: 30 * 1000,
+  });
 
   const items = [
     { icon: Home, label: "Home", path: "/home" },
@@ -109,7 +120,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
               };
 
               const content = (
-                <div className="flex flex-col items-center gap-0.5 relative py-1">
+              <div className="flex flex-col items-center gap-0.5 relative py-1">
                   {active && (
                     <motion.div
                       layoutId="bottomNavIndicator"
@@ -117,7 +128,14 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
                       transition={{ type: "spring", stiffness: 500, damping: 35 }}
                     />
                   )}
-                  <item.icon className={`w-5 h-5 transition-colors ${active ? "text-primary" : "text-muted-foreground"}`} />
+                  <div className="relative">
+                    <item.icon className={`w-5 h-5 transition-colors ${active ? "text-primary" : "text-muted-foreground"}`} />
+                    {item.label === "Cart" && cartCount > 0 && (
+                      <span className="absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
+                        {cartCount > 99 ? "99+" : cartCount}
+                      </span>
+                    )}
+                  </div>
                   <span className={`text-[10px] font-medium transition-colors ${active ? "text-primary" : "text-muted-foreground"}`}>
                     {item.label}
                   </span>
