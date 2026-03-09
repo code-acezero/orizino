@@ -138,12 +138,12 @@ const ProfilePage: React.FC = () => {
   const savePreferences = async (newAddresses?: Address[], newPayments?: PaymentMethod[]) => {
     if (!user) return;
     const currentPrefs = (await supabase.from("profiles").select("preferences").eq("id", user.id).single()).data?.preferences as Record<string, any> || {};
-    const updated = {
+    const updated: Record<string, any> = {
       ...currentPrefs,
-      addresses: newAddresses || addresses,
-      paymentMethods: newPayments || paymentMethods,
+      addresses: (newAddresses || addresses).map((a) => ({ ...a })),
+      paymentMethods: (newPayments || paymentMethods).map((p) => ({ ...p })),
     };
-    await supabase.from("profiles").update({ preferences: updated }).eq("id", user.id);
+    await supabase.from("profiles").update({ preferences: updated as any }).eq("id", user.id);
   };
 
   const handleSave = async () => {

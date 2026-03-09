@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Moon, Sun, Palette, Bell, Globe, Shield, ChevronRight, Eye, EyeOff,
-  Lock, Smartphone, Mail, Volume2, VolumeX, Languages, Monitor,
+  Lock, Smartphone, Mail, Volume2, VolumeX, Languages, Monitor, TrendingUp,
   Trash2, Download, HelpCircle, MessageSquare, FileText, Info,
   BellRing, BellOff, ShoppingBag, Tag, Package, Megaphone, AlertTriangle
 } from "lucide-react";
