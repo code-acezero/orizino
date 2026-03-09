@@ -19,6 +19,8 @@ const DEFAULT_CONFIG = {
   show_on_all_pages: true,
   primary_color: "",
   avatar_emoji: "🤖",
+  avatar_url: "",
+  avatar_type: "emoji" as "emoji" | "image",
 };
 
 const AdminAISettings = () => {
