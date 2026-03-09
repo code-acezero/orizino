@@ -41,7 +41,7 @@ interface ShowcaseConfig {
 const defaultConfig: ShowcaseConfig = {
   autoplay_speed: 6000,
   transition_duration: 800,
-  height: "85vh",
+  height: "65vh",
   overlay_style: "gradient-left",
   overlay_opacity: 80,
   text_position: "left",
@@ -239,7 +239,7 @@ const ParallaxSlider: React.FC = () => {
   return (
     <div
       className={`relative w-full overflow-hidden ${radiusClass}`}
-      style={{ height: cfg.height, minHeight: "400px", perspective: activeTransition === "cube" || activeTransition === "flip" ? "1200px" : undefined }}
+      style={{ height: cfg.height, minHeight: "280px", maxHeight: "600px", perspective: activeTransition === "cube" || activeTransition === "flip" ? "1200px" : undefined }}
       onMouseEnter={() => cfg.pause_on_hover && setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
