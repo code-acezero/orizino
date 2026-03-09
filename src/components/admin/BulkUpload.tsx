@@ -12,12 +12,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-type BulkUploadMode = "categories" | "products";
+type BulkUploadMode = "categories" | "products" | "variants";
 
 interface BulkUploadProps {
   mode: BulkUploadMode;
   onComplete: () => void;
   categories?: { id: string; name: string; slug: string }[];
+  products?: { id: string; name: string; slug: string }[];
 }
 
 type RowStatus = "valid" | "error" | "warning";
@@ -30,6 +31,7 @@ interface ParsedRow {
 
 const CATEGORY_REQUIRED = ["name", "slug"];
 const PRODUCT_REQUIRED = ["name", "slug", "price"];
+const VARIANT_REQUIRED = ["product", "stock_quantity"];
 
 const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -50,17 +52,24 @@ function parseSheetToRows(rawRows: string[][]): Record<string, string>[] {
   });
 }
 
-function validateRow(row: Record<string, string>, mode: BulkUploadMode): { status: RowStatus; errors: string[] } {
+function validateRow(row: Record<string, string>, mode: BulkUploadMode, products?: { id: string; name: string; slug: string }[]): { status: RowStatus; errors: string[] } {
   const errors: string[] = [];
-  const required = mode === "categories" ? CATEGORY_REQUIRED : PRODUCT_REQUIRED;
+  const required = mode === "categories" ? CATEGORY_REQUIRED : mode === "products" ? PRODUCT_REQUIRED : VARIANT_REQUIRED;
   required.forEach((f) => {
     if (!row[f]?.trim()) errors.push(`Missing "${f}"`);
   });
   if (mode === "products" && row.price && isNaN(Number(row.price))) {
     errors.push("Invalid price");
   }
-  if (mode === "products" && row.stock_quantity && isNaN(Number(row.stock_quantity))) {
+  if ((mode === "products" || mode === "variants") && row.stock_quantity && isNaN(Number(row.stock_quantity))) {
     errors.push("Invalid stock_quantity");
+  }
+  if (mode === "variants") {
+    if (row.price_override && isNaN(Number(row.price_override))) errors.push("Invalid price_override");
+    if (row.product && products?.length) {
+      const match = products.find(p => p.name.toLowerCase() === row.product.toLowerCase() || p.slug === row.product.toLowerCase());
+      if (!match) errors.push(`Product "${row.product}" not found`);
+    }
   }
   return { status: errors.length ? "error" : "valid", errors };
 }
@@ -105,6 +114,24 @@ function buildProductInsert(row: Record<string, string>, categories?: { id: stri
   };
 }
 
+function buildVariantInsert(row: Record<string, string>, products?: { id: string; name: string; slug: string }[]) {
+  let productId = "";
+  if (row.product && products?.length) {
+    const match = products.find(p => p.name.toLowerCase() === row.product.toLowerCase() || p.slug === row.product.toLowerCase());
+    if (match) productId = match.id;
+  }
+  return {
+    product_id: productId,
+    color: row.color || null,
+    size: row.size || null,
+    sku: row.sku || null,
+    stock_quantity: Number(row.stock_quantity) || 0,
+    price_override: row.price_override ? Number(row.price_override) : null,
+    is_active: row.is_active?.toLowerCase() !== "false",
+    image_url: row.image_url || null,
+  };
+}
+
 const SAMPLE_CATEGORIES = `name,slug,description,is_active,is_featured
 Electronics,electronics,Electronic gadgets,true,true
 Fashion,fashion,Clothing and accessories,true,false`;
@@ -112,7 +139,11 @@ Fashion,fashion,Clothing and accessories,true,false`;
 const SAMPLE_PRODUCTS = `name,slug,price,compare_at_price,category,sku,stock_quantity,description,is_active,is_featured,tags
 Sample Product,sample-product,29.99,39.99,Electronics,SKU001,100,A great product,true,false,"tag1,tag2"`;
 
-export default function BulkUpload({ mode, onComplete, categories }: BulkUploadProps) {
+const SAMPLE_VARIANTS = `product,color,size,sku,stock_quantity,price_override,is_active
+sample-product,Black,M,SKU001-BK-M,50,29.99,true
+sample-product,White,L,SKU001-WH-L,30,,true`;
+
+export default function BulkUpload({ mode, onComplete, categories, products }: BulkUploadProps) {
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [importing, setImporting] = useState(false);
@@ -124,7 +155,7 @@ export default function BulkUpload({ mode, onComplete, categories }: BulkUploadP
 
   const processRawRows = useCallback((rawRows: Record<string, string>[]) => {
     const parsed: ParsedRow[] = rawRows.map((data) => {
-      const { status, errors } = validateRow(data, mode);
+      const { status, errors } = validateRow(data, mode, products);
       return { data, status, errors };
     });
     setRows(parsed);
@@ -203,9 +234,13 @@ export default function BulkUpload({ mode, onComplete, categories }: BulkUploadP
         const inserts = validRows.map((r) => buildCategoryInsert(r.data));
         const { error } = await supabase.from("categories").upsert(inserts, { onConflict: "slug" });
         if (error) throw error;
-      } else {
+      } else if (mode === "products") {
         const inserts = validRows.map((r) => buildProductInsert(r.data, categories));
         const { error } = await supabase.from("products").upsert(inserts, { onConflict: "slug" });
+        if (error) throw error;
+      } else {
+        const inserts = validRows.map((r) => buildVariantInsert(r.data, products)).filter(v => v.product_id);
+        const { error } = await supabase.from("product_variants").upsert(inserts, { onConflict: "product_id,size,color", ignoreDuplicates: false } as any);
         if (error) throw error;
       }
       toast.success(`${validRows.length} ${mode} imported/updated successfully!`);
@@ -220,7 +255,7 @@ export default function BulkUpload({ mode, onComplete, categories }: BulkUploadP
   };
 
   const downloadSample = () => {
-    const sample = mode === "categories" ? SAMPLE_CATEGORIES : SAMPLE_PRODUCTS;
+    const sample = mode === "categories" ? SAMPLE_CATEGORIES : mode === "products" ? SAMPLE_PRODUCTS : SAMPLE_VARIANTS;
     const blob = new Blob([sample], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -235,7 +270,7 @@ export default function BulkUpload({ mode, onComplete, categories }: BulkUploadP
   return (
     <>
       <Button variant="outline" onClick={() => { reset(); setOpen(true); }} className="gap-2">
-        <Upload className="w-4 h-4" /> Bulk Upload
+        <Upload className="w-4 h-4" /> {mode === "variants" ? "Upload Variants" : "Bulk Upload"}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -243,7 +278,7 @@ export default function BulkUpload({ mode, onComplete, categories }: BulkUploadP
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileSpreadsheet className="w-5 h-5 text-primary" />
-              Bulk Upload {mode === "categories" ? "Categories" : "Products"}
+              Bulk Upload {mode === "categories" ? "Categories" : mode === "products" ? "Products" : "Variants"}
             </DialogTitle>
           </DialogHeader>
 
@@ -291,7 +326,7 @@ export default function BulkUpload({ mode, onComplete, categories }: BulkUploadP
                   <FileSpreadsheet className="w-3.5 h-3.5" /> Download Sample CSV
                 </Button>
                 <p className="text-[11px] text-muted-foreground">
-                  Required columns: <strong>{mode === "categories" ? "name, slug" : "name, slug, price"}</strong>
+                  Required columns: <strong>{mode === "categories" ? "name, slug" : mode === "products" ? "name, slug, price" : "product, stock_quantity"}</strong>
                 </p>
               </div>
             </div>
