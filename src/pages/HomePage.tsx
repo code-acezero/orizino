@@ -342,7 +342,7 @@ const HomePage: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-xl md:text-2xl font-bold font-display text-foreground">{sale.title}</h3>
-                <p className="text-muted-foreground">{sale.subtitle}</p>
+                <p className="text-sm text-muted-foreground">{sale.subtitle}</p>
                 {sale.show_countdown && sale.ends_at && <SaleCountdown endsAt={sale.ends_at} color={sale.color} />}
                 {!sale.show_countdown && sale.ends_at && (
                   <p className="text-xs text-muted-foreground/70 mt-1">Ends {new Date(sale.ends_at).toLocaleDateString()}</p>
