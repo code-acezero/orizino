@@ -337,7 +337,7 @@ const HomePage: React.FC = () => {
           {sale.banner_image && <div className="absolute inset-0 bg-background/50" />}
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl" style={{ background: `${bgColor}20` }}>
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center text-2xl" style={{ background: `${bgColor}20` }}>
                 {sale.custom_icon_url ? <img src={sale.custom_icon_url} className="w-10 h-10 object-contain" alt="" /> : sale.icon}
               </div>
               <div>
