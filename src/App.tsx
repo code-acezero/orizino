@@ -55,6 +55,7 @@ const App = () => (
           <CurrencyProvider>
           <SiteThemeProvider />
           <AIChatWidget />
+          <PromoPopup />
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/home" element={<HomePage />} />
