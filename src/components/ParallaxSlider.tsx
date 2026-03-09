@@ -253,11 +253,11 @@ const ParallaxSlider: React.FC = () => {
       onMouseEnter={() => cfg.pause_on_hover && setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <AnimatePresence custom={direction} mode="wait">
+      <AnimatePresence custom={direction} mode="sync">
         <motion.div key={slide.id} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="absolute inset-0" style={{ transformStyle: activeTransition === "cube" || activeTransition === "flip" ? "preserve-3d" : undefined }}>
           {/* Skeleton shimmer shown while image hasn't loaded yet */}
           {!loadedImages.has(slide.image) && (
-            <div className="absolute inset-0 bg-muted animate-pulse">
+            <div className="absolute inset-0 bg-muted/70 animate-pulse">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-muted-foreground/10 to-transparent animate-[shimmer_1.5s_infinite]" style={{ backgroundSize: "200% 100%" }} />
             </div>
           )}
@@ -270,9 +270,9 @@ const ParallaxSlider: React.FC = () => {
               src={slide.image}
               alt={slide.title}
               className="w-full h-full object-cover"
-              initial={{ filter: "blur(12px)", opacity: 0.6 }}
-              animate={loadedImages.has(slide.image) ? { filter: "blur(0px)", opacity: 1 } : { filter: "blur(12px)", opacity: 0.6 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
+              initial={loadedImages.has(slide.image) ? { filter: "blur(0px)", opacity: 1 } : { filter: "blur(8px)", opacity: 0.85 }}
+              animate={loadedImages.has(slide.image) ? { filter: "blur(0px)", opacity: 1 } : { filter: "blur(8px)", opacity: 0.85 }}
+              transition={{ duration: 0.45, ease: "easeOut" }}
             />
           </motion.div>
 
