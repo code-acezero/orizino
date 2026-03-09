@@ -201,14 +201,14 @@ export default function BulkUpload({ mode, onComplete, categories }: BulkUploadP
     try {
       if (mode === "categories") {
         const inserts = validRows.map((r) => buildCategoryInsert(r.data));
-        const { error } = await supabase.from("categories").insert(inserts);
+        const { error } = await supabase.from("categories").upsert(inserts, { onConflict: "slug" });
         if (error) throw error;
       } else {
         const inserts = validRows.map((r) => buildProductInsert(r.data, categories));
-        const { error } = await supabase.from("products").insert(inserts);
+        const { error } = await supabase.from("products").upsert(inserts, { onConflict: "slug" });
         if (error) throw error;
       }
-      toast.success(`${validRows.length} ${mode} imported successfully!`);
+      toast.success(`${validRows.length} ${mode} imported/updated successfully!`);
       reset();
       setOpen(false);
       onComplete();
