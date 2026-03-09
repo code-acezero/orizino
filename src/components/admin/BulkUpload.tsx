@@ -186,7 +186,7 @@ export default function BulkUpload({ mode, onComplete, categories }: BulkUploadP
         error: () => toast.error("Failed to parse sheet data"),
       });
     } catch (err: any) {
-      toast({ title: err.message || "Failed to load Google Sheet", type: "error" });
+      toast.error(err.message || "Failed to load Google Sheet");
     } finally {
       setLoadingSheet(false);
     }
