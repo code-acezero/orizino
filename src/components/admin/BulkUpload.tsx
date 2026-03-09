@@ -183,7 +183,7 @@ export default function BulkUpload({ mode, onComplete, categories }: BulkUploadP
         skipEmptyLines: true,
         transformHeader: (h: string) => h.trim().toLowerCase().replace(/[\s_]+/g, "_").replace(/[^a-z0-9_]/g, ""),
         complete: (result) => processRawRows(result.data as Record<string, string>[]),
-        error: () => toast({ title: "Failed to parse sheet data", type: "error" }),
+        error: () => toast.error("Failed to parse sheet data"),
       });
     } catch (err: any) {
       toast({ title: err.message || "Failed to load Google Sheet", type: "error" });
