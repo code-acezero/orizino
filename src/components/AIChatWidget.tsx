@@ -32,6 +32,18 @@ const AIChatWidget: React.FC = () => {
 
   const agentName = aiConfig?.name || "Ace Assistant";
   const welcomeMessage = aiConfig?.welcome_message || "Hi! I'm here to help you with products, orders, and more. How can I assist you?";
+  const avatarType = aiConfig?.avatar_type || "emoji";
+  const avatarUrl = aiConfig?.avatar_url || "";
+  const avatarEmoji = aiConfig?.avatar_emoji || "🤖";
+
+  const AgentAvatar = ({ size = "w-10 h-10", iconSize = "w-5 h-5" }: { size?: string; iconSize?: string }) =>
+    avatarType === "image" && avatarUrl ? (
+      <img src={avatarUrl} alt={agentName} className={`${size} rounded-full object-cover`} />
+    ) : (
+      <div className={`${size} rounded-full bg-primary/20 flex items-center justify-center`}>
+        {avatarEmoji ? <span className={iconSize === "w-5 h-5" ? "text-lg" : "text-sm"}>{avatarEmoji}</span> : <Bot className={`${iconSize} text-primary`} />}
+      </div>
+    );
 
   useEffect(() => {
     if (open && messages.length === 0) {
@@ -131,9 +143,7 @@ const AIChatWidget: React.FC = () => {
           >
             {/* Header */}
             <div className="flex items-center gap-3 p-4 border-b border-border bg-primary/5">
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <Bot className="w-5 h-5 text-primary" />
-              </div>
+              <AgentAvatar />
               <div className="flex-1">
                 <p className="text-sm font-semibold text-foreground">{agentName}</p>
                 <p className="text-[10px] text-muted-foreground">AI-powered support</p>
@@ -158,9 +168,7 @@ const AIChatWidget: React.FC = () => {
                   className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   {msg.role === "assistant" && (
-                    <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-1">
-                      <Bot className="w-3.5 h-3.5 text-primary" />
-                    </div>
+                    <AgentAvatar size="w-7 h-7" iconSize="w-3.5 h-3.5" />
                   )}
                   <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${
                     msg.role === "user"

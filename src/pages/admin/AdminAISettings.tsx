@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/lib/app-toast";
-import { Bot, Sparkles, MessageCircle, Palette } from "lucide-react";
+import { Bot, Sparkles, MessageCircle, Upload, X, Image as ImageIcon } from "lucide-react";
 
 const DEFAULT_CONFIG = {
   name: "Ace Assistant",
@@ -19,11 +19,43 @@ const DEFAULT_CONFIG = {
   show_on_all_pages: true,
   primary_color: "",
   avatar_emoji: "🤖",
+  avatar_url: "",
+  avatar_type: "emoji" as "emoji" | "image",
 };
 
 const AdminAISettings = () => {
   const qc = useQueryClient();
   const [form, setForm] = useState(DEFAULT_CONFIG);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image must be under 2MB");
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `ai-agent/avatar-${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (uploadErr) throw uploadErr;
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+      setForm((prev) => ({ ...prev, avatar_url: urlData.publicUrl, avatar_type: "image" as const }));
+      toast.success("Avatar uploaded");
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const { data: config } = useQuery({
     queryKey: ["admin-ai-config"],
@@ -75,10 +107,64 @@ const AdminAISettings = () => {
               <Label>Agent Name</Label>
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ace Assistant" />
             </div>
-            <div className="space-y-2">
-              <Label>Avatar Emoji</Label>
-              <Input value={form.avatar_emoji} onChange={(e) => setForm({ ...form, avatar_emoji: e.target.value })} placeholder="🤖" maxLength={4} className="w-20 text-center text-xl" />
+
+            {/* Avatar Type Selector */}
+            <div className="space-y-3">
+              <Label>Avatar</Label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, avatar_type: "emoji" })}
+                  className={`px-3 py-1.5 rounded-lg border text-sm transition-colors ${
+                    form.avatar_type === "emoji" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
+                  }`}
+                >
+                  Emoji
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, avatar_type: "image" })}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm transition-colors ${
+                    form.avatar_type === "image" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
+                  }`}
+                >
+                  <ImageIcon className="w-3.5 h-3.5" /> Image
+                </button>
+              </div>
+
+              {form.avatar_type === "emoji" ? (
+                <Input value={form.avatar_emoji} onChange={(e) => setForm({ ...form, avatar_emoji: e.target.value })} placeholder="🤖" maxLength={4} className="w-20 text-center text-xl" />
+              ) : (
+                <div className="space-y-2">
+                  {form.avatar_url ? (
+                    <div className="relative inline-block">
+                      <img src={form.avatar_url} alt="Agent avatar" className="w-16 h-16 rounded-xl object-cover border border-border" />
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, avatar_url: "", avatar_type: "emoji" })}
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : null}
+                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="gap-1.5"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    {uploading ? "Uploading..." : form.avatar_url ? "Change Image" : "Upload Avatar"}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">Recommended: 128×128px, under 2MB</p>
+                </div>
+              )}
             </div>
+
             <div className="space-y-2">
               <Label>Personality</Label>
               <Input value={form.personality} onChange={(e) => setForm({ ...form, personality: e.target.value })} placeholder="friendly, helpful..." />
