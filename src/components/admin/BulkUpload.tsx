@@ -255,7 +255,7 @@ export default function BulkUpload({ mode, onComplete, categories, products }: B
   };
 
   const downloadSample = () => {
-    const sample = mode === "categories" ? SAMPLE_CATEGORIES : SAMPLE_PRODUCTS;
+    const sample = mode === "categories" ? SAMPLE_CATEGORIES : mode === "products" ? SAMPLE_PRODUCTS : SAMPLE_VARIANTS;
     const blob = new Blob([sample], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
