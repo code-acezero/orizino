@@ -14,6 +14,9 @@ import {
   Megaphone,
   Tag,
   Truck,
+  Headphones,
+  Key,
+  Bot,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -51,6 +54,12 @@ const contentItems = [
   { title: "Reviews", url: "/admin/reviews", icon: Star },
   { title: "Announcements", url: "/admin/announcements", icon: Megaphone },
   { title: "Requests", url: "/admin/requests", icon: MessageSquare },
+];
+
+const systemItems = [
+  { title: "Live Support", url: "/admin/support", icon: Headphones },
+  { title: "AI Agent", url: "/admin/ai-settings", icon: Bot },
+  { title: "API Keys", url: "/admin/api-keys", icon: Key },
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 
@@ -64,6 +73,26 @@ export function AdminSidebar() {
       ? location.pathname === "/admin"
       : location.pathname.startsWith(path);
 
+  const renderGroup = (label: string, items: typeof mainItems) => (
+    <SidebarGroup>
+      <SidebarGroupLabel>{label}</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {items.map((item) => (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                <NavLink to={item.url} end={item.url === "/admin"}>
+                  <item.icon className="h-4 w-4" />
+                  {!collapsed && <span>{item.title}</span>}
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="p-4">
@@ -75,59 +104,10 @@ export function AdminSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Management</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink to={item.url} end={item.url === "/admin"}>
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Commerce</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {commerceItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink to={item.url}>
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Content</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {contentItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink to={item.url}>
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {renderGroup("Management", mainItems)}
+        {renderGroup("Commerce", commerceItems)}
+        {renderGroup("Content", contentItems)}
+        {renderGroup("System", systemItems)}
       </SidebarContent>
 
       <SidebarFooter className="p-2">

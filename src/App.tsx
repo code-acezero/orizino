@@ -18,6 +18,7 @@ import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrdersPage from "./pages/OrdersPage";
 import WishlistPage from "./pages/WishlistPage";
+import SupportPage from "./pages/SupportPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminCategories from "./pages/admin/AdminCategories";
@@ -32,9 +33,13 @@ import AdminHome from "./pages/admin/AdminHome";
 import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
 import AdminCoupons from "./pages/admin/AdminCoupons";
 import AdminShipping from "./pages/admin/AdminShipping";
+import AdminSupport from "./pages/admin/AdminSupport";
+import AdminApiKeys from "./pages/admin/AdminApiKeys";
+import AdminAISettings from "./pages/admin/AdminAISettings";
 import NotFound from "./pages/NotFound";
 import SiteThemeProvider from "./components/SiteThemeProvider";
 import AppToastOverlay from "./components/AppToastOverlay";
+import AIChatWidget from "./components/AIChatWidget";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +51,7 @@ const App = () => (
         <AuthProvider>
           <CurrencyProvider>
           <SiteThemeProvider />
+          <AIChatWidget />
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/home" element={<HomePage />} />
@@ -56,6 +62,7 @@ const App = () => (
             <Route path="/product/:slug" element={<ProductDetailPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
+            <Route path="/support" element={<SupportPage />} />
             <Route
               path="/profile"
               element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}
@@ -90,6 +97,9 @@ const App = () => (
               <Route path="announcements" element={<AdminAnnouncements />} />
               <Route path="coupons" element={<AdminCoupons />} />
               <Route path="shipping" element={<AdminShipping />} />
+              <Route path="support" element={<AdminSupport />} />
+              <Route path="api-keys" element={<AdminApiKeys />} />
+              <Route path="ai-settings" element={<AdminAISettings />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

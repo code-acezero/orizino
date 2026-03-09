@@ -1,27 +1,21 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
-import { Package, ChevronRight, Clock } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Package, ChevronRight, Clock, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
-
-const statusColors: Record<string, string> = {
-  pending: "bg-yellow-500/20 text-yellow-400",
-  processing: "bg-blue-500/20 text-blue-400",
-  shipped: "bg-purple-500/20 text-purple-400",
-  delivered: "bg-primary/20 text-primary",
-  cancelled: "bg-destructive/20 text-destructive",
-};
+import OrderTrackingTimeline from "@/components/OrderTrackingTimeline";
 
 const OrdersPage: React.FC = () => {
   useSeoMeta("orders", "My Orders | Ace Marketplace");
   const { user } = useAuth();
   const { formatPrice } = useCurrency();
+  const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ["orders", user?.id],
@@ -35,6 +29,10 @@ const OrdersPage: React.FC = () => {
     },
     enabled: !!user,
   });
+
+  const toggleExpand = (id: string) => {
+    setExpandedOrder((prev) => (prev === id ? null : id));
+  };
 
   return (
     <div className="min-h-screen pb-20 lg:pb-0">
@@ -55,40 +53,60 @@ const OrdersPage: React.FC = () => {
         ) : (
           <div className="space-y-4">
             {orders.map((order) => (
-              <motion.div key={order.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-strong rounded-3xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="font-display font-semibold text-foreground">{order.order_number}</p>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                      <Clock className="w-3 h-3" />
-                      {new Date(order.created_at).toLocaleDateString()}
+              <motion.div key={order.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-strong rounded-3xl overflow-hidden">
+                {/* Header */}
+                <button onClick={() => toggleExpand(order.id)} className="w-full p-6 text-left">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="font-display font-semibold text-foreground">{order.order_number}</p>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                        <Clock className="w-3 h-3" />
+                        {new Date(order.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-foreground">{formatPrice(order.total)}</span>
+                      {expandedOrder === order.id ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                     </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${statusColors[order.status] || "bg-secondary text-muted-foreground"}`}>
-                    {order.status}
-                  </span>
-                </div>
 
-                <div className="space-y-2 mb-4">
-                  {(order.order_items as any[])?.slice(0, 3).map((item: any) => (
-                    <div key={item.id} className="flex items-center gap-3">
-                      <img src={item.product_image || "/placeholder.svg"} alt="" className="w-10 h-10 rounded-xl object-cover" />
-                      <span className="text-sm text-foreground flex-1 line-clamp-1">{item.product_name}</span>
-                      <span className="text-xs text-muted-foreground">x{item.quantity}</span>
-                      <span className="text-sm font-medium text-foreground">{formatPrice(item.total_price)}</span>
-                    </div>
-                  ))}
-                  {(order.order_items as any[])?.length > 3 && (
-                    <p className="text-xs text-muted-foreground">+{(order.order_items as any[]).length - 3} more items</p>
-                  )}
-                </div>
+                  {/* Tracking Timeline - always visible */}
+                  <OrderTrackingTimeline
+                    status={order.status}
+                    trackingNumber={order.tracking_number}
+                    updatedAt={order.updated_at}
+                  />
+                </button>
 
-                <div className="flex items-center justify-between border-t border-border pt-3">
-                  <span className="font-bold text-foreground">Total: {formatPrice(order.total)}</span>
-                  {order.tracking_number && (
-                    <span className="text-xs text-primary">Tracking: {order.tracking_number}</span>
+                {/* Expanded details */}
+                <AnimatePresence>
+                  {expandedOrder === order.id && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-6 pb-6 space-y-3 border-t border-border pt-4">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Order Items</p>
+                        {(order.order_items as any[])?.map((item: any) => (
+                          <div key={item.id} className="flex items-center gap-3">
+                            <img src={item.product_image || "/placeholder.svg"} alt="" className="w-12 h-12 rounded-xl object-cover" />
+                            <span className="text-sm text-foreground flex-1 line-clamp-1">{item.product_name}</span>
+                            <span className="text-xs text-muted-foreground">x{item.quantity}</span>
+                            <span className="text-sm font-medium text-foreground">{formatPrice(item.total_price)}</span>
+                          </div>
+                        ))}
+
+                        <div className="flex items-center justify-between pt-3 border-t border-border">
+                          <span className="text-sm text-muted-foreground">Payment: <span className="text-foreground capitalize">{order.payment_method}</span></span>
+                          <span className="font-bold text-foreground">Total: {formatPrice(order.total)}</span>
+                        </div>
+                      </div>
+                    </motion.div>
                   )}
-                </div>
+                </AnimatePresence>
               </motion.div>
             ))}
           </div>
