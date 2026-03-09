@@ -36,10 +36,13 @@ import AdminShipping from "./pages/admin/AdminShipping";
 import AdminSupport from "./pages/admin/AdminSupport";
 import AdminApiKeys from "./pages/admin/AdminApiKeys";
 import AdminAISettings from "./pages/admin/AdminAISettings";
+import AdminUserPromos from "./pages/admin/AdminUserPromos";
+import AdminDeliveryOffers from "./pages/admin/AdminDeliveryOffers";
 import NotFound from "./pages/NotFound";
 import SiteThemeProvider from "./components/SiteThemeProvider";
 import AppToastOverlay from "./components/AppToastOverlay";
 import AIChatWidget from "./components/AIChatWidget";
+import PromoPopup from "./components/PromoPopup";
 
 const queryClient = new QueryClient();
 
