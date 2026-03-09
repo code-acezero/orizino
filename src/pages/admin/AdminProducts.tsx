@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Pencil, Trash2, Search, X, LayoutTemplate, Upload, Loader2, ImagePlus, Bell, CheckCheck, Eye, EyeOff } from "lucide-react";
+import BulkUpload from "@/components/admin/BulkUpload";
 import { Checkbox } from "@/components/ui/checkbox";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/lib/app-toast";
