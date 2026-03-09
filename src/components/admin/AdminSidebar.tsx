@@ -46,7 +46,9 @@ const mainItems = [
 
 const commerceItems = [
   { title: "Coupons", url: "/admin/coupons", icon: Tag },
+  { title: "User Promos", url: "/admin/user-promos", icon: Gift },
   { title: "Shipping", url: "/admin/shipping", icon: Truck },
+  { title: "Delivery Offers", url: "/admin/delivery-offers", icon: Percent },
 ];
 
 const contentItems = [
