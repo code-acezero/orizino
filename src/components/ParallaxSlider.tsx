@@ -239,7 +239,7 @@ const ParallaxSlider: React.FC = () => {
   return (
     <div
       className={`relative w-full overflow-hidden ${radiusClass}`}
-      style={{ height: cfg.height, minHeight: "280px", maxHeight: "600px", perspective: activeTransition === "cube" || activeTransition === "flip" ? "1200px" : undefined }}
+      style={{ height: cfg.height, minHeight: "250px", maxHeight: "500px", perspective: activeTransition === "cube" || activeTransition === "flip" ? "1200px" : undefined }}
       onMouseEnter={() => cfg.pause_on_hover && setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
