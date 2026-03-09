@@ -72,16 +72,12 @@ const CartPage: React.FC = () => {
     },
   });
 
-  const moveToWishlist = async (productId: string, cartItemId: string) => {
-    if (!user) return;
-    const { data: existing } = await supabase.from("wishlist_items").select("id").eq("user_id", user.id).eq("product_id", productId).maybeSingle();
-    if (!existing) await supabase.from("wishlist_items").insert({ user_id: user.id, product_id: productId });
-    await supabase.from("cart_items").delete().eq("id", cartItemId);
-    queryClient.invalidateQueries({ queryKey: ["cart"] });
-    queryClient.invalidateQueries({ queryKey: ["cart-count"] });
-    queryClient.invalidateQueries({ queryKey: ["wishlist"] });
-    toast({ title: "Moved to wishlist" });
-  };
+  const subtotal = cartItems?.reduce((sum, item) => {
+    const product = item.products as any;
+    const variant = (item as any).product_variants as any;
+    const price = variant?.price_override ?? product?.price ?? 0;
+    return sum + price * item.quantity;
+  }, 0) || 0;
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -98,6 +94,11 @@ const CartPage: React.FC = () => {
 
   const removeCoupon = () => { setAppliedCoupon(null); setCouponCode(""); };
 
+  // Auto-select first shipping
+  React.useEffect(() => {
+    if (shippingMethods?.length && !selectedShipping) setSelectedShipping(shippingMethods[0].id);
+  }, [shippingMethods, selectedShipping]);
+
   if (!user) {
     return (
       <div className="min-h-screen pb-20 lg:pb-0">
@@ -111,13 +112,6 @@ const CartPage: React.FC = () => {
       </div>
     );
   }
-
-  const subtotal = cartItems?.reduce((sum, item) => {
-    const product = item.products as any;
-    const variant = (item as any).product_variants as any;
-    const price = variant?.price_override ?? product?.price ?? 0;
-    return sum + price * item.quantity;
-  }, 0) || 0;
 
   const itemCount = cartItems?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
@@ -138,11 +132,6 @@ const CartPage: React.FC = () => {
 
   const giftWrapFee = giftWrap ? 50 : 0;
   const total = Math.max(0, subtotal - couponDiscount + shippingFee + giftWrapFee);
-
-  // Auto-select first shipping
-  React.useEffect(() => {
-    if (shippingMethods?.length && !selectedShipping) setSelectedShipping(shippingMethods[0].id);
-  }, [shippingMethods, selectedShipping]);
 
   return (
     <div className="min-h-screen pb-20 lg:pb-0">
