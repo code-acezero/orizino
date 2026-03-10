@@ -38,6 +38,8 @@ import AdminApiKeys from "./pages/admin/AdminApiKeys";
 import AdminAISettings from "./pages/admin/AdminAISettings";
 import AdminUserPromos from "./pages/admin/AdminUserPromos";
 import AdminDeliveryOffers from "./pages/admin/AdminDeliveryOffers";
+import AdminCmsPages from "./pages/admin/AdminCmsPages";
+import CmsPage from "./pages/CmsPage";
 import NotFound from "./pages/NotFound";
 import SiteThemeProvider from "./components/SiteThemeProvider";
 import AppToastOverlay from "./components/AppToastOverlay";
