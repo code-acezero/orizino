@@ -181,6 +181,42 @@ export type Database = {
           },
         ]
       }
+      cms_pages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_published: boolean
+          meta_description: string | null
+          meta_title: string | null
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          meta_description?: string | null
+          meta_title?: string | null
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          meta_description?: string | null
+          meta_title?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           code: string
@@ -268,6 +304,27 @@ export type Database = {
           starts_at?: string | null
           target_areas?: string[] | null
           title?: string
+        }
+        Relationships: []
+      }
+      email_subscriptions: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          is_active: boolean
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          is_active?: boolean
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          is_active?: boolean
         }
         Relationships: []
       }
@@ -533,6 +590,53 @@ export type Database = {
           trigger_value?: number
         }
         Relationships: []
+      }
+      product_import_requests: {
+        Row: {
+          admin_notes: string | null
+          conversation_id: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          product_images: string[] | null
+          product_url: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          product_images?: string[] | null
+          product_url: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          product_images?: string[] | null
+          product_url?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_import_requests_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "support_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_requests: {
         Row: {

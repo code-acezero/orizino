@@ -11,6 +11,7 @@ import HomePopup from "@/components/HomePopup";
 import SaleCountdown from "@/components/SaleCountdown";
 import SalePopup from "@/components/SalePopup";
 import LiveVisitorCounter from "@/components/LiveVisitorCounter";
+import DeliveryOfferBanner from "@/components/DeliveryOfferBanner";
 import { Sparkles } from "lucide-react";
 import { usePageViewTracker, useSectionTracker, trackClick } from "@/hooks/use-analytics";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
@@ -513,6 +514,7 @@ const HomePage: React.FC = () => {
       {popupSales.map((sale: SaleConfig) => <SalePopup key={sale.id} sale={sale} />)}
 
       <main className={`mx-auto px-4 pt-6 flex flex-col ${spacingClass}`} style={{ maxWidth: layout.container_max_width }}>
+        <DeliveryOfferBanner />
         {sectionOrder.map((section, idx) => {
           // Check visibility (default to visible if not specified)
           const isVisible = (section as any).visible !== false;

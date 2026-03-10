@@ -57,6 +57,7 @@ const contentItems = [
   { title: "Banners", url: "/admin/banners", icon: Image },
   { title: "Reviews", url: "/admin/reviews", icon: Star },
   { title: "Announcements", url: "/admin/announcements", icon: Megaphone },
+  { title: "CMS Pages", url: "/admin/cms-pages", icon: MessageSquare },
   { title: "Requests", url: "/admin/requests", icon: MessageSquare },
 ];
 
