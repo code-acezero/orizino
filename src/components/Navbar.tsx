@@ -97,12 +97,12 @@ const Navbar: React.FC = () => {
                   <img src={logoUrl} alt={siteName} className="w-8 h-8 rounded-full object-cover" />
                 ) : siteIconUrl ? (
                   <img src={siteIconUrl} alt={siteName} className="w-8 h-8 rounded-full object-cover" />
-                ) : (
+                ) : siteName ? (
                   <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center">
                     <span className="text-primary-foreground font-bold text-sm">{siteName.charAt(0)}</span>
                   </div>
-                )}
-                <span className="font-display font-bold text-xl text-foreground hidden sm:inline">{siteName}</span>
+                ) : null}
+                {siteName && <span className="font-display font-bold text-xl text-foreground hidden sm:inline">{siteName}</span>}
               </Link>
 
               {/* Mobile: Search bar */}

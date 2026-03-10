@@ -108,7 +108,9 @@ const App = () => (
               <Route path="ai-settings" element={<AdminAISettings />} />
               <Route path="user-promos" element={<AdminUserPromos />} />
               <Route path="delivery-offers" element={<AdminDeliveryOffers />} />
+              <Route path="cms-pages" element={<AdminCmsPages />} />
             </Route>
+            <Route path="/page/:slug" element={<CmsPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
