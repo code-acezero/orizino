@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Send, Bot, User, Headphones, Minimize2 } from "lucide-react";
+import { MessageCircle, X, Send, Bot, User, Headphones } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 
 interface Msg {
@@ -13,14 +13,15 @@ interface Msg {
 
 const AIChatWidget: React.FC = () => {
   const { user } = useAuth();
+  const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [liveRequested, setLiveRequested] = useState(false);
+  const [liveMode, setLiveMode] = useState(false);
+  const [liveConvId, setLiveConvId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Load AI config from site_settings
   const { data: aiConfig } = useQuery({
     queryKey: ["ai-agent-config"],
     queryFn: async () => {
@@ -30,11 +31,11 @@ const AIChatWidget: React.FC = () => {
     staleTime: 60_000,
   });
 
-  const agentName = aiConfig?.name || "Ace Assistant";
-  const welcomeMessage = aiConfig?.welcome_message || "Hi! I'm here to help you with products, orders, and more. How can I assist you?";
+  const agentName = aiConfig?.name || "";
+  const welcomeMessage = aiConfig?.welcome_message || "Hi! How can I help you?";
   const avatarType = aiConfig?.avatar_type || "emoji";
   const avatarUrl = aiConfig?.avatar_url || "";
-  const avatarEmoji = aiConfig?.avatar_emoji || "🤖";
+  const avatarEmoji = aiConfig?.avatar_emoji || "";
 
   const AgentAvatar = ({ size = "w-10 h-10", iconSize = "w-5 h-5" }: { size?: string; iconSize?: string }) =>
     avatarType === "image" && avatarUrl ? (
@@ -45,8 +46,60 @@ const AIChatWidget: React.FC = () => {
       </div>
     );
 
+  // Fetch live support messages in real-time
+  const { data: liveMessages = [] } = useQuery({
+    queryKey: ["live-support-messages", liveConvId],
+    queryFn: async () => {
+      if (!liveConvId) return [];
+      const { data } = await supabase
+        .from("support_messages")
+        .select("*")
+        .eq("conversation_id", liveConvId)
+        .order("created_at");
+      return data || [];
+    },
+    enabled: !!liveConvId && liveMode,
+    refetchInterval: 2000,
+  });
+
+  // Real-time subscription for live support
   useEffect(() => {
-    if (open && messages.length === 0) {
+    if (!liveConvId || !liveMode) return;
+    const channel = supabase
+      .channel(`widget-live-${liveConvId}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_messages", filter: `conversation_id=eq.${liveConvId}` },
+        () => qc.invalidateQueries({ queryKey: ["live-support-messages", liveConvId] })
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [liveConvId, liveMode, qc]);
+
+  // Check if conversation was closed
+  useEffect(() => {
+    if (!liveConvId || !liveMode) return;
+    const check = async () => {
+      const { data } = await supabase.from("support_conversations").select("status").eq("id", liveConvId).maybeSingle();
+      if (data?.status === "closed") {
+        setLiveMode(false);
+        setMessages(prev => [...prev, { role: "assistant", content: "The live support session has ended. I'm back to assist you! 😊" }]);
+      }
+    };
+    const interval = setInterval(check, 5000);
+    return () => clearInterval(interval);
+  }, [liveConvId, liveMode]);
+
+  // Convert live messages to display
+  useEffect(() => {
+    if (!liveMode || liveMessages.length === 0) return;
+    const converted: Msg[] = liveMessages.map((m: any) => ({
+      role: m.sender_type === "user" ? "user" as const : "assistant" as const,
+      content: m.content,
+    }));
+    setMessages(converted);
+  }, [liveMessages, liveMode]);
+
+  useEffect(() => {
+    if (open && messages.length === 0 && !liveMode) {
       setMessages([{ role: "assistant", content: welcomeMessage }]);
     }
   }, [open, welcomeMessage]);
@@ -57,6 +110,22 @@ const AIChatWidget: React.FC = () => {
 
   const sendMessage = useCallback(async () => {
     if (!input.trim() || loading) return;
+
+    // If in live mode, send to support_messages
+    if (liveMode && liveConvId && user) {
+      const content = input.trim();
+      setInput("");
+      await supabase.from("support_messages").insert({
+        conversation_id: liveConvId,
+        sender_id: user.id,
+        sender_type: "user",
+        content,
+      });
+      await supabase.from("support_conversations").update({ updated_at: new Date().toISOString() }).eq("id", liveConvId);
+      return;
+    }
+
+    // AI mode
     const userMsg: Msg = { role: "user", content: input.trim() };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
@@ -67,7 +136,6 @@ const AIChatWidget: React.FC = () => {
       const { data, error } = await supabase.functions.invoke("ai-chat", {
         body: { messages: newMessages.filter((m) => m.role !== "system"), context: { userId: user?.id } },
       });
-
       if (error) throw error;
       setMessages((prev) => [...prev, { role: "assistant", content: data?.reply || "Sorry, I couldn't process that." }]);
     } catch {
@@ -75,13 +143,12 @@ const AIChatWidget: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [input, messages, loading, user]);
+  }, [input, messages, loading, user, liveMode, liveConvId]);
 
   const requestLiveSupport = async () => {
     if (!user) return;
-    setLiveRequested(true);
+    setLoading(true);
     try {
-      // Create support conversation
       const { data: conv } = await supabase.from("support_conversations").insert({
         user_id: user.id,
         subject: "Live Support Request",
@@ -97,27 +164,28 @@ const AIChatWidget: React.FC = () => {
           content: "Requested live support from chat widget.",
         });
 
-        // Notify admins via edge function
         await supabase.functions.invoke("notify-live-support", {
-          body: { conversation_id: conv.id, user_id: user.id },
+          body: { conversation_id: conv.id },
         });
-      }
 
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "🎧 I've notified our support team! A moderator will join this chat shortly. Please stay connected." },
-      ]);
+        setLiveConvId(conv.id);
+        setLiveMode(true);
+        setMessages([
+          { role: "assistant", content: "🎧 Connecting you to live support... An agent will join shortly. Please wait." },
+        ]);
+      }
     } catch {
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: "Couldn't connect to live support right now. Please try again later." },
       ]);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <>
-      {/* Floating button */}
       <AnimatePresence>
         {!open && (
           <motion.button
@@ -132,7 +200,6 @@ const AIChatWidget: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Chat panel */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -141,14 +208,15 @@ const AIChatWidget: React.FC = () => {
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             className="fixed bottom-20 lg:bottom-6 right-4 z-50 w-[360px] max-w-[calc(100vw-2rem)] h-[500px] max-h-[calc(100vh-8rem)] rounded-3xl bg-background border border-border shadow-2xl flex flex-col overflow-hidden"
           >
-            {/* Header */}
             <div className="flex items-center gap-3 p-4 border-b border-border bg-primary/5">
               <AgentAvatar />
               <div className="flex-1">
-                <p className="text-sm font-semibold text-foreground">{agentName}</p>
-                <p className="text-[10px] text-muted-foreground">AI-powered support</p>
+                <p className="text-sm font-semibold text-foreground">{agentName || "Support"}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {liveMode ? "🟢 Live support" : "AI-powered support"}
+                </p>
               </div>
-              {user && !liveRequested && (
+              {user && !liveMode && (
                 <button onClick={requestLiveSupport} className="p-2 rounded-xl hover:bg-secondary transition-colors" title="Request live support">
                   <Headphones className="w-4 h-4 text-muted-foreground" />
                 </button>
@@ -158,7 +226,6 @@ const AIChatWidget: React.FC = () => {
               </button>
             </div>
 
-            {/* Messages */}
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
               {messages.map((msg, i) => (
                 <motion.div
@@ -167,9 +234,7 @@ const AIChatWidget: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
-                  {msg.role === "assistant" && (
-                    <AgentAvatar size="w-7 h-7" iconSize="w-3.5 h-3.5" />
-                  )}
+                  {msg.role === "assistant" && <AgentAvatar size="w-7 h-7" iconSize="w-3.5 h-3.5" />}
                   <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${
                     msg.role === "user"
                       ? "bg-primary text-primary-foreground rounded-br-md"
@@ -190,9 +255,7 @@ const AIChatWidget: React.FC = () => {
               ))}
               {loading && (
                 <div className="flex gap-2 items-center">
-                  <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
-                    <Bot className="w-3.5 h-3.5 text-primary" />
-                  </div>
+                  <AgentAvatar size="w-7 h-7" iconSize="w-3.5 h-3.5" />
                   <div className="bg-secondary rounded-2xl px-4 py-3 flex gap-1">
                     <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
                     <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
@@ -202,14 +265,13 @@ const AIChatWidget: React.FC = () => {
               )}
             </div>
 
-            {/* Input */}
             <div className="p-3 border-t border-border">
               <div className="flex gap-2">
                 <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
-                  placeholder="Ask anything..."
+                  placeholder={liveMode ? "Message agent..." : "Ask anything..."}
                   className="flex-1 bg-secondary rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
                 <button

@@ -4,15 +4,17 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, Send, Github, Twitter, Instagram, Mail, Zap, Globe, Shield } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/lib/app-toast";
 
 const Footer: React.FC = () => {
   const [email, setEmail] = useState("");
+  const [subscribing, setSubscribing] = useState(false);
   const year = new Date().getFullYear();
 
   const { data: siteSettings } = useQuery({
-    queryKey: ["site-settings-name"],
+    queryKey: ["site-settings-footer"],
     queryFn: async () => {
-      const { data } = await supabase.from("site_settings").select("key, value").in("key", ["site_name"]);
+      const { data } = await supabase.from("site_settings").select("key, value").in("key", ["site_name", "logo_url", "site_icon_url"]);
       const map: Record<string, any> = {};
       data?.forEach((s) => {
         const val = s.value;
@@ -24,7 +26,9 @@ const Footer: React.FC = () => {
   });
 
   const rawName = siteSettings?.site_name;
-  const siteName = String(typeof rawName === "object" && rawName !== null ? (rawName as any).value ?? "Zero" : rawName ?? "Zero");
+  const siteName = String(typeof rawName === "object" && rawName !== null ? (rawName as any).value ?? "" : rawName ?? "");
+  const logoUrl = (siteSettings?.logo_url as string) || "";
+  const siteIconUrl = (siteSettings?.site_icon_url as string) || "";
 
   const { data: footerCategories = [] } = useQuery({
     queryKey: ["footer-categories"],
@@ -41,12 +45,27 @@ const Footer: React.FC = () => {
     staleTime: 10 * 60 * 1000,
   });
 
+  const handleSubscribe = async () => {
+    if (!email.trim() || subscribing) return;
+    setSubscribing(true);
+    const { error } = await supabase.from("email_subscriptions").insert({ email: email.trim().toLowerCase() });
+    setSubscribing(false);
+    if (error?.code === "23505") {
+      toast.success("You're already subscribed!");
+    } else if (error) {
+      toast.error("Subscription failed. Try again.");
+    } else {
+      toast.success("Subscribed successfully!");
+      setEmail("");
+    }
+  };
+
   const quickLinks = [
-    { label: "About", to: "#" },
-    { label: "FAQ", to: "#" },
-    { label: "Shipping", to: "#" },
-    { label: "Returns", to: "#" },
-    { label: "Contact", to: "#" },
+    { label: "About", to: "/page/about" },
+    { label: "FAQ", to: "/page/faq" },
+    { label: "Returns", to: "/page/returns" },
+    { label: "Contact", to: "/page/contact" },
+    { label: "Support", to: "/support" },
   ];
 
   const socials = [
@@ -58,16 +77,13 @@ const Footer: React.FC = () => {
 
   return (
     <footer className="relative mt-24 overflow-hidden">
-      {/* Decorative top edge */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-px bg-primary shadow-[0_0_20px_hsl(var(--primary)/0.6)]" />
-
-      {/* Glow orbs */}
       <div className="absolute top-12 left-[10%] w-64 h-64 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
       <div className="absolute bottom-0 right-[15%] w-48 h-48 rounded-full bg-accent/5 blur-[80px] pointer-events-none" />
 
       <div className="relative">
-        {/* Newsletter section */}
+        {/* Newsletter */}
         <div className="border-b border-border/30">
           <div className="max-w-[1440px] mx-auto px-4 lg:px-6 py-16">
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
@@ -81,9 +97,12 @@ const Footer: React.FC = () => {
               </div>
               <div className="w-full lg:w-auto">
                 <div className="flex gap-2 max-w-sm">
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com"
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSubscribe()}
+                    placeholder="your@email.com"
                     className="flex-1 px-5 py-3 rounded-full glass border border-border/50 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 transition-all" />
-                  <button className="shrink-0 w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground hover:shadow-[0_0_20px_hsl(var(--primary)/0.4)] transition-shadow">
+                  <button onClick={handleSubscribe} disabled={subscribing}
+                    className="shrink-0 w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground hover:shadow-[0_0_20px_hsl(var(--primary)/0.4)] transition-shadow disabled:opacity-50">
                     <Send className="w-4 h-4" />
                   </button>
                 </div>
@@ -98,13 +117,18 @@ const Footer: React.FC = () => {
             {/* Brand */}
             <div className="col-span-2 md:col-span-1">
               <Link to="/home" className="inline-flex items-center gap-2.5 mb-5 group">
-                <div className="w-9 h-9 rounded-full bg-gradient-primary flex items-center justify-center group-hover:shadow-[0_0_16px_hsl(var(--primary)/0.5)] transition-shadow">
-                  <span className="text-primary-foreground font-bold text-sm">{siteName.charAt(0)}</span>
-                </div>
-                <span className="font-display font-bold text-lg text-foreground">{siteName}</span>
+                {logoUrl ? (
+                  <img src={logoUrl} alt={siteName} className="w-9 h-9 rounded-full object-cover" />
+                ) : siteIconUrl ? (
+                  <img src={siteIconUrl} alt={siteName} className="w-9 h-9 rounded-full object-cover" />
+                ) : siteName ? (
+                  <div className="w-9 h-9 rounded-full bg-gradient-primary flex items-center justify-center group-hover:shadow-[0_0_16px_hsl(var(--primary)/0.5)] transition-shadow">
+                    <span className="text-primary-foreground font-bold text-sm">{siteName.charAt(0)}</span>
+                  </div>
+                ) : null}
+                {siteName && <span className="font-display font-bold text-lg text-foreground">{siteName}</span>}
               </Link>
-              <p className="text-xs text-muted-foreground leading-relaxed mb-5 max-w-[200px]">Premium marketplace for the modern shopper. Quality first, always.</p>
-              <div className="flex items-center gap-3 text-muted-foreground">
+              <div className="flex items-center gap-3 text-muted-foreground mt-4">
                 {socials.map(({ icon: Icon, href, label }) => (
                   <a key={label} href={href} aria-label={label}
                     className="w-8 h-8 rounded-full border border-border/50 flex items-center justify-center hover:border-primary/50 hover:text-primary hover:shadow-[0_0_10px_hsl(var(--primary)/0.2)] transition-all">
@@ -172,15 +196,10 @@ const Footer: React.FC = () => {
         <div className="border-t border-border/30">
           <div className="max-w-[1440px] mx-auto px-4 lg:px-6 py-5">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-              <p className="text-[11px] text-muted-foreground">© {year} {siteName} Mall. All rights reserved.</p>
+              <p className="text-[11px] text-muted-foreground">{siteName ? `© ${year} ${siteName}. All rights reserved.` : `© ${year}`}</p>
               <div className="flex items-center gap-4">
-                {["Privacy", "Terms", "Cookies"].map((item) => (
-                  <Link key={item} to="#" className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">{item}</Link>
-                ))}
-                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  All systems operational
-                </div>
+                <Link to="/page/privacy" className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">Privacy</Link>
+                <Link to="/page/terms" className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">Terms</Link>
               </div>
             </div>
           </div>
