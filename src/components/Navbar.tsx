@@ -41,7 +41,7 @@ const Navbar: React.FC = () => {
     staleTime: 10 * 60 * 1000,
   });
 
-  const siteName = (siteSettings?.site_name as string) || "Zero";
+  const siteName = (siteSettings?.site_name as string) || "";
   const logoUrl = (siteSettings?.logo_url as string) || "";
   const siteIconUrl = (siteSettings?.site_icon_url as string) || "";
 
