@@ -11,6 +11,7 @@ import HomePopup from "@/components/HomePopup";
 import SaleCountdown from "@/components/SaleCountdown";
 import SalePopup from "@/components/SalePopup";
 import LiveVisitorCounter from "@/components/LiveVisitorCounter";
+import DeliveryOfferBanner from "@/components/DeliveryOfferBanner";
 import { Sparkles } from "lucide-react";
 import { usePageViewTracker, useSectionTracker, trackClick } from "@/hooks/use-analytics";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
