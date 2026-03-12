@@ -4,6 +4,7 @@ import { MessageCircle, X, Send, Bot, User, Headphones } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 
 interface Msg {
@@ -14,6 +15,7 @@ interface Msg {
 const AIChatWidget: React.FC = () => {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -21,6 +23,10 @@ const AIChatWidget: React.FC = () => {
   const [liveMode, setLiveMode] = useState(false);
   const [liveConvId, setLiveConvId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Hide on admin pages and landing page
+  const isAdminPage = location.pathname.startsWith("/admin");
+  const isLandingPage = location.pathname === "/";
 
   const { data: aiConfig } = useQuery({
     queryKey: ["ai-agent-config"],
@@ -31,6 +37,7 @@ const AIChatWidget: React.FC = () => {
     staleTime: 60_000,
   });
 
+  const isEnabled = aiConfig?.is_enabled !== false;
   const agentName = aiConfig?.name || "";
   const welcomeMessage = aiConfig?.welcome_message || "Hi! How can I help you?";
   const avatarType = aiConfig?.avatar_type || "emoji";
@@ -46,23 +53,17 @@ const AIChatWidget: React.FC = () => {
       </div>
     );
 
-  // Fetch live support messages in real-time
   const { data: liveMessages = [] } = useQuery({
     queryKey: ["live-support-messages", liveConvId],
     queryFn: async () => {
       if (!liveConvId) return [];
-      const { data } = await supabase
-        .from("support_messages")
-        .select("*")
-        .eq("conversation_id", liveConvId)
-        .order("created_at");
+      const { data } = await supabase.from("support_messages").select("*").eq("conversation_id", liveConvId).order("created_at");
       return data || [];
     },
     enabled: !!liveConvId && liveMode,
     refetchInterval: 2000,
   });
 
-  // Real-time subscription for live support
   useEffect(() => {
     if (!liveConvId || !liveMode) return;
     const channel = supabase
@@ -74,7 +75,6 @@ const AIChatWidget: React.FC = () => {
     return () => { supabase.removeChannel(channel); };
   }, [liveConvId, liveMode, qc]);
 
-  // Check if conversation was closed
   useEffect(() => {
     if (!liveConvId || !liveMode) return;
     const check = async () => {
@@ -88,7 +88,6 @@ const AIChatWidget: React.FC = () => {
     return () => clearInterval(interval);
   }, [liveConvId, liveMode]);
 
-  // Convert live messages to display
   useEffect(() => {
     if (!liveMode || liveMessages.length === 0) return;
     const converted: Msg[] = liveMessages.map((m: any) => ({
@@ -111,7 +110,6 @@ const AIChatWidget: React.FC = () => {
   const sendMessage = useCallback(async () => {
     if (!input.trim() || loading) return;
 
-    // If in live mode, send to support_messages
     if (liveMode && liveConvId && user) {
       const content = input.trim();
       setInput("");
@@ -125,7 +123,6 @@ const AIChatWidget: React.FC = () => {
       return;
     }
 
-    // AI mode
     const userMsg: Msg = { role: "user", content: input.trim() };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
@@ -163,26 +160,20 @@ const AIChatWidget: React.FC = () => {
           sender_type: "user",
           content: "Requested live support from chat widget.",
         });
-
-        await supabase.functions.invoke("notify-live-support", {
-          body: { conversation_id: conv.id },
-        });
-
+        await supabase.functions.invoke("notify-live-support", { body: { conversation_id: conv.id } });
         setLiveConvId(conv.id);
         setLiveMode(true);
-        setMessages([
-          { role: "assistant", content: "🎧 Connecting you to live support... An agent will join shortly. Please wait." },
-        ]);
+        setMessages([{ role: "assistant", content: "🎧 Connecting you to live support... An agent will join shortly. Please wait." }]);
       }
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "Couldn't connect to live support right now. Please try again later." },
-      ]);
+      setMessages((prev) => [...prev, { role: "assistant", content: "Couldn't connect to live support right now. Please try again later." }]);
     } finally {
       setLoading(false);
     }
   };
+
+  // Don't render on admin or landing pages, or if disabled
+  if (isAdminPage || isLandingPage || !isEnabled) return null;
 
   return (
     <>
@@ -195,7 +186,13 @@ const AIChatWidget: React.FC = () => {
             onClick={() => setOpen(true)}
             className="fixed bottom-20 lg:bottom-6 right-4 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-2xl shadow-primary/40 flex items-center justify-center hover:scale-110 transition-transform"
           >
-            <MessageCircle className="w-6 h-6" />
+            {avatarType === "image" && avatarUrl ? (
+              <img src={avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+            ) : avatarEmoji ? (
+              <span className="text-2xl">{avatarEmoji}</span>
+            ) : (
+              <MessageCircle className="w-6 h-6" />
+            )}
           </motion.button>
         )}
       </AnimatePresence>

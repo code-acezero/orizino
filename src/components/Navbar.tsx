@@ -30,7 +30,7 @@ const Navbar: React.FC = () => {
   const { data: siteSettings } = useQuery({
     queryKey: ["site-settings-nav"],
     queryFn: async () => {
-      const { data } = await supabase.from("site_settings").select("key, value").in("key", ["site_name", "logo_url", "site_icon_url"]);
+      const { data } = await supabase.from("site_settings").select("key, value").in("key", ["site_name", "logo_url", "site_icon_url", "logo_display_style"]);
       const map: Record<string, any> = {};
       data?.forEach((s) => {
         const val = s.value;
@@ -44,6 +44,31 @@ const Navbar: React.FC = () => {
   const siteName = (siteSettings?.site_name as string) || "";
   const logoUrl = (siteSettings?.logo_url as string) || "";
   const siteIconUrl = (siteSettings?.site_icon_url as string) || "";
+  const logoStyle = (siteSettings?.logo_display_style as string) || "rounded";
+
+  // Fetch user profile for avatar
+  const { data: userProfile } = useQuery({
+    queryKey: ["user-profile-nav", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("avatar_url, full_name").eq("id", user!.id).maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 60_000,
+  });
+
+  const logoShapeClass = logoStyle === "square" ? "rounded-lg" : logoStyle === "circle" ? "rounded-full" : logoStyle === "shield" ? "rounded-lg [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]" : logoStyle === "pill" ? "rounded-full px-1" : "rounded-full";
+
+  const UserAvatar = ({ className = "w-9 h-9" }: { className?: string }) => {
+    if (userProfile?.avatar_url) {
+      return <img src={userProfile.avatar_url} alt="" className={`${className} rounded-full object-cover`} />;
+    }
+    return (
+      <div className={`${className} rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-sm`}>
+        {userProfile?.full_name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "?"}
+      </div>
+    );
+  };
 
   const { data: dbCategories = [] } = useQuery({
     queryKey: ["nav-categories"],
@@ -94,11 +119,11 @@ const Navbar: React.FC = () => {
               {/* Logo */}
               <Link to="/home" className="flex items-center gap-2 shrink-0">
                 {logoUrl ? (
-                  <img src={logoUrl} alt={siteName} className="w-8 h-8 rounded-full object-cover" />
+                  <img src={logoUrl} alt={siteName} className={`w-8 h-8 ${logoShapeClass} object-cover`} />
                 ) : siteIconUrl ? (
-                  <img src={siteIconUrl} alt={siteName} className="w-8 h-8 rounded-full object-cover" />
+                  <img src={siteIconUrl} alt={siteName} className={`w-8 h-8 ${logoShapeClass} object-cover`} />
                 ) : siteName ? (
-                  <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center">
+                  <div className={`w-8 h-8 ${logoShapeClass} bg-gradient-primary flex items-center justify-center`}>
                     <span className="text-primary-foreground font-bold text-sm">{siteName.charAt(0)}</span>
                   </div>
                 ) : null}
@@ -267,8 +292,8 @@ const Navbar: React.FC = () => {
                 {/* Desktop user menu */}
                 {user ? (
                   <div className="relative hidden lg:block" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)}>
-                    <button className="w-9 h-9 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-sm">
-                      {user.email?.charAt(0).toUpperCase()}
+                    <button className="flex items-center justify-center">
+                      <UserAvatar />
                     </button>
                     <AnimatePresence>
                       {userMenuOpen && (
@@ -294,11 +319,8 @@ const Navbar: React.FC = () => {
                 <div className="relative lg:hidden">
                   {user ? (
                     <>
-                      <button
-                        onClick={() => setMobileOpen(!mobileOpen)}
-                        className="w-9 h-9 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-sm"
-                      >
-                        {user.email?.charAt(0).toUpperCase()}
+                      <button onClick={() => setMobileOpen(!mobileOpen)} className="flex items-center justify-center">
+                        <UserAvatar />
                       </button>
                       <AnimatePresence>
                         {mobileOpen && (
