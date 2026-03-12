@@ -118,6 +118,8 @@ const App = () => (
               <Route path="user-promos" element={<AdminUserPromos />} />
               <Route path="delivery-offers" element={<AdminDeliveryOffers />} />
               <Route path="cms-pages" element={<AdminCmsPages />} />
+              <Route path="landing" element={<AdminLanding />} />
+              <Route path="branding" element={<AdminBranding />} />
             </Route>
             <Route path="/page/:slug" element={<CmsPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

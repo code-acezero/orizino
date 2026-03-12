@@ -19,6 +19,8 @@ import {
   Bot,
   Gift,
   Percent,
+  Palette,
+  Globe,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -52,6 +54,7 @@ const commerceItems = [
 ];
 
 const contentItems = [
+  { title: "Landing Page", url: "/admin/landing", icon: Globe },
   { title: "Home Page", url: "/admin/home", icon: Home },
   { title: "Showcase", url: "/admin/showcase", icon: Layers },
   { title: "Banners", url: "/admin/banners", icon: Image },
@@ -64,6 +67,7 @@ const contentItems = [
 const systemItems = [
   { title: "Live Support", url: "/admin/support", icon: Headphones },
   { title: "AI Agent", url: "/admin/ai-settings", icon: Bot },
+  { title: "Branding", url: "/admin/branding", icon: Palette },
   { title: "API Keys", url: "/admin/api-keys", icon: Key },
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
