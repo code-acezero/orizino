@@ -64,6 +64,7 @@ const App = () => (
         <AuthProvider>
           <CurrencyProvider>
           <SiteThemeProvider />
+          <AppContent />
           <AIChatWidget />
           <PromoPopup />
           <Routes>
