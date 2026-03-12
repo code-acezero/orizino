@@ -292,8 +292,8 @@ const Navbar: React.FC = () => {
                 {/* Desktop user menu */}
                 {user ? (
                   <div className="relative hidden lg:block" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)}>
-                    <button className="w-9 h-9 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-sm">
-                      {user.email?.charAt(0).toUpperCase()}
+                    <button className="flex items-center justify-center">
+                      <UserAvatar />
                     </button>
                     <AnimatePresence>
                       {userMenuOpen && (
