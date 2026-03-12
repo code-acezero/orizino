@@ -1,18 +1,9 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { trackClick } from "@/hooks/use-analytics";
-import demoSlide1 from "@/assets/demo-slide-1.jpg";
-import demoSlide2 from "@/assets/demo-slide-2.jpg";
-import demoSlide3 from "@/assets/demo-slide-3.jpg";
-
-const fallbackSlides = [
-  { id: "demo1", title: "Step Into Style", subtitle: "New Collection", description: "Explore premium sneakers crafted for the modern trendsetter.", image: demoSlide1, cta: "Shop Now", ctaLink: "/shop", transitionType: "" },
-  { id: "demo2", title: "Tech That Inspires", subtitle: "Electronics", description: "Cutting-edge gadgets and wearables designed for tomorrow.", image: demoSlide2, cta: "View Electronics", ctaLink: "/shop?category=electronics", transitionType: "zoom" },
-  { id: "demo3", title: "Elevate Your Space", subtitle: "Home & Living", description: "Designer furniture and décor for the modern home.", image: demoSlide3, cta: "Explore Home", ctaLink: "/shop?category=home", transitionType: "blur" },
-];
 
 interface ShowcaseConfig {
   autoplay_speed: number;
@@ -62,7 +53,6 @@ const defaultConfig: ShowcaseConfig = {
   slide_gap: "0",
 };
 
-/* ── Transition variant factories ── */
 const getSlideVariants = (type: string, dur: number): Variants => {
   const ease = [0.25, 0.46, 0.45, 0.94] as const;
   switch (type) {
@@ -106,7 +96,6 @@ const getSlideVariants = (type: string, dur: number): Variants => {
   }
 };
 
-/* ── Content animation variants ── */
 const getContentVariants = (anim: string): { initial: Record<string, any>; animate: Record<string, any> } => {
   const base = { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] };
   switch (anim) {
@@ -158,9 +147,16 @@ const ParallaxSlider: React.FC = () => {
 
   const cfg = configData || defaultConfig;
 
-  const slides = dbSlides.length > 0
-    ? dbSlides.map((s) => ({ id: s.id, title: s.title, subtitle: s.subtitle || "", description: s.description || "", image: s.image_url, cta: s.cta_text || "Shop Now", ctaLink: s.cta_link || "/shop", transitionType: s.transition_type || "" }))
-    : fallbackSlides;
+  const slides = dbSlides.map((s) => ({
+    id: s.id,
+    title: s.title,
+    subtitle: s.subtitle || "",
+    description: s.description || "",
+    image: s.image_url,
+    cta: s.cta_text || "",
+    ctaLink: s.cta_link || "/shop",
+    transitionType: s.transition_type || "",
+  }));
 
   useEffect(() => {
     if (slides.length <= 1 || !cfg.autoplay || paused) return;
@@ -175,7 +171,6 @@ const ParallaxSlider: React.FC = () => {
   const prev = () => { setDirection(-1); setCurrent((c) => (c - 1 + slides.length) % slides.length); };
   const next = () => { setDirection(1); setCurrent((c) => (c + 1) % slides.length); };
 
-  // Preload all slide images and track which are loaded for smooth transitions
   useEffect(() => {
     slides.forEach((s) => {
       const img = new Image();
@@ -183,6 +178,9 @@ const ParallaxSlider: React.FC = () => {
       img.src = s.image;
     });
   }, [slides]);
+
+  // Don't render if no slides in DB
+  if (slides.length === 0) return null;
 
   const slide = slides[current];
   if (!slide) return null;
@@ -212,6 +210,7 @@ const ParallaxSlider: React.FC = () => {
   const titleClass = `text-4xl md:text-${cfg.title_size}`;
 
   const subtitleEl = (text: string) => {
+    if (!text) return null;
     if (cfg.subtitle_style === "badge") return <span className="inline-block btn-pill bg-primary/20 text-primary text-sm mb-3">{text}</span>;
     if (cfg.subtitle_style === "underline") return <span className="inline-block text-primary text-sm mb-3 border-b-2 border-primary pb-1">{text}</span>;
     return <span className="inline-block text-primary text-sm mb-3 font-medium">{text}</span>;
@@ -255,7 +254,6 @@ const ParallaxSlider: React.FC = () => {
     >
       <AnimatePresence custom={direction} mode="sync">
         <motion.div key={slide.id} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="absolute inset-0" style={{ transformStyle: activeTransition === "cube" || activeTransition === "flip" ? "preserve-3d" : undefined }}>
-          {/* Skeleton shimmer shown while image hasn't loaded yet */}
           {!loadedImages.has(slide.image) && (
             <div className="absolute inset-0 bg-muted/70 animate-pulse">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-muted-foreground/10 to-transparent animate-[shimmer_1.5s_infinite]" style={{ backgroundSize: "200% 100%" }} />
@@ -278,33 +276,11 @@ const ParallaxSlider: React.FC = () => {
 
           <div className={`absolute inset-0 ${overlayClasses[cfg.overlay_style] || ""}`} style={overlayStyle} />
 
-          {/* Cinematic smoky mist layers — subtle & slow */}
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse at 15% 85%, rgba(0,0,0,0.35) 0%, transparent 55%)" }}
-            animate={{ opacity: [0.3, 0.5, 0.3], x: [0, 10, 0] }}
-            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse at 85% 90%, rgba(0,0,0,0.25) 0%, transparent 50%)" }}
-            animate={{ opacity: [0.2, 0.4, 0.2], x: [0, -12, 0] }}
-            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 3 }}
-          />
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.1) 35%, transparent 65%)" }}
-            animate={{ opacity: [0.6, 0.8, 0.6] }}
-            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          />
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.3) 0%, transparent 45%)" }}
-            animate={{ scale: [1, 1.05, 1], opacity: [0.4, 0.6, 0.4] }}
-            transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
-          />
+          <motion.div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 15% 85%, rgba(0,0,0,0.35) 0%, transparent 55%)" }} animate={{ opacity: [0.3, 0.5, 0.3], x: [0, 10, 0] }} transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }} />
+          <motion.div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 85% 90%, rgba(0,0,0,0.25) 0%, transparent 50%)" }} animate={{ opacity: [0.2, 0.4, 0.2], x: [0, -12, 0] }} transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 3 }} />
+          <motion.div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.1) 35%, transparent 65%)" }} animate={{ opacity: [0.6, 0.8, 0.6] }} transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }} />
+          <motion.div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.3) 0%, transparent 45%)" }} animate={{ scale: [1, 1.05, 1], opacity: [0.4, 0.6, 0.4] }} transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }} />
 
-          {/* Content */}
           <div className="absolute inset-0 flex items-end md:items-center pb-14 md:pb-0">
             <div className={`container mx-auto px-4 md:px-6 lg:px-12 ${textContainer}`}>
               <motion.div
@@ -315,19 +291,21 @@ const ParallaxSlider: React.FC = () => {
               >
                 {subtitleEl(slide.subtitle)}
                 <h1 className={`text-2xl md:${titleClass} font-bold font-display mb-2 md:mb-4 leading-tight text-white`}>{slide.title}</h1>
-                <p className="text-sm md:text-lg text-white/80 mb-4 md:mb-8 max-w-lg line-clamp-2 md:line-clamp-none">{slide.description}</p>
-                <motion.a href={slide.ctaLink} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                  onClick={() => trackClick("slider_cta", slide.id, "/home", { cta_text: slide.cta, cta_link: slide.ctaLink })}
-                  className={`inline-flex items-center btn-pill font-semibold text-sm md:text-lg px-5 md:px-8 py-2 md:py-3 ${ctaClasses[cfg.cta_style] || ctaClasses.gradient}`}>
-                  {slide.cta}
-                </motion.a>
+                {slide.description && <p className="text-sm md:text-lg text-white/80 mb-4 md:mb-8 max-w-lg line-clamp-2 md:line-clamp-none">{slide.description}</p>}
+                {slide.cta && (
+                  <motion.a href={slide.ctaLink} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                    onClick={() => trackClick("slider_cta", slide.id, "/home", { cta_text: slide.cta, cta_link: slide.ctaLink })}
+                    className={`inline-flex items-center btn-pill font-semibold text-sm md:text-lg px-5 md:px-8 py-2 md:py-3 ${ctaClasses[cfg.cta_style] || ctaClasses.gradient}`}>
+                    {slide.cta}
+                  </motion.a>
+                )}
               </motion.div>
             </div>
           </div>
         </motion.div>
       </AnimatePresence>
 
-      {(cfg.show_arrows || cfg.show_dots) && (
+      {(cfg.show_arrows || cfg.show_dots) && slides.length > 1 && (
         <div className="absolute bottom-2 md:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 z-10">
           {cfg.show_arrows && <button onClick={prev} className="glass rounded-full p-2 text-foreground hover:text-primary transition-colors"><ChevronLeft className="w-5 h-5" /></button>}
           {cfg.show_dots && <div className="flex gap-2">{slides.map((_, i) => renderDot(i))}</div>}
