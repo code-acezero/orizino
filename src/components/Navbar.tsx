@@ -119,11 +119,11 @@ const Navbar: React.FC = () => {
               {/* Logo */}
               <Link to="/home" className="flex items-center gap-2 shrink-0">
                 {logoUrl ? (
-                  <img src={logoUrl} alt={siteName} className="w-8 h-8 rounded-full object-cover" />
+                  <img src={logoUrl} alt={siteName} className={`w-8 h-8 ${logoShapeClass} object-cover`} />
                 ) : siteIconUrl ? (
-                  <img src={siteIconUrl} alt={siteName} className="w-8 h-8 rounded-full object-cover" />
+                  <img src={siteIconUrl} alt={siteName} className={`w-8 h-8 ${logoShapeClass} object-cover`} />
                 ) : siteName ? (
-                  <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center">
+                  <div className={`w-8 h-8 ${logoShapeClass} bg-gradient-primary flex items-center justify-center`}>
                     <span className="text-primary-foreground font-bold text-sm">{siteName.charAt(0)}</span>
                   </div>
                 ) : null}
