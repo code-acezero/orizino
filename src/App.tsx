@@ -39,14 +39,22 @@ import AdminAISettings from "./pages/admin/AdminAISettings";
 import AdminUserPromos from "./pages/admin/AdminUserPromos";
 import AdminDeliveryOffers from "./pages/admin/AdminDeliveryOffers";
 import AdminCmsPages from "./pages/admin/AdminCmsPages";
+import AdminLanding from "./pages/admin/AdminLanding";
+import AdminBranding from "./pages/admin/AdminBranding";
 import CmsPage from "./pages/CmsPage";
 import NotFound from "./pages/NotFound";
 import SiteThemeProvider from "./components/SiteThemeProvider";
 import AppToastOverlay from "./components/AppToastOverlay";
 import AIChatWidget from "./components/AIChatWidget";
 import PromoPopup from "./components/PromoPopup";
+import { useDynamicFavicon } from "./hooks/use-dynamic-favicon";
 
 const queryClient = new QueryClient();
+
+const AppContent = () => {
+  useDynamicFavicon();
+  return null;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
