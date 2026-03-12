@@ -319,11 +319,8 @@ const Navbar: React.FC = () => {
                 <div className="relative lg:hidden">
                   {user ? (
                     <>
-                      <button
-                        onClick={() => setMobileOpen(!mobileOpen)}
-                        className="w-9 h-9 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-sm"
-                      >
-                        {user.email?.charAt(0).toUpperCase()}
+                      <button onClick={() => setMobileOpen(!mobileOpen)} className="flex items-center justify-center">
+                        <UserAvatar />
                       </button>
                       <AnimatePresence>
                         {mobileOpen && (
