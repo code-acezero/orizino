@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, Trash2, FileText, Printer } from "lucide-react";
 import { toast } from "@/lib/app-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Tables } from "@/integrations/supabase/types";
