@@ -239,7 +239,7 @@ const AdminOrders = () => {
                 </TableCell>
                 <TableCell className="font-medium">{o.order_number}</TableCell>
                 <TableCell>{format(new Date(o.created_at), "MMM d, yyyy")}</TableCell>
-                <TableCell>${Number(o.total).toFixed(2)}</TableCell>
+                <TableCell>{formatPrice(Number(o.total))}</TableCell>
                 <TableCell><Badge variant={(statusColors[o.status] as any) ?? "secondary"}>{o.status}</Badge></TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(o)}><Eye className="h-4 w-4" /></Button>
