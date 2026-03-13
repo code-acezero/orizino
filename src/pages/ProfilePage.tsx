@@ -57,8 +57,9 @@ const emptyPayment: Omit<PaymentMethod, "id"> = {
 const addressTypeIcons = { home: Home, office: Building2, other: MapPinned };
 
 const ProfilePage: React.FC = () => {
-  useSeoMeta("profile", "Profile | Ace Marketplace");
+  useSeoMeta("profile", "Profile");
   const { user, signOut } = useAuth();
+  const { formatPrice } = useCurrency();
   const queryClient = useQueryClient();
 
   const [loading, setLoading] = useState(false);
