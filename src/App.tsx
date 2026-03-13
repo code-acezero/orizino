@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/AdminRoute";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -62,6 +63,7 @@ const App = () => (
       <AppToastOverlay />
       <BrowserRouter>
         <AuthProvider>
+          <LanguageProvider>
           <CurrencyProvider>
           <SiteThemeProvider />
           <AppContent />
@@ -126,6 +128,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
           </CurrencyProvider>
+          </LanguageProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

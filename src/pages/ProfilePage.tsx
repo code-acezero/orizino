@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { toast } from "@/lib/app-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
@@ -56,8 +57,9 @@ const emptyPayment: Omit<PaymentMethod, "id"> = {
 const addressTypeIcons = { home: Home, office: Building2, other: MapPinned };
 
 const ProfilePage: React.FC = () => {
-  useSeoMeta("profile", "Profile | Ace Marketplace");
+  useSeoMeta("profile", "Profile");
   const { user, signOut } = useAuth();
+  const { formatPrice } = useCurrency();
   const queryClient = useQueryClient();
 
   const [loading, setLoading] = useState(false);
@@ -468,7 +470,7 @@ const ProfilePage: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[order.status] || "bg-secondary text-foreground"}`}>{order.status}</span>
-                        <p className="text-sm font-bold text-foreground">${Number(order.total).toFixed(2)}</p>
+                        <p className="text-sm font-bold text-foreground">{formatPrice(Number(order.total))}</p>
                         <ChevronRight className="w-4 h-4 text-muted-foreground" />
                       </div>
                     </div>

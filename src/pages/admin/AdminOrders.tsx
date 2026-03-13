@@ -11,8 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, Trash2 } from "lucide-react";
+import { Eye, Trash2, FileText, Printer } from "lucide-react";
 import { toast } from "@/lib/app-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Tables } from "@/integrations/supabase/types";
@@ -31,10 +32,12 @@ const statusColors: Record<string, string> = {
 
 const AdminOrders = () => {
   const qc = useQueryClient();
+  const { formatPrice } = useCurrency();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [filterStatus, setFilterStatus] = useState("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState<string | null>(null);
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["admin-orders"],
@@ -236,7 +239,7 @@ const AdminOrders = () => {
                 </TableCell>
                 <TableCell className="font-medium">{o.order_number}</TableCell>
                 <TableCell>{format(new Date(o.created_at), "MMM d, yyyy")}</TableCell>
-                <TableCell>${Number(o.total).toFixed(2)}</TableCell>
+                <TableCell>{formatPrice(Number(o.total))}</TableCell>
                 <TableCell><Badge variant={(statusColors[o.status] as any) ?? "secondary"}>{o.status}</Badge></TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(o)}><Eye className="h-4 w-4" /></Button>
@@ -253,9 +256,9 @@ const AdminOrders = () => {
           {selectedOrder && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div><span className="text-muted-foreground">Subtotal:</span> ${Number(selectedOrder.subtotal).toFixed(2)}</div>
-                <div><span className="text-muted-foreground">Shipping:</span> ${Number(selectedOrder.shipping_fee).toFixed(2)}</div>
-                <div><span className="text-muted-foreground">Total:</span> ${Number(selectedOrder.total).toFixed(2)}</div>
+                <div><span className="text-muted-foreground">Subtotal:</span> {formatPrice(Number(selectedOrder.subtotal))}</div>
+                <div><span className="text-muted-foreground">Shipping:</span> {formatPrice(Number(selectedOrder.shipping_fee))}</div>
+                <div><span className="text-muted-foreground">Total:</span> {formatPrice(Number(selectedOrder.total))}</div>
                 <div><span className="text-muted-foreground">Payment:</span> {selectedOrder.payment_method}</div>
               </div>
 
@@ -265,7 +268,7 @@ const AdminOrders = () => {
                   {orderItems.map((item) => (
                     <div key={item.id} className="flex justify-between text-sm p-2 rounded-md bg-muted/50">
                       <span>{item.product_name} × {item.quantity}</span>
-                      <span>${Number(item.total_price).toFixed(2)}</span>
+                      <span>{formatPrice(Number(item.total_price))}</span>
                     </div>
                   ))}
                 </div>
@@ -306,6 +309,65 @@ const AdminOrders = () => {
                     Save
                   </Button>
                 </div>
+              </div>
+
+              {/* Invoice Actions */}
+              <div className="border-t border-border pt-4 flex gap-2">
+                <Button
+                  variant="outline"
+                  className="gap-1.5"
+                  disabled={invoiceLoading}
+                  onClick={async () => {
+                    setInvoiceLoading(true);
+                    try {
+                      const { data, error } = await supabase.functions.invoke("generate-invoice", {
+                        body: { order_id: selectedOrder.id },
+                      });
+                      if (error || !data?.invoice_html) {
+                        toast({ title: "Failed to generate invoice", variant: "destructive" });
+                      } else {
+                        const win = window.open("", "_blank");
+                        if (win) {
+                          win.document.write(data.invoice_html);
+                          win.document.close();
+                        }
+                      }
+                    } catch {
+                      toast({ title: "Invoice generation failed", variant: "destructive" });
+                    }
+                    setInvoiceLoading(false);
+                  }}
+                >
+                  <FileText className="w-4 h-4" /> View Invoice
+                </Button>
+                <Button
+                  variant="outline"
+                  className="gap-1.5"
+                  disabled={invoiceLoading}
+                  onClick={async () => {
+                    setInvoiceLoading(true);
+                    try {
+                      const { data, error } = await supabase.functions.invoke("generate-invoice", {
+                        body: { order_id: selectedOrder.id },
+                      });
+                      if (error || !data?.invoice_html) {
+                        toast({ title: "Failed to generate invoice", variant: "destructive" });
+                      } else {
+                        const win = window.open("", "_blank");
+                        if (win) {
+                          win.document.write(data.invoice_html);
+                          win.document.close();
+                          setTimeout(() => win.print(), 500);
+                        }
+                      }
+                    } catch {
+                      toast({ title: "Print failed", variant: "destructive" });
+                    }
+                    setInvoiceLoading(false);
+                  }}
+                >
+                  <Printer className="w-4 h-4" /> Print Invoice
+                </Button>
               </div>
             </div>
           )}
