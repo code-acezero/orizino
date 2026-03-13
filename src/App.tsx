@@ -63,6 +63,7 @@ const App = () => (
       <AppToastOverlay />
       <BrowserRouter>
         <AuthProvider>
+          <LanguageProvider>
           <CurrencyProvider>
           <SiteThemeProvider />
           <AppContent />
