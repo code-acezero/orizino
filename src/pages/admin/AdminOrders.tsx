@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, Trash2 } from "lucide-react";
+import { Eye, Trash2, FileText, Printer } from "lucide-react";
 import { toast } from "@/lib/app-toast";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
