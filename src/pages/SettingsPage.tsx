@@ -4,9 +4,12 @@ import {
   Moon, Sun, Palette, Bell, Globe, Shield, ChevronRight, Eye, EyeOff,
   Lock, Smartphone, Mail, Volume2, VolumeX, Languages, Monitor, TrendingUp,
   Trash2, Download, HelpCircle, MessageSquare, FileText, Info,
-  BellRing, BellOff, ShoppingBag, Tag, Package, Megaphone, AlertTriangle
+  BellRing, BellOff, ShoppingBag, Tag, Package, Megaphone, AlertTriangle,
+  Coins
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { useLanguage, ALL_LANGUAGES } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/app-toast";
 import Navbar from "@/components/Navbar";
@@ -28,15 +31,6 @@ const themes = [
   { id: "crimson", label: "Crimson Red", color: "0 85% 55%" },
   { id: "gold", label: "Golden Hour", color: "45 90% 50%" },
   { id: "mint", label: "Fresh Mint", color: "170 70% 45%" },
-];
-
-const languages = [
-  { code: "en", label: "English (US)" },
-  { code: "ar", label: "العربية" },
-  { code: "fr", label: "Français" },
-  { code: "es", label: "Español" },
-  { code: "de", label: "Deutsch" },
-  { code: "zh", label: "中文" },
 ];
 
 interface NotifPrefs {
@@ -71,10 +65,11 @@ const ToggleRow: React.FC<{ icon: React.ReactNode; label: string; desc?: string;
 
 const SettingsPage: React.FC = () => {
   const { user, signOut } = useAuth();
+  const { currency, setCurrency, enabledCurrencies } = useCurrency();
+  const { language, setLanguage: setLang, t } = useLanguage();
 
   const [mode, setMode] = useState<"dark" | "light">("dark");
   const [theme, setTheme] = useState("default");
-  const [language, setLanguage] = useState("en");
   const [notifPrefs, setNotifPrefs] = useState<NotifPrefs>(defaultNotifPrefs);
   const [loading, setLoading] = useState(false);
 
@@ -93,7 +88,6 @@ const SettingsPage: React.FC = () => {
         const prefs = data.preferences as Record<string, any>;
         if (prefs.mode) setMode(prefs.mode);
         if (prefs.theme) setTheme(prefs.theme);
-        if (prefs.language) setLanguage(prefs.language);
         if (prefs.notifPrefs) setNotifPrefs({ ...defaultNotifPrefs, ...prefs.notifPrefs });
       }
     });
@@ -144,22 +138,22 @@ const SettingsPage: React.FC = () => {
       <Navbar />
       <main className="container mx-auto px-4 py-8 max-w-2xl">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-3xl font-bold font-display text-foreground mb-2">Settings</h1>
+          <h1 className="text-3xl font-bold font-display text-foreground mb-2">{t("nav.settings")}</h1>
           <p className="text-sm text-muted-foreground mb-6">Manage your preferences, security, and notifications</p>
 
           <Tabs defaultValue="appearance" className="space-y-6">
             <TabsList className="w-full grid grid-cols-4 h-auto p-1 rounded-2xl">
               <TabsTrigger value="appearance" className="rounded-xl text-xs sm:text-sm py-2.5 data-[state=active]:shadow-md">
-                <Palette className="w-4 h-4 mr-1.5 hidden sm:block" /> Appearance
+                <Palette className="w-4 h-4 mr-1.5 hidden sm:block" /> {t("settings.appearance")}
               </TabsTrigger>
               <TabsTrigger value="notifications" className="rounded-xl text-xs sm:text-sm py-2.5 data-[state=active]:shadow-md">
-                <Bell className="w-4 h-4 mr-1.5 hidden sm:block" /> Alerts
+                <Bell className="w-4 h-4 mr-1.5 hidden sm:block" /> {t("settings.notifications")}
               </TabsTrigger>
               <TabsTrigger value="security" className="rounded-xl text-xs sm:text-sm py-2.5 data-[state=active]:shadow-md">
-                <Shield className="w-4 h-4 mr-1.5 hidden sm:block" /> Security
+                <Shield className="w-4 h-4 mr-1.5 hidden sm:block" /> {t("settings.security")}
               </TabsTrigger>
               <TabsTrigger value="general" className="rounded-xl text-xs sm:text-sm py-2.5 data-[state=active]:shadow-md">
-                <Globe className="w-4 h-4 mr-1.5 hidden sm:block" /> General
+                <Globe className="w-4 h-4 mr-1.5 hidden sm:block" /> {t("settings.general")}
               </TabsTrigger>
             </TabsList>
 
@@ -169,7 +163,7 @@ const SettingsPage: React.FC = () => {
                 <h2 className="text-lg font-semibold font-display text-foreground">Display</h2>
                 <ToggleRow
                   icon={mode === "dark" ? <Moon className="w-5 h-5 text-primary" /> : <Sun className="w-5 h-5 text-primary" />}
-                  label="Dark Mode" desc={mode === "dark" ? "Currently dark" : "Currently light"}
+                  label={t("settings.darkMode")} desc={mode === "dark" ? "Currently dark" : "Currently light"}
                   checked={mode === "dark"} onChange={toggleMode}
                 />
               </div>
@@ -181,12 +175,12 @@ const SettingsPage: React.FC = () => {
                 </div>
                 <p className="text-xs text-muted-foreground">Customizes your profile page appearance</p>
                 <div className="grid grid-cols-2 gap-2">
-                  {themes.map((t) => (
-                    <button key={t.id} onClick={() => selectTheme(t.id)}
-                      className={`flex items-center gap-3 p-3 rounded-2xl border transition-all ${theme === t.id ? "border-primary bg-primary/10 shadow-sm" : "border-border hover:border-primary/30"}`}>
-                      <div className="w-7 h-7 rounded-full shadow-inner flex-shrink-0" style={{ background: `hsl(${t.color})` }} />
-                      <span className="text-sm text-foreground">{t.label}</span>
-                      {theme === t.id && <Badge variant="secondary" className="ml-auto text-[10px]">Active</Badge>}
+                  {themes.map((th) => (
+                    <button key={th.id} onClick={() => selectTheme(th.id)}
+                      className={`flex items-center gap-3 p-3 rounded-2xl border transition-all ${theme === th.id ? "border-primary bg-primary/10 shadow-sm" : "border-border hover:border-primary/30"}`}>
+                      <div className="w-7 h-7 rounded-full shadow-inner flex-shrink-0" style={{ background: `hsl(${th.color})` }} />
+                      <span className="text-sm text-foreground">{th.label}</span>
+                      {theme === th.id && <Badge variant="secondary" className="ml-auto text-[10px]">Active</Badge>}
                     </button>
                   ))}
                 </div>
@@ -201,7 +195,6 @@ const SettingsPage: React.FC = () => {
                 <ToggleRow icon={<Mail className="w-5 h-5 text-primary" />} label="Email Notifications" desc="Get updates via email" checked={notifPrefs.email} onChange={() => updateNotifPref("email")} />
                 <ToggleRow icon={notifPrefs.sound ? <Volume2 className="w-5 h-5 text-primary" /> : <VolumeX className="w-5 h-5 text-primary" />} label="Sound" desc="Notification sounds" checked={notifPrefs.sound} onChange={() => updateNotifPref("sound")} />
               </div>
-
               <div className="glass-strong rounded-3xl p-6 space-y-1">
                 <h2 className="text-lg font-semibold font-display text-foreground mb-3">Categories</h2>
                 <ToggleRow icon={<Package className="w-5 h-5 text-primary" />} label="Order Updates" desc="Shipping, delivery status" checked={notifPrefs.orders} onChange={() => updateNotifPref("orders")} />
@@ -247,7 +240,6 @@ const SettingsPage: React.FC = () => {
                   <Badge variant="secondary" className="text-[10px]">Coming Soon</Badge>
                 </div>
               </div>
-
               <div className="glass-strong rounded-3xl p-6 space-y-1">
                 <h2 className="text-lg font-semibold font-display text-foreground mb-3 text-destructive">Danger Zone</h2>
                 <button onClick={() => setDeleteAccountOpen(true)} className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-destructive/10 transition-colors">
@@ -265,19 +257,57 @@ const SettingsPage: React.FC = () => {
 
             {/* General Tab */}
             <TabsContent value="general" className="space-y-4">
+              {/* Language */}
               <div className="glass-strong rounded-3xl p-6 space-y-4">
-                <h2 className="text-lg font-semibold font-display text-foreground">Language & Region</h2>
-                <div className="space-y-1.5">
-                  <Label className="text-muted-foreground flex items-center gap-1.5"><Languages className="w-4 h-4" /> Language</Label>
-                  <Select value={language} onValueChange={(v) => { setLanguage(v); savePrefs({ language: v }); }}>
-                    <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {languages.map((l) => <SelectItem key={l.code} value={l.code}>{l.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                <div className="flex items-center gap-2">
+                  <Languages className="w-5 h-5 text-primary" />
+                  <h2 className="text-lg font-semibold font-display text-foreground">{t("settings.language")}</h2>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {ALL_LANGUAGES.map((l) => (
+                    <button
+                      key={l.code}
+                      onClick={() => setLang(l.code)}
+                      className={`flex items-center gap-2 p-3 rounded-xl border transition-all text-left ${language === l.code ? "border-primary bg-primary/10" : "border-border hover:border-primary/30"}`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{l.nativeLabel}</p>
+                        <p className="text-xs text-muted-foreground truncate">{l.label}</p>
+                      </div>
+                      {language === l.code && <Badge variant="secondary" className="text-[10px] flex-shrink-0">✓</Badge>}
+                    </button>
+                  ))}
                 </div>
               </div>
 
+              {/* Currency */}
+              {enabledCurrencies.length > 1 && (
+                <div className="glass-strong rounded-3xl p-6 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Coins className="w-5 h-5 text-primary" />
+                    <h2 className="text-lg font-semibold font-display text-foreground">{t("settings.currency")}</h2>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Select your preferred currency for displaying prices</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {enabledCurrencies.map((c) => (
+                      <button
+                        key={c.code}
+                        onClick={() => setCurrency(c.code)}
+                        className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${currency === c.code ? "border-primary bg-primary/10" : "border-border hover:border-primary/30"}`}
+                      >
+                        <span className="text-xl font-display">{c.symbol}</span>
+                        <div className="flex-1 min-w-0 text-left">
+                          <p className="text-sm font-medium text-foreground">{c.code}</p>
+                          <p className="text-xs text-muted-foreground truncate">{c.name}</p>
+                        </div>
+                        {currency === c.code && <Badge variant="secondary" className="text-[10px]">✓</Badge>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Data & Privacy */}
               <div className="glass-strong rounded-3xl p-6 space-y-1">
                 <h2 className="text-lg font-semibold font-display text-foreground mb-3">Data & Privacy</h2>
                 <button className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-secondary/30 transition-colors">
