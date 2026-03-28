@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/app-toast";
 import { Send, MessageCircle, User, Clock, CheckCircle2, UserCheck, PhoneCall, ExternalLink } from "lucide-react";
+import VoiceCallButton from "@/components/admin/VoiceCallButton";
 import { format } from "date-fns";
 
 const AdminSupport = () => {
@@ -259,6 +260,13 @@ const AdminSupport = () => {
                   <Button size="sm" variant="outline" onClick={() => closeConversation(selectedConv)} className="rounded-xl gap-1">
                     <CheckCircle2 className="w-4 h-4" /> Close
                   </Button>
+                  {isClaimedByMe && selectedConvData?.status === "open" && (
+                    <VoiceCallButton
+                      conversationId={selectedConv}
+                      userId={selectedConvData.user_id}
+                      adminId={user!.id}
+                    />
+                  )}
                 </div>
               </div>
 
