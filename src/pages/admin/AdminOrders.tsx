@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, Trash2, FileText, Printer } from "lucide-react";
+import { Eye, Trash2, FileText, Printer, CheckCircle2, XCircle, Mail } from "lucide-react";
 import { toast } from "@/lib/app-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { format } from "date-fns";
@@ -251,23 +251,58 @@ const AdminOrders = () => {
       </div>
 
       <Dialog open={!!selectedOrder} onOpenChange={(v) => !v && setSelectedOrder(null)}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Order {selectedOrder?.order_number}</DialogTitle></DialogHeader>
           {selectedOrder && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div><span className="text-muted-foreground">Subtotal:</span> {formatPrice(Number(selectedOrder.subtotal))}</div>
                 <div><span className="text-muted-foreground">Shipping:</span> {formatPrice(Number(selectedOrder.shipping_fee))}</div>
-                <div><span className="text-muted-foreground">Total:</span> {formatPrice(Number(selectedOrder.total))}</div>
+                <div><span className="text-muted-foreground">Total:</span> <span className="font-bold">{formatPrice(Number(selectedOrder.total))}</span></div>
                 <div><span className="text-muted-foreground">Payment:</span> {selectedOrder.payment_method}</div>
+                {selectedOrder.coupon_code && (
+                  <div><span className="text-muted-foreground">Coupon:</span> <Badge variant="outline" className="font-mono text-xs">{selectedOrder.coupon_code}</Badge> (-{formatPrice(Number(selectedOrder.coupon_discount || 0))})</div>
+                )}
+                {selectedOrder.gift_wrap && (
+                  <div><span className="text-muted-foreground">Gift:</span> Yes {selectedOrder.gift_message && `— "${selectedOrder.gift_message}"`}</div>
+                )}
               </div>
+
+              {/* Shipping Address */}
+              {selectedOrder.shipping_address && typeof selectedOrder.shipping_address === "object" && (
+                <div className="p-3 rounded-xl bg-secondary/30 text-sm">
+                  <p className="font-medium text-foreground mb-1">Shipping Address</p>
+                  {(() => {
+                    const addr = selectedOrder.shipping_address as any;
+                    return (
+                      <div className="text-muted-foreground space-y-0.5">
+                        <p>{addr.full_name || addr.name}</p>
+                        <p>{addr.phone}</p>
+                        <p>{addr.street}, {addr.city}</p>
+                        <p>{addr.state} {addr.zip}, {addr.country}</p>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {selectedOrder.notes && (
+                <div className="p-3 rounded-xl bg-secondary/30 text-sm">
+                  <p className="font-medium text-foreground mb-1">Customer Notes</p>
+                  <p className="text-muted-foreground">{selectedOrder.notes}</p>
+                </div>
+              )}
 
               <div>
                 <Label>Items</Label>
                 <div className="space-y-2 mt-1">
                   {orderItems.map((item) => (
-                    <div key={item.id} className="flex justify-between text-sm p-2 rounded-md bg-muted/50">
-                      <span>{item.product_name} × {item.quantity}</span>
+                    <div key={item.id} className="flex items-center gap-3 text-sm p-2 rounded-md bg-muted/50">
+                      {item.product_image && <img src={item.product_image} alt="" className="w-10 h-10 rounded-lg object-cover" />}
+                      <div className="flex-1">
+                        <span className="font-medium">{item.product_name}</span>
+                        <span className="text-muted-foreground ml-2">× {item.quantity}</span>
+                      </div>
                       <span>{formatPrice(Number(item.total_price))}</span>
                     </div>
                   ))}
@@ -311,6 +346,55 @@ const AdminOrders = () => {
                 </div>
               </div>
 
+              {/* Order Review Actions */}
+              {selectedOrder.status === "pending" && (
+                <div className="border-t border-border pt-4">
+                  <Label className="font-medium mb-2 block">Order Review</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      className="flex-1 gap-1.5"
+                      onClick={async () => {
+                        updateStatus.mutate({ id: selectedOrder.id, status: "processing" });
+                        setSelectedOrder({ ...selectedOrder, status: "processing" });
+                        // Send notification to user
+                        await supabase.from("notifications").insert({
+                          user_id: selectedOrder.user_id,
+                          title: "Order Confirmed",
+                          message: `Your order #${selectedOrder.order_number} has been confirmed and is being processed.`,
+                          type: "order",
+                          priority: "high",
+                          link_url: "/orders",
+                          icon: "✅",
+                        });
+                        toast.success("Order confirmed & customer notified");
+                      }}
+                    >
+                      <CheckCircle2 className="w-4 h-4" /> Confirm Order
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="gap-1.5"
+                      onClick={async () => {
+                        updateStatus.mutate({ id: selectedOrder.id, status: "cancelled" });
+                        setSelectedOrder({ ...selectedOrder, status: "cancelled" });
+                        await supabase.from("notifications").insert({
+                          user_id: selectedOrder.user_id,
+                          title: "Order Cancelled",
+                          message: `Your order #${selectedOrder.order_number} has been cancelled. Please contact support for details.`,
+                          type: "order",
+                          priority: "high",
+                          link_url: "/orders",
+                          icon: "❌",
+                        });
+                        toast.success("Order cancelled & customer notified");
+                      }}
+                    >
+                      <XCircle className="w-4 h-4" /> Reject
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Invoice Actions */}
               <div className="border-t border-border pt-4 flex gap-2">
                 <Button
@@ -324,7 +408,7 @@ const AdminOrders = () => {
                         body: { order_id: selectedOrder.id },
                       });
                       if (error || !data?.invoice_html) {
-                        toast({ title: "Failed to generate invoice", variant: "destructive" });
+                        toast.error("Failed to generate invoice");
                       } else {
                         const win = window.open("", "_blank");
                         if (win) {
@@ -333,7 +417,7 @@ const AdminOrders = () => {
                         }
                       }
                     } catch {
-                      toast({ title: "Invoice generation failed", variant: "destructive" });
+                      toast.error("Invoice generation failed");
                     }
                     setInvoiceLoading(false);
                   }}
@@ -351,7 +435,7 @@ const AdminOrders = () => {
                         body: { order_id: selectedOrder.id },
                       });
                       if (error || !data?.invoice_html) {
-                        toast({ title: "Failed to generate invoice", variant: "destructive" });
+                        toast.error("Failed to generate invoice");
                       } else {
                         const win = window.open("", "_blank");
                         if (win) {
@@ -361,12 +445,43 @@ const AdminOrders = () => {
                         }
                       }
                     } catch {
-                      toast({ title: "Print failed", variant: "destructive" });
+                      toast.error("Print failed");
                     }
                     setInvoiceLoading(false);
                   }}
                 >
                   <Printer className="w-4 h-4" /> Print Invoice
+                </Button>
+                <Button
+                  variant="outline"
+                  className="gap-1.5"
+                  disabled={invoiceLoading}
+                  onClick={async () => {
+                    setInvoiceLoading(true);
+                    try {
+                      const { data, error } = await supabase.functions.invoke("generate-invoice", {
+                        body: { order_id: selectedOrder.id, send_email: true },
+                      });
+                      if (error) {
+                        toast.error("Failed to send invoice");
+                      } else {
+                        await supabase.from("notifications").insert({
+                          user_id: selectedOrder.user_id,
+                          title: "Invoice Sent",
+                          message: `Invoice for order #${selectedOrder.order_number} has been sent to your email.`,
+                          type: "order",
+                          icon: "📧",
+                          link_url: "/orders",
+                        });
+                        toast.success("Invoice sent to customer");
+                      }
+                    } catch {
+                      toast.error("Failed to send invoice");
+                    }
+                    setInvoiceLoading(false);
+                  }}
+                >
+                  <Mail className="w-4 h-4" /> Email Invoice
                 </Button>
               </div>
             </div>

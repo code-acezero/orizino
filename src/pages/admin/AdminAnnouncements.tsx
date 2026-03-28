@@ -22,6 +22,7 @@ import {
   MessageSquare, Activity, Calendar, GripVertical,
 } from "lucide-react";
 import { useDragReorder } from "@/hooks/use-drag-reorder";
+import ColorPicker from "@/components/ui/color-picker";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 
@@ -992,22 +993,8 @@ const AdminAnnouncements = () => {
                 <Card className="border-border/50">
                   <CardContent className="pt-4 space-y-3">
                     <Label className="font-medium">Colors</Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label className="text-xs text-muted-foreground">Background</Label>
-                        <div className="flex gap-2 items-center">
-                          <Input value={editingPopup.bg_color || ""} onChange={(e) => setEditingPopup({ ...editingPopup, bg_color: e.target.value })} placeholder="Default" />
-                          {editingPopup.bg_color && <div className="w-7 h-7 rounded-lg border border-border shrink-0" style={{ backgroundColor: editingPopup.bg_color }} />}
-                        </div>
-                      </div>
-                      <div>
-                        <Label className="text-xs text-muted-foreground">Text Color</Label>
-                        <div className="flex gap-2 items-center">
-                          <Input value={editingPopup.text_color || ""} onChange={(e) => setEditingPopup({ ...editingPopup, text_color: e.target.value })} placeholder="Default" />
-                          {editingPopup.text_color && <div className="w-7 h-7 rounded-lg border border-border shrink-0" style={{ backgroundColor: editingPopup.text_color }} />}
-                        </div>
-                      </div>
-                    </div>
+                    <ColorPicker label="Background" value={editingPopup.bg_color || ""} onChange={(c) => setEditingPopup({ ...editingPopup, bg_color: c })} />
+                    <ColorPicker label="Text Color" value={editingPopup.text_color || ""} onChange={(c) => setEditingPopup({ ...editingPopup, text_color: c })} />
                   </CardContent>
                 </Card>
 

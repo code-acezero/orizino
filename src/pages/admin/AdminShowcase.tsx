@@ -17,6 +17,7 @@ import ImageUpload from "@/components/ImageUpload";
 import { toast } from "@/lib/app-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Pencil, Trash2, Settings2, Layers, GripVertical, Copy, Link2, Palette, Sparkles, Eye, Monitor, ChevronLeft, ChevronRight, Play, Pause, Image } from "lucide-react";
+import ColorPicker from "@/components/ui/color-picker";
 import { useDragReorder } from "@/hooks/use-drag-reorder";
 
 interface ShowcaseConfig {
@@ -809,14 +810,8 @@ const AdminShowcase = () => {
                       <Palette className="w-4 h-4 text-accent" />
                       <Label className="font-medium">Style Overrides</Label>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label className="text-xs text-muted-foreground">Text Color</Label>
-                        <div className="flex gap-2 items-center">
-                          <Input value={editing.text_color || ""} onChange={(e) => setEditing({ ...editing, text_color: e.target.value })} placeholder="#ffffff" className="flex-1" />
-                          {editing.text_color && <div className="w-7 h-7 rounded-lg border border-border shrink-0" style={{ backgroundColor: editing.text_color }} />}
-                        </div>
-                      </div>
+                    <div className="space-y-3">
+                      <ColorPicker label="Text Color" value={editing.text_color || ""} onChange={(c) => setEditing({ ...editing, text_color: c })} />
                       <div>
                         <Label className="text-xs text-muted-foreground">Sort Order</Label>
                         <Input type="number" value={editing.sort_order} onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })} />
