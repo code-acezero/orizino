@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/lib/app-toast";
 import { Gift, Plus, Trash2, Edit, Users, Eye, Percent, DollarSign } from "lucide-react";
+import ColorPicker from "@/components/ui/color-picker";
 import { format } from "date-fns";
 
 const CONDITION_TYPES = [
@@ -285,18 +286,10 @@ const AdminUserPromos = () => {
                 <Textarea value={form.popup_message} onChange={(e) => setForm({ ...form, popup_message: e.target.value })} placeholder="You've unlocked an exclusive discount! Use code..." rows={2} />
               </div>
               <div className="space-y-2">
-                <Label>Background Color</Label>
-                <div className="flex gap-2">
-                  <Input value={form.popup_bg_color} onChange={(e) => setForm({ ...form, popup_bg_color: e.target.value })} placeholder="#1a1a2e" className="flex-1" />
-                  {form.popup_bg_color && <div className="w-10 h-10 rounded-lg border" style={{ background: form.popup_bg_color }} />}
-                </div>
+                <ColorPicker label="Background Color" value={form.popup_bg_color} onChange={(c) => setForm({ ...form, popup_bg_color: c })} />
               </div>
               <div className="space-y-2">
-                <Label>Text Color</Label>
-                <div className="flex gap-2">
-                  <Input value={form.popup_text_color} onChange={(e) => setForm({ ...form, popup_text_color: e.target.value })} placeholder="#ffffff" className="flex-1" />
-                  {form.popup_text_color && <div className="w-10 h-10 rounded-lg border" style={{ background: form.popup_text_color }} />}
-                </div>
+                <ColorPicker label="Text Color" value={form.popup_text_color} onChange={(c) => setForm({ ...form, popup_text_color: c })} />
               </div>
 
               {/* Timing */}
