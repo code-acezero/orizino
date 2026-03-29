@@ -3,17 +3,34 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/lib/app-toast";
-import { Palette } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Palette, Monitor, Smartphone, Globe } from "lucide-react";
 import ImageUpload from "@/components/ImageUpload";
+import ColorPicker from "@/components/ui/color-picker";
 
 const LOGO_STYLES = [
-  { id: "rounded", label: "Rounded", desc: "Smooth rounded corners", preview: "rounded-lg" },
-  { id: "circle", label: "Circle", desc: "Perfect circle frame", preview: "rounded-full" },
-  { id: "square", label: "Square", desc: "Sharp square edges", preview: "rounded-none" },
-  { id: "pill", label: "Pill", desc: "Wide pill shape", preview: "rounded-full px-2" },
-  { id: "shield", label: "Shield", desc: "Hexagonal shield shape", preview: "rounded-lg [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]" },
+  { id: "rounded", label: "Rounded", desc: "Soft rounded corners", cls: "rounded-lg" },
+  { id: "circle", label: "Circle", desc: "Perfect circle", cls: "rounded-full" },
+  { id: "square", label: "Square", desc: "Sharp edges", cls: "rounded-none" },
+  { id: "pill", label: "Pill", desc: "Wide capsule", cls: "rounded-full" },
+  { id: "shield", label: "Shield", desc: "Hex badge", cls: "rounded-lg [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]" },
+  { id: "hexagon", label: "Hexagon", desc: "6-sided shape", cls: "[clip-path:polygon(25%_0%,75%_0%,100%_50%,75%_100%,25%_100%,0%_50%)]" },
+  { id: "diamond", label: "Diamond", desc: "Rotated square", cls: "rotate-45 rounded-lg" },
+  { id: "blob", label: "Blob", desc: "Organic shape", cls: "rounded-[30%_70%_70%_30%/30%_30%_70%_70%]" },
+];
+
+const LOGO_EFFECTS = [
+  { id: "none", label: "None", desc: "No effect" },
+  { id: "glossy", label: "Glossy", desc: "Shiny glass overlay" },
+  { id: "glow", label: "Glow", desc: "Outer glow ring" },
+  { id: "shadow", label: "Shadow", desc: "Drop shadow" },
+  { id: "border", label: "Border", desc: "Thin border accent" },
+  { id: "grayscale", label: "Grayscale", desc: "Muted colors" },
+  { id: "negative", label: "Negative", desc: "Inverted colors" },
+  { id: "blur-bg", label: "Frosted", desc: "Blurred background" },
 ];
 
 const AdminBranding = () => {
@@ -21,11 +38,14 @@ const AdminBranding = () => {
   const [logoUrl, setLogoUrl] = useState("");
   const [iconUrl, setIconUrl] = useState("");
   const [logoStyle, setLogoStyle] = useState("rounded");
+  const [logoEffect, setLogoEffect] = useState("none");
+  const [siteName, setSiteName] = useState("");
+  const [titleColors, setTitleColors] = useState<Record<number, string>>({});
 
   const { data: settings } = useQuery({
     queryKey: ["admin-branding"],
     queryFn: async () => {
-      const { data } = await supabase.from("site_settings").select("key, value").in("key", ["logo_url", "site_icon_url", "logo_display_style"]);
+      const { data } = await supabase.from("site_settings").select("key, value").in("key", ["logo_url", "site_icon_url", "logo_display_style", "logo_effect", "site_name", "title_letter_colors"]);
       const map: Record<string, any> = {};
       data?.forEach((s) => {
         const val = s.value;
@@ -40,121 +60,250 @@ const AdminBranding = () => {
       setLogoUrl((settings.logo_url as string) || "");
       setIconUrl((settings.site_icon_url as string) || "");
       setLogoStyle((settings.logo_display_style as string) || "rounded");
+      setLogoEffect((settings.logo_effect as string) || "none");
+      const rawName = settings.site_name;
+      setSiteName(String(typeof rawName === "object" && rawName !== null ? (rawName as any).value ?? "" : rawName ?? ""));
+      if (settings.title_letter_colors && typeof settings.title_letter_colors === "object") {
+        setTitleColors(settings.title_letter_colors as Record<number, string>);
+      }
     }
   }, [settings]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const items = [
+      const items: { key: string; value: any }[] = [
         { key: "logo_url", value: logoUrl },
         { key: "site_icon_url", value: iconUrl },
         { key: "logo_display_style", value: logoStyle },
+        { key: "logo_effect", value: logoEffect },
+        { key: "title_letter_colors", value: titleColors },
       ];
       for (const item of items) {
-        const { error } = await supabase.from("site_settings").upsert({
-          key: item.key,
-          value: item.value as any,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: "key" });
-        if (error) throw error;
+        await supabase.from("site_settings").upsert({ key: item.key, value: item.value as any, updated_at: new Date().toISOString() }, { onConflict: "key" });
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["admin-branding"] });
-      qc.invalidateQueries({ queryKey: ["site-settings-nav"] });
-      qc.invalidateQueries({ queryKey: ["site-settings-footer"] });
-      qc.invalidateQueries({ queryKey: ["site-settings-landing"] });
-      qc.invalidateQueries({ queryKey: ["site-settings"] });
+      ["admin-branding", "site-settings-nav", "site-settings-footer", "site-settings-landing", "site-settings"].forEach(k => qc.invalidateQueries({ queryKey: [k] }));
       toast.success("Branding saved");
     },
     onError: (e: any) => toast.error(e.message),
   });
 
-  const currentStyle = LOGO_STYLES.find((s) => s.id === logoStyle) || LOGO_STYLES[0];
+  const getEffectClass = (effect: string) => {
+    switch (effect) {
+      case "glossy": return "after:absolute after:inset-0 after:bg-gradient-to-b after:from-white/20 after:to-transparent after:rounded-inherit";
+      case "glow": return "ring-2 ring-primary/40 shadow-[0_0_16px_hsl(var(--primary)/0.3)]";
+      case "shadow": return "shadow-[0_4px_16px_hsl(0_0%_0%/0.4)]";
+      case "border": return "ring-2 ring-primary/60";
+      case "grayscale": return "grayscale";
+      case "negative": return "invert";
+      case "blur-bg": return "backdrop-blur-sm bg-background/30";
+      default: return "";
+    }
+  };
+
+  const styleObj = LOGO_STYLES.find(s => s.id === logoStyle) || LOGO_STYLES[0];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-display font-bold">Logo & Branding</h1>
+        <div>
+          <h1 className="text-2xl font-display font-bold">Logo & Branding</h1>
+          <p className="text-sm text-muted-foreground">Customize your site's visual identity</p>
+        </div>
         <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
           {saveMutation.isPending ? "Saving..." : "Save Changes"}
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Palette className="w-5 h-5" /> Logo Upload</CardTitle>
-            <CardDescription>Upload your site logo and favicon</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Site Logo</Label>
-              <ImageUpload bucket="avatars" folder="branding" value={logoUrl} onUploaded={(url) => setLogoUrl(url)} />
-              <p className="text-xs text-muted-foreground">Recommended: 256×256px or higher, PNG/SVG</p>
-            </div>
-            <div className="space-y-2">
-              <Label>Site Icon (Favicon)</Label>
-              <ImageUpload bucket="avatars" folder="branding" value={iconUrl} onUploaded={(url) => setIconUrl(url)} />
-              <p className="text-xs text-muted-foreground">Recommended: 128×128px, PNG. This appears in the browser tab.</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Live Preview */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Live Preview</CardTitle>
-            <CardDescription>See how your logo appears in the navbar</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="glass rounded-2xl p-4">
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30">
-                {logoUrl ? (
-                  <img src={logoUrl} alt="" className={`w-10 h-10 object-cover ${currentStyle.preview}`} />
-                ) : (
-                  <div className={`w-10 h-10 bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold ${currentStyle.preview}`}>
-                    S
-                  </div>
-                )}
-                <span className="font-display font-bold text-lg text-foreground">Site Name</span>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <Label className="mb-3 block">Logo Display Style</Label>
-              <div className="grid grid-cols-5 gap-3">
-                {LOGO_STYLES.map((style) => (
-                  <button
-                    key={style.id}
-                    onClick={() => setLogoStyle(style.id)}
-                    className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
-                      logoStyle === style.id ? "border-primary bg-primary/10" : "border-border hover:border-primary/30"
-                    }`}
-                  >
-                    <div className={`w-10 h-10 bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-sm ${style.preview}`}>
-                      {logoUrl ? <img src={logoUrl} alt="" className={`w-full h-full object-cover ${style.preview}`} /> : "L"}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left: Upload */}
+        <div className="space-y-4">
+          <Card className="glass">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Site Logo</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4">
+                <div className={`w-16 h-16 shrink-0 overflow-hidden relative ${styleObj.cls} ${getEffectClass(logoEffect)}`}>
+                  {logoUrl ? (
+                    <img src={logoUrl} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-xl">
+                      {siteName?.charAt(0) || "L"}
                     </div>
-                    <span className="text-[10px] font-medium text-foreground">{style.label}</span>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <ImageUpload bucket="avatars" folder="branding" value={logoUrl} onUploaded={(url) => setLogoUrl(url)} />
+                  <p className="text-[10px] text-muted-foreground mt-1">256×256px+, PNG/SVG</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Favicon</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4">
+                <div className="shrink-0">
+                  {iconUrl ? (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/50 border border-border/50">
+                      <img src={iconUrl} alt="" className="w-4 h-4 rounded-sm" />
+                      <span className="text-[10px] text-muted-foreground">Tab</span>
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-lg bg-secondary/50 border border-border/50 flex items-center justify-center">
+                      <Globe className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <ImageUpload bucket="avatars" folder="branding" value={iconUrl} onUploaded={(url) => setIconUrl(url)} />
+                  <p className="text-[10px] text-muted-foreground mt-1">128×128px, PNG</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Center: Style & Effect selectors */}
+        <div className="space-y-4">
+          <Card className="glass">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Logo Shape</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-4 gap-2">
+                {LOGO_STYLES.map((style) => (
+                  <button key={style.id} onClick={() => setLogoStyle(style.id)}
+                    className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl border transition-all ${logoStyle === style.id ? "border-primary bg-primary/10" : "border-border/50 hover:border-primary/30"}`}>
+                    <div className={`w-9 h-9 bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-xs overflow-hidden ${style.cls}`}>
+                      {logoUrl ? <img src={logoUrl} alt="" className="w-full h-full object-cover" /> : "L"}
+                    </div>
+                    <span className="text-[9px] font-medium text-foreground">{style.label}</span>
                   </button>
                 ))}
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            {/* Favicon preview */}
-            {iconUrl && (
-              <div className="mt-6">
-                <Label className="mb-3 block">Favicon Preview</Label>
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30">
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-background border border-border">
-                    <img src={iconUrl} alt="" className="w-4 h-4 rounded-sm" />
-                    <span className="text-xs text-muted-foreground">Browser Tab</span>
+          <Card className="glass">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Logo Effect</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-4 gap-2">
+                {LOGO_EFFECTS.map((effect) => (
+                  <button key={effect.id} onClick={() => setLogoEffect(effect.id)}
+                    className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl border transition-all ${logoEffect === effect.id ? "border-primary bg-primary/10" : "border-border/50 hover:border-primary/30"}`}>
+                    <div className={`w-9 h-9 rounded-lg bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-xs overflow-hidden relative ${getEffectClass(effect.id)}`}>
+                      {logoUrl ? <img src={logoUrl} alt="" className="w-full h-full object-cover" /> : "L"}
+                    </div>
+                    <span className="text-[9px] font-medium text-foreground">{effect.label}</span>
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right: Live previews */}
+        <div className="space-y-4">
+          <Card className="glass">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2"><Monitor className="w-4 h-4" /> Live Preview</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Navbar preview */}
+              <div className="rounded-xl bg-card border border-border/50 p-3">
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-8 h-8 overflow-hidden relative shrink-0 ${styleObj.cls} ${getEffectClass(logoEffect)}`}>
+                    {logoUrl ? (
+                      <img src={logoUrl} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-xs">
+                        {siteName?.charAt(0) || "L"}
+                      </div>
+                    )}
+                  </div>
+                  {siteName && (
+                    <span className="font-display font-bold text-foreground">
+                      {siteName.split("").map((char, i) => (
+                        <span key={i} style={titleColors[i] ? { color: titleColors[i] } : undefined}>{char}</span>
+                      ))}
+                    </span>
+                  )}
+                  <div className="flex-1" />
+                  <div className="flex gap-1.5">
+                    {["Home", "Shop"].map(l => (
+                      <span key={l} className="text-[9px] text-muted-foreground px-2 py-1 rounded-full bg-secondary/30">{l}</span>
+                    ))}
                   </div>
                 </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
+
+              {/* Mobile preview */}
+              <div className="rounded-xl bg-card border border-border/50 p-3 max-w-[200px] mx-auto">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="w-3 h-3 text-muted-foreground" />
+                  <span className="text-[9px] text-muted-foreground">Mobile</span>
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <div className={`w-6 h-6 overflow-hidden relative shrink-0 ${styleObj.cls} ${getEffectClass(logoEffect)}`}>
+                    {logoUrl ? (
+                      <img src={logoUrl} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-[8px]">
+                        {siteName?.charAt(0) || "L"}
+                      </div>
+                    )}
+                  </div>
+                  <span className="font-display font-bold text-xs text-foreground truncate">{siteName || "Site"}</span>
+                </div>
+              </div>
+
+              {/* Favicon preview */}
+              <div className="rounded-xl bg-card border border-border/50 p-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-secondary/50 border border-border/50">
+                    {iconUrl ? <img src={iconUrl} alt="" className="w-3.5 h-3.5 rounded-sm" /> : <Globe className="w-3.5 h-3.5 text-muted-foreground" />}
+                    <span className="text-[9px] text-muted-foreground truncate max-w-[80px]">{siteName || "Site"}</span>
+                    <span className="text-[8px] text-muted-foreground">×</span>
+                  </div>
+                  <Badge variant="outline" className="text-[8px]">Browser Tab</Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Title letter colors */}
+          {siteName && (
+            <Card className="glass">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm flex items-center gap-2"><Palette className="w-4 h-4" /> Title Colors</CardTitle>
+                <CardDescription className="text-xs">Set individual letter colors</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {siteName.split("").map((char, i) => (
+                    <div key={i} className="flex flex-col items-center gap-1">
+                      <span className="text-lg font-display font-bold" style={titleColors[i] ? { color: titleColors[i] } : undefined}>{char}</span>
+                      <input type="color" value={titleColors[i] || "#ffffff"}
+                        onChange={(e) => setTitleColors(prev => ({ ...prev, [i]: e.target.value }))}
+                        className="w-6 h-6 rounded border-none cursor-pointer" />
+                    </div>
+                  ))}
+                </div>
+                <Button variant="outline" size="sm" className="text-xs" onClick={() => setTitleColors({})}>
+                  Reset Colors
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );
