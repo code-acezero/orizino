@@ -19,6 +19,7 @@ import {
 } from "recharts";
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
@@ -80,6 +81,7 @@ const PIE_COLORS = [
 /* ── Main Component ── */
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { formatPrice } = useCurrency();
   /* ── Date range state ── */
   const [rangePreset, setRangePreset] = useState("7d");
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
@@ -366,7 +368,7 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Revenue"
-          value={`$${(stats?.revenue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          value={formatPrice(stats?.revenue ?? 0)}
           icon={DollarSign}
           trend={stats?.revenueTrend}
           trendLabel="vs last week"
