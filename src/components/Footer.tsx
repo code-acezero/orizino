@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowUpRight, Send, Github, Twitter, Instagram, Mail, Zap, Globe, Shield } from "lucide-react";
+import { ArrowUpRight, Send, Github, Twitter, Instagram, Mail, Shield, Zap, Globe } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/app-toast";
@@ -16,10 +15,7 @@ const Footer: React.FC = () => {
     queryFn: async () => {
       const { data } = await supabase.from("site_settings").select("key, value").in("key", ["site_name", "logo_url", "site_icon_url"]);
       const map: Record<string, any> = {};
-      data?.forEach((s) => {
-        const val = s.value;
-        map[s.key] = typeof val === "object" && val !== null ? (val as any).value ?? val : val;
-      });
+      data?.forEach((s) => { const val = s.value; map[s.key] = typeof val === "object" && val !== null ? (val as any).value ?? val : val; });
       return map;
     },
     staleTime: 10 * 60 * 1000,
@@ -33,13 +29,7 @@ const Footer: React.FC = () => {
   const { data: footerCategories = [] } = useQuery({
     queryKey: ["footer-categories"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("categories")
-        .select("name, slug")
-        .eq("is_active", true)
-        .is("parent_id", null)
-        .order("sort_order")
-        .limit(5);
+      const { data } = await supabase.from("categories").select("name, slug").eq("is_active", true).is("parent_id", null).order("sort_order").limit(5);
       return data || [];
     },
     staleTime: 10 * 60 * 1000,
@@ -50,22 +40,17 @@ const Footer: React.FC = () => {
     setSubscribing(true);
     const { error } = await supabase.from("email_subscriptions").insert({ email: email.trim().toLowerCase() });
     setSubscribing(false);
-    if (error?.code === "23505") {
-      toast.success("You're already subscribed!");
-    } else if (error) {
-      toast.error("Subscription failed. Try again.");
-    } else {
-      toast.success("Subscribed successfully!");
-      setEmail("");
-    }
+    if (error?.code === "23505") toast.success("You're already subscribed!");
+    else if (error) toast.error("Subscription failed.");
+    else { toast.success("Subscribed!"); setEmail(""); }
   };
 
   const quickLinks = [
     { label: "About", to: "/page/about" },
     { label: "FAQ", to: "/page/faq" },
-    { label: "Returns", to: "/page/returns" },
-    { label: "Contact", to: "/page/contact" },
     { label: "Support", to: "/support" },
+    { label: "Privacy", to: "/page/privacy" },
+    { label: "Terms", to: "/page/terms" },
   ];
 
   const socials = [
@@ -76,132 +61,103 @@ const Footer: React.FC = () => {
   ];
 
   return (
-    <footer className="relative mt-24 overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-px bg-primary shadow-[0_0_20px_hsl(var(--primary)/0.6)]" />
-      <div className="absolute top-12 left-[10%] w-64 h-64 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-0 right-[15%] w-48 h-48 rounded-full bg-accent/5 blur-[80px] pointer-events-none" />
+    <footer className="relative mt-12 overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-      <div className="relative">
-        {/* Newsletter */}
-        <div className="border-b border-border/30">
-          <div className="max-w-[1440px] mx-auto px-4 lg:px-6 py-16">
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
-              <div className="max-w-md">
-                <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="flex items-center gap-2 mb-3">
-                  <Zap className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Stay ahead</span>
-                </motion.div>
-                <h3 className="font-display text-2xl lg:text-3xl font-bold text-foreground mb-2">Get the latest drops</h3>
-                <p className="text-sm text-muted-foreground">Exclusive deals, new arrivals, and curated picks — straight to your inbox.</p>
-              </div>
-              <div className="w-full lg:w-auto">
-                <div className="flex gap-2 max-w-sm">
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSubscribe()}
-                    placeholder="your@email.com"
-                    className="flex-1 px-5 py-3 rounded-full glass border border-border/50 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 transition-all" />
-                  <button onClick={handleSubscribe} disabled={subscribing}
-                    className="shrink-0 w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground hover:shadow-[0_0_20px_hsl(var(--primary)/0.4)] transition-shadow disabled:opacity-50">
-                    <Send className="w-4 h-4" />
-                  </button>
+      <div className="relative max-w-[1440px] mx-auto px-4 lg:px-6">
+        {/* Compact grid */}
+        <div className="py-8 grid grid-cols-2 md:grid-cols-5 gap-6 items-start">
+          {/* Brand + Newsletter combined */}
+          <div className="col-span-2">
+            <Link to="/home" className="inline-flex items-center gap-2 mb-3 group">
+              {logoUrl ? (
+                <img src={logoUrl} alt={siteName} className="w-7 h-7 rounded-full object-cover" />
+              ) : siteIconUrl ? (
+                <img src={siteIconUrl} alt={siteName} className="w-7 h-7 rounded-full object-cover" />
+              ) : siteName ? (
+                <div className="w-7 h-7 rounded-full bg-gradient-primary flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold text-xs">{siteName.charAt(0)}</span>
                 </div>
-              </div>
+              ) : null}
+              {siteName && <span className="font-display font-bold text-foreground">{siteName}</span>}
+            </Link>
+            <div className="flex gap-2 max-w-xs mb-3">
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSubscribe()}
+                placeholder="your@email.com"
+                className="flex-1 px-3.5 py-2 rounded-full glass border border-border/50 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all" />
+              <button onClick={handleSubscribe} disabled={subscribing}
+                className="shrink-0 w-9 h-9 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground hover:shadow-[0_0_14px_hsl(var(--primary)/0.4)] transition-shadow disabled:opacity-50">
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              {socials.map(({ icon: Icon, href, label }) => (
+                <a key={label} href={href} aria-label={label}
+                  className="w-7 h-7 rounded-full border border-border/40 flex items-center justify-center text-muted-foreground hover:border-primary/50 hover:text-primary transition-all">
+                  <Icon className="w-3 h-3" />
+                </a>
+              ))}
             </div>
           </div>
-        </div>
 
-        {/* Main grid */}
-        <div className="max-w-[1440px] mx-auto px-4 lg:px-6 py-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
-            {/* Brand */}
-            <div className="col-span-2 md:col-span-1">
-              <Link to="/home" className="inline-flex items-center gap-2.5 mb-5 group">
-                {logoUrl ? (
-                  <img src={logoUrl} alt={siteName} className="w-9 h-9 rounded-full object-cover" />
-                ) : siteIconUrl ? (
-                  <img src={siteIconUrl} alt={siteName} className="w-9 h-9 rounded-full object-cover" />
-                ) : siteName ? (
-                  <div className="w-9 h-9 rounded-full bg-gradient-primary flex items-center justify-center group-hover:shadow-[0_0_16px_hsl(var(--primary)/0.5)] transition-shadow">
-                    <span className="text-primary-foreground font-bold text-sm">{siteName.charAt(0)}</span>
+          {/* Links */}
+          <div>
+            <h4 className="text-[10px] font-semibold uppercase tracking-[0.15em] text-foreground mb-2">Navigate</h4>
+            <ul className="space-y-1.5">
+              {quickLinks.map(({ label, to }) => (
+                <li key={label}>
+                  <Link to={to} className="group inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    {label}
+                    <ArrowUpRight className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Categories */}
+          <div>
+            <h4 className="text-[10px] font-semibold uppercase tracking-[0.15em] text-foreground mb-2">Categories</h4>
+            <ul className="space-y-1.5">
+              {footerCategories.map((cat) => (
+                <li key={cat.slug}>
+                  <Link to={`/categories/${cat.slug}`} className="group inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    {cat.name}
+                    <ArrowUpRight className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Trust */}
+          <div>
+            <h4 className="text-[10px] font-semibold uppercase tracking-[0.15em] text-foreground mb-2">Promise</h4>
+            <div className="space-y-2">
+              {[
+                { icon: Shield, title: "Secure", desc: "256-bit SSL" },
+                { icon: Zap, title: "Fast", desc: "Express delivery" },
+                { icon: Globe, title: "Global", desc: "Ship worldwide" },
+              ].map(({ icon: Icon, title, desc }) => (
+                <div key={title} className="flex items-center gap-2">
+                  <Icon className="w-3 h-3 text-primary shrink-0" />
+                  <div>
+                    <p className="text-[10px] font-medium text-foreground leading-none">{title}</p>
+                    <p className="text-[9px] text-muted-foreground">{desc}</p>
                   </div>
-                ) : null}
-                {siteName && <span className="font-display font-bold text-lg text-foreground">{siteName}</span>}
-              </Link>
-              <div className="flex items-center gap-3 text-muted-foreground mt-4">
-                {socials.map(({ icon: Icon, href, label }) => (
-                  <a key={label} href={href} aria-label={label}
-                    className="w-8 h-8 rounded-full border border-border/50 flex items-center justify-center hover:border-primary/50 hover:text-primary hover:shadow-[0_0_10px_hsl(var(--primary)/0.2)] transition-all">
-                    <Icon className="w-3.5 h-3.5" />
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            {/* Quick Links */}
-            <div>
-              <h4 className="text-xs font-semibold uppercase tracking-[0.15em] text-foreground mb-4">Navigate</h4>
-              <ul className="space-y-2.5">
-                {quickLinks.map(({ label, to }) => (
-                  <li key={label}>
-                    <Link to={to} className="group inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      {label}
-                      <ArrowUpRight className="w-3 h-3 opacity-0 -translate-y-0.5 translate-x-0.5 group-hover:opacity-100 group-hover:translate-y-0 group-hover:translate-x-0 transition-all" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Dynamic Categories */}
-            <div>
-              <h4 className="text-xs font-semibold uppercase tracking-[0.15em] text-foreground mb-4">Categories</h4>
-              <ul className="space-y-2.5">
-                {footerCategories.map((cat) => (
-                  <li key={cat.slug}>
-                    <Link to={`/categories/${cat.slug}`} className="group inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      {cat.name}
-                      <ArrowUpRight className="w-3 h-3 opacity-0 -translate-y-0.5 translate-x-0.5 group-hover:opacity-100 group-hover:translate-y-0 group-hover:translate-x-0 transition-all" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Trust signals */}
-            <div>
-              <h4 className="text-xs font-semibold uppercase tracking-[0.15em] text-foreground mb-4">We promise</h4>
-              <div className="space-y-4">
-                {[
-                  { icon: Shield, title: "Secure Payments", desc: "256-bit SSL encryption" },
-                  { icon: Zap, title: "Fast Delivery", desc: "Express & standard options" },
-                  { icon: Globe, title: "Global Shipping", desc: "We deliver worldwide" },
-                ].map(({ icon: Icon, title, desc }) => (
-                  <div key={title} className="flex items-start gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <Icon className="w-3.5 h-3.5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-foreground">{title}</p>
-                      <p className="text-[11px] text-muted-foreground">{desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-border/30">
-          <div className="max-w-[1440px] mx-auto px-4 lg:px-6 py-5">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-              <p className="text-[11px] text-muted-foreground">{siteName ? `© ${year} ${siteName}. All rights reserved.` : `© ${year}`}</p>
-              <div className="flex items-center gap-4">
-                <Link to="/page/privacy" className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">Privacy</Link>
-                <Link to="/page/terms" className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">Terms</Link>
-              </div>
-            </div>
+        <div className="border-t border-border/30 py-3 flex items-center justify-between">
+          <p className="text-[10px] text-muted-foreground">{siteName ? `© ${year} ${siteName}` : `© ${year}`}</p>
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[9px] text-muted-foreground">All systems operational</span>
           </div>
         </div>
       </div>

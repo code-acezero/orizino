@@ -19,6 +19,7 @@ import {
 } from "recharts";
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
@@ -80,6 +81,7 @@ const PIE_COLORS = [
 /* ── Main Component ── */
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { formatPrice } = useCurrency();
   /* ── Date range state ── */
   const [rangePreset, setRangePreset] = useState("7d");
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
@@ -366,7 +368,7 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Revenue"
-          value={`$${(stats?.revenue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          value={formatPrice(stats?.revenue ?? 0)}
           icon={DollarSign}
           trend={stats?.revenueTrend}
           trendLabel="vs last week"
@@ -430,7 +432,7 @@ const AdminDashboard = () => {
                     tick={{ fontSize: 11, fill: "hsl(215, 15%, 55%)" }}
                     axisLine={false}
                     tickLine={false}
-                    tickFormatter={(v) => `$${v}`}
+                    tickFormatter={(v) => formatPrice(v)}
                   />
                   <Tooltip
                     contentStyle={{
@@ -439,7 +441,7 @@ const AdminDashboard = () => {
                       borderRadius: "12px",
                       fontSize: "12px",
                     }}
-                    formatter={(value: number) => [`$${value.toFixed(2)}`, "Revenue"]}
+                    formatter={(value: number) => [formatPrice(value), "Revenue"]}
                   />
                   <Area
                     type="monotone"
@@ -653,7 +655,7 @@ const AdminDashboard = () => {
                         </div>
                       </div>
                       <div className="text-right shrink-0 ml-3">
-                        <p className="text-sm font-display font-semibold">${Number(order.total).toFixed(2)}</p>
+                        <p className="text-sm font-display font-semibold">{formatPrice(Number(order.total))}</p>
                         <Badge variant="outline" className={`text-[10px] ${sc.color}`}>{sc.label}</Badge>
                       </div>
                     </div>
@@ -705,7 +707,7 @@ const AdminDashboard = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{product.name}</p>
-                        <p className="text-xs text-muted-foreground">${Number(product.price).toFixed(2)}</p>
+                        <p className="text-xs text-muted-foreground">{formatPrice(Number(product.price))}</p>
                       </div>
                       <Badge
                         variant="outline"
@@ -787,7 +789,7 @@ const AdminDashboard = () => {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{product.name}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>${Number(product.price).toFixed(2)}</span>
+                      <span>{formatPrice(Number(product.price))}</span>
                       {(product.avg_rating ?? 0) > 0 && (
                         <span className="flex items-center gap-0.5">
                           <Star className="w-3 h-3 fill-amber-400 text-amber-400" />

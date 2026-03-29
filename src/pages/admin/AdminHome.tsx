@@ -1101,62 +1101,7 @@ const AdminHome = () => {
 
         {/* Layout & Style */}
         <TabsContent value="layout">
-          {/* Color Theme Picker */}
-          <Card className="glass mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2"><Palette className="w-5 h-5" /> Color Theme</CardTitle>
-              <p className="text-sm text-muted-foreground">Switch the site-wide color palette. Changes apply instantly across all sections.</p>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {themeOptions.map((theme) => (
-                  <button
-                    key={theme.id}
-                    onClick={() => setSelectedTheme(theme.id)}
-                    className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-                      selectedTheme === theme.id
-                        ? "border-primary bg-primary/10 scale-[1.02] shadow-lg"
-                        : "border-border bg-secondary/20 hover:border-primary/50 hover:bg-secondary/40"
-                    }`}
-                  >
-                    <div
-                      className="w-10 h-10 rounded-full shadow-md ring-2 ring-background"
-                      style={{ background: `hsl(${theme.color})` }}
-                    />
-                    <span className="text-xs font-medium text-foreground">{theme.label}</span>
-                    {selectedTheme === theme.id && (
-                      <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary" />
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-4">
-                <Label className="text-sm">Mode</Label>
-                <div className="flex items-center gap-2 p-1 rounded-xl bg-secondary/30 border border-border">
-                  <button
-                    onClick={() => setSelectedMode("dark")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                      selectedMode === "dark" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <Moon className="w-3.5 h-3.5" /> Dark
-                  </button>
-                  <button
-                    onClick={() => setSelectedMode("light")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                      selectedMode === "light" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <Sun className="w-3.5 h-3.5" /> Light
-                  </button>
-                </div>
-                <Button size="sm" onClick={() => saveTheme.mutate()} disabled={saveTheme.isPending} className="ml-auto">
-                  {saveTheme.isPending ? "Applying..." : "Apply Theme"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Theme controls moved to Settings > Theme */}
 
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-6">
            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
