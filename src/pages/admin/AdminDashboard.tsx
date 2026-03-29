@@ -789,7 +789,7 @@ const AdminDashboard = () => {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{product.name}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>${Number(product.price).toFixed(2)}</span>
+                      <span>{formatPrice(Number(product.price))}</span>
                       {(product.avg_rating ?? 0) > 0 && (
                         <span className="flex items-center gap-0.5">
                           <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
