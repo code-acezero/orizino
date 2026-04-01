@@ -247,6 +247,10 @@ const Navbar: React.FC = () => {
 
               {/* Right: Actions */}
               <div className="flex items-center gap-1 shrink-0 ml-auto lg:ml-0">
+                {/* Language switcher */}
+                <div className="hidden lg:block">
+                  <LanguageSwitcher compact />
+                </div>
                 {/* Currency selector */}
                 {enabledCurrencies.length > 1 && (
                   <div className="relative hidden lg:block">
