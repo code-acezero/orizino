@@ -3,6 +3,7 @@ import { Phone, PhoneOff, Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
 interface VoiceCallButtonProps {
   conversationId: string;
@@ -13,7 +14,7 @@ interface VoiceCallButtonProps {
 
 /**
  * WebRTC voice call button for admin support.
- * Uses Supabase Realtime broadcast as signaling channel.
+ * Uses Supabase Realtime broadcast for signaling.
  */
 const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
   conversationId,
@@ -21,28 +22,58 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
   adminId,
   disabled = false,
 }) => {
-  const [callState, setCallState] = useState<"idle" | "calling" | "connected" | "ended">("idle");
+  const [callState, setCallState] = useState<"idle" | "requesting" | "calling" | "connected" | "rejected">("idle");
   const [muted, setMuted] = useState(false);
   const [duration, setDuration] = useState(0);
   const peerRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const channelRef = useRef<any>(null);
 
-  // Format duration
   const formatDuration = (s: number) => {
     const m = Math.floor(s / 60);
     const sec = s % 60;
     return `${m}:${sec.toString().padStart(2, "0")}`;
   };
 
+  // Setup signaling channel
   useEffect(() => {
+    const channel = supabase.channel(`call-${conversationId}`, {
+      config: { broadcast: { self: false } },
+    });
+
+    channel.on("broadcast", { event: "call-response" }, async ({ payload }) => {
+      if (payload.action === "accepted") {
+        // User accepted, start WebRTC
+        await initiateWebRTC();
+      } else if (payload.action === "rejected") {
+        setCallState("rejected");
+        setTimeout(() => setCallState("idle"), 2000);
+      }
+    });
+
+    channel.on("broadcast", { event: "call-signal" }, async ({ payload }) => {
+      const pc = peerRef.current;
+      if (!pc) return;
+
+      if (payload.type === "answer" && payload.sdp) {
+        await pc.setRemoteDescription(new RTCSessionDescription({ type: "answer", sdp: payload.sdp }));
+      } else if (payload.type === "ice-candidate" && payload.candidate) {
+        await pc.addIceCandidate(new RTCIceCandidate(payload.candidate));
+      }
+    });
+
+    channel.subscribe();
+    channelRef.current = channel;
+
     return () => {
+      supabase.removeChannel(channel);
       endCall();
     };
-  }, []);
+  }, [conversationId]);
 
-  const startCall = useCallback(async () => {
+  const initiateWebRTC = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       localStreamRef.current = stream;
@@ -64,6 +95,16 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
         }
       };
 
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          channelRef.current?.send({
+            type: "broadcast",
+            event: "call-signal",
+            payload: { type: "ice-candidate", candidate: event.candidate, from: "admin" },
+          });
+        }
+      };
+
       pc.oniceconnectionstatechange = () => {
         if (pc.iceConnectionState === "connected") {
           setCallState("connected");
@@ -74,27 +115,53 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
         }
       };
 
-      // Create offer — in a production app, this would use Supabase Realtime broadcast
-      // for signaling exchange. Here we simulate the call state UI.
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
-      
+
+      channelRef.current?.send({
+        type: "broadcast",
+        event: "call-signal",
+        payload: { type: "offer", sdp: offer.sdp, from: "admin" },
+      });
+
       setCallState("calling");
-
-      // Simulate ringing then connected after 2s for demo
-      // In production, the signaling would happen via Supabase Realtime channels
-      setTimeout(() => {
-        if (callState === "calling" || peerRef.current) {
-          setCallState("connected");
-          timerRef.current = setInterval(() => setDuration((d) => d + 1), 1000);
-        }
-      }, 2000);
-
     } catch (err) {
-      console.error("Failed to start call:", err);
+      console.error("Failed to start WebRTC:", err);
       setCallState("idle");
     }
-  }, [conversationId]);
+  };
+
+  const startCall = useCallback(async () => {
+    setCallState("requesting");
+
+    // Send call request to customer via broadcast
+    channelRef.current?.send({
+      type: "broadcast",
+      event: "call-request",
+      payload: {
+        from: adminId,
+        conversationId,
+        action: "incoming",
+      },
+    });
+
+    // Also insert a notification for the user
+    await supabase.from("notifications").insert({
+      user_id: userId,
+      title: "Incoming Voice Call",
+      message: "A support agent is trying to call you. Open the support page to answer.",
+      type: "call",
+      priority: "high",
+      link_url: "/support",
+    });
+
+    // Timeout after 30s
+    setTimeout(() => {
+      if (callState === "requesting") {
+        setCallState("idle");
+      }
+    }, 30000);
+  }, [conversationId, adminId, userId, callState]);
 
   const endCall = useCallback(() => {
     if (timerRef.current) {
@@ -109,6 +176,13 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
       peerRef.current.close();
       peerRef.current = null;
     }
+
+    channelRef.current?.send({
+      type: "broadcast",
+      event: "call-signal",
+      payload: { type: "hangup", from: "admin" },
+    });
+
     setCallState("idle");
     setDuration(0);
     setMuted(false);
@@ -147,9 +221,19 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
           exit={{ opacity: 0, scale: 0.95 }}
           className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-green-500/10 border border-green-500/20"
         >
+          {callState === "requesting" && (
+            <Badge variant="outline" className="text-xs text-amber-500 border-amber-500/30 animate-pulse">
+              Requesting...
+            </Badge>
+          )}
           {callState === "calling" && (
             <Badge variant="outline" className="text-xs text-amber-500 border-amber-500/30 animate-pulse">
               Ringing...
+            </Badge>
+          )}
+          {callState === "rejected" && (
+            <Badge variant="outline" className="text-xs text-destructive border-destructive/30">
+              Declined
             </Badge>
           )}
           {callState === "connected" && (
@@ -157,9 +241,11 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
               {formatDuration(duration)}
             </Badge>
           )}
-          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={toggleMute}>
-            {muted ? <MicOff className="w-3.5 h-3.5 text-destructive" /> : <Mic className="w-3.5 h-3.5 text-green-500" />}
-          </Button>
+          {(callState === "calling" || callState === "connected") && (
+            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={toggleMute}>
+              {muted ? <MicOff className="w-3.5 h-3.5 text-destructive" /> : <Mic className="w-3.5 h-3.5 text-green-500" />}
+            </Button>
+          )}
           <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={endCall}>
             <PhoneOff className="w-3.5 h-3.5" />
           </Button>
