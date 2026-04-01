@@ -146,7 +146,7 @@ const Navbar: React.FC = () => {
               <div className="hidden lg:flex items-center gap-0.5">
                 <Link to="/home"
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${location.pathname === "/home" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
-                  Home
+                  {t("nav.home")}
                 </Link>
                 {/* Categories dropdown */}
                 <div className="relative" ref={catDropRef}>
