@@ -26,6 +26,3 @@ verify_jwt = false
 
 [functions.generate-invoice]
 verify_jwt = false
-
-[functions.telegram-notify]
-verify_jwt = false
