@@ -26,6 +26,7 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { currency, setCurrency, enabledCurrencies } = useCurrency();
+  const { t } = useLanguage();
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const catDropRef = useRef<HTMLDivElement>(null);
 
