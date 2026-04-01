@@ -42,6 +42,8 @@ import AdminDeliveryOffers from "./pages/admin/AdminDeliveryOffers";
 import AdminCmsPages from "./pages/admin/AdminCmsPages";
 import AdminLanding from "./pages/admin/AdminLanding";
 import AdminBranding from "./pages/admin/AdminBranding";
+import AdminModules from "./pages/admin/AdminModules";
+import AdminTelegram from "./pages/admin/AdminTelegram";
 import CmsPage from "./pages/CmsPage";
 import NotFound from "./pages/NotFound";
 import SiteThemeProvider from "./components/SiteThemeProvider";
