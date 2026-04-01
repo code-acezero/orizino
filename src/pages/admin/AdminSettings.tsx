@@ -412,17 +412,19 @@ const AdminSettings = () => {
               </div>
               <div>
                 <Label className="mb-2 block">Color Theme</Label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                   {themes.map((t) => (
                     <button
                       key={t.id}
                       onClick={() => setForm({ ...form, site_theme: t.id })}
                       className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                        form.site_theme === t.id ? "border-primary bg-primary/10" : "border-border hover:border-primary/30"
+                        form.site_theme === t.id ? "border-primary bg-primary/10 ring-1 ring-primary/30" : "border-border hover:border-primary/30"
                       }`}
                     >
-                      <div className="w-6 h-6 rounded-full" style={{ background: `hsl(${t.color})` }} />
-                      <span className="text-sm">{t.label}</span>
+                      <div className="w-8 h-8 rounded-lg shrink-0 shadow-inner"
+                        style={{ background: `linear-gradient(135deg, hsl(${t.color}), hsl(${t.color.replace(/\d+%$/, (m) => Math.max(30, parseInt(m) - 15) + '%')}))` }}
+                      />
+                      <span className="text-xs font-medium truncate">{t.label}</span>
                     </button>
                   ))}
                 </div>
