@@ -155,7 +155,7 @@ const Navbar: React.FC = () => {
                     className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors inline-flex items-center gap-1 ${catDropOpen ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
                   >
                     <LayoutGrid className="w-3.5 h-3.5" />
-                    Categories
+                    {t("nav.categories")}
                     <ChevronDown className={`w-3 h-3 transition-transform ${catDropOpen ? "rotate-180" : ""}`} />
                   </button>
 
