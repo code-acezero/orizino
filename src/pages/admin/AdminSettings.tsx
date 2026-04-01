@@ -25,6 +25,19 @@ const themes = [
   { id: "crimson", label: "Crimson Red", color: "0 85% 55%" },
   { id: "gold", label: "Golden Hour", color: "45 90% 50%" },
   { id: "mint", label: "Fresh Mint", color: "170 70% 45%" },
+  { id: "aurora", label: "Aurora Borealis", color: "160 85% 45%" },
+  { id: "neon", label: "Neon Pulse", color: "120 100% 50%" },
+  { id: "lavender", label: "Lavender Dream", color: "250 60% 65%" },
+  { id: "ember", label: "Ember Glow", color: "15 90% 50%" },
+  { id: "sapphire", label: "Sapphire Deep", color: "220 85% 55%" },
+  { id: "coral", label: "Coral Reef", color: "10 80% 60%" },
+  { id: "arctic", label: "Arctic Frost", color: "195 85% 55%" },
+  { id: "forest", label: "Forest Canopy", color: "140 65% 40%" },
+  { id: "midnight", label: "Midnight Indigo", color: "235 70% 55%" },
+  { id: "candy", label: "Candy Pop", color: "320 80% 60%" },
+  { id: "bronze", label: "Antique Bronze", color: "30 70% 45%" },
+  { id: "plasma", label: "Plasma Burst", color: "280 90% 60%" },
+  { id: "slate", label: "Steel Slate", color: "215 25% 50%" },
 ];
 
 const defaultSettings: Record<string, any> = {
@@ -399,17 +412,19 @@ const AdminSettings = () => {
               </div>
               <div>
                 <Label className="mb-2 block">Color Theme</Label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                   {themes.map((t) => (
                     <button
                       key={t.id}
                       onClick={() => setForm({ ...form, site_theme: t.id })}
                       className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                        form.site_theme === t.id ? "border-primary bg-primary/10" : "border-border hover:border-primary/30"
+                        form.site_theme === t.id ? "border-primary bg-primary/10 ring-1 ring-primary/30" : "border-border hover:border-primary/30"
                       }`}
                     >
-                      <div className="w-6 h-6 rounded-full" style={{ background: `hsl(${t.color})` }} />
-                      <span className="text-sm">{t.label}</span>
+                      <div className="w-8 h-8 rounded-lg shrink-0 shadow-inner"
+                        style={{ background: `linear-gradient(135deg, hsl(${t.color}), hsl(${t.color.replace(/\d+%$/, (m) => Math.max(30, parseInt(m) - 15) + '%')}))` }}
+                      />
+                      <span className="text-xs font-medium truncate">{t.label}</span>
                     </button>
                   ))}
                 </div>
