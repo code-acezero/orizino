@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import AuthModal from "@/components/AuthModal";
 import BottomNav from "@/components/BottomNav";
 import NotificationBell from "@/components/NotificationBell";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Navbar: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -24,6 +26,7 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { currency, setCurrency, enabledCurrencies } = useCurrency();
+  const { t } = useLanguage();
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const catDropRef = useRef<HTMLDivElement>(null);
 
@@ -143,7 +146,7 @@ const Navbar: React.FC = () => {
               <div className="hidden lg:flex items-center gap-0.5">
                 <Link to="/home"
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${location.pathname === "/home" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
-                  Home
+                  {t("nav.home")}
                 </Link>
                 {/* Categories dropdown */}
                 <div className="relative" ref={catDropRef}>
@@ -152,7 +155,7 @@ const Navbar: React.FC = () => {
                     className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors inline-flex items-center gap-1 ${catDropOpen ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
                   >
                     <LayoutGrid className="w-3.5 h-3.5" />
-                    Categories
+                    {t("nav.categories")}
                     <ChevronDown className={`w-3 h-3 transition-transform ${catDropOpen ? "rotate-180" : ""}`} />
                   </button>
 
@@ -237,13 +240,17 @@ const Navbar: React.FC = () => {
               <div className="hidden lg:block flex-1 max-w-md mx-auto">
                 <form onSubmit={handleSearchSubmit} className="relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search products..."
+                  <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={t("nav.search")}
                     className="w-full pl-11 pr-4 py-2.5 rounded-full bg-secondary/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 transition-all" />
                 </form>
               </div>
 
               {/* Right: Actions */}
               <div className="flex items-center gap-1 shrink-0 ml-auto lg:ml-0">
+                {/* Language switcher */}
+                <div className="hidden lg:block">
+                  <LanguageSwitcher compact />
+                </div>
                 {/* Currency selector */}
                 {enabledCurrencies.length > 1 && (
                   <div className="relative hidden lg:block">

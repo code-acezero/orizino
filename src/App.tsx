@@ -42,6 +42,8 @@ import AdminDeliveryOffers from "./pages/admin/AdminDeliveryOffers";
 import AdminCmsPages from "./pages/admin/AdminCmsPages";
 import AdminLanding from "./pages/admin/AdminLanding";
 import AdminBranding from "./pages/admin/AdminBranding";
+import AdminModules from "./pages/admin/AdminModules";
+import AdminTelegram from "./pages/admin/AdminTelegram";
 import CmsPage from "./pages/CmsPage";
 import NotFound from "./pages/NotFound";
 import SiteThemeProvider from "./components/SiteThemeProvider";
@@ -122,6 +124,8 @@ const App = () => (
               <Route path="cms-pages" element={<AdminCmsPages />} />
               <Route path="landing" element={<AdminLanding />} />
               <Route path="branding" element={<AdminBranding />} />
+              <Route path="modules" element={<AdminModules />} />
+              <Route path="telegram" element={<AdminTelegram />} />
             </Route>
             <Route path="/page/:slug" element={<CmsPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
