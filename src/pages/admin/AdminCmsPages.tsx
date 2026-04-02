@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/lib/app-toast";
-import { FileText, Save, Plus, Trash2, Eye, ArrowLeft } from "lucide-react";
+import { FileText, Save, Plus, Trash2, Eye, Blocks, Code2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import PageBuilder, { type PageBlock } from "@/components/admin/PageBuilder";
 
 const AdminCmsPages = () => {
   const qc = useQueryClient();
@@ -17,6 +19,7 @@ const AdminCmsPages = () => {
   const [creating, setCreating] = useState(false);
   const [newSlug, setNewSlug] = useState("");
   const [newTitle, setNewTitle] = useState("");
+  const [editorMode, setEditorMode] = useState<"blocks" | "markdown">("blocks");
 
   const { data: pages = [] } = useQuery({
     queryKey: ["admin-cms-pages"],
@@ -25,6 +28,25 @@ const AdminCmsPages = () => {
       return data || [];
     },
   });
+
+  // Parse blocks from content (stored as JSON in a special format)
+  const getBlocks = (page: any): PageBlock[] => {
+    try {
+      if (page?.content?.startsWith("<!--BLOCKS:")) {
+        const json = page.content.slice(11, page.content.indexOf("-->"));
+        return JSON.parse(json);
+      }
+    } catch {}
+    return [];
+  };
+
+  const setBlocks = (blocks: PageBlock[]) => {
+    if (!selected) return;
+    const encoded = `<!--BLOCKS:${JSON.stringify(blocks)}-->`;
+    setSelected({ ...selected, content: encoded });
+  };
+
+  const hasBlocks = (page: any) => page?.content?.startsWith("<!--BLOCKS:");
 
   const saveMutation = useMutation({
     mutationFn: async (page: any) => {
@@ -49,7 +71,7 @@ const AdminCmsPages = () => {
     const { error } = await supabase.from("cms_pages").insert({
       slug: newSlug.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
       title: newTitle,
-      content: `# ${newTitle}\n\nContent here...`,
+      content: `<!--BLOCKS:${JSON.stringify([])}-->`,
     });
     if (error) { toast.error(error.message); return; }
     setCreating(false);
@@ -66,6 +88,12 @@ const AdminCmsPages = () => {
     toast.success("Page deleted");
   };
 
+  const convertToBlocks = () => {
+    if (!selected) return;
+    setSelected({ ...selected, content: `<!--BLOCKS:${JSON.stringify([])}-->` });
+    setEditorMode("blocks");
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -75,7 +103,7 @@ const AdminCmsPages = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4" style={{ minHeight: "calc(100vh - 200px)" }}>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4" style={{ minHeight: "calc(100vh - 200px)" }}>
         {/* Page list */}
         <div className="border border-border rounded-2xl overflow-hidden flex flex-col">
           <div className="p-3 border-b border-border bg-secondary/30">
@@ -85,12 +113,12 @@ const AdminCmsPages = () => {
             {pages.map((page: any) => (
               <button
                 key={page.id}
-                onClick={() => setSelected({ ...page })}
+                onClick={() => { setSelected({ ...page }); setEditorMode(hasBlocks(page) ? "blocks" : "markdown"); }}
                 className={`w-full text-left p-3 border-b border-border hover:bg-secondary/30 transition-colors ${selected?.id === page.id ? "bg-primary/5 border-l-2 border-l-primary" : ""}`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-muted-foreground" />
+                    {hasBlocks(page) ? <Blocks className="w-4 h-4 text-primary" /> : <FileText className="w-4 h-4 text-muted-foreground" />}
                     <span className="text-sm font-medium text-foreground">{page.title}</span>
                   </div>
                   <Badge variant={page.is_published ? "default" : "secondary"} className="text-[10px]">
@@ -104,69 +132,87 @@ const AdminCmsPages = () => {
         </div>
 
         {/* Editor */}
-        <div className="lg:col-span-2 border border-border rounded-2xl overflow-hidden flex flex-col">
+        <div className="lg:col-span-3 border border-border rounded-2xl overflow-hidden flex flex-col">
           {!selected ? (
             <div className="flex-1 flex items-center justify-center text-muted-foreground">
               <div className="text-center">
-                <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <Blocks className="w-12 h-12 mx-auto mb-3 opacity-30" />
                 <p className="text-sm">Select a page to edit</p>
+                <p className="text-xs text-muted-foreground mt-1">Use the visual block editor or markdown</p>
               </div>
             </div>
           ) : (
             <div className="flex flex-col h-full">
               <div className="p-3 border-b border-border bg-secondary/30 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <p className="text-sm font-medium">Editing: {selected.title}</p>
+                  <Input
+                    value={selected.title}
+                    onChange={(e) => setSelected({ ...selected, title: e.target.value })}
+                    className="rounded-xl h-8 text-sm font-medium w-48"
+                  />
                   <a href={`/page/${selected.slug}`} target="_blank" rel="noopener" className="text-xs text-primary flex items-center gap-1">
                     <Eye className="w-3 h-3" /> Preview
                   </a>
+                  <div className="flex items-center gap-2">
+                    <Switch checked={selected.is_published} onCheckedChange={(v) => setSelected({ ...selected, is_published: v })} />
+                    <span className="text-xs text-muted-foreground">Published</span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button size="sm" variant="destructive" onClick={() => deletePage(selected.id)} className="rounded-xl gap-1">
+                  <Button size="sm" variant="destructive" onClick={() => deletePage(selected.id)} className="rounded-xl gap-1 h-8">
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
-                  <Button size="sm" onClick={() => saveMutation.mutate(selected)} disabled={saveMutation.isPending} className="rounded-xl gap-1">
+                  <Button size="sm" onClick={() => saveMutation.mutate(selected)} disabled={saveMutation.isPending} className="rounded-xl gap-1 h-8">
                     <Save className="w-3.5 h-3.5" /> Save
                   </Button>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Title</Label>
-                    <Input value={selected.title} onChange={(e) => setSelected({ ...selected, title: e.target.value })} className="rounded-xl" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Slug (URL)</Label>
-                    <Input value={selected.slug} disabled className="rounded-xl opacity-60" />
-                  </div>
-                </div>
+              <div className="flex-1 overflow-y-auto p-4">
+                <Tabs value={editorMode} onValueChange={(v) => setEditorMode(v as any)}>
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="blocks" className="gap-1.5"><Blocks className="w-3.5 h-3.5" /> Visual Builder</TabsTrigger>
+                    <TabsTrigger value="markdown" className="gap-1.5"><Code2 className="w-3.5 h-3.5" /> Markdown</TabsTrigger>
+                  </TabsList>
 
-                <div className="flex items-center gap-3">
-                  <Switch checked={selected.is_published} onCheckedChange={(v) => setSelected({ ...selected, is_published: v })} />
-                  <span className="text-sm text-muted-foreground">Published</span>
-                </div>
+                  <TabsContent value="blocks">
+                    {hasBlocks(selected) ? (
+                      <PageBuilder
+                        blocks={getBlocks(selected)}
+                        onChange={setBlocks}
+                      />
+                    ) : (
+                      <div className="text-center py-12">
+                        <Blocks className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" />
+                        <p className="text-sm text-muted-foreground mb-4">This page uses markdown. Convert to visual blocks?</p>
+                        <Button onClick={convertToBlocks} variant="outline" className="rounded-xl">
+                          Convert to Block Editor
+                        </Button>
+                      </div>
+                    )}
+                  </TabsContent>
 
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Content (Markdown)</Label>
-                  <Textarea
-                    value={selected.content}
-                    onChange={(e) => setSelected({ ...selected, content: e.target.value })}
-                    className="min-h-[400px] rounded-xl font-mono text-sm"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Meta Title</Label>
-                    <Input value={selected.meta_title || ""} onChange={(e) => setSelected({ ...selected, meta_title: e.target.value })} className="rounded-xl" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Meta Description</Label>
-                    <Input value={selected.meta_description || ""} onChange={(e) => setSelected({ ...selected, meta_description: e.target.value })} className="rounded-xl" />
-                  </div>
-                </div>
+                  <TabsContent value="markdown">
+                    <div className="space-y-4">
+                      <Textarea
+                        value={hasBlocks(selected) ? "(Visual blocks — switch to Visual Builder tab)" : selected.content}
+                        onChange={(e) => !hasBlocks(selected) && setSelected({ ...selected, content: e.target.value })}
+                        className="min-h-[400px] rounded-xl font-mono text-sm"
+                        disabled={hasBlocks(selected)}
+                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-muted-foreground">Meta Title</Label>
+                          <Input value={selected.meta_title || ""} onChange={(e) => setSelected({ ...selected, meta_title: e.target.value })} className="rounded-xl" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-muted-foreground">Meta Description</Label>
+                          <Input value={selected.meta_description || ""} onChange={(e) => setSelected({ ...selected, meta_description: e.target.value })} className="rounded-xl" />
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
             </div>
           )}
