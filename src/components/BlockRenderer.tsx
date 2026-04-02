@@ -108,7 +108,17 @@ const ProductGridBlock: React.FC<{ p: Record<string, any> }> = ({ p }) => {
       {p.title && <h2 className="text-2xl font-display font-bold text-foreground mb-6">{p.title}</h2>}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {products.map((product: any) => (
-          <ProductCard key={product.id} product={product} />
+          <ProductCard
+            key={product.id}
+            id={product.id}
+            name={product.name}
+            price={product.price}
+            compareAtPrice={product.compare_at_price}
+            thumbnail={product.thumbnail}
+            avgRating={product.avg_rating}
+            reviewCount={product.review_count}
+            slug={product.slug}
+          />
         ))}
       </div>
     </div>
