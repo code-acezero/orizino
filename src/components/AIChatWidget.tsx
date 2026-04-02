@@ -177,14 +177,8 @@ const AIChatWidget: React.FC = () => {
                 animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
                 transition={{ repeat: Infinity, duration: 3 }}
               />
-              <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_4px_20px_hsl(var(--primary)/0.4)] flex items-center justify-center group-hover:shadow-[0_4px_30px_hsl(var(--primary)/0.6)] transition-shadow">
-                {avatarType === "image" && avatarUrl ? (
-                  <img src={avatarUrl} alt="" className="w-9 h-9 rounded-xl object-cover" />
-                ) : avatarEmoji ? (
-                  <span className="text-xl">{avatarEmoji}</span>
-                ) : (
-                  <Sparkles className="w-6 h-6" />
-                )}
+              <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_4px_20px_hsl(var(--primary)/0.4)] flex items-center justify-center group-hover:shadow-[0_4px_30px_hsl(var(--primary)/0.6)] transition-shadow overflow-hidden">
+                <img src={wolfMascot} alt="Support" className="w-10 h-10 object-contain" />
               </div>
               {/* Pulse dot */}
               <motion.div
