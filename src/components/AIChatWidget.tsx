@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Bot, User, Headphones, Sparkles } from "lucide-react";
+import { X, Send, Bot, User, Headphones } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import wolfMascot from "@/assets/wolf-mascot.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
