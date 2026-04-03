@@ -154,13 +154,13 @@ const ParallaxSlider: React.FC = () => {
       x: "0%",
       scale: 1,
       opacity: 1,
-      transition: { duration: dur, ease: [0.25, 0.46, 0.45, 0.94] },
+      transition: { duration: dur, ease: [0.25, 0.46, 0.45, 0.94] as const },
     },
     exit: (d: number) => ({
       x: d > 0 ? "-8%" : "8%",
       scale: 1.05,
       opacity: 0,
-      transition: { duration: dur * 0.7, ease: [0.25, 0.46, 0.45, 0.94] },
+      transition: { duration: dur * 0.7, ease: [0.25, 0.46, 0.45, 0.94] as const },
     }),
   };
 
@@ -169,7 +169,7 @@ const ParallaxSlider: React.FC = () => {
     center: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, delay: dur * 0.4, ease: "easeOut" },
+      transition: { duration: 0.6, delay: dur * 0.4, ease: "easeOut" as const },
     },
     exit: {
       opacity: 0,
