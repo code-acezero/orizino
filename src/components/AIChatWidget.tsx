@@ -200,25 +200,12 @@ const AIChatWidget: React.FC = () => {
                 transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut", delay: 0.5 }}
               />
 
-              {/* Wolf mascot — no background */}
+              {/* Wolf mascot — no background, no eye glow */}
               <div className="relative w-16 h-16 flex items-center justify-center">
                 <img
                   src={wolfMascot}
                   alt="Support"
                   className="w-14 h-14 object-contain drop-shadow-[0_0_12px_hsl(var(--primary)/0.5)] group-hover:drop-shadow-[0_0_20px_hsl(var(--primary)/0.7)] transition-all duration-300 group-hover:scale-110"
-                />
-                {/* Eye glow overlay — two small dots positioned on the wolf's eyes */}
-                <motion.div
-                  className="absolute w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_6px_hsl(var(--primary)),0_0_12px_hsl(var(--primary)/0.5)]"
-                  style={{ top: "32%", left: "36%" }}
-                  animate={{ opacity: [0.6, 1, 0.6], boxShadow: ["0 0 4px hsl(var(--primary))", "0 0 10px hsl(var(--primary)), 0 0 20px hsl(var(--primary)/0.4)", "0 0 4px hsl(var(--primary))"] }}
-                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                />
-                <motion.div
-                  className="absolute w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_6px_hsl(var(--primary)),0_0_12px_hsl(var(--primary)/0.5)]"
-                  style={{ top: "32%", right: "36%" }}
-                  animate={{ opacity: [0.6, 1, 0.6], boxShadow: ["0 0 4px hsl(var(--primary))", "0 0 10px hsl(var(--primary)), 0 0 20px hsl(var(--primary)/0.4)", "0 0 4px hsl(var(--primary))"] }}
-                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
                 />
               </div>
 
