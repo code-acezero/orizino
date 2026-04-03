@@ -248,6 +248,164 @@
   background: transparent;
 }
 
+/* ── Animated Bottom Navbar (liquid indicator) ── */
+.bottom-nav-bar {
+  background: hsl(var(--card));
+  border-top: 1px solid hsl(var(--border));
+}
+
+.bottom-nav-list {
+  display: flex;
+  width: 350px;
+  margin: 0 auto;
+  position: relative;
+  list-style: none;
+  padding: 0;
+}
+
+.bottom-nav-item {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  z-index: 1;
+}
+
+.bottom-nav-link {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bottom-nav-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 75px;
+  transition: transform 0.5s ease, color 0.3s;
+  color: hsl(var(--muted-foreground));
+}
+
+.bottom-nav-item.active .bottom-nav-icon {
+  transform: translateY(-32px);
+  color: hsl(var(--primary-foreground));
+}
+
+.bottom-nav-text {
+  position: absolute;
+  color: hsl(var(--primary));
+  font-weight: 500;
+  font-size: 0.7em;
+  letter-spacing: 0.05em;
+  transition: opacity 0.5s, transform 0.5s;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.bottom-nav-item.active .bottom-nav-text {
+  opacity: 1;
+  transform: translateY(10px);
+}
+
+/* The liquid indicator ball */
+.bottom-nav-indicator {
+  position: absolute;
+  top: -50%;
+  width: 70px;
+  height: 70px;
+  background: hsl(var(--primary));
+  border-radius: 50%;
+  border: 6px solid hsl(var(--background));
+  transition: transform 0.5s ease;
+  box-shadow: 0 0 12px hsl(var(--primary) / 0.4);
+}
+
+/* Left curve cutout */
+.bottom-nav-indicator::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -22px;
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  border-top-right-radius: 20px;
+  box-shadow: 1px -10px 0 0 hsl(var(--background));
+}
+
+/* Right curve cutout */
+.bottom-nav-indicator::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -22px;
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  border-top-left-radius: 20px;
+  box-shadow: -1px -10px 0 0 hsl(var(--background));
+}
+
+/* ── 3D Parallax Slider ── */
+:root {
+  --slide-width: min(25vw, 300px);
+  --slide-aspect: 2 / 3;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --slide-width: 65vw;
+    --slide-aspect: 3 / 4;
+  }
+}
+
+.parallax-slide[data-state="current"] {
+  --slide-scale: 1.2;
+  --slide-tx: 0px;
+  --slide-rotY: 0deg;
+}
+.parallax-slide[data-state="next"] {
+  --slide-tx: calc(var(--slide-width) * 1.07);
+  --slide-rotY: -45deg;
+  --slide-scale: 1;
+}
+.parallax-slide[data-state="prev"] {
+  --slide-tx: calc(-1 * var(--slide-width) * 1.07);
+  --slide-rotY: 45deg;
+  --slide-scale: 1;
+}
+
+@media (max-width: 768px) {
+  .parallax-slide[data-state="next"] {
+    --slide-rotY: -25deg;
+    --slide-tx: calc(var(--slide-width) * 1.15);
+  }
+  .parallax-slide[data-state="prev"] {
+    --slide-rotY: 25deg;
+    --slide-tx: calc(-1 * var(--slide-width) * 1.15);
+  }
+  .parallax-slide[data-state="current"] {
+    --slide-scale: 1.1;
+  }
+}
+
+/* Slide-up animation for categories */
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
 /* Ripple animation for bottom nav */
 @keyframes ripple {
   100% {
@@ -269,7 +427,6 @@
   img {
     content-visibility: auto;
   }
-  /* Reduce motion for low-end devices */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
