@@ -44,7 +44,7 @@ const defaultConfig: ShowcaseConfig = {
   title_size: "7xl",
   subtitle_style: "badge",
   cta_style: "gradient",
-  border_radius: "3xl",
+  border_radius: "none",
   autoplay: true,
   pause_on_hover: true,
   transition_type: "fade",
@@ -53,14 +53,12 @@ const defaultConfig: ShowcaseConfig = {
   slide_gap: "0",
 };
 
-/* ── 3D Tilt hook (desktop only) ── */
+/* ── 3D mouse-tilt for active slide (desktop only) ── */
 function use3DTilt(active: boolean) {
   const ref = useRef<HTMLDivElement>(null);
-  const rotX = useRef(0);
-  const rotY = useRef(0);
-  const targetRotX = useRef(0);
-  const targetRotY = useRef(0);
-  const rafId = useRef<number>(0);
+  const raf = useRef(0);
+  const target = useRef({ x: 0, y: 0 });
+  const current = useRef({ x: 0, y: 0 });
   const isMobile = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
 
   useEffect(() => {
@@ -68,35 +66,27 @@ function use3DTilt(active: boolean) {
     const el = ref.current;
 
     const onMove = (e: MouseEvent) => {
-      const rect = el.getBoundingClientRect();
-      const ox = (e.clientX - rect.left - rect.width / 2) / (Math.PI * 3);
-      const oy = -(e.clientY - rect.top - rect.height / 2) / (Math.PI * 4);
-      targetRotX.current = ox;
-      targetRotY.current = oy;
+      const r = el.getBoundingClientRect();
+      target.current.x = ((e.clientX - r.left) / r.width - 0.5) * 12;
+      target.current.y = -((e.clientY - r.top) / r.height - 0.5) * 8;
     };
-    const onLeave = () => {
-      targetRotX.current = 0;
-      targetRotY.current = 0;
-    };
+    const onLeave = () => { target.current = { x: 0, y: 0 }; };
 
     const tick = () => {
-      rotX.current += (targetRotX.current - rotX.current) * 0.08;
-      rotY.current += (targetRotY.current - rotY.current) * 0.08;
-      if (el) {
-        el.style.setProperty("--rotX", `${rotY.current.toFixed(2)}deg`);
-        el.style.setProperty("--rotY", `${rotX.current.toFixed(2)}deg`);
-      }
-      rafId.current = requestAnimationFrame(tick);
+      current.current.x += (target.current.x - current.current.x) * 0.08;
+      current.current.y += (target.current.y - current.current.y) * 0.08;
+      el.style.setProperty("--rotY", `${current.current.x.toFixed(2)}deg`);
+      el.style.setProperty("--rotX", `${current.current.y.toFixed(2)}deg`);
+      raf.current = requestAnimationFrame(tick);
     };
 
     el.addEventListener("mousemove", onMove);
     el.addEventListener("mouseleave", onLeave);
-    rafId.current = requestAnimationFrame(tick);
-
+    raf.current = requestAnimationFrame(tick);
     return () => {
       el.removeEventListener("mousemove", onMove);
       el.removeEventListener("mouseleave", onLeave);
-      cancelAnimationFrame(rafId.current);
+      cancelAnimationFrame(raf.current);
     };
   }, [active, isMobile]);
 
@@ -106,9 +96,7 @@ function use3DTilt(active: boolean) {
 const ParallaxSlider: React.FC = () => {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
   const touchStartX = useRef(0);
-  const sliderRef = useRef<HTMLDivElement>(null);
 
   const { data: dbSlides = [] } = useQuery({
     queryKey: ["showcase-slides"],
@@ -144,38 +132,30 @@ const ParallaxSlider: React.FC = () => {
     ctaLink: s.cta_link || "/shop",
   })), [dbSlides]);
 
-  // Wrap index helper
   const wrap = (n: number) => ((n % slides.length) + slides.length) % slides.length;
 
   useEffect(() => {
     if (slides.length <= 1 || !cfg.autoplay || paused) return;
-    const timer = setInterval(() => {
-      setCurrent((prev) => wrap(prev + 1));
-    }, cfg.autoplay_speed);
+    const timer = setInterval(() => setCurrent((p) => wrap(p + 1)), cfg.autoplay_speed);
     return () => clearInterval(timer);
   }, [slides.length, cfg.autoplay, cfg.autoplay_speed, paused]);
 
-  const prev = useCallback(() => setCurrent((c) => wrap(c - 1)), [slides.length]);
-  const next = useCallback(() => setCurrent((c) => wrap(c + 1)), [slides.length]);
+  const goPrev = useCallback(() => setCurrent((c) => wrap(c - 1)), [slides.length]);
+  const goNext = useCallback(() => setCurrent((c) => wrap(c + 1)), [slides.length]);
 
-  // Preload images
+  // Preload
   useEffect(() => {
-    slides.forEach((s) => {
-      const img = new Image();
-      img.onload = () => setLoadedImages((prev) => new Set(prev).add(s.image));
-      img.src = s.image;
-    });
+    slides.forEach((s) => { const img = new Image(); img.src = s.image; });
   }, [slides]);
 
-  // Touch/swipe support
+  // Touch
   const onTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.changedTouches[0].screenX; };
   const onTouchEnd = (e: React.TouchEvent) => {
     const diff = e.changedTouches[0].screenX - touchStartX.current;
-    if (diff < -50) next();
-    if (diff > 50) prev();
+    if (diff < -50) goNext();
+    if (diff > 50) goPrev();
   };
 
-  // 3D tilt for current slide
   const tiltRef = use3DTilt(slides.length > 0);
 
   if (slides.length === 0) return null;
@@ -185,9 +165,7 @@ const ParallaxSlider: React.FC = () => {
   const nextSlide = slides[wrap(current + 1)];
   if (!currentSlide) return null;
 
-  const radiusClass = cfg.border_radius === "none" ? "" : `rounded-${cfg.border_radius}`;
-
-  const opa = cfg.overlay_opacity / 100;
+  const dur = cfg.transition_duration / 1000;
 
   const ctaClasses: Record<string, string> = {
     gradient: "bg-gradient-primary text-primary-foreground glow-primary",
@@ -222,82 +200,16 @@ const ParallaxSlider: React.FC = () => {
     return <button key={i} onClick={() => setCurrent(i)} className={`h-2 rounded-full transition-all duration-300 ${active ? "w-8 bg-primary glow-primary" : "w-2 bg-muted-foreground/40 hover:bg-muted-foreground/60"}`} />;
   };
 
-  // 3D card slide component
-  const SlideCard = ({ slide, state }: { slide: typeof currentSlide; state: "current" | "prev" | "next" }) => {
-    const isCurrent = state === "current";
-    const transform = state === "prev"
-      ? "perspective(1000px) translateX(calc(-1 * min(25vw, 300px) * 1.07)) rotateY(45deg) scale(1)"
-      : state === "next"
-      ? "perspective(1000px) translateX(calc(1 * min(25vw, 300px) * 1.07)) rotateY(-45deg) scale(1)"
-      : "perspective(1000px) translateX(0) rotateY(0deg) scale(1.2)";
-
-    const mobileTransform = state === "prev"
-      ? "perspective(1000px) translateX(-72vw) rotateY(25deg) scale(1)"
-      : state === "next"
-      ? "perspective(1000px) translateX(72vw) rotateY(-25deg) scale(1)"
-      : "perspective(1000px) translateX(0) rotateY(0deg) scale(1.1)";
-
-    return (
-      <motion.div
-        className="absolute"
-        style={{
-          width: "min(25vw, 300px)",
-          aspectRatio: "2/3",
-          zIndex: isCurrent ? 20 : 10,
-        }}
-        initial={false}
-        animate={{
-          opacity: 1,
-          filter: isCurrent ? "brightness(0.8)" : "brightness(0.5)",
-        }}
-        transition={{ duration: cfg.transition_duration / 1000, ease: [0.25, 0.46, 0.45, 0.94] }}
-      >
-        <div
-          className="w-full h-full transition-transform"
-          style={{
-            transform: window.innerWidth <= 768 ? mobileTransform : transform,
-            transitionDuration: `${cfg.transition_duration}ms`,
-            transitionTimingFunction: "ease",
-            transformStyle: "preserve-3d",
-          }}
-        >
-          <div
-            ref={isCurrent ? tiltRef : undefined}
-            className="w-full h-full"
-            style={{
-              transformStyle: "preserve-3d",
-              transform: isCurrent ? "rotateX(var(--rotX, 0deg)) rotateY(var(--rotY, 0deg))" : undefined,
-            }}
-          >
-            <div className="w-full h-full overflow-hidden rounded-md">
-              <img
-                src={slide.image}
-                alt={slide.title}
-                className="w-full h-full object-cover"
-                style={{
-                  transform: "scale(1.25)",
-                  willChange: "transform",
-                }}
-                loading={state === "current" ? "eager" : "lazy"}
-              />
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    );
-  };
-
   return (
     <div
-      ref={sliderRef}
-      className={`relative w-full overflow-hidden ${radiusClass}`}
+      className="relative w-full overflow-hidden"
       style={{ height: cfg.height, minHeight: "250px", maxHeight: "500px" }}
       onMouseEnter={() => cfg.pause_on_hover && setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      {/* Blurred background of current slide */}
+      {/* ── Blurred background ── */}
       <AnimatePresence mode="sync">
         <motion.div
           key={`bg-${currentSlide.id}`}
@@ -305,21 +217,25 @@ const ParallaxSlider: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: cfg.transition_duration / 1000 }}
+          transition={{ duration: dur }}
         >
           <img src={currentSlide.image} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-[8px]" />
         </motion.div>
       </AnimatePresence>
 
-      {/* 3D Slides carousel */}
+      {/* ── 3D Card Carousel ── */}
       <div className="absolute inset-0 flex items-center justify-center z-10" style={{ perspective: "1000px" }}>
-        {slides.length >= 3 && <SlideCard slide={prevSlide} state="prev" />}
-        <SlideCard slide={currentSlide} state="current" />
-        {slides.length >= 2 && <SlideCard slide={nextSlide} state="next" />}
+        {slides.length >= 3 && (
+          <Slide3D slide={prevSlide} state="prev" dur={dur} />
+        )}
+        <Slide3D slide={currentSlide} state="current" dur={dur} tiltRef={tiltRef} />
+        {slides.length >= 2 && (
+          <Slide3D slide={nextSlide} state="next" dur={dur} />
+        )}
       </div>
 
-      {/* Text overlay */}
+      {/* ── Text overlay ── */}
       <div className="absolute inset-0 z-20 pointer-events-none flex items-end pb-14 md:pb-8">
         <div className="container mx-auto px-4 md:px-6 lg:px-12 pointer-events-auto">
           <AnimatePresence mode="wait">
@@ -356,17 +272,72 @@ const ParallaxSlider: React.FC = () => {
         </div>
       </div>
 
-      {/* Smoky mist overlays */}
-      <div className="absolute inset-0 pointer-events-none z-15" style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.1) 35%, transparent 65%)" }} />
+      {/* ── Bottom gradient mist ── */}
+      <div className="absolute inset-0 pointer-events-none z-[15]" style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.1) 35%, transparent 65%)" }} />
 
-      {/* Navigation controls */}
+      {/* ── Navigation ── */}
       {(cfg.show_arrows || cfg.show_dots) && slides.length > 1 && (
         <div className="absolute bottom-2 md:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 z-30">
-          {cfg.show_arrows && <button onClick={prev} className="glass rounded-full p-2 text-foreground hover:text-primary transition-colors"><ChevronLeft className="w-5 h-5" /></button>}
+          {cfg.show_arrows && (
+            <button onClick={goPrev} className="glass rounded-full p-2 text-foreground hover:text-primary transition-colors">
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          )}
           {cfg.show_dots && <div className="flex gap-2">{slides.map((_, i) => renderDot(i))}</div>}
-          {cfg.show_arrows && <button onClick={next} className="glass rounded-full p-2 text-foreground hover:text-primary transition-colors"><ChevronRight className="w-5 h-5" /></button>}
+          {cfg.show_arrows && (
+            <button onClick={goNext} className="glass rounded-full p-2 text-foreground hover:text-primary transition-colors">
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          )}
         </div>
       )}
+    </div>
+  );
+};
+
+/* ── Individual 3D Slide Card ── */
+interface Slide3DProps {
+  slide: { id: string; title: string; image: string };
+  state: "current" | "prev" | "next";
+  dur: number;
+  tiltRef?: React.RefObject<HTMLDivElement>;
+}
+
+const Slide3D: React.FC<Slide3DProps> = ({ slide, state, dur, tiltRef }) => {
+  const isCurrent = state === "current";
+
+  return (
+    <div
+      className="absolute parallax-slide"
+      data-state={state}
+      style={{
+        width: "var(--slide-width)",
+        aspectRatio: "var(--slide-aspect)",
+        zIndex: isCurrent ? 20 : 10,
+        perspective: "1000px",
+        transform: `perspective(1000px) translate3d(var(--slide-tx), 0, 0) rotateY(var(--slide-rotY)) scale(var(--slide-scale))`,
+        transition: `transform ${dur}s ease, filter ${dur}s ease`,
+        filter: isCurrent ? "brightness(0.8)" : "brightness(0.5)",
+      }}
+    >
+      <div
+        ref={isCurrent ? (tiltRef as any) : undefined}
+        className="w-full h-full"
+        style={{
+          transformStyle: "preserve-3d",
+          transform: isCurrent ? "rotateX(var(--rotX, 0deg)) rotateY(var(--rotY, 0deg))" : undefined,
+        }}
+      >
+        <div className="w-full h-full overflow-hidden rounded-md">
+          <img
+            src={slide.image}
+            alt={slide.title}
+            className="w-full h-full object-cover"
+            style={{ transform: "translate(-50%, -50%) scale(1.25)", position: "absolute", top: "50%", left: "50%" }}
+            loading={isCurrent ? "eager" : "lazy"}
+          />
+        </div>
+      </div>
     </div>
   );
 };
