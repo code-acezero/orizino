@@ -133,30 +133,30 @@ Deno.serve(async (req) => {
 <body>
   <div class="header">
     <div>
-      <h1>${siteName}</h1>
+      <h1>${esc(siteName)}</h1>
       <p style="color: #666; margin: 5px 0 0;">INVOICE</p>
     </div>
     <div class="order-info">
-      <p><strong>Order #${order.order_number}</strong></p>
+      <p><strong>Order #${esc(order.order_number)}</strong></p>
       <p>Date: ${new Date(order.created_at).toLocaleDateString()}</p>
-      <p>Status: ${order.status.toUpperCase()}</p>
-      <p>Payment: ${order.payment_method}</p>
+      <p>Status: ${esc(order.status).toUpperCase()}</p>
+      <p>Payment: ${esc(order.payment_method)}</p>
     </div>
   </div>
   
   <div class="address-grid section">
     <div class="address-box">
       <h3>Ship To</h3>
-      <p><strong>${shippingAddr.full_name || ""}</strong></p>
-      <p>${shippingAddr.street || ""}</p>
-      <p>${shippingAddr.city || ""}, ${shippingAddr.state || ""} ${shippingAddr.zip || ""}</p>
-      <p>${shippingAddr.country || ""}</p>
-      <p>Phone: ${shippingAddr.phone || ""}</p>
+      <p><strong>${esc(shippingAddr.full_name || "")}</strong></p>
+      <p>${esc(shippingAddr.street || "")}</p>
+      <p>${esc(shippingAddr.city || "")}, ${esc(shippingAddr.state || "")} ${esc(shippingAddr.zip || "")}</p>
+      <p>${esc(shippingAddr.country || "")}</p>
+      <p>Phone: ${esc(shippingAddr.phone || "")}</p>
     </div>
     <div class="address-box">
       <h3>Customer</h3>
-      <p><strong>${profile?.full_name || "N/A"}</strong></p>
-      <p>Phone: ${profile?.phone || "N/A"}</p>
+      <p><strong>${esc(profile?.full_name || "N/A")}</strong></p>
+      <p>Phone: ${esc(profile?.phone || "N/A")}</p>
     </div>
   </div>
 
@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
       <tbody>
         ${(items || []).map((item: any) => `
         <tr>
-          <td>${item.product_name}</td>
+          <td>${esc(item.product_name)}</td>
           <td>${item.quantity}</td>
           <td>${Number(item.unit_price).toFixed(2)}</td>
           <td style="text-align:right">${Number(item.total_price).toFixed(2)}</td>
@@ -183,23 +183,22 @@ Deno.serve(async (req) => {
 
     <table class="totals">
       <tr><td>Subtotal</td><td>${Number(order.subtotal).toFixed(2)}</td></tr>
-      ${order.coupon_discount ? `<tr><td>Discount (${order.coupon_code})</td><td>-${Number(order.coupon_discount).toFixed(2)}</td></tr>` : ""}
+      ${order.coupon_discount ? `<tr><td>Discount (${esc(order.coupon_code)})</td><td>-${Number(order.coupon_discount).toFixed(2)}</td></tr>` : ""}
       <tr><td>Shipping</td><td>${Number(order.shipping_fee).toFixed(2)}</td></tr>
       ${order.gift_wrap ? `<tr><td>Gift Wrap</td><td>50.00</td></tr>` : ""}
       <tr class="total-row"><td>Total</td><td>${Number(order.total).toFixed(2)}</td></tr>
     </table>
   </div>
 
-  ${order.gift_message ? `<div class="section"><h3>Gift Message</h3><p style="font-style:italic">"${order.gift_message}"</p></div>` : ""}
-  ${order.notes ? `<div class="section"><h3>Order Notes</h3><p>${order.notes}</p></div>` : ""}
+  ${order.gift_message ? `<div class="section"><h3>Gift Message</h3><p style="font-style:italic">"${esc(order.gift_message)}"</p></div>` : ""}
+  ${order.notes ? `<div class="section"><h3>Order Notes</h3><p>${esc(order.notes)}</p></div>` : ""}
 
   <div class="footer">
-    <p>Thank you for your order! | ${siteName}</p>
+    <p>Thank you for your order! | ${esc(siteName)}</p>
     <p>This is a computer-generated invoice. No signature required.</p>
   </div>
 </body>
 </html>`;
-
     return new Response(JSON.stringify({ 
       success: true, 
       invoice_html: invoiceHtml,
