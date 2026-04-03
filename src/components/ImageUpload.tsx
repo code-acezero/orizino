@@ -28,26 +28,71 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     const ext = file.name.split(".").pop();
     const path = `${folder ? folder + "/" : ""}${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-    const { error } = await supabase.storage.from(bucket).upload(path, file, {
-      cacheControl: "3600",
-      upsert: false,
-    });
+    try {
+      // Try upload
+      const { error } = await supabase.storage.from(bucket).upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
 
-    if (error) {
-      toast.error("Upload failed: " + error.message);
+      if (error) {
+        // If bucket doesn't exist or permission denied, try 'site-assets' bucket as fallback
+        if (error.message?.includes("not found") || error.message?.includes("Bucket") || error.statusCode === "404") {
+          const fallbackPath = `${folder ? folder + "/" : ""}${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+          const { error: fallbackError } = await supabase.storage.from("site-assets").upload(fallbackPath, file, {
+            cacheControl: "3600",
+            upsert: false,
+          });
+          if (fallbackError) {
+            // Last resort: convert to base64 data URL
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              const dataUrl = ev.target?.result as string;
+              if (dataUrl) {
+                onUploaded(dataUrl);
+                toast.success("Image loaded (local)");
+              }
+            };
+            reader.readAsDataURL(file);
+            setUploading(false);
+            return;
+          }
+          const { data: urlData } = supabase.storage.from("site-assets").getPublicUrl(fallbackPath);
+          onUploaded(urlData.publicUrl);
+          setUploading(false);
+          toast.success("Image uploaded");
+          return;
+        }
+
+        toast.error("Upload failed: " + error.message);
+        setUploading(false);
+        return;
+      }
+
+      const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(path);
+      onUploaded(urlData.publicUrl);
+      toast.success("Image uploaded");
+    } catch (err: any) {
+      // Fallback: use data URL if all storage fails
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dataUrl = ev.target?.result as string;
+        if (dataUrl) {
+          onUploaded(dataUrl);
+          toast.success("Image loaded (local)");
+        }
+      };
+      reader.readAsDataURL(file);
+    } finally {
       setUploading(false);
-      return;
     }
-
-    const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(path);
-    onUploaded(urlData.publicUrl);
-    setUploading(false);
-    toast.success("Image uploaded");
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) upload(file);
+    // Reset input so re-uploading the same file works
+    if (inputRef.current) inputRef.current.value = "";
   };
 
   return (

@@ -13,6 +13,21 @@ interface Msg {
   content: string;
 }
 
+/* ── Floating bubble particles ── */
+const BubbleParticle = ({ delay, size, x, y, duration }: { delay: number; size: number; x: number; y: number; duration: number }) => (
+  <motion.div
+    className="absolute rounded-full bg-primary/25 pointer-events-none"
+    style={{ width: size, height: size, left: x, top: y }}
+    animate={{
+      y: [0, -20, -40, -20, 0],
+      x: [0, 8, -6, 4, 0],
+      opacity: [0, 0.6, 0.8, 0.4, 0],
+      scale: [0.6, 1, 1.1, 0.9, 0.6],
+    }}
+    transition={{ repeat: Infinity, duration, delay, ease: "easeInOut" }}
+  />
+);
+
 const AIChatWidget: React.FC = () => {
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -159,7 +174,7 @@ const AIChatWidget: React.FC = () => {
 
   return (
     <>
-      {/* Floating button */}
+      {/* Floating wolf mascot button — no container, just the mascot with effects */}
       <AnimatePresence>
         {!open && (
           <motion.button
@@ -169,20 +184,54 @@ const AIChatWidget: React.FC = () => {
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             onClick={() => setOpen(true)}
             className="fixed bottom-20 lg:bottom-6 right-4 z-50 group"
+            aria-label="Open support chat"
           >
-            <div className="relative">
-              {/* Glow ring */}
+            <div className="relative w-16 h-16">
+              {/* Ambient glow behind mascot */}
               <motion.div
-                className="absolute inset-0 rounded-2xl bg-primary/30 blur-lg"
-                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
-                transition={{ repeat: Infinity, duration: 3 }}
+                className="absolute inset-[-8px] rounded-full bg-primary/20 blur-xl"
+                animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
+                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
               />
-              <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_4px_20px_hsl(var(--primary)/0.4)] flex items-center justify-center group-hover:shadow-[0_4px_30px_hsl(var(--primary)/0.6)] transition-shadow overflow-hidden">
-                <img src={wolfMascot} alt="Support" className="w-10 h-10 object-contain" />
-              </div>
-              {/* Pulse dot */}
+              {/* Secondary glow ring */}
               <motion.div
-                className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-background"
+                className="absolute inset-[-4px] rounded-full border border-primary/20"
+                animate={{ scale: [1, 1.15, 1], opacity: [0.2, 0.5, 0.2] }}
+                transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut", delay: 0.5 }}
+              />
+
+              {/* Wolf mascot — no background */}
+              <div className="relative w-16 h-16 flex items-center justify-center">
+                <img
+                  src={wolfMascot}
+                  alt="Support"
+                  className="w-14 h-14 object-contain drop-shadow-[0_0_12px_hsl(var(--primary)/0.5)] group-hover:drop-shadow-[0_0_20px_hsl(var(--primary)/0.7)] transition-all duration-300 group-hover:scale-110"
+                />
+                {/* Eye glow overlay — two small dots positioned on the wolf's eyes */}
+                <motion.div
+                  className="absolute w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_6px_hsl(var(--primary)),0_0_12px_hsl(var(--primary)/0.5)]"
+                  style={{ top: "32%", left: "36%" }}
+                  animate={{ opacity: [0.6, 1, 0.6], boxShadow: ["0 0 4px hsl(var(--primary))", "0 0 10px hsl(var(--primary)), 0 0 20px hsl(var(--primary)/0.4)", "0 0 4px hsl(var(--primary))"] }}
+                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                />
+                <motion.div
+                  className="absolute w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_6px_hsl(var(--primary)),0_0_12px_hsl(var(--primary)/0.5)]"
+                  style={{ top: "32%", right: "36%" }}
+                  animate={{ opacity: [0.6, 1, 0.6], boxShadow: ["0 0 4px hsl(var(--primary))", "0 0 10px hsl(var(--primary)), 0 0 20px hsl(var(--primary)/0.4)", "0 0 4px hsl(var(--primary))"] }}
+                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                />
+              </div>
+
+              {/* Bubble particles */}
+              <BubbleParticle delay={0} size={5} x={-6} y={10} duration={3.5} />
+              <BubbleParticle delay={0.8} size={4} x={52} y={5} duration={4} />
+              <BubbleParticle delay={1.5} size={6} x={20} y={-4} duration={3} />
+              <BubbleParticle delay={2.2} size={3} x={46} y={20} duration={4.5} />
+              <BubbleParticle delay={0.4} size={4} x={-2} y={40} duration={3.8} />
+
+              {/* Online pulse dot */}
+              <motion.div
+                className="absolute top-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-background shadow-[0_0_6px_theme(colors.emerald.400)]"
                 animate={{ scale: [1, 1.3, 1] }}
                 transition={{ repeat: Infinity, duration: 2 }}
               />

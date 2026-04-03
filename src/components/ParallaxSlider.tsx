@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence, type Variants } from "framer-motion";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,75 +53,62 @@ const defaultConfig: ShowcaseConfig = {
   slide_gap: "0",
 };
 
-const getSlideVariants = (type: string, dur: number): Variants => {
-  const ease = [0.25, 0.46, 0.45, 0.94] as const;
-  switch (type) {
-    case "slide":
-      return {
-        enter: (dir: number) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 1 }),
-        center: { x: 0, opacity: 1, transition: { duration: dur, ease } },
-        exit: (dir: number) => ({ x: dir > 0 ? "-100%" : "100%", opacity: 1, transition: { duration: dur, ease } }),
-      };
-    case "zoom":
-      return {
-        enter: () => ({ scale: 1.4, opacity: 0 }),
-        center: { scale: 1, opacity: 1, transition: { duration: dur, ease } },
-        exit: () => ({ scale: 0.6, opacity: 0, transition: { duration: dur * 0.75, ease } }),
-      };
-    case "flip":
-      return {
-        enter: (dir: number) => ({ rotateY: dir > 0 ? 90 : -90, opacity: 0 }),
-        center: { rotateY: 0, opacity: 1, transition: { duration: dur, ease } },
-        exit: (dir: number) => ({ rotateY: dir > 0 ? -90 : 90, opacity: 0, transition: { duration: dur * 0.75, ease } }),
-      };
-    case "blur":
-      return {
-        enter: () => ({ filter: "blur(30px)", opacity: 0, scale: 1.1 }),
-        center: { filter: "blur(0px)", opacity: 1, scale: 1, transition: { duration: dur, ease } },
-        exit: () => ({ filter: "blur(30px)", opacity: 0, scale: 0.95, transition: { duration: dur * 0.75, ease } }),
-      };
-    case "cube":
-      return {
-        enter: (dir: number) => ({ rotateY: dir > 0 ? 90 : -90, x: dir > 0 ? "50%" : "-50%", opacity: 0, transformOrigin: dir > 0 ? "left center" : "right center" }),
-        center: { rotateY: 0, x: 0, opacity: 1, transformOrigin: "center", transition: { duration: dur, ease } },
-        exit: (dir: number) => ({ rotateY: dir > 0 ? -90 : 90, x: dir > 0 ? "-50%" : "50%", opacity: 0, transformOrigin: dir > 0 ? "right center" : "left center", transition: { duration: dur * 0.75, ease } }),
-      };
-    case "fade":
-    default:
-      return {
-        enter: (dir: number) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 0, scale: 1.1 }),
-        center: { x: 0, opacity: 1, scale: 1, transition: { duration: dur, ease } },
-        exit: (dir: number) => ({ x: dir > 0 ? "-30%" : "30%", opacity: 0, scale: 0.95, transition: { duration: dur * 0.75, ease } }),
-      };
-  }
-};
+/* ── 3D Tilt hook (desktop only) ── */
+function use3DTilt(active: boolean) {
+  const ref = useRef<HTMLDivElement>(null);
+  const rotX = useRef(0);
+  const rotY = useRef(0);
+  const targetRotX = useRef(0);
+  const targetRotY = useRef(0);
+  const rafId = useRef<number>(0);
+  const isMobile = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
 
-const getContentVariants = (anim: string): { initial: Record<string, any>; animate: Record<string, any> } => {
-  const base = { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] };
-  switch (anim) {
-    case "slide-left":
-      return { initial: { opacity: 0, x: -60 }, animate: { opacity: 1, x: 0, transition: { delay: 0.3, ...base } } };
-    case "slide-right":
-      return { initial: { opacity: 0, x: 60 }, animate: { opacity: 1, x: 0, transition: { delay: 0.3, ...base } } };
-    case "scale":
-      return { initial: { opacity: 0, scale: 0.8 }, animate: { opacity: 1, scale: 1, transition: { delay: 0.3, ...base } } };
-    case "fade":
-      return { initial: { opacity: 0 }, animate: { opacity: 1, transition: { delay: 0.3, ...base } } };
-    case "rotate":
-      return { initial: { opacity: 0, rotate: -5, y: 40 }, animate: { opacity: 1, rotate: 0, y: 0, transition: { delay: 0.3, ...base } } };
-    case "blur-in":
-      return { initial: { opacity: 0, filter: "blur(20px)" }, animate: { opacity: 1, filter: "blur(0px)", transition: { delay: 0.3, ...base } } };
-    case "slide-up":
-    default:
-      return { initial: { opacity: 0, y: 40 }, animate: { opacity: 1, y: 0, transition: { delay: 0.3, ...base } } };
-  }
-};
+  useEffect(() => {
+    if (!active || isMobile || !ref.current) return;
+    const el = ref.current;
+
+    const onMove = (e: MouseEvent) => {
+      const rect = el.getBoundingClientRect();
+      const ox = (e.clientX - rect.left - rect.width / 2) / (Math.PI * 3);
+      const oy = -(e.clientY - rect.top - rect.height / 2) / (Math.PI * 4);
+      targetRotX.current = ox;
+      targetRotY.current = oy;
+    };
+    const onLeave = () => {
+      targetRotX.current = 0;
+      targetRotY.current = 0;
+    };
+
+    const tick = () => {
+      rotX.current += (targetRotX.current - rotX.current) * 0.08;
+      rotY.current += (targetRotY.current - rotY.current) * 0.08;
+      if (el) {
+        el.style.setProperty("--rotX", `${rotY.current.toFixed(2)}deg`);
+        el.style.setProperty("--rotY", `${rotX.current.toFixed(2)}deg`);
+      }
+      rafId.current = requestAnimationFrame(tick);
+    };
+
+    el.addEventListener("mousemove", onMove);
+    el.addEventListener("mouseleave", onLeave);
+    rafId.current = requestAnimationFrame(tick);
+
+    return () => {
+      el.removeEventListener("mousemove", onMove);
+      el.removeEventListener("mouseleave", onLeave);
+      cancelAnimationFrame(rafId.current);
+    };
+  }, [active, isMobile]);
+
+  return ref;
+}
 
 const ParallaxSlider: React.FC = () => {
   const [current, setCurrent] = useState(0);
-  const [direction, setDirection] = useState(0);
   const [paused, setPaused] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
+  const touchStartX = useRef(0);
+  const sliderRef = useRef<HTMLDivElement>(null);
 
   const { data: dbSlides = [] } = useQuery({
     queryKey: ["showcase-slides"],
@@ -147,7 +134,7 @@ const ParallaxSlider: React.FC = () => {
 
   const cfg = configData || defaultConfig;
 
-  const slides = dbSlides.map((s) => ({
+  const slides = useMemo(() => dbSlides.map((s) => ({
     id: s.id,
     title: s.title,
     subtitle: s.subtitle || "",
@@ -155,22 +142,23 @@ const ParallaxSlider: React.FC = () => {
     image: s.image_url,
     cta: s.cta_text || "",
     ctaLink: s.cta_link || "/shop",
-    transitionType: s.transition_type || "",
-  }));
+  })), [dbSlides]);
+
+  // Wrap index helper
+  const wrap = (n: number) => ((n % slides.length) + slides.length) % slides.length;
 
   useEffect(() => {
     if (slides.length <= 1 || !cfg.autoplay || paused) return;
     const timer = setInterval(() => {
-      setDirection(1);
-      setCurrent((prev) => (prev + 1) % slides.length);
+      setCurrent((prev) => wrap(prev + 1));
     }, cfg.autoplay_speed);
     return () => clearInterval(timer);
   }, [slides.length, cfg.autoplay, cfg.autoplay_speed, paused]);
 
-  const goTo = useCallback((index: number) => { setDirection(index > current ? 1 : -1); setCurrent(index); }, [current]);
-  const prev = () => { setDirection(-1); setCurrent((c) => (c - 1 + slides.length) % slides.length); };
-  const next = () => { setDirection(1); setCurrent((c) => (c + 1) % slides.length); };
+  const prev = useCallback(() => setCurrent((c) => wrap(c - 1)), [slides.length]);
+  const next = useCallback(() => setCurrent((c) => wrap(c + 1)), [slides.length]);
 
+  // Preload images
   useEffect(() => {
     slides.forEach((s) => {
       const img = new Image();
@@ -179,42 +167,27 @@ const ParallaxSlider: React.FC = () => {
     });
   }, [slides]);
 
-  // Don't render if no slides in DB
+  // Touch/swipe support
+  const onTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.changedTouches[0].screenX; };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const diff = e.changedTouches[0].screenX - touchStartX.current;
+    if (diff < -50) next();
+    if (diff > 50) prev();
+  };
+
+  // 3D tilt for current slide
+  const tiltRef = use3DTilt(slides.length > 0);
+
   if (slides.length === 0) return null;
 
-  const slide = slides[current];
-  if (!slide) return null;
+  const currentSlide = slides[current];
+  const prevSlide = slides[wrap(current - 1)];
+  const nextSlide = slides[wrap(current + 1)];
+  if (!currentSlide) return null;
 
-  const activeTransition = slide.transitionType && slide.transitionType !== "fade" ? slide.transitionType : cfg.transition_type;
-  const dur = cfg.transition_duration / 1000;
-  const variants = getSlideVariants(activeTransition, dur);
-  const contentAnim = getContentVariants(cfg.content_animation);
+  const radiusClass = cfg.border_radius === "none" ? "" : `rounded-${cfg.border_radius}`;
 
   const opa = cfg.overlay_opacity / 100;
-  const overlayClasses: Record<string, string> = {
-    "gradient-left": `bg-gradient-to-r from-background/${Math.round(opa * 90)} via-background/${Math.round(opa * 50)} to-transparent`,
-    "gradient-right": `bg-gradient-to-l from-background/${Math.round(opa * 90)} via-background/${Math.round(opa * 50)} to-transparent`,
-    "gradient-bottom": `bg-gradient-to-t from-background/${Math.round(opa * 90)} via-transparent to-transparent`,
-    "gradient-center": "",
-    "solid": "",
-    "none": "hidden",
-  };
-  const overlayStyle = cfg.overlay_style === "gradient-center"
-    ? { background: `radial-gradient(ellipse at center, transparent 30%, hsl(var(--background) / ${opa}) 100%)` }
-    : cfg.overlay_style === "solid"
-    ? { background: `hsl(var(--background) / ${opa})` }
-    : {};
-
-  const textAlign = cfg.text_position === "center" ? "items-center text-center" : cfg.text_position === "right" ? "items-end text-right ml-auto" : "";
-  const textContainer = cfg.text_position === "center" ? "flex justify-center" : cfg.text_position === "right" ? "flex justify-end" : "";
-  const titleClass = `text-4xl md:text-${cfg.title_size}`;
-
-  const subtitleEl = (text: string) => {
-    if (!text) return null;
-    if (cfg.subtitle_style === "badge") return <span className="inline-block btn-pill bg-primary/20 text-primary text-sm mb-3">{text}</span>;
-    if (cfg.subtitle_style === "underline") return <span className="inline-block text-primary text-sm mb-3 border-b-2 border-primary pb-1">{text}</span>;
-    return <span className="inline-block text-primary text-sm mb-3 font-medium">{text}</span>;
-  };
 
   const ctaClasses: Record<string, string> = {
     gradient: "bg-gradient-primary text-primary-foreground glow-primary",
@@ -223,90 +196,172 @@ const ParallaxSlider: React.FC = () => {
     ghost: "bg-background/20 backdrop-blur text-foreground border border-foreground/20",
   };
 
+  const subtitleEl = (text: string) => {
+    if (!text) return null;
+    if (cfg.subtitle_style === "badge") return <span className="inline-block btn-pill bg-primary/20 text-primary text-sm mb-3">{text}</span>;
+    if (cfg.subtitle_style === "underline") return <span className="inline-block text-primary text-sm mb-3 border-b-2 border-primary pb-1">{text}</span>;
+    return <span className="inline-block text-primary text-sm mb-3 font-medium">{text}</span>;
+  };
+
   const renderDot = (i: number) => {
     const active = i === current;
     if (cfg.dot_style === "number") {
       return (
-        <button key={i} onClick={() => goTo(i)}
+        <button key={i} onClick={() => setCurrent(i)}
           className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center transition-all ${active ? "bg-primary text-primary-foreground glow-primary" : "bg-muted-foreground/30 text-muted-foreground hover:bg-muted-foreground/50"}`}>
           {i + 1}
         </button>
       );
     }
     if (cfg.dot_style === "circle") {
-      return <button key={i} onClick={() => goTo(i)} className={`w-3 h-3 rounded-full transition-all ${active ? "bg-primary glow-primary scale-125" : "bg-muted-foreground/40 hover:bg-muted-foreground/60"}`} />;
+      return <button key={i} onClick={() => setCurrent(i)} className={`w-3 h-3 rounded-full transition-all ${active ? "bg-primary glow-primary scale-125" : "bg-muted-foreground/40 hover:bg-muted-foreground/60"}`} />;
     }
     if (cfg.dot_style === "dash") {
-      return <button key={i} onClick={() => goTo(i)} className={`h-1 rounded-full transition-all ${active ? "w-10 bg-primary glow-primary" : "w-4 bg-muted-foreground/40 hover:bg-muted-foreground/60"}`} />;
+      return <button key={i} onClick={() => setCurrent(i)} className={`h-1 rounded-full transition-all ${active ? "w-10 bg-primary glow-primary" : "w-4 bg-muted-foreground/40 hover:bg-muted-foreground/60"}`} />;
     }
-    return <button key={i} onClick={() => goTo(i)} className={`h-2 rounded-full transition-all duration-300 ${active ? "w-8 bg-primary glow-primary" : "w-2 bg-muted-foreground/40 hover:bg-muted-foreground/60"}`} />;
+    return <button key={i} onClick={() => setCurrent(i)} className={`h-2 rounded-full transition-all duration-300 ${active ? "w-8 bg-primary glow-primary" : "w-2 bg-muted-foreground/40 hover:bg-muted-foreground/60"}`} />;
   };
 
-  const radiusClass = cfg.border_radius === "none" ? "" : `rounded-${cfg.border_radius}`;
-  const parallaxPx = cfg.parallax_intensity || 20;
+  // 3D card slide component
+  const SlideCard = ({ slide, state }: { slide: typeof currentSlide; state: "current" | "prev" | "next" }) => {
+    const isCurrent = state === "current";
+    const transform = state === "prev"
+      ? "perspective(1000px) translateX(calc(-1 * min(25vw, 300px) * 1.07)) rotateY(45deg) scale(1)"
+      : state === "next"
+      ? "perspective(1000px) translateX(calc(1 * min(25vw, 300px) * 1.07)) rotateY(-45deg) scale(1)"
+      : "perspective(1000px) translateX(0) rotateY(0deg) scale(1.2)";
+
+    const mobileTransform = state === "prev"
+      ? "perspective(1000px) translateX(-72vw) rotateY(25deg) scale(1)"
+      : state === "next"
+      ? "perspective(1000px) translateX(72vw) rotateY(-25deg) scale(1)"
+      : "perspective(1000px) translateX(0) rotateY(0deg) scale(1.1)";
+
+    return (
+      <motion.div
+        className="absolute"
+        style={{
+          width: "min(25vw, 300px)",
+          aspectRatio: "2/3",
+          zIndex: isCurrent ? 20 : 10,
+        }}
+        initial={false}
+        animate={{
+          opacity: 1,
+          filter: isCurrent ? "brightness(0.8)" : "brightness(0.5)",
+        }}
+        transition={{ duration: cfg.transition_duration / 1000, ease: [0.25, 0.46, 0.45, 0.94] }}
+      >
+        <div
+          className="w-full h-full transition-transform"
+          style={{
+            transform: window.innerWidth <= 768 ? mobileTransform : transform,
+            transitionDuration: `${cfg.transition_duration}ms`,
+            transitionTimingFunction: "ease",
+            transformStyle: "preserve-3d",
+          }}
+        >
+          <div
+            ref={isCurrent ? tiltRef : undefined}
+            className="w-full h-full"
+            style={{
+              transformStyle: "preserve-3d",
+              transform: isCurrent ? "rotateX(var(--rotX, 0deg)) rotateY(var(--rotY, 0deg))" : undefined,
+            }}
+          >
+            <div className="w-full h-full overflow-hidden rounded-md">
+              <img
+                src={slide.image}
+                alt={slide.title}
+                className="w-full h-full object-cover"
+                style={{
+                  transform: "scale(1.25)",
+                  willChange: "transform",
+                }}
+                loading={state === "current" ? "eager" : "lazy"}
+              />
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
 
   return (
     <div
+      ref={sliderRef}
       className={`relative w-full overflow-hidden ${radiusClass}`}
-      style={{ height: cfg.height, minHeight: "250px", maxHeight: "500px", perspective: activeTransition === "cube" || activeTransition === "flip" ? "1200px" : undefined }}
+      style={{ height: cfg.height, minHeight: "250px", maxHeight: "500px" }}
       onMouseEnter={() => cfg.pause_on_hover && setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
     >
-      <AnimatePresence custom={direction} mode="sync">
-        <motion.div key={slide.id} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="absolute inset-0" style={{ transformStyle: activeTransition === "cube" || activeTransition === "flip" ? "preserve-3d" : undefined }}>
-          {!loadedImages.has(slide.image) && (
-            <div className="absolute inset-0 bg-muted/70 animate-pulse">
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-muted-foreground/10 to-transparent animate-[shimmer_1.5s_infinite]" style={{ backgroundSize: "200% 100%" }} />
-            </div>
-          )}
-          <motion.div
-            className="absolute inset-0"
-            animate={cfg.ken_burns ? { scale: 1.05, y: [parallaxPx * -0.5, parallaxPx * 0.5] } : {}}
-            transition={{ duration: cfg.autoplay_speed / 1000, ease: "linear", y: { duration: cfg.autoplay_speed / 1000, ease: "linear", repeat: 0 } }}
-          >
-            <motion.img
-              src={slide.image}
-              alt={slide.title}
-              className="w-full h-full object-cover"
-              initial={loadedImages.has(slide.image) ? { filter: "blur(0px)", opacity: 1 } : { filter: "blur(8px)", opacity: 0.85 }}
-              animate={loadedImages.has(slide.image) ? { filter: "blur(0px)", opacity: 1 } : { filter: "blur(8px)", opacity: 0.85 }}
-              transition={{ duration: 0.45, ease: "easeOut" }}
-            />
-          </motion.div>
-
-          <div className={`absolute inset-0 ${overlayClasses[cfg.overlay_style] || ""}`} style={overlayStyle} />
-
-          <motion.div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 15% 85%, rgba(0,0,0,0.35) 0%, transparent 55%)" }} animate={{ opacity: [0.3, 0.5, 0.3], x: [0, 10, 0] }} transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }} />
-          <motion.div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 85% 90%, rgba(0,0,0,0.25) 0%, transparent 50%)" }} animate={{ opacity: [0.2, 0.4, 0.2], x: [0, -12, 0] }} transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 3 }} />
-          <motion.div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.1) 35%, transparent 65%)" }} animate={{ opacity: [0.6, 0.8, 0.6] }} transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }} />
-          <motion.div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.3) 0%, transparent 45%)" }} animate={{ scale: [1, 1.05, 1], opacity: [0.4, 0.6, 0.4] }} transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }} />
-
-          <div className="absolute inset-0 flex items-end md:items-center pb-14 md:pb-0">
-            <div className={`container mx-auto px-4 md:px-6 lg:px-12 ${textContainer}`}>
-              <motion.div
-                key={`content-${slide.id}`}
-                initial={contentAnim.initial}
-                animate={contentAnim.animate}
-                className={`max-w-${cfg.text_max_width} ${textAlign}`}
-              >
-                {subtitleEl(slide.subtitle)}
-                <h1 className={`text-2xl md:${titleClass} font-bold font-display mb-2 md:mb-4 leading-tight text-white`}>{slide.title}</h1>
-                {slide.description && <p className="text-sm md:text-lg text-white/80 mb-4 md:mb-8 max-w-lg line-clamp-2 md:line-clamp-none">{slide.description}</p>}
-                {slide.cta && (
-                  <motion.a href={slide.ctaLink} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                    onClick={() => trackClick("slider_cta", slide.id, "/home", { cta_text: slide.cta, cta_link: slide.ctaLink })}
-                    className={`inline-flex items-center btn-pill font-semibold text-sm md:text-lg px-5 md:px-8 py-2 md:py-3 ${ctaClasses[cfg.cta_style] || ctaClasses.gradient}`}>
-                    {slide.cta}
-                  </motion.a>
-                )}
-              </motion.div>
-            </div>
-          </div>
+      {/* Blurred background of current slide */}
+      <AnimatePresence mode="sync">
+        <motion.div
+          key={`bg-${currentSlide.id}`}
+          className="absolute inset-[-20%] z-0"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: cfg.transition_duration / 1000 }}
+        >
+          <img src={currentSlide.image} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
         </motion.div>
       </AnimatePresence>
 
+      {/* 3D Slides carousel */}
+      <div className="absolute inset-0 flex items-center justify-center z-10" style={{ perspective: "1000px" }}>
+        {slides.length >= 3 && <SlideCard slide={prevSlide} state="prev" />}
+        <SlideCard slide={currentSlide} state="current" />
+        {slides.length >= 2 && <SlideCard slide={nextSlide} state="next" />}
+      </div>
+
+      {/* Text overlay */}
+      <div className="absolute inset-0 z-20 pointer-events-none flex items-end pb-14 md:pb-8">
+        <div className="container mx-auto px-4 md:px-6 lg:px-12 pointer-events-auto">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`text-${currentSlide.id}`}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="max-w-lg"
+            >
+              {subtitleEl(currentSlide.subtitle)}
+              <h1 className="text-2xl md:text-5xl lg:text-6xl font-bold font-display mb-2 md:mb-4 leading-tight text-white drop-shadow-lg">
+                {currentSlide.title}
+              </h1>
+              {currentSlide.description && (
+                <p className="text-sm md:text-lg text-white/80 mb-4 md:mb-6 max-w-md line-clamp-2 md:line-clamp-none drop-shadow">
+                  {currentSlide.description}
+                </p>
+              )}
+              {currentSlide.cta && (
+                <motion.a
+                  href={currentSlide.ctaLink}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => trackClick("slider_cta", currentSlide.id, "/home", { cta_text: currentSlide.cta, cta_link: currentSlide.ctaLink })}
+                  className={`inline-flex items-center btn-pill font-semibold text-sm md:text-lg px-5 md:px-8 py-2 md:py-3 ${ctaClasses[cfg.cta_style] || ctaClasses.gradient}`}
+                >
+                  {currentSlide.cta}
+                </motion.a>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Smoky mist overlays */}
+      <div className="absolute inset-0 pointer-events-none z-15" style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.1) 35%, transparent 65%)" }} />
+
+      {/* Navigation controls */}
       {(cfg.show_arrows || cfg.show_dots) && slides.length > 1 && (
-        <div className="absolute bottom-2 md:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 z-10">
+        <div className="absolute bottom-2 md:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 z-30">
           {cfg.show_arrows && <button onClick={prev} className="glass rounded-full p-2 text-foreground hover:text-primary transition-colors"><ChevronLeft className="w-5 h-5" /></button>}
           {cfg.show_dots && <div className="flex gap-2">{slides.map((_, i) => renderDot(i))}</div>}
           {cfg.show_arrows && <button onClick={next} className="glass rounded-full p-2 text-foreground hover:text-primary transition-colors"><ChevronRight className="w-5 h-5" /></button>}
