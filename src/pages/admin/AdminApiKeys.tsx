@@ -144,7 +144,7 @@ const AdminApiKeys = () => {
         <Shield className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
         <div>
           <p className="text-sm font-medium text-foreground">Security Notice</p>
-          <p className="text-xs text-muted-foreground">API keys are stored encrypted. For production use, consider using Supabase secrets for sensitive keys.</p>
+          <p className="text-xs text-muted-foreground">API keys stored here are protected by admin-only database access. For maximum security, store sensitive keys as Supabase Edge Function Secrets instead.</p>
         </div>
       </div>
 
