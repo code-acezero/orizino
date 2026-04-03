@@ -354,47 +354,33 @@
   box-shadow: -1px -10px 0 0 hsl(var(--background));
 }
 
-/* ── 3D Parallax Slider ── */
-:root {
-  --slide-width: min(25vw, 300px);
-  --slide-aspect: 2 / 3;
+/* ── Parallax Slider ── */
+.parallax-slider-root {
+  background: hsl(var(--background));
 }
 
-@media (max-width: 768px) {
-  :root {
-    --slide-width: 65vw;
-    --slide-aspect: 3 / 4;
-  }
+.parallax-overlay {
+  background: linear-gradient(
+    to right,
+    hsl(0 0% 0% / 0.7) 0%,
+    hsl(0 0% 0% / 0.4) 40%,
+    hsl(0 0% 0% / 0.1) 70%,
+    transparent 100%
+  ),
+  linear-gradient(
+    to top,
+    hsl(0 0% 0% / 0.6) 0%,
+    transparent 50%
+  );
 }
 
-.parallax-slide[data-state="current"] {
-  --slide-scale: 1.2;
-  --slide-tx: 0px;
-  --slide-rotY: 0deg;
-}
-.parallax-slide[data-state="next"] {
-  --slide-tx: calc(var(--slide-width) * 1.07);
-  --slide-rotY: -45deg;
-  --slide-scale: 1;
-}
-.parallax-slide[data-state="prev"] {
-  --slide-tx: calc(-1 * var(--slide-width) * 1.07);
-  --slide-rotY: 45deg;
-  --slide-scale: 1;
+@keyframes ken-burns {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.08); }
 }
 
-@media (max-width: 768px) {
-  .parallax-slide[data-state="next"] {
-    --slide-rotY: -25deg;
-    --slide-tx: calc(var(--slide-width) * 1.15);
-  }
-  .parallax-slide[data-state="prev"] {
-    --slide-rotY: 25deg;
-    --slide-tx: calc(-1 * var(--slide-width) * 1.15);
-  }
-  .parallax-slide[data-state="current"] {
-    --slide-scale: 1.1;
-  }
+.parallax-ken-burns {
+  animation: ken-burns 8s ease-out forwards;
 }
 
 /* Slide-up animation for categories */
