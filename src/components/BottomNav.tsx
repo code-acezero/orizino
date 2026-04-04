@@ -141,7 +141,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
             {/* Liquid indicator ball */}
             <div
               className="bottom-nav-indicator"
-              style={{ transform: activeIndex >= 0 ? `translateX(calc(70px * ${activeIndex}))` : "translateX(-999px)" }}
+              style={{ transform: activeIndex >= 0 ? `translateX(calc(60px * ${activeIndex}))` : "translateX(-999px)" }}
             />
           </ul>
         </div>

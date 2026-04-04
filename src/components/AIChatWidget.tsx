@@ -28,6 +28,43 @@ const BubbleParticle = ({ delay, size, x, y, duration }: { delay: number; size: 
   />
 );
 
+/** Hook: hide while scrolling, show at top/bottom or when idle */
+function useScrollVisibility() {
+  const [visible, setVisible] = useState(true);
+  const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+
+    const onScroll = () => {
+      const y = window.scrollY;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const atTop = y <= 10;
+      const atBottom = y >= maxScroll - 10;
+
+      if (atTop || atBottom) {
+        setVisible(true);
+      } else if (Math.abs(y - lastY) > 3) {
+        setVisible(false);
+      }
+
+      lastY = y;
+
+      // Show again after scroll stops
+      if (scrollTimer.current) clearTimeout(scrollTimer.current);
+      scrollTimer.current = setTimeout(() => setVisible(true), 800);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (scrollTimer.current) clearTimeout(scrollTimer.current);
+    };
+  }, []);
+
+  return visible;
+}
+
 const AIChatWidget: React.FC = () => {
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -39,6 +76,7 @@ const AIChatWidget: React.FC = () => {
   const [liveMode, setLiveMode] = useState(false);
   const [liveConvId, setLiveConvId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollVisible = useScrollVisibility();
 
   const isAdminPage = location.pathname.startsWith("/admin");
   const isLandingPage = location.pathname === "/";
@@ -172,15 +210,18 @@ const AIChatWidget: React.FC = () => {
 
   if (isAdminPage || isLandingPage || !isEnabled) return null;
 
+  // When chat is open, always show; when closed, respect scroll visibility
+  const showMascot = !open && scrollVisible;
+
   return (
     <>
-      {/* Floating wolf mascot button — no container, just the mascot with effects */}
+      {/* Floating wolf mascot button — hides while scrolling */}
       <AnimatePresence>
-        {!open && (
+        {showMascot && (
           <motion.button
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
-            exit={{ scale: 0, rotate: 180 }}
+            exit={{ scale: 0, rotate: 180, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             onClick={() => setOpen(true)}
             className="fixed bottom-20 lg:bottom-6 right-4 z-50 group"
@@ -200,7 +241,7 @@ const AIChatWidget: React.FC = () => {
                 transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut", delay: 0.5 }}
               />
 
-              {/* Wolf mascot — no background, no eye glow */}
+              {/* Wolf mascot */}
               <div className="relative w-16 h-16 flex items-center justify-center">
                 <img
                   src={wolfMascot}
