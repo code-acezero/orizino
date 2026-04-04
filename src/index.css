@@ -302,30 +302,50 @@
 .bottom-nav-text {
   position: absolute;
   color: hsl(var(--primary));
-  font-weight: 500;
-  font-size: 0.7em;
+  font-weight: 600;
+  font-size: 0.6em;
   letter-spacing: 0.05em;
-  transition: opacity 0.5s, transform 0.5s;
+  transition: opacity 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55),
+              transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(16px) scale(0.8);
 }
 
 .bottom-nav-item.active .bottom-nav-text {
   opacity: 1;
-  transform: translateY(10px);
+  transform: translateY(8px) scale(1);
 }
 
-/* The liquid indicator ball */
+/* The liquid indicator ball — smaller with water-drop morphing */
 .bottom-nav-indicator {
   position: absolute;
-  top: -50%;
-  width: 70px;
-  height: 70px;
+  top: -44%;
+  width: 52px;
+  height: 52px;
   background: hsl(var(--primary));
   border-radius: 50%;
-  border: 6px solid hsl(var(--background));
-  transition: transform 0.5s ease;
-  box-shadow: 0 0 12px hsl(var(--primary) / 0.4);
+  border: 5px solid hsl(var(--background));
+  transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  box-shadow: 0 0 14px hsl(var(--primary) / 0.5),
+              0 4px 20px hsl(var(--primary) / 0.3);
+  animation: liquid-idle 3s ease-in-out infinite;
+}
+
+/* Liquid water-drop morphing animation */
+@keyframes liquid-idle {
+  0%, 100% {
+    border-radius: 50%;
+    transform: var(--indicator-x, translateX(0));
+  }
+  25% {
+    border-radius: 47% 53% 52% 48% / 48% 46% 54% 52%;
+  }
+  50% {
+    border-radius: 53% 47% 48% 52% / 52% 54% 46% 48%;
+  }
+  75% {
+    border-radius: 48% 52% 53% 47% / 46% 48% 52% 54%;
+  }
 }
 
 /* Left curve cutout */
@@ -333,12 +353,12 @@
   content: '';
   position: absolute;
   top: 50%;
-  left: -22px;
-  width: 20px;
-  height: 20px;
+  left: -18px;
+  width: 18px;
+  height: 18px;
   background: transparent;
-  border-top-right-radius: 20px;
-  box-shadow: 1px -10px 0 0 hsl(var(--background));
+  border-top-right-radius: 18px;
+  box-shadow: 1px -8px 0 0 hsl(var(--background));
 }
 
 /* Right curve cutout */
@@ -346,12 +366,12 @@
   content: '';
   position: absolute;
   top: 50%;
-  right: -22px;
-  width: 20px;
-  height: 20px;
+  right: -18px;
+  width: 18px;
+  height: 18px;
   background: transparent;
-  border-top-left-radius: 20px;
-  box-shadow: -1px -10px 0 0 hsl(var(--background));
+  border-top-left-radius: 18px;
+  box-shadow: -1px -8px 0 0 hsl(var(--background));
 }
 
 /* ── Parallax Slider ── */
