@@ -717,7 +717,7 @@ const AdminShowcase = () => {
             <Card className="glass">
               <CardHeader>
                 <CardTitle className="text-lg">Visual Effects</CardTitle>
-                <CardDescription>Parallax and image effects</CardDescription>
+                <CardDescription>Parallax, particles, and image effects</CardDescription>
               </CardHeader>
               <CardContent className="space-y-5">
                 <div className="flex items-center justify-between">
@@ -728,6 +728,30 @@ const AdminShowcase = () => {
                   <Label>Parallax Intensity: {config.parallax_intensity}%</Label>
                   <Slider value={[config.parallax_intensity]} onValueChange={([v]) => setConfig({ ...config, parallax_intensity: v })} min={0} max={50} step={5} className="mt-2" />
                 </div>
+                <div className="flex items-center justify-between">
+                  <Label>Vignette Border</Label>
+                  <Switch checked={config.show_vignette} onCheckedChange={(v) => setConfig({ ...config, show_vignette: v })} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>Dust Particles</Label>
+                  <Switch checked={config.show_particles} onCheckedChange={(v) => setConfig({ ...config, show_particles: v })} />
+                </div>
+                {config.show_particles && (
+                  <>
+                    <div>
+                      <Label>Particle Count: {config.particle_count}</Label>
+                      <Slider value={[config.particle_count]} onValueChange={([v]) => setConfig({ ...config, particle_count: v })} min={10} max={120} step={5} className="mt-2" />
+                    </div>
+                    <div>
+                      <Label>Particle Speed: {config.particle_speed}x</Label>
+                      <Slider value={[config.particle_speed]} onValueChange={([v]) => setConfig({ ...config, particle_speed: v })} min={0.2} max={3} step={0.2} className="mt-2" />
+                    </div>
+                    <div>
+                      <Label>Particle Size: {config.particle_size}x</Label>
+                      <Slider value={[config.particle_size]} onValueChange={([v]) => setConfig({ ...config, particle_size: v })} min={0.5} max={3} step={0.25} className="mt-2" />
+                    </div>
+                  </>
+                )}
                 <div>
                   <Label>Slide Gap</Label>
                   <Select value={config.slide_gap} onValueChange={(v) => setConfig({ ...config, slide_gap: v })}>
