@@ -28,6 +28,11 @@ interface ShowcaseConfig {
   parallax_intensity: number;
   content_animation: string;
   slide_gap: string;
+  particle_count: number;
+  particle_speed: number;
+  particle_size: number;
+  show_particles: boolean;
+  show_vignette: boolean;
 }
 
 const defaultConfig: ShowcaseConfig = {
@@ -52,6 +57,11 @@ const defaultConfig: ShowcaseConfig = {
   parallax_intensity: 20,
   content_animation: "slide-up",
   slide_gap: "0",
+  particle_count: 40,
+  particle_speed: 1,
+  particle_size: 1,
+  show_particles: true,
+  show_vignette: true,
 };
 
 const ParallaxSlider: React.FC = () => {
@@ -63,11 +73,20 @@ const ParallaxSlider: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollY = useMotionValue(0);
 
-  // Mouse-follow tilt
+  // ── Mouse position (0-1 range, 0.5 = center) ──
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
-  const tiltX = useSpring(useTransform(mouseY, [0, 1], [2, -2]), { stiffness: 150, damping: 20 });
-  const tiltY = useSpring(useTransform(mouseX, [0, 1], [-3, 3]), { stiffness: 150, damping: 20 });
+
+  // True parallax: image layer moves OPPOSITE to mouse, text moves WITH mouse (less)
+  // This creates the depth illusion like a real 3D parallax slider
+  const imgX = useSpring(useTransform(mouseX, [0, 1], [20, -20]), { stiffness: 80, damping: 25 });
+  const imgY = useSpring(useTransform(mouseY, [0, 1], [15, -15]), { stiffness: 80, damping: 25 });
+  const textX = useSpring(useTransform(mouseX, [0, 1], [-8, 8]), { stiffness: 120, damping: 30 });
+  const textY = useSpring(useTransform(mouseY, [0, 1], [-5, 5]), { stiffness: 120, damping: 30 });
+
+  // Subtle 3D rotation on the whole container
+  const rotateX = useSpring(useTransform(mouseY, [0, 1], [1.5, -1.5]), { stiffness: 100, damping: 25 });
+  const rotateY = useSpring(useTransform(mouseX, [0, 1], [-2, 2]), { stiffness: 100, damping: 25 });
 
   const onMouseMove = useCallback((e: React.MouseEvent) => {
     if (!containerRef.current) return;
@@ -93,7 +112,7 @@ const ParallaxSlider: React.FC = () => {
     return () => ro.disconnect();
   }, []);
 
-  // Scroll-based parallax: image translates slightly as user scrolls
+  // Scroll-based parallax
   useEffect(() => {
     const handleScroll = () => {
       if (!containerRef.current) return;
@@ -108,8 +127,8 @@ const ParallaxSlider: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [scrollY]);
 
-  const parallaxY = useTransform(scrollY, [300, -300], [-30, 30]);
-  const smoothParallaxY = useSpring(parallaxY, { stiffness: 100, damping: 30 });
+  const parallaxScrollY = useTransform(scrollY, [300, -300], [-25, 25]);
+  const smoothScrollY = useSpring(parallaxScrollY, { stiffness: 100, damping: 30 });
 
   const { data: dbSlides = [] } = useQuery({
     queryKey: ["showcase-slides"],
@@ -156,20 +175,11 @@ const ParallaxSlider: React.FC = () => {
     return () => clearInterval(timer);
   }, [slides.length, cfg.autoplay, cfg.autoplay_speed, paused, wrap]);
 
-  const goPrev = useCallback(() => {
-    setDirection(-1);
-    setCurrent((c) => wrap(c - 1));
-  }, [wrap]);
+  const goPrev = useCallback(() => { setDirection(-1); setCurrent((c) => wrap(c - 1)); }, [wrap]);
+  const goNext = useCallback(() => { setDirection(1); setCurrent((c) => wrap(c + 1)); }, [wrap]);
 
-  const goNext = useCallback(() => {
-    setDirection(1);
-    setCurrent((c) => wrap(c + 1));
-  }, [wrap]);
-
-  // Preload images
-  useEffect(() => {
-    slides.forEach((s) => { const img = new Image(); img.src = s.image; });
-  }, [slides]);
+  // Preload
+  useEffect(() => { slides.forEach((s) => { const img = new Image(); img.src = s.image; }); }, [slides]);
 
   // Touch swipe
   const onTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.changedTouches[0].screenX; };
@@ -190,25 +200,21 @@ const ParallaxSlider: React.FC = () => {
   }, [goPrev, goNext]);
 
   if (slides.length === 0) return null;
-
   const currentSlide = slides[current];
   if (!currentSlide) return null;
 
   const dur = cfg.transition_duration / 1000;
 
-  // 3D depth transition: slides rotate in from the side with perspective
   const imageVariants = {
     enter: (d: number) => ({
       x: d > 0 ? "6%" : "-6%",
       scale: 1.05,
-      rotateY: d > 0 ? -8 : 8,
       opacity: 0,
-      filter: "brightness(0.6)",
+      filter: "brightness(0.5)",
     }),
     center: {
       x: "0%",
       scale: 1,
-      rotateY: 0,
       opacity: 1,
       filter: "brightness(1)",
       transition: { duration: dur, ease: [0.25, 0.46, 0.45, 0.94] as const },
@@ -216,25 +222,19 @@ const ParallaxSlider: React.FC = () => {
     exit: (d: number) => ({
       x: d > 0 ? "-6%" : "6%",
       scale: 0.97,
-      rotateY: d > 0 ? 6 : -6,
       opacity: 0,
-      filter: "brightness(0.6)",
+      filter: "brightness(0.5)",
       transition: { duration: dur * 0.7, ease: [0.25, 0.46, 0.45, 0.94] as const },
     }),
   };
 
   const textVariants = {
-    enter: { opacity: 0, y: 40 },
+    enter: { opacity: 0, y: 40, scale: 0.97 },
     center: {
-      opacity: 1,
-      y: 0,
+      opacity: 1, y: 0, scale: 1,
       transition: { duration: 0.6, delay: dur * 0.4, ease: "easeOut" as const },
     },
-    exit: {
-      opacity: 0,
-      y: -20,
-      transition: { duration: 0.3 },
-    },
+    exit: { opacity: 0, y: -20, scale: 0.98, transition: { duration: 0.3 } },
   };
 
   const ctaClasses: Record<string, string> = {
@@ -274,17 +274,25 @@ const ParallaxSlider: React.FC = () => {
   };
 
   return (
-    <div
+    <motion.div
       ref={containerRef}
       className="parallax-slider-root relative w-full overflow-hidden"
-      style={{ height: cfg.height, minHeight: "280px", maxHeight: "600px", perspective: "1200px" }}
+      style={{
+        height: cfg.height,
+        minHeight: "280px",
+        maxHeight: "600px",
+        perspective: "1000px",
+        rotateX,
+        rotateY,
+        transformStyle: "preserve-3d",
+      }}
       onMouseEnter={() => cfg.pause_on_hover && setPaused(true)}
       onMouseLeave={onMouseLeaveReset}
       onMouseMove={onMouseMove}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      {/* ── Full-width slide images with 3D tilt + scroll parallax ── */}
+      {/* ── Background image layer (moves opposite to mouse = parallax depth) ── */}
       <AnimatePresence initial={false} custom={direction} mode="sync">
         <motion.div
           key={currentSlide.id}
@@ -293,19 +301,14 @@ const ParallaxSlider: React.FC = () => {
           initial="enter"
           animate="center"
           exit="exit"
-          className="absolute inset-0 w-full h-full"
-          style={{
-            transformStyle: "preserve-3d",
-            transformOrigin: "center center",
-            rotateX: tiltX,
-            rotateY: tiltY,
-          }}
+          className="absolute inset-[-30px] w-[calc(100%+60px)] h-[calc(100%+60px)]"
+          style={{ x: imgX, y: imgY }}
         >
-          <motion.div className="w-full h-full" style={{ y: smoothParallaxY }}>
+          <motion.div className="w-full h-full" style={{ y: smoothScrollY }}>
             <img
               src={currentSlide.image}
               alt={currentSlide.title}
-              className={`w-full h-full object-cover scale-110 ${cfg.ken_burns ? "parallax-ken-burns" : ""}`}
+              className={`w-full h-full object-cover ${cfg.ken_burns ? "parallax-ken-burns" : ""}`}
               loading="eager"
             />
           </motion.div>
@@ -313,13 +316,27 @@ const ParallaxSlider: React.FC = () => {
       </AnimatePresence>
 
       {/* ── Particle / dust overlay ── */}
-      <ParticleOverlay width={containerSize.w} height={containerSize.h} />
+      {cfg.show_particles && (
+        <ParticleOverlay
+          width={containerSize.w}
+          height={containerSize.h}
+          count={cfg.particle_count}
+          speed={cfg.particle_speed}
+          size={cfg.particle_size}
+        />
+      )}
+
+      {/* ── Vignette ── */}
+      {cfg.show_vignette && <div className="absolute inset-0 z-[12] pointer-events-none parallax-vignette" />}
 
       {/* ── Overlay gradient ── */}
       <div className="absolute inset-0 z-10 pointer-events-none parallax-overlay" />
 
-      {/* ── Text content ── */}
-      <div className="absolute inset-0 z-20 flex items-end">
+      {/* ── Text layer (moves slightly WITH mouse = foreground depth) ── */}
+      <motion.div
+        className="absolute inset-0 z-20 flex items-end"
+        style={{ x: textX, y: textY, transformStyle: "preserve-3d" }}
+      >
         <div className="container mx-auto px-4 md:px-8 lg:px-16 pb-20 md:pb-16">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
@@ -353,18 +370,14 @@ const ParallaxSlider: React.FC = () => {
             </motion.div>
           </AnimatePresence>
         </div>
-      </div>
+      </motion.div>
 
       {/* ── Navigation controls ── */}
       {slides.length > 1 && (cfg.show_arrows || cfg.show_dots) && (
         <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 z-30">
           {cfg.show_arrows && (
-            <motion.button
-              onClick={goPrev}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="w-10 h-10 rounded-full bg-foreground/10 backdrop-blur-sm border border-foreground/10 flex items-center justify-center text-white hover:bg-foreground/20 transition-colors"
-            >
+            <motion.button onClick={goPrev} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+              className="w-10 h-10 rounded-full bg-foreground/10 backdrop-blur-sm border border-foreground/10 flex items-center justify-center text-white hover:bg-foreground/20 transition-colors">
               <ChevronLeft className="w-5 h-5" />
             </motion.button>
           )}
@@ -374,31 +387,14 @@ const ParallaxSlider: React.FC = () => {
             </div>
           )}
           {cfg.show_arrows && (
-            <motion.button
-              onClick={goNext}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="w-10 h-10 rounded-full bg-foreground/10 backdrop-blur-sm border border-foreground/10 flex items-center justify-center text-white hover:bg-foreground/20 transition-colors"
-            >
+            <motion.button onClick={goNext} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+              className="w-10 h-10 rounded-full bg-foreground/10 backdrop-blur-sm border border-foreground/10 flex items-center justify-center text-white hover:bg-foreground/20 transition-colors">
               <ChevronRight className="w-5 h-5" />
             </motion.button>
           )}
         </div>
       )}
-
-      {/* ── Progress bar ── */}
-      {cfg.autoplay && slides.length > 1 && !paused && (
-        <div className="absolute bottom-0 left-0 right-0 z-30 h-0.5 bg-foreground/10">
-          <motion.div
-            key={`progress-${current}`}
-            className="h-full bg-primary"
-            initial={{ width: "0%" }}
-            animate={{ width: "100%" }}
-            transition={{ duration: cfg.autoplay_speed / 1000, ease: "linear" }}
-          />
-        </div>
-      )}
-    </div>
+    </motion.div>
   );
 };
 
