@@ -88,12 +88,14 @@ const ParallaxSlider: React.FC = () => {
   const rotateX = useSpring(useTransform(mouseY, [0, 1], [1.5, -1.5]), { stiffness: 100, damping: 25 });
   const rotateY = useSpring(useTransform(mouseX, [0, 1], [-2, 2]), { stiffness: 100, damping: 25 });
 
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
   const onMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!containerRef.current) return;
+    if (isMobile || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     mouseX.set((e.clientX - rect.left) / rect.width);
     mouseY.set((e.clientY - rect.top) / rect.height);
-  }, [mouseX, mouseY]);
+  }, [mouseX, mouseY, isMobile]);
 
   const onMouseLeaveReset = useCallback(() => {
     setPaused(false);
