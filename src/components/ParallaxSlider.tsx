@@ -58,6 +58,27 @@ const ParallaxSlider: React.FC = () => {
   const [direction, setDirection] = useState(0);
   const [paused, setPaused] = useState(false);
   const touchStartX = useRef(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollY = useMotionValue(0);
+
+  // Scroll-based parallax: image translates slightly as user scrolls
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const viewH = window.innerHeight;
+      // Only update when slider is in viewport
+      if (rect.bottom > 0 && rect.top < viewH) {
+        scrollY.set(rect.top);
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [scrollY]);
+
+  const parallaxY = useTransform(scrollY, [300, -300], [-30, 30]);
+  const smoothParallaxY = useSpring(parallaxY, { stiffness: 100, damping: 30 });
 
   const { data: dbSlides = [] } = useQuery({
     queryKey: ["showcase-slides"],
