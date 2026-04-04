@@ -256,7 +256,7 @@
 
 .bottom-nav-list {
   display: flex;
-  width: 350px;
+  width: 300px;
   margin: 0 auto;
   position: relative;
   list-style: none;
@@ -265,8 +265,8 @@
 
 .bottom-nav-item {
   position: relative;
-  width: 70px;
-  height: 70px;
+  width: 60px;
+  height: 65px;
   z-index: 1;
 }
 
@@ -289,13 +289,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 75px;
-  transition: transform 0.5s ease, color 0.3s;
+  line-height: 65px;
+  transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55), color 0.3s;
   color: hsl(var(--muted-foreground));
 }
 
 .bottom-nav-item.active .bottom-nav-icon {
-  transform: translateY(-32px);
+  transform: translateY(-28px);
   color: hsl(var(--primary-foreground));
 }
 
