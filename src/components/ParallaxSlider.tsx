@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,6 +58,27 @@ const ParallaxSlider: React.FC = () => {
   const [direction, setDirection] = useState(0);
   const [paused, setPaused] = useState(false);
   const touchStartX = useRef(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollY = useMotionValue(0);
+
+  // Scroll-based parallax: image translates slightly as user scrolls
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const viewH = window.innerHeight;
+      // Only update when slider is in viewport
+      if (rect.bottom > 0 && rect.top < viewH) {
+        scrollY.set(rect.top);
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [scrollY]);
+
+  const parallaxY = useTransform(scrollY, [300, -300], [-30, 30]);
+  const smoothParallaxY = useSpring(parallaxY, { stiffness: 100, damping: 30 });
 
   const { data: dbSlides = [] } = useQuery({
     queryKey: ["showcase-slides"],
@@ -144,22 +165,29 @@ const ParallaxSlider: React.FC = () => {
 
   const dur = cfg.transition_duration / 1000;
 
+  // 3D depth transition: slides rotate in from the side with perspective
   const imageVariants = {
     enter: (d: number) => ({
-      x: d > 0 ? "8%" : "-8%",
-      scale: 1.1,
+      x: d > 0 ? "6%" : "-6%",
+      scale: 1.05,
+      rotateY: d > 0 ? -8 : 8,
       opacity: 0,
+      filter: "brightness(0.6)",
     }),
     center: {
       x: "0%",
       scale: 1,
+      rotateY: 0,
       opacity: 1,
+      filter: "brightness(1)",
       transition: { duration: dur, ease: [0.25, 0.46, 0.45, 0.94] as const },
     },
     exit: (d: number) => ({
-      x: d > 0 ? "-8%" : "8%",
-      scale: 1.05,
+      x: d > 0 ? "-6%" : "6%",
+      scale: 0.97,
+      rotateY: d > 0 ? 6 : -6,
       opacity: 0,
+      filter: "brightness(0.6)",
       transition: { duration: dur * 0.7, ease: [0.25, 0.46, 0.45, 0.94] as const },
     }),
   };
@@ -216,14 +244,15 @@ const ParallaxSlider: React.FC = () => {
 
   return (
     <div
+      ref={containerRef}
       className="parallax-slider-root relative w-full overflow-hidden"
-      style={{ height: cfg.height, minHeight: "280px", maxHeight: "600px" }}
+      style={{ height: cfg.height, minHeight: "280px", maxHeight: "600px", perspective: "1200px" }}
       onMouseEnter={() => cfg.pause_on_hover && setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      {/* ── Full-width slide images ── */}
+      {/* ── Full-width slide images with 3D + scroll parallax ── */}
       <AnimatePresence initial={false} custom={direction} mode="sync">
         <motion.div
           key={currentSlide.id}
@@ -233,13 +262,16 @@ const ParallaxSlider: React.FC = () => {
           animate="center"
           exit="exit"
           className="absolute inset-0 w-full h-full"
+          style={{ transformStyle: "preserve-3d", transformOrigin: "center center" }}
         >
-          <img
-            src={currentSlide.image}
-            alt={currentSlide.title}
-            className={`w-full h-full object-cover ${cfg.ken_burns ? "parallax-ken-burns" : ""}`}
-            loading="eager"
-          />
+          <motion.div className="w-full h-full" style={{ y: smoothParallaxY }}>
+            <img
+              src={currentSlide.image}
+              alt={currentSlide.title}
+              className={`w-full h-full object-cover scale-110 ${cfg.ken_burns ? "parallax-ken-burns" : ""}`}
+              loading="eager"
+            />
+          </motion.div>
         </motion.div>
       </AnimatePresence>
 
