@@ -165,22 +165,29 @@ const ParallaxSlider: React.FC = () => {
 
   const dur = cfg.transition_duration / 1000;
 
+  // 3D depth transition: slides rotate in from the side with perspective
   const imageVariants = {
     enter: (d: number) => ({
-      x: d > 0 ? "8%" : "-8%",
-      scale: 1.1,
+      x: d > 0 ? "6%" : "-6%",
+      scale: 1.05,
+      rotateY: d > 0 ? -8 : 8,
       opacity: 0,
+      filter: "brightness(0.6)",
     }),
     center: {
       x: "0%",
       scale: 1,
+      rotateY: 0,
       opacity: 1,
+      filter: "brightness(1)",
       transition: { duration: dur, ease: [0.25, 0.46, 0.45, 0.94] as const },
     },
     exit: (d: number) => ({
-      x: d > 0 ? "-8%" : "8%",
-      scale: 1.05,
+      x: d > 0 ? "-6%" : "6%",
+      scale: 0.97,
+      rotateY: d > 0 ? 6 : -6,
       opacity: 0,
+      filter: "brightness(0.6)",
       transition: { duration: dur * 0.7, ease: [0.25, 0.46, 0.45, 0.94] as const },
     }),
   };
