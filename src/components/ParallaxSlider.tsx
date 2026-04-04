@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { trackClick } from "@/hooks/use-analytics";
+import ParticleOverlay from "@/components/slider/ParticleOverlay";
 
 interface ShowcaseConfig {
   autoplay_speed: number;
