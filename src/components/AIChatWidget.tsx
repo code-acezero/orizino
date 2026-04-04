@@ -97,14 +97,15 @@ const AIChatWidget: React.FC = () => {
   const avatarUrl = aiConfig?.avatar_url || "";
   const avatarEmoji = aiConfig?.avatar_emoji || "";
 
-  const AgentAvatar = ({ size = "w-8 h-8", iconSize = "w-4 h-4" }: { size?: string; iconSize?: string }) =>
+  const AgentAvatar = React.memo(({ size = "w-8 h-8", iconSize = "w-4 h-4" }: { size?: string; iconSize?: string }) =>
     avatarType === "image" && avatarUrl ? (
-      <img src={avatarUrl} alt={agentName} className={`${size} rounded-full object-cover`} />
+      <img src={avatarUrl} alt={agentName} className={`${size} rounded-full object-cover`} loading="eager" decoding="async" />
     ) : (
       <div className={`${size} rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center`}>
         {avatarEmoji ? <span className={iconSize === "w-4 h-4" ? "text-base" : "text-sm"}>{avatarEmoji}</span> : <Bot className={`${iconSize} text-primary`} />}
       </div>
-    );
+    )
+  );
 
   const { data: liveMessages = [] } = useQuery({
     queryKey: ["live-support-messages", liveConvId],
