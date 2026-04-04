@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { trackClick } from "@/hooks/use-analytics";
+import ParticleOverlay from "@/components/slider/ParticleOverlay";
 
 interface ShowcaseConfig {
   autoplay_speed: number;
@@ -57,9 +58,40 @@ const ParallaxSlider: React.FC = () => {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
   const touchStartX = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollY = useMotionValue(0);
+
+  // Mouse-follow tilt
+  const mouseX = useMotionValue(0.5);
+  const mouseY = useMotionValue(0.5);
+  const tiltX = useSpring(useTransform(mouseY, [0, 1], [2, -2]), { stiffness: 150, damping: 20 });
+  const tiltY = useSpring(useTransform(mouseX, [0, 1], [-3, 3]), { stiffness: 150, damping: 20 });
+
+  const onMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    mouseX.set((e.clientX - rect.left) / rect.width);
+    mouseY.set((e.clientY - rect.top) / rect.height);
+  }, [mouseX, mouseY]);
+
+  const onMouseLeaveReset = useCallback(() => {
+    setPaused(false);
+    mouseX.set(0.5);
+    mouseY.set(0.5);
+  }, [mouseX, mouseY]);
+
+  // Measure container for particle canvas
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setContainerSize({ w: entry.contentRect.width, h: entry.contentRect.height });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Scroll-based parallax: image translates slightly as user scrolls
   useEffect(() => {
@@ -67,7 +99,6 @@ const ParallaxSlider: React.FC = () => {
       if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
       const viewH = window.innerHeight;
-      // Only update when slider is in viewport
       if (rect.bottom > 0 && rect.top < viewH) {
         scrollY.set(rect.top);
       }
@@ -248,11 +279,12 @@ const ParallaxSlider: React.FC = () => {
       className="parallax-slider-root relative w-full overflow-hidden"
       style={{ height: cfg.height, minHeight: "280px", maxHeight: "600px", perspective: "1200px" }}
       onMouseEnter={() => cfg.pause_on_hover && setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      onMouseLeave={onMouseLeaveReset}
+      onMouseMove={onMouseMove}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      {/* ── Full-width slide images with 3D + scroll parallax ── */}
+      {/* ── Full-width slide images with 3D tilt + scroll parallax ── */}
       <AnimatePresence initial={false} custom={direction} mode="sync">
         <motion.div
           key={currentSlide.id}
@@ -262,7 +294,12 @@ const ParallaxSlider: React.FC = () => {
           animate="center"
           exit="exit"
           className="absolute inset-0 w-full h-full"
-          style={{ transformStyle: "preserve-3d", transformOrigin: "center center" }}
+          style={{
+            transformStyle: "preserve-3d",
+            transformOrigin: "center center",
+            rotateX: tiltX,
+            rotateY: tiltY,
+          }}
         >
           <motion.div className="w-full h-full" style={{ y: smoothParallaxY }}>
             <img
@@ -274,6 +311,9 @@ const ParallaxSlider: React.FC = () => {
           </motion.div>
         </motion.div>
       </AnimatePresence>
+
+      {/* ── Particle / dust overlay ── */}
+      <ParticleOverlay width={containerSize.w} height={containerSize.h} />
 
       {/* ── Overlay gradient ── */}
       <div className="absolute inset-0 z-10 pointer-events-none parallax-overlay" />
