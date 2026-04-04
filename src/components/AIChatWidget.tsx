@@ -87,7 +87,8 @@ const AIChatWidget: React.FC = () => {
       const { data } = await supabase.from("site_settings").select("value").eq("key", "ai_agent_config").maybeSingle();
       return (data?.value as any) || {};
     },
-    staleTime: 60_000,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
   const isEnabled = aiConfig?.is_enabled !== false;

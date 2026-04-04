@@ -57,7 +57,8 @@ const Navbar: React.FC = () => {
       return data;
     },
     enabled: !!user,
-    staleTime: 60_000,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
   const logoShapeClass = logoStyle === "square" ? "rounded-lg" : logoStyle === "circle" ? "rounded-full" : logoStyle === "shield" ? "rounded-lg [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]" : logoStyle === "pill" ? "rounded-full px-1" : "rounded-full";
