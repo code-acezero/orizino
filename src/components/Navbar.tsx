@@ -57,21 +57,22 @@ const Navbar: React.FC = () => {
       return data;
     },
     enabled: !!user,
-    staleTime: 60_000,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
   const logoShapeClass = logoStyle === "square" ? "rounded-lg" : logoStyle === "circle" ? "rounded-full" : logoStyle === "shield" ? "rounded-lg [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]" : logoStyle === "pill" ? "rounded-full px-1" : "rounded-full";
 
-  const UserAvatar = ({ className = "w-9 h-9" }: { className?: string }) => {
+  const UserAvatar = React.memo(({ className = "w-9 h-9" }: { className?: string }) => {
     if (userProfile?.avatar_url) {
-      return <img src={userProfile.avatar_url} alt="" className={`${className} rounded-full object-cover`} />;
+      return <img src={userProfile.avatar_url} alt="" className={`${className} rounded-full object-cover`} loading="eager" decoding="async" />;
     }
     return (
       <div className={`${className} rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-sm`}>
         {userProfile?.full_name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "?"}
       </div>
     );
-  };
+  });
 
   const { data: dbCategories = [] } = useQuery({
     queryKey: ["nav-categories"],

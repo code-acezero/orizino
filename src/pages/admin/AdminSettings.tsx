@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/app-toast";
-import ImageUpload from "@/components/ImageUpload";
+
 import { ALL_CURRENCIES, type CurrencyConfig } from "@/contexts/CurrencyContext";
 import { DollarSign, Globe, Check, RefreshCw, Clock, Zap, PaintBucket, Search } from "lucide-react";
 import SiteCustomizer from "@/components/admin/SiteCustomizer";
@@ -218,7 +218,7 @@ const AdminSettings = () => {
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="commerce">Commerce</TabsTrigger>
           <TabsTrigger value="social">Social & Links</TabsTrigger>
-          <TabsTrigger value="branding">Branding</TabsTrigger>
+          
           <TabsTrigger value="theme">Site Theme</TabsTrigger>
           <TabsTrigger value="customizer" className="flex items-center gap-1">
             <PaintBucket className="w-3.5 h-3.5" /> Customizer
@@ -370,24 +370,6 @@ const AdminSettings = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="branding">
-          <Card className="glass">
-            <CardHeader><CardTitle>Branding</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label>Site Logo</Label>
-                <ImageUpload bucket="banners" folder="branding" value={form.logo_url} onUploaded={(url) => setForm({ ...form, logo_url: url })} />
-              </div>
-              <div>
-                <Label>Site Icon / Favicon</Label>
-                <ImageUpload bucket="banners" folder="branding" value={form.site_icon_url} onUploaded={(url) => setForm({ ...form, site_icon_url: url })} />
-              </div>
-              <Button className="w-full" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
-                {saveMutation.isPending ? "Saving..." : "Save Branding"}
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="theme">
           <Card className="glass">
