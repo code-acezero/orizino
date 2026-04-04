@@ -279,11 +279,12 @@ const ParallaxSlider: React.FC = () => {
       className="parallax-slider-root relative w-full overflow-hidden"
       style={{ height: cfg.height, minHeight: "280px", maxHeight: "600px", perspective: "1200px" }}
       onMouseEnter={() => cfg.pause_on_hover && setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      onMouseLeave={onMouseLeaveReset}
+      onMouseMove={onMouseMove}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      {/* ── Full-width slide images with 3D + scroll parallax ── */}
+      {/* ── Full-width slide images with 3D tilt + scroll parallax ── */}
       <AnimatePresence initial={false} custom={direction} mode="sync">
         <motion.div
           key={currentSlide.id}
@@ -293,7 +294,12 @@ const ParallaxSlider: React.FC = () => {
           animate="center"
           exit="exit"
           className="absolute inset-0 w-full h-full"
-          style={{ transformStyle: "preserve-3d", transformOrigin: "center center" }}
+          style={{
+            transformStyle: "preserve-3d",
+            transformOrigin: "center center",
+            rotateX: tiltX,
+            rotateY: tiltY,
+          }}
         >
           <motion.div className="w-full h-full" style={{ y: smoothParallaxY }}>
             <img
@@ -305,6 +311,9 @@ const ParallaxSlider: React.FC = () => {
           </motion.div>
         </motion.div>
       </AnimatePresence>
+
+      {/* ── Particle / dust overlay ── */}
+      <ParticleOverlay width={containerSize.w} height={containerSize.h} />
 
       {/* ── Overlay gradient ── */}
       <div className="absolute inset-0 z-10 pointer-events-none parallax-overlay" />
