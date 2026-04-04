@@ -218,7 +218,7 @@ const AdminSettings = () => {
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="commerce">Commerce</TabsTrigger>
           <TabsTrigger value="social">Social & Links</TabsTrigger>
-          <TabsTrigger value="branding">Branding</TabsTrigger>
+          
           <TabsTrigger value="theme">Site Theme</TabsTrigger>
           <TabsTrigger value="customizer" className="flex items-center gap-1">
             <PaintBucket className="w-3.5 h-3.5" /> Customizer
