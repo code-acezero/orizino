@@ -42,6 +42,11 @@ interface ShowcaseConfig {
   parallax_intensity: number;
   content_animation: string;
   slide_gap: string;
+  particle_count: number;
+  particle_speed: number;
+  particle_size: number;
+  show_particles: boolean;
+  show_vignette: boolean;
 }
 
 const defaultConfig: ShowcaseConfig = {
