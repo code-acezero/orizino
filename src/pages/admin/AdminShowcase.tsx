@@ -71,6 +71,11 @@ const defaultConfig: ShowcaseConfig = {
   parallax_intensity: 20,
   content_animation: "slide-up",
   slide_gap: "0",
+  particle_count: 40,
+  particle_speed: 1,
+  particle_size: 1,
+  show_particles: true,
+  show_vignette: true,
 };
 
 const emptySlide = {
