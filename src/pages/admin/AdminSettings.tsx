@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/app-toast";
-import ImageUpload from "@/components/ImageUpload";
+
 import { ALL_CURRENCIES, type CurrencyConfig } from "@/contexts/CurrencyContext";
 import { DollarSign, Globe, Check, RefreshCw, Clock, Zap, PaintBucket, Search } from "lucide-react";
 import SiteCustomizer from "@/components/admin/SiteCustomizer";
