@@ -244,14 +244,15 @@ const ParallaxSlider: React.FC = () => {
 
   return (
     <div
+      ref={containerRef}
       className="parallax-slider-root relative w-full overflow-hidden"
-      style={{ height: cfg.height, minHeight: "280px", maxHeight: "600px" }}
+      style={{ height: cfg.height, minHeight: "280px", maxHeight: "600px", perspective: "1200px" }}
       onMouseEnter={() => cfg.pause_on_hover && setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      {/* ── Full-width slide images ── */}
+      {/* ── Full-width slide images with 3D + scroll parallax ── */}
       <AnimatePresence initial={false} custom={direction} mode="sync">
         <motion.div
           key={currentSlide.id}
@@ -261,13 +262,16 @@ const ParallaxSlider: React.FC = () => {
           animate="center"
           exit="exit"
           className="absolute inset-0 w-full h-full"
+          style={{ transformStyle: "preserve-3d", transformOrigin: "center center" }}
         >
-          <img
-            src={currentSlide.image}
-            alt={currentSlide.title}
-            className={`w-full h-full object-cover ${cfg.ken_burns ? "parallax-ken-burns" : ""}`}
-            loading="eager"
-          />
+          <motion.div className="w-full h-full" style={{ y: smoothParallaxY }}>
+            <img
+              src={currentSlide.image}
+              alt={currentSlide.title}
+              className={`w-full h-full object-cover scale-110 ${cfg.ken_burns ? "parallax-ken-burns" : ""}`}
+              loading="eager"
+            />
+          </motion.div>
         </motion.div>
       </AnimatePresence>
 
