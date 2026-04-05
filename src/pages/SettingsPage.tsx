@@ -22,16 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const themes = [
-  { id: "default", label: "Cyber Emerald", color: "160 84% 45%" },
-  { id: "ocean", label: "Ocean Blue", color: "200 90% 50%" },
-  { id: "sunset", label: "Sunset Orange", color: "25 95% 55%" },
-  { id: "rose", label: "Rose Pink", color: "340 82% 55%" },
-  { id: "violet", label: "Royal Violet", color: "270 80% 60%" },
-  { id: "crimson", label: "Crimson Red", color: "0 85% 55%" },
-  { id: "gold", label: "Golden Hour", color: "45 90% 50%" },
-  { id: "mint", label: "Fresh Mint", color: "170 70% 45%" },
-];
+import { themePalettes } from "@/lib/theme-palettes";
 
 interface NotifPrefs {
   orders: boolean;
@@ -175,11 +166,15 @@ const SettingsPage: React.FC = () => {
                 </div>
                 <p className="text-xs text-muted-foreground">Customizes your profile page appearance</p>
                 <div className="grid grid-cols-2 gap-2">
-                  {themes.map((th) => (
+                  {themePalettes.map((th) => (
                     <button key={th.id} onClick={() => selectTheme(th.id)}
-                      className={`flex items-center gap-3 p-3 rounded-2xl border transition-all ${theme === th.id ? "border-primary bg-primary/10 shadow-sm" : "border-border hover:border-primary/30"}`}>
-                      <div className="w-7 h-7 rounded-full shadow-inner flex-shrink-0" style={{ background: `hsl(${th.color})` }} />
-                      <span className="text-sm text-foreground">{th.label}</span>
+                      className={`flex items-center gap-2 p-3 rounded-2xl border transition-all ${theme === th.id ? "border-primary bg-primary/10 shadow-sm" : "border-border hover:border-primary/30"}`}>
+                      <div className="flex gap-0.5 w-7 h-7 rounded-full overflow-hidden shadow-inner flex-shrink-0">
+                        {th.preview.slice(0, 3).map((hex, i) => (
+                          <div key={i} className="flex-1 h-full" style={{ background: hex }} />
+                        ))}
+                      </div>
+                      <span className="text-xs text-foreground truncate">{th.name}</span>
                       {theme === th.id && <Badge variant="secondary" className="ml-auto text-[10px]">Active</Badge>}
                     </button>
                   ))}

@@ -15,30 +15,7 @@ import { DollarSign, Globe, Check, RefreshCw, Clock, Zap, PaintBucket, Search } 
 import SiteCustomizer from "@/components/admin/SiteCustomizer";
 import AdminSeoSettings from "@/components/admin/AdminSeoSettings";
 import { Textarea } from "@/components/ui/textarea";
-
-const themes = [
-  { id: "default", label: "Cyber Emerald", color: "160 84% 45%" },
-  { id: "ocean", label: "Ocean Blue", color: "200 90% 50%" },
-  { id: "sunset", label: "Sunset Orange", color: "25 95% 55%" },
-  { id: "rose", label: "Rose Pink", color: "340 82% 55%" },
-  { id: "violet", label: "Royal Violet", color: "270 80% 60%" },
-  { id: "crimson", label: "Crimson Red", color: "0 85% 55%" },
-  { id: "gold", label: "Golden Hour", color: "45 90% 50%" },
-  { id: "mint", label: "Fresh Mint", color: "170 70% 45%" },
-  { id: "aurora", label: "Aurora Borealis", color: "160 85% 45%" },
-  { id: "neon", label: "Neon Pulse", color: "120 100% 50%" },
-  { id: "lavender", label: "Lavender Dream", color: "250 60% 65%" },
-  { id: "ember", label: "Ember Glow", color: "15 90% 50%" },
-  { id: "sapphire", label: "Sapphire Deep", color: "220 85% 55%" },
-  { id: "coral", label: "Coral Reef", color: "10 80% 60%" },
-  { id: "arctic", label: "Arctic Frost", color: "195 85% 55%" },
-  { id: "forest", label: "Forest Canopy", color: "140 65% 40%" },
-  { id: "midnight", label: "Midnight Indigo", color: "235 70% 55%" },
-  { id: "candy", label: "Candy Pop", color: "320 80% 60%" },
-  { id: "bronze", label: "Antique Bronze", color: "30 70% 45%" },
-  { id: "plasma", label: "Plasma Burst", color: "280 90% 60%" },
-  { id: "slate", label: "Steel Slate", color: "215 25% 50%" },
-];
+import { themePalettes } from "@/lib/theme-palettes";
 
 const defaultSettings: Record<string, any> = {
   site_name: "Zero Marketplace",
@@ -116,8 +93,6 @@ const AdminSettings = () => {
 
   useEffect(() => {
     document.documentElement.classList.toggle("light", form.site_mode === "light");
-    document.documentElement.className = document.documentElement.className.replace(/theme-\w+/g, "");
-    if (form.site_theme !== "default") document.documentElement.classList.add(`theme-${form.site_theme}`);
   }, [form.site_theme, form.site_mode]);
 
   const saveMutation = useMutation({
@@ -373,9 +348,11 @@ const AdminSettings = () => {
 
         <TabsContent value="theme">
           <Card className="glass">
-            <CardHeader><CardTitle>Site-wide Theme</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Site-wide Theme</CardTitle>
+              <CardDescription>Choose a color palette that applies across the entire store.</CardDescription>
+            </CardHeader>
             <CardContent className="space-y-6">
-              <p className="text-sm text-muted-foreground">This theme applies to the entire site (excluding category pages which use their own accent colors).</p>
               <div>
                 <Label className="mb-2 block">Mode</Label>
                 <div className="flex gap-2">
@@ -393,20 +370,29 @@ const AdminSettings = () => {
                 </div>
               </div>
               <div>
-                <Label className="mb-2 block">Color Theme</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {themes.map((t) => (
+                <Label className="mb-3 block">Color Palette</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {themePalettes.map((t) => (
                     <button
                       key={t.id}
                       onClick={() => setForm({ ...form, site_theme: t.id })}
-                      className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                        form.site_theme === t.id ? "border-primary bg-primary/10 ring-1 ring-primary/30" : "border-border hover:border-primary/30"
+                      className={`text-left p-3 rounded-xl border transition-all ${
+                        form.site_theme === t.id
+                          ? "border-primary bg-primary/10 ring-1 ring-primary/30 shadow-md"
+                          : "border-border hover:border-primary/30"
                       }`}
                     >
-                      <div className="w-8 h-8 rounded-lg shrink-0 shadow-inner"
-                        style={{ background: `linear-gradient(135deg, hsl(${t.color}), hsl(${t.color.replace(/\d+%$/, (m) => Math.max(30, parseInt(m) - 15) + '%')}))` }}
-                      />
-                      <span className="text-xs font-medium truncate">{t.label}</span>
+                      <div className="flex gap-1 mb-2 h-6 rounded-lg overflow-hidden">
+                        {t.preview.map((hex, i) => (
+                          <div key={i} className="flex-1" style={{ background: hex }} />
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-foreground">{t.name}</span>
+                        {form.site_theme === t.id && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Active</Badge>
+                        )}
+                      </div>
                     </button>
                   ))}
                 </div>
