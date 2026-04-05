@@ -61,15 +61,16 @@ const SiteThemeProvider = () => {
   useEffect(() => {
     if (!siteSettings) return;
     const mode = String(siteSettings.site_mode || "dark");
-    const themeId = String(siteSettings.site_theme || "crimson_drive");
+    const rawThemeId = String(siteSettings.site_theme || "crimson_drive");
+    const themeId = legacyMap[rawThemeId] || rawThemeId;
     const html = document.documentElement;
 
     // Clear all theme vars
     allThemeVars.forEach((v) => html.style.removeProperty(v));
     customizerVars.forEach((v) => html.style.removeProperty(v));
 
-    // Get palette
-    const palette = themeMap.get(themeId);
+    // Get palette (fallback to first theme)
+    const palette = themeMap.get(themeId) || themePalettes[0];
     if (palette) {
       const vars = mode === "light" ? palette.light : palette.dark;
       Object.entries(vars).forEach(([k, v]) => html.style.setProperty(k, v));
