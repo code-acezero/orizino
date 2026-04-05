@@ -1,7 +1,32 @@
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { themeMap, allThemeVars } from "@/lib/theme-palettes";
+import { themeMap, allThemeVars, themePalettes } from "@/lib/theme-palettes";
+
+/* Map old theme IDs to new ones for backward compat */
+const legacyMap: Record<string, string> = {
+  default: "crimson_drive",
+  ocean: "tidal_flame",
+  sunset: "ember_city",
+  rose: "rose_petal",
+  violet: "midnight_orchid",
+  crimson: "crimson_drive",
+  gold: "gilded_vault",
+  mint: "emerald_night",
+  aurora: "arctic_aurora",
+  neon: "neon_pulse",
+  lavender: "lavender_dream",
+  ember: "ember_city",
+  sapphire: "sapphire_deep",
+  coral: "terracotta_sun",
+  arctic: "arctic_aurora",
+  forest: "forest_canopy",
+  midnight: "midnight_orchid",
+  candy: "rose_petal",
+  bronze: "amber_rocks",
+  plasma: "neon_pulse",
+  slate: "carbon_fiber",
+};
 
 const customizerVars = [
   "--font-display", "--font-body",
