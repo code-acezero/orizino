@@ -15,30 +15,7 @@ import { DollarSign, Globe, Check, RefreshCw, Clock, Zap, PaintBucket, Search } 
 import SiteCustomizer from "@/components/admin/SiteCustomizer";
 import AdminSeoSettings from "@/components/admin/AdminSeoSettings";
 import { Textarea } from "@/components/ui/textarea";
-
-const themes = [
-  { id: "default", label: "Cyber Emerald", color: "160 84% 45%" },
-  { id: "ocean", label: "Ocean Blue", color: "200 90% 50%" },
-  { id: "sunset", label: "Sunset Orange", color: "25 95% 55%" },
-  { id: "rose", label: "Rose Pink", color: "340 82% 55%" },
-  { id: "violet", label: "Royal Violet", color: "270 80% 60%" },
-  { id: "crimson", label: "Crimson Red", color: "0 85% 55%" },
-  { id: "gold", label: "Golden Hour", color: "45 90% 50%" },
-  { id: "mint", label: "Fresh Mint", color: "170 70% 45%" },
-  { id: "aurora", label: "Aurora Borealis", color: "160 85% 45%" },
-  { id: "neon", label: "Neon Pulse", color: "120 100% 50%" },
-  { id: "lavender", label: "Lavender Dream", color: "250 60% 65%" },
-  { id: "ember", label: "Ember Glow", color: "15 90% 50%" },
-  { id: "sapphire", label: "Sapphire Deep", color: "220 85% 55%" },
-  { id: "coral", label: "Coral Reef", color: "10 80% 60%" },
-  { id: "arctic", label: "Arctic Frost", color: "195 85% 55%" },
-  { id: "forest", label: "Forest Canopy", color: "140 65% 40%" },
-  { id: "midnight", label: "Midnight Indigo", color: "235 70% 55%" },
-  { id: "candy", label: "Candy Pop", color: "320 80% 60%" },
-  { id: "bronze", label: "Antique Bronze", color: "30 70% 45%" },
-  { id: "plasma", label: "Plasma Burst", color: "280 90% 60%" },
-  { id: "slate", label: "Steel Slate", color: "215 25% 50%" },
-];
+import { themePalettes } from "@/lib/theme-palettes";
 
 const defaultSettings: Record<string, any> = {
   site_name: "Zero Marketplace",
