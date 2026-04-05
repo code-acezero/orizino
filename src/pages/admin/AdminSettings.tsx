@@ -350,9 +350,11 @@ const AdminSettings = () => {
 
         <TabsContent value="theme">
           <Card className="glass">
-            <CardHeader><CardTitle>Site-wide Theme</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Site-wide Theme</CardTitle>
+              <CardDescription>Choose a color palette that applies across the entire store.</CardDescription>
+            </CardHeader>
             <CardContent className="space-y-6">
-              <p className="text-sm text-muted-foreground">This theme applies to the entire site (excluding category pages which use their own accent colors).</p>
               <div>
                 <Label className="mb-2 block">Mode</Label>
                 <div className="flex gap-2">
@@ -370,20 +372,29 @@ const AdminSettings = () => {
                 </div>
               </div>
               <div>
-                <Label className="mb-2 block">Color Theme</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {themes.map((t) => (
+                <Label className="mb-3 block">Color Palette</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {themePalettes.map((t) => (
                     <button
                       key={t.id}
                       onClick={() => setForm({ ...form, site_theme: t.id })}
-                      className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                        form.site_theme === t.id ? "border-primary bg-primary/10 ring-1 ring-primary/30" : "border-border hover:border-primary/30"
+                      className={`text-left p-3 rounded-xl border transition-all ${
+                        form.site_theme === t.id
+                          ? "border-primary bg-primary/10 ring-1 ring-primary/30 shadow-md"
+                          : "border-border hover:border-primary/30"
                       }`}
                     >
-                      <div className="w-8 h-8 rounded-lg shrink-0 shadow-inner"
-                        style={{ background: `linear-gradient(135deg, hsl(${t.color}), hsl(${t.color.replace(/\d+%$/, (m) => Math.max(30, parseInt(m) - 15) + '%')}))` }}
-                      />
-                      <span className="text-xs font-medium truncate">{t.label}</span>
+                      <div className="flex gap-1 mb-2 h-6 rounded-lg overflow-hidden">
+                        {t.preview.map((hex, i) => (
+                          <div key={i} className="flex-1" style={{ background: hex }} />
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-foreground">{t.name}</span>
+                        {form.site_theme === t.id && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Active</Badge>
+                        )}
+                      </div>
                     </button>
                   ))}
                 </div>

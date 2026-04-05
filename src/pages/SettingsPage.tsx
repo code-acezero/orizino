@@ -22,16 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const themes = [
-  { id: "default", label: "Cyber Emerald", color: "160 84% 45%" },
-  { id: "ocean", label: "Ocean Blue", color: "200 90% 50%" },
-  { id: "sunset", label: "Sunset Orange", color: "25 95% 55%" },
-  { id: "rose", label: "Rose Pink", color: "340 82% 55%" },
-  { id: "violet", label: "Royal Violet", color: "270 80% 60%" },
-  { id: "crimson", label: "Crimson Red", color: "0 85% 55%" },
-  { id: "gold", label: "Golden Hour", color: "45 90% 50%" },
-  { id: "mint", label: "Fresh Mint", color: "170 70% 45%" },
-];
+import { themePalettes } from "@/lib/theme-palettes";
 
 interface NotifPrefs {
   orders: boolean;
