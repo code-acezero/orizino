@@ -130,32 +130,57 @@ const SiteThemeProvider = () => {
   /* Loading overlay — neutral skeleton while DB loads */
   if (isLoading) {
     return (
-      <div className="fixed inset-0 z-[9999] bg-background flex flex-col">
+      <div className="fixed inset-0 z-[9999] bg-background flex flex-col overflow-hidden">
         {/* Navbar skeleton */}
-        <div className="h-16 border-b border-border/50 flex items-center px-6 gap-4">
+        <div className="h-16 border-b border-border/50 flex items-center px-4 md:px-6 gap-3 shrink-0">
           <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
-          <div className="w-32 h-4 rounded bg-muted animate-pulse" />
-          <div className="flex-1" />
-          <div className="w-20 h-4 rounded bg-muted animate-pulse" />
-          <div className="w-20 h-4 rounded bg-muted animate-pulse" />
-          <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
+          <div className="w-24 h-4 rounded bg-muted animate-pulse hidden md:block" />
+          <div className="flex-1 mx-4 h-9 rounded-full bg-muted/50 animate-pulse" />
+          <div className="flex gap-2">
+            <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
+            <div className="w-8 h-8 rounded-full bg-muted animate-pulse hidden md:block" />
+            <div className="w-8 h-8 rounded-full bg-muted animate-pulse hidden md:block" />
+          </div>
         </div>
-        {/* Hero skeleton */}
-        <div className="w-full h-[50vh] bg-muted/50 animate-pulse" />
-        {/* Content skeleton */}
-        <div className="max-w-6xl mx-auto w-full px-6 py-8 space-y-6">
-          <div className="w-48 h-6 rounded bg-muted animate-pulse" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="aspect-[3/4] rounded-2xl bg-muted animate-pulse" />
+        {/* Hero slider skeleton */}
+        <div className="w-full h-[40vh] md:h-[55vh] bg-muted/30 animate-pulse relative">
+          <div className="absolute bottom-8 left-6 md:left-12 space-y-3">
+            <div className="w-20 h-5 rounded-full bg-muted/50 animate-pulse" />
+            <div className="w-64 h-8 rounded bg-muted/50 animate-pulse" />
+            <div className="w-48 h-4 rounded bg-muted/50 animate-pulse" />
+            <div className="w-32 h-10 rounded-full bg-muted/50 animate-pulse mt-2" />
+          </div>
+        </div>
+        {/* Categories skeleton */}
+        <div className="max-w-7xl mx-auto w-full px-4 md:px-6 py-6 space-y-6">
+          <div className="w-40 h-6 rounded bg-muted animate-pulse" />
+          <div className="flex gap-3 overflow-hidden">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="w-20 shrink-0 flex flex-col items-center gap-2">
+                <div className="w-14 h-14 rounded-2xl bg-muted animate-pulse" />
+                <div className="w-12 h-3 rounded bg-muted/60 animate-pulse" />
+              </div>
             ))}
           </div>
-          <div className="w-40 h-6 rounded bg-muted animate-pulse mt-8" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Products grid skeleton */}
+          <div className="w-36 h-6 rounded bg-muted animate-pulse mt-4" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="aspect-[3/4] rounded-2xl bg-muted animate-pulse" />
+              <div key={i} className="rounded-2xl bg-muted/40 overflow-hidden">
+                <div className="aspect-[3/4] bg-muted animate-pulse" />
+                <div className="p-3 space-y-2">
+                  <div className="w-3/4 h-3 rounded bg-muted/60 animate-pulse" />
+                  <div className="w-1/2 h-4 rounded bg-muted/50 animate-pulse" />
+                </div>
+              </div>
             ))}
           </div>
+        </div>
+        {/* Mobile bottom nav skeleton */}
+        <div className="fixed bottom-0 left-0 right-0 h-[72px] border-t border-border/30 bg-card flex items-center justify-around px-8 md:hidden">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="w-6 h-6 rounded bg-muted animate-pulse" />
+          ))}
         </div>
       </div>
     );
