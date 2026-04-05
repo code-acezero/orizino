@@ -21,6 +21,7 @@ import {
   Percent,
   Palette,
   Globe,
+  Smartphone,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -68,6 +69,7 @@ const systemItems = [
   { title: "Live Support", url: "/admin/support", icon: Headphones },
   { title: "AI Agent", url: "/admin/ai-settings", icon: Bot },
   { title: "Branding", url: "/admin/branding", icon: Palette },
+  { title: "Mobile UI", url: "/admin/mobile-ui", icon: Smartphone },
   { title: "API Keys", url: "/admin/api-keys", icon: Key },
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
