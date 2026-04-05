@@ -93,8 +93,6 @@ const AdminSettings = () => {
 
   useEffect(() => {
     document.documentElement.classList.toggle("light", form.site_mode === "light");
-    document.documentElement.className = document.documentElement.className.replace(/theme-\w+/g, "");
-    if (form.site_theme !== "default") document.documentElement.classList.add(`theme-${form.site_theme}`);
   }, [form.site_theme, form.site_mode]);
 
   const saveMutation = useMutation({
