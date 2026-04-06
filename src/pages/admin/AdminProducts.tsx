@@ -615,6 +615,37 @@ const AdminProducts = () => {
                 </div>
               </CardContent>
             </Card>
+
+            <Card className="glass">
+              <CardHeader>
+                <CardTitle>Image Gallery Style</CardTitle>
+                <CardDescription>Choose how product images are displayed on the detail page.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {([
+                    { id: "default", label: "Classic Gallery", desc: "Traditional thumbnail-based gallery with zoom lens and lightbox" },
+                    { id: "infinity", label: "Infinity Loop", desc: "GSAP-powered infinite 3D carousel with blurred background transitions" },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.id}
+                      onClick={() => setGalleryStyle(opt.id)}
+                      className={`text-left p-4 rounded-2xl border-2 transition-all ${
+                        galleryStyle === opt.id
+                          ? "border-primary bg-primary/10"
+                          : "border-border/50 hover:border-primary/30"
+                      }`}
+                    >
+                      <p className="font-semibold text-foreground text-sm">{opt.label}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{opt.desc}</p>
+                      {galleryStyle === opt.id && (
+                        <Badge variant="default" className="mt-2">Active</Badge>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
             <Button className="w-full" onClick={() => saveLayoutMutation.mutate()} disabled={saveLayoutMutation.isPending}>
               {saveLayoutMutation.isPending ? "Saving..." : "Save Product Page Settings"}
             </Button>
