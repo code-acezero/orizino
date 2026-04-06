@@ -297,48 +297,53 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
   // ══════════════════════════════════════════════
   // STYLE 5: Wave
   // ══════════════════════════════════════════════
-  const renderWave = () => (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
-      <div className="wave-nav-bar">
-        <svg className="wave-nav-svg" viewBox="0 0 400 70" preserveAspectRatio="none">
-          <motion.path
-            animate={{
-              d: activeIndex >= 0
-                ? `M0,20 L${activeIndex * 80 + 10},20 Q${activeIndex * 80 + 40},0 ${activeIndex * 80 + 40},-15 Q${activeIndex * 80 + 40},0 ${activeIndex * 80 + 70},20 L400,20 L400,70 L0,70 Z`
-                : "M0,20 L400,20 L400,70 L0,70 Z"
-            }}
-            transition={{ type: "spring", stiffness: 300, damping: 28 }}
-            fill="hsl(var(--card))"
-            stroke="hsl(var(--border))"
-            strokeWidth="0.5"
-          />
-        </svg>
-        <div className="wave-nav-items">
-          {items.map((item, index) => {
-            const isActive = index === activeIndex;
-            return (
-              <button key={item.label} onClick={() => handleClick(item, index)}
-                className={`wave-nav-item${isActive ? " active" : ""}`}>
-                <motion.div
-                  animate={isActive ? { y: -22, scale: 1.1 } : { y: 0, scale: 1 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 22 }}
-                  className={`relative flex items-center justify-center ${isActive ? "w-10 h-10 rounded-full bg-primary shadow-lg" : ""}`}
-                >
-                  <item.icon className={`w-5 h-5 ${isActive ? "text-primary-foreground" : "text-muted-foreground"}`} />
-                  {item.label === "Cart" && <CartBadge />}
-                </motion.div>
-                <motion.span
-                  animate={{ opacity: isActive ? 1 : 0.5, y: isActive ? -4 : 0 }}
-                  className="wave-label"
-                >{item.label}</motion.span>
-              </button>
-            );
-          })}
+  const renderWave = () => {
+    const itemCount = items.length;
+    const cx = activeIndex >= 0 ? (activeIndex + 0.5) * (400 / itemCount) : -100;
+
+    return (
+      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
+        <div className="wave-nav-bar">
+          <svg className="wave-nav-svg" viewBox="0 0 400 62" preserveAspectRatio="none">
+            <motion.path
+              animate={{
+                d: activeIndex >= 0
+                  ? `M0,18 L${cx - 30},18 Q${cx},0 ${cx},-12 Q${cx},0 ${cx + 30},18 L400,18 L400,62 L0,62 Z`
+                  : "M0,18 L400,18 L400,62 L0,62 Z"
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 28 }}
+              fill="hsl(var(--card))"
+              stroke="hsl(var(--border))"
+              strokeWidth="0.5"
+            />
+          </svg>
+          <div className="wave-nav-items">
+            {items.map((item, index) => {
+              const isActive = index === activeIndex;
+              return (
+                <button key={item.label} onClick={() => handleClick(item, index)}
+                  className={`wave-nav-item${isActive ? " active" : ""}`}>
+                  <motion.div
+                    animate={isActive ? { y: -18, scale: 1.1 } : { y: 0, scale: 1 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 22 }}
+                    className={`relative flex items-center justify-center ${isActive ? "w-9 h-9 rounded-full bg-primary shadow-lg" : ""}`}
+                  >
+                    <item.icon className={`w-[18px] h-[18px] ${isActive ? "text-primary-foreground" : "text-muted-foreground"}`} />
+                    {item.label === "Cart" && <CartBadge />}
+                  </motion.div>
+                  <motion.span
+                    animate={{ opacity: isActive ? 1 : 0.5, y: isActive ? -2 : 0 }}
+                    className="wave-label"
+                  >{item.label}</motion.span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
-      <div className="h-[env(safe-area-inset-bottom)] bg-card" />
-    </nav>
-  );
+        <div className="h-[env(safe-area-inset-bottom)] bg-card" />
+      </nav>
+    );
+  };
 
   const renderNav = () => {
     switch (navStyle) {
