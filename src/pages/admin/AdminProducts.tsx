@@ -92,17 +92,23 @@ const AdminProducts = () => {
   });
 
   const [pageLayout, setPageLayout] = useState("premium");
+  const [galleryStyle, setGalleryStyle] = useState("default");
 
   useEffect(() => {
     if (layoutSettingsRow?.value) {
       const val = layoutSettingsRow.value as any;
-      setPageLayout(val?.value ?? val ?? "premium");
+      if (typeof val === "string") {
+        setPageLayout(val);
+      } else {
+        setPageLayout(val?.layout || val?.value || "premium");
+        setGalleryStyle(val?.gallery || "default");
+      }
     }
   }, [layoutSettingsRow]);
 
   const saveLayoutMutation = useMutation({
     mutationFn: async () => {
-      const jsonValue = { value: pageLayout } as any;
+      const jsonValue = { layout: pageLayout, gallery: galleryStyle } as any;
       if (layoutSettingsRow) {
         await supabase.from("site_settings").update({ value: jsonValue }).eq("id", layoutSettingsRow.id);
       } else {
