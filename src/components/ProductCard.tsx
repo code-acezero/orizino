@@ -169,9 +169,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
       }}
       whileHover={isMobile ? { y: -4 } : undefined}
       transition={{ duration: 0.3 }}
-      className={`group glass rounded-3xl overflow-hidden will-change-transform ${className}`}
+      className={`group glass rounded-3xl overflow-hidden will-change-transform flex flex-col h-full ${className}`}
     >
-      <Link to={`/product/${slug}`} className="block" onClick={() => trackClick("product_card", slug, window.location.pathname, { product_name: name })}>
+      <Link to={`/product/${slug}`} className="flex flex-col flex-1" onClick={() => trackClick("product_card", slug, window.location.pathname, { product_name: name })}>
         {/* Image with parallax offset + 3D box effect */}
         <div
           className="relative aspect-square overflow-hidden bg-secondary/20 cursor-zoom-in"
@@ -229,7 +229,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Info with parallax depth */}
         <motion.div
-          className="p-4"
+          className="p-4 flex flex-col flex-1"
           style={isMobile ? {} : { x: textX, y: textY, translateZ: 30 }}
         >
           <h3 className="font-medium text-foreground text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors">
@@ -248,7 +248,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             ))}
             <span className="text-xs text-muted-foreground ml-1">({reviewCount})</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mt-auto">
             <span className="font-bold text-foreground group-hover:animate-[priceGlow_1.5s_ease-in-out_infinite] transition-all duration-300"
               style={{ textShadow: 'none' }}
             >

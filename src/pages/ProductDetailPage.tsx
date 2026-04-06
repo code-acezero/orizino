@@ -498,7 +498,7 @@ const ProductDetailPage: React.FC = () => {
                 </Link>
               )}
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 auto-rows-fr">
               {relatedProducts.map((p, i) => (
                 <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
                   <ProductCard id={p.id} name={p.name} price={p.price}
