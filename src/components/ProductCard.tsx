@@ -8,6 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import QuickViewModal from "@/components/QuickViewModal";
 
 export interface ProductCardProps {
   id: string;
@@ -37,6 +38,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const [addingToCart, setAddingToCart] = useState(false);
+  const [quickViewOpen, setQuickViewOpen] = useState(false);
 
   const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -123,12 +125,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
     >
       <Link to={`/product/${slug}`} className="block" onClick={() => trackClick("product_card", slug, window.location.pathname, { product_name: name })}>
         {/* Image with parallax offset + 3D box effect */}
-        <div className="relative aspect-square overflow-hidden bg-secondary/20" style={isMobile ? {} : { transformStyle: "preserve-3d" }}>
+        <div
+          className="relative aspect-square overflow-hidden bg-secondary/20 cursor-zoom-in"
+          style={isMobile ? {} : { transformStyle: "preserve-3d" }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuickViewOpen(true); }}
+        >
           <motion.img
             src={thumbnail || "/placeholder.svg"}
             alt={name}
             style={isMobile ? {} : { x: imgX, y: imgY, scale: 1.12 }}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none"
             loading="lazy"
           />
           {!isMobile && (
@@ -230,6 +236,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </motion.button>
         </motion.div>
       </Link>
+      <QuickViewModal productId={id} open={quickViewOpen} onOpenChange={setQuickViewOpen} />
     </motion.div>
   );
 };
