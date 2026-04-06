@@ -209,16 +209,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="glass rounded-full p-2 text-foreground hover:text-primary"
+              onClick={handleToggleWishlist}
+              disabled={togglingWishlist}
+              className={`glass rounded-full p-2 transition-colors ${inWishlist ? "text-destructive" : "text-foreground hover:text-primary"}`}
             >
-              <Heart className="w-4 h-4" />
+              <Heart className={`w-4 h-4 ${inWishlist ? "fill-destructive" : ""}`} />
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
+              onClick={handleAddToCart}
+              disabled={addingToCart}
               className="glass rounded-full p-2 text-foreground hover:text-primary"
             >
-              <ShoppingCart className="w-4 h-4" />
+              {addingToCart ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShoppingCart className="w-4 h-4" />}
             </motion.button>
           </div>
         </div>
