@@ -439,7 +439,10 @@ const ProductDetailPage: React.FC = () => {
         {!isEditorial && (
           <>
             <div className="grid md:grid-cols-2 gap-10">
-              <ImageGallery key={selectedColor || "default"} images={images} productName={product.name} discount={discount} layout={layout} />
+              {galleryStyle === "infinity"
+                ? <InfinityGallery key={selectedColor || "default"} images={images} productName={product.name} discount={discount} />
+                : <ImageGallery key={selectedColor || "default"} images={images} productName={product.name} discount={discount} layout={layout} />
+              }
 
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                 {productCat && (
