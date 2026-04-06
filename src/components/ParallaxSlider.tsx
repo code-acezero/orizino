@@ -284,11 +284,9 @@ const ParallaxSlider: React.FC = () => {
   return (
     <motion.div
       ref={containerRef}
-      className="parallax-slider-root relative w-full overflow-hidden"
+      className="parallax-slider-root relative w-full overflow-hidden h-[35vh] md:h-[40vh] lg:h-[45vh] max-h-[450px] md:max-h-[500px] lg:max-h-[540px]"
       style={{
-        height: cfg.height,
-        minHeight: "280px",
-        maxHeight: "600px",
+        minHeight: "200px",
         perspective: "1000px",
         rotateX,
         rotateY,

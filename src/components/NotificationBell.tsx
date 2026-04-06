@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
+import { subscribe as subscribeToasts, type AppToast, removeToast as removeAppToast } from "@/lib/app-toast";
 
 interface Notification {
   id: string;
@@ -21,15 +22,25 @@ const typeConfig: Record<string, { icon: React.ElementType; color: string }> = {
   error: { icon: XCircle, color: "text-destructive" },
   warning: { icon: AlertTriangle, color: "text-yellow-400" },
   general: { icon: Info, color: "text-primary" },
+  info: { icon: Info, color: "text-blue-400" },
 };
+
+interface IslandItem {
+  id: string;
+  title: string;
+  message?: string;
+  type: string;
+  source: "notification" | "toast";
+}
 
 const NotificationBell: React.FC = () => {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [comicNotif, setComicNotif] = useState<Notification | null>(null);
+  const [islandItem, setIslandItem] = useState<IslandItem | null>(null);
   const [lastSeenId, setLastSeenId] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const islandTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: notifications = [] } = useQuery({
     queryKey: ["bell-notifications", user?.id],
@@ -50,18 +61,45 @@ const NotificationBell: React.FC = () => {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  // Show comic bubble for new notifications
+  const showIsland = (item: IslandItem) => {
+    if (islandTimerRef.current) clearTimeout(islandTimerRef.current);
+    setIslandItem(item);
+    islandTimerRef.current = setTimeout(() => setIslandItem(null), 4000);
+  };
+
+  // Show island for new notifications
   useEffect(() => {
     if (notifications.length > 0 && !open) {
       const latest = notifications[0];
       if (latest && !latest.is_read && latest.id !== lastSeenId) {
-        setComicNotif(latest);
         setLastSeenId(latest.id);
-        const timer = setTimeout(() => setComicNotif(null), 5000);
-        return () => clearTimeout(timer);
+        showIsland({
+          id: latest.id,
+          title: latest.title,
+          message: latest.message || undefined,
+          type: latest.type,
+          source: "notification",
+        });
       }
     }
   }, [notifications, open, lastSeenId]);
+
+  // Subscribe to app toasts and show them in the island
+  useEffect(() => {
+    const unsub = subscribeToasts((toasts: AppToast[]) => {
+      if (toasts.length > 0) {
+        const t = toasts[0];
+        showIsland({
+          id: `toast-${t.id}`,
+          title: t.title,
+          message: t.description,
+          type: t.type,
+          source: "toast",
+        });
+      }
+    });
+    return unsub;
+  }, []);
 
   // Close panel on outside click
   useEffect(() => {
@@ -108,63 +146,79 @@ const NotificationBell: React.FC = () => {
 
   if (!user) return null;
 
+  const isExpanded = !!islandItem && !open;
+
   return (
     <div className="relative" ref={panelRef}>
-      {/* Bell button */}
-      <button
-        onClick={() => { setOpen(!open); setComicNotif(null); }}
-        className="p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all relative"
+      {/* Dynamic Island container */}
+      <motion.div
+        layout
+        className="flex items-center overflow-hidden rounded-full cursor-pointer"
+        style={{
+          background: isExpanded ? "hsl(var(--secondary) / 0.8)" : "transparent",
+          border: isExpanded ? "1px solid hsl(var(--border) / 0.5)" : "1px solid transparent",
+        }}
+        animate={{
+          width: isExpanded ? 240 : 40,
+          height: 40,
+        }}
+        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+        onClick={() => {
+          if (isExpanded) {
+            setIslandItem(null);
+            setOpen(true);
+          } else {
+            setOpen(!open);
+          }
+        }}
       >
-        <Bell className="w-5 h-5" />
-        {unreadCount > 0 && (
-          <motion.span
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute top-1 right-1 w-4 h-4 rounded-full bg-destructive text-[10px] text-destructive-foreground flex items-center justify-center font-bold"
-          >
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </motion.span>
-        )}
-      </button>
+        {/* Bell icon - always visible */}
+        <div className="flex items-center justify-center shrink-0 w-10 h-10 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all relative">
+          <Bell className="w-5 h-5" />
+          {unreadCount > 0 && !isExpanded && (
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute top-1 right-1 w-4 h-4 rounded-full bg-destructive text-[10px] text-destructive-foreground flex items-center justify-center font-bold"
+            >
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </motion.span>
+          )}
+        </div>
 
-      {/* Comic dialogue bubble */}
-      <AnimatePresence>
-        {comicNotif && !open && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.5, y: 10 }}
-            transition={{ type: "spring", stiffness: 400, damping: 20 }}
-            className="absolute top-full right-0 mt-2 z-[100] pointer-events-auto"
-          >
-            <div className="relative">
-              {/* Triangle pointer */}
-              <div className="absolute -top-2 right-4 w-4 h-4 rotate-45 bg-card border-l border-t border-border" />
-              <div
-                className="relative glass-strong rounded-2xl p-3 pr-8 max-w-[280px] border-2 border-primary/30 shadow-lg cursor-pointer"
-                onClick={() => { setComicNotif(null); setOpen(true); }}
-                style={{ boxShadow: "4px 4px 0px hsl(var(--primary) / 0.2)" }}
-              >
-                <button
-                  onClick={(e) => { e.stopPropagation(); setComicNotif(null); }}
-                  className="absolute top-1.5 right-1.5 p-0.5 rounded-full hover:bg-secondary/50 text-muted-foreground"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-                <div className="flex items-start gap-2">
-                  {React.createElement(getConfig(comicNotif.type).icon, { className: `w-4 h-4 mt-0.5 shrink-0 ${getConfig(comicNotif.type).color}` })}
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-foreground truncate">{comicNotif.title}</p>
-                    {comicNotif.message && (
-                      <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{comicNotif.message}</p>
-                    )}
-                  </div>
-                </div>
+        {/* Expanded island content */}
+        <AnimatePresence>
+          {isExpanded && islandItem && (
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ delay: 0.1 }}
+              className="flex items-center gap-2 pr-3 min-w-0 flex-1"
+            >
+              {React.createElement(getConfig(islandItem.type).icon, {
+                className: `w-3.5 h-3.5 shrink-0 ${getConfig(islandItem.type).color}`,
+              })}
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-medium text-foreground truncate leading-tight">
+                  {islandItem.title}
+                </p>
+                {islandItem.message && (
+                  <p className="text-[10px] text-muted-foreground truncate leading-tight">
+                    {islandItem.message}
+                  </p>
+                )}
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <button
+                onClick={(e) => { e.stopPropagation(); setIslandItem(null); }}
+                className="shrink-0 p-0.5 rounded-full hover:bg-secondary/50"
+              >
+                <X className="w-3 h-3 text-muted-foreground" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
 
       {/* Notification panel */}
       <AnimatePresence>
