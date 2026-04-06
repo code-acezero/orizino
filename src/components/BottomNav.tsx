@@ -268,16 +268,16 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
             <button key={item.label} onClick={() => handleClick(item, index)}
               className={`glow-nav-item${isActive ? " active" : ""}`}>
               <motion.div
-                animate={isActive ? { scale: 1.3, y: -10 } : { scale: 1, y: 0 }}
+                animate={isActive ? { scale: 1.25, y: -8 } : { scale: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 500, damping: 22 }}
                 className="relative"
               >
-                <item.icon className={`w-5 h-5 transition-all duration-300 ${isActive ? "drop-shadow-[0_0_8px_hsl(var(--primary))]" : ""}`} />
+                <item.icon className={`w-[18px] h-[18px] transition-all duration-300 ${isActive ? "drop-shadow-[0_0_6px_hsl(var(--primary))]" : ""}`} />
                 {item.label === "Cart" && <CartBadge />}
                 {isActive && (
                   <motion.div
                     layoutId="glow-ring"
-                    className="absolute -inset-3 rounded-full border-2 border-primary/40"
+                    className="absolute -inset-2.5 rounded-full border-2 border-primary/40"
                     transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   />
                 )}
