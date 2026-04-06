@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import gsap from "gsap";
+import ZoomableImage from "@/components/product/ZoomableImage";
 
 interface InfinityGalleryProps {
   images: string[];
@@ -334,16 +335,21 @@ const LightboxModal: React.FC<{
               </button>
             </>
           )}
-          <motion.img
+          <motion.div
             key={selected}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            src={images[selected]}
-            alt={productName}
-            className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl"
+            className="max-w-[90vw] max-h-[85vh] rounded-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
-          />
+          >
+            <ZoomableImage
+              src={images[selected]}
+              alt={productName}
+              className="w-full h-full max-w-[90vw] max-h-[85vh]"
+              zoomScale={3}
+            />
+          </motion.div>
           {images.length > 1 && (
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
               {images.map((_, i) => (

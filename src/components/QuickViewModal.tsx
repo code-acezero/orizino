@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { X, Star, ShoppingCart, Heart, Loader2, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
+import { X, Star, ShoppingCart, Heart, Loader2, ChevronLeft, ChevronRight, ExternalLink, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import ZoomableImage from "@/components/product/ZoomableImage";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -98,7 +99,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ productId, open, onOpen
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl p-0 gap-0 overflow-hidden border-border/50 bg-background/95 backdrop-blur-xl rounded-2xl">
+      <DialogContent className="max-w-3xl p-0 gap-0 overflow-hidden border-border/50 bg-background/95 backdrop-blur-xl rounded-2xl max-h-[90vh]">
         {isLoading || !product ? (
           <div className="flex items-center justify-center h-96">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -108,17 +109,26 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ productId, open, onOpen
             {/* Image gallery */}
             <div className="relative aspect-square bg-secondary/10 overflow-hidden">
               <AnimatePresence mode="wait">
-                <motion.img
+                <motion.div
                   key={currentImg}
-                  src={images[currentImg]}
-                  alt={product.name}
-                  initial={{ opacity: 0, scale: 1.05 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.3 }}
-                  className="w-full h-full object-cover"
-                />
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="w-full h-full"
+                >
+                  <ZoomableImage
+                    src={images[currentImg]}
+                    alt={product.name}
+                    className="w-full h-full"
+                    zoomScale={2.5}
+                  />
+                </motion.div>
               </AnimatePresence>
+              {/* Zoom hint */}
+              <div className="absolute top-3 right-3 glass rounded-full p-1.5 opacity-50 pointer-events-none z-10">
+                <Search className="w-3 h-3 text-foreground" />
+              </div>
               {images.length > 1 && (
                 <>
                   <button onClick={prevImg} className="absolute left-2 top-1/2 -translate-y-1/2 glass rounded-full p-1.5 text-foreground hover:text-primary z-10">
