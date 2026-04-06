@@ -225,8 +225,8 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
       >
         {/* Blurred background */}
         <div className="absolute inset-0 z-0">
-          <div ref={bgRef1} className="absolute -inset-[10%] w-[120%] h-[120%] bg-cover bg-center transition-opacity duration-1000" style={{ filter: "blur(40px) brightness(0.4)", opacity: 0 }} />
-          <div ref={bgRef2} className="absolute -inset-[10%] w-[120%] h-[120%] bg-cover bg-center transition-opacity duration-1000" style={{ filter: "blur(40px) brightness(0.4)", opacity: 0 }} />
+          <div ref={bgRef1} className="absolute -inset-[10%] w-[120%] h-[120%] bg-cover bg-center" style={{ filter: "blur(40px) brightness(0.4)", opacity: 0, transition: "opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1)" }} />
+          <div ref={bgRef2} className="absolute -inset-[10%] w-[120%] h-[120%] bg-cover bg-center" style={{ filter: "blur(40px) brightness(0.4)", opacity: 0, transition: "opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1)" }} />
         </div>
 
         {/* Noise overlay */}
@@ -266,15 +266,25 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
           </ul>
         </div>
 
-        {/* Controls */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-5">
-          <button onClick={() => { pauseAutoPlay(); goPrev(); }} className="w-12 h-12 rounded-full bg-white/5 border border-white/10 backdrop-blur-lg flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-300 hover:scale-110">
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <span className="text-white/60 text-xs font-medium tracking-wider">{activeIndex + 1} / {images.length}</span>
-          <button onClick={() => { pauseAutoPlay(); goNext(); }} className="w-12 h-12 rounded-full bg-white/5 border border-white/10 backdrop-blur-lg flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-300 hover:scale-110">
-            <ChevronRight className="w-5 h-5" />
-          </button>
+        {/* Left arrow */}
+        <button
+          onClick={() => { pauseAutoPlay(); goPrev(); }}
+          className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-20 p-1 text-white/60 hover:text-white transition-colors duration-200 hover:scale-110"
+        >
+          <ChevronLeft className="w-6 h-6 sm:w-7 sm:h-7 drop-shadow-lg" />
+        </button>
+
+        {/* Right arrow */}
+        <button
+          onClick={() => { pauseAutoPlay(); goNext(); }}
+          className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 p-1 text-white/60 hover:text-white transition-colors duration-200 hover:scale-110"
+        >
+          <ChevronRight className="w-6 h-6 sm:w-7 sm:h-7 drop-shadow-lg" />
+        </button>
+
+        {/* Counter */}
+        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20">
+          <span className="text-white/50 text-xs font-medium tracking-wider">{activeIndex + 1} / {images.length}</span>
         </div>
 
         {/* Discount badge */}
