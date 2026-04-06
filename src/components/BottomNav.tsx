@@ -148,31 +148,38 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
   // ══════════════════════════════════════════════
   // STYLE 1: Liquid Ball
   // ══════════════════════════════════════════════
-  const renderLiquid = () => (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
-      <div className="bottom-nav-bar relative">
-        <ul className="bottom-nav-list">
-          {items.map((item, index) => {
-            const isActive = index === activeIndex;
-            return (
-              <li key={item.label} className={`bottom-nav-item${isActive ? " active" : ""}`}>
-                <button onClick={() => handleClick(item, index)} className="bottom-nav-link">
-                  <span className="bottom-nav-icon">
-                    <item.icon className="w-5 h-5" />
-                    {item.label === "Cart" && <CartBadge />}
-                  </span>
-                  <span className="bottom-nav-text">{item.label}</span>
-                </button>
-              </li>
-            );
-          })}
-          <div className="bottom-nav-indicator"
-            style={{ transform: activeIndex >= 0 ? `translateX(calc(60px * ${activeIndex}))` : "translateX(-999px)" }} />
-        </ul>
-      </div>
-      <div className="h-[env(safe-area-inset-bottom)] bg-background" />
-    </nav>
-  );
+  const renderLiquid = () => {
+    const itemCount = items.length;
+    const itemWidthPercent = 100 / itemCount;
+    const indicatorLeft = activeIndex >= 0
+      ? `calc(${activeIndex * itemWidthPercent}% + ${itemWidthPercent / 2}% - 21px)`
+      : "-999px";
+
+    return (
+      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
+        <div className="bottom-nav-bar relative">
+          <ul className="bottom-nav-list">
+            {items.map((item, index) => {
+              const isActive = index === activeIndex;
+              return (
+                <li key={item.label} className={`bottom-nav-item${isActive ? " active" : ""}`}>
+                  <button onClick={() => handleClick(item, index)} className="bottom-nav-link">
+                    <span className="bottom-nav-icon">
+                      <item.icon className="w-[18px] h-[18px]" />
+                      {item.label === "Cart" && <CartBadge />}
+                    </span>
+                    <span className="bottom-nav-text">{item.label}</span>
+                  </button>
+                </li>
+              );
+            })}
+            <div className="bottom-nav-indicator" style={{ left: indicatorLeft, transition: "left 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55)" }} />
+          </ul>
+        </div>
+        <div className="h-[env(safe-area-inset-bottom)] bg-background" />
+      </nav>
+    );
+  };
 
   // ══════════════════════════════════════════════
   // STYLE 2: Notch
