@@ -69,6 +69,7 @@ const contentItems = [
 
 const systemItems = [
   { title: "Live Support", url: "/admin/support", icon: Headphones },
+  { title: "Call Settings", url: "/admin/call-settings", icon: Phone },
   { title: "AI Agent", url: "/admin/ai-settings", icon: Bot },
   { title: "Branding", url: "/admin/branding", icon: Palette },
   { title: "Mobile UI", url: "/admin/mobile-ui", icon: Smartphone },

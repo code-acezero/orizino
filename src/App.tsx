@@ -43,6 +43,7 @@ import AdminCmsPages from "./pages/admin/AdminCmsPages";
 import AdminLanding from "./pages/admin/AdminLanding";
 import AdminBranding from "./pages/admin/AdminBranding";
 import AdminMobileUI from "./pages/admin/AdminMobileUI";
+import AdminCallSettings from "./pages/admin/AdminCallSettings";
 import CmsPage from "./pages/CmsPage";
 import NotFound from "./pages/NotFound";
 import SiteThemeProvider from "./components/SiteThemeProvider";
@@ -124,6 +125,7 @@ const App = () => (
               <Route path="landing" element={<AdminLanding />} />
               <Route path="branding" element={<AdminBranding />} />
               <Route path="mobile-ui" element={<AdminMobileUI />} />
+              <Route path="call-settings" element={<AdminCallSettings />} />
             </Route>
             <Route path="/page/:slug" element={<CmsPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
