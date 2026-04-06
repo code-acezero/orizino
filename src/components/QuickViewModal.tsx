@@ -70,7 +70,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ productId, open, onOpen
         .select("id, quantity")
         .eq("user_id", user.id)
         .eq("product_id", productId)
-        .is("variant_id", matchedVariant?.id ?? null)
+        .eq("variant_id", matchedVariant?.id ?? null as any)
         .maybeSingle();
       if (existing) {
         await supabase.from("cart_items").update({ quantity: existing.quantity + quantity }).eq("id", existing.id);
