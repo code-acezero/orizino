@@ -50,8 +50,8 @@ const ProductActions: React.FC<ProductActionsProps> = ({
         )}
       </div>
 
-      {/* Quantity row */}
-      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+      {/* Row 1: Quantity + Wishlist + Share */}
+      <div className="flex items-center gap-1.5 sm:gap-2">
         <div className={`flex items-center gap-0.5 sm:gap-1 px-1 sm:px-1.5 py-0.5 sm:py-1 shrink-0 ${isMinimal ? "border border-border rounded-lg" : "glass rounded-full"}`}>
           <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-1 sm:p-1.5 rounded-full hover:bg-secondary/50">
             <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -61,7 +61,27 @@ const ProductActions: React.FC<ProductActionsProps> = ({
             <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
         </div>
+        <div className="flex-1" />
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={onToggleWishlist}
+          className={`p-2 sm:p-2.5 shrink-0 text-foreground hover:text-primary ${isMinimal ? "border border-border rounded-lg" : "glass rounded-full"}`}
+        >
+          <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={handleShare}
+          className={`p-2 sm:p-2.5 shrink-0 text-foreground hover:text-primary ${isMinimal ? "border border-border rounded-lg" : "glass rounded-full"}`}
+        >
+          <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+        </motion.button>
+      </div>
 
+      {/* Row 2: Add to Cart + Buy Now */}
+      <div className="flex items-center gap-1.5 sm:gap-2">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -92,23 +112,6 @@ const ProductActions: React.FC<ProductActionsProps> = ({
         >
           <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           <span className="truncate">Buy Now</span>
-        </motion.button>
-
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={onToggleWishlist}
-          className={`p-2 sm:p-2.5 shrink-0 text-foreground hover:text-primary ${isMinimal ? "border border-border rounded-lg" : "glass rounded-full"}`}
-        >
-          <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={handleShare}
-          className={`p-2 sm:p-2.5 shrink-0 text-foreground hover:text-primary ${isMinimal ? "border border-border rounded-lg" : "glass rounded-full"}`}
-        >
-          <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </motion.button>
       </div>
     </div>
