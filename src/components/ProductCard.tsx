@@ -4,6 +4,7 @@ import { Heart, ShoppingCart, Star } from "lucide-react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { trackClick } from "@/hooks/use-analytics";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export interface ProductCardProps {
   id: string;
@@ -29,6 +30,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const { formatPrice } = useCurrency();
   const cardRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   const discount = compareAtPrice
     ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
@@ -42,28 +44,29 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-10, 10]), springCfg);
   const glareX = useSpring(useTransform(mouseX, [-0.5, 0.5], [0, 100]), springCfg);
   const glareY = useSpring(useTransform(mouseY, [-0.5, 0.5], [0, 100]), springCfg);
-  // Image shifts opposite to tilt for depth
   const imgX = useSpring(useTransform(mouseX, [-0.5, 0.5], [10, -10]), { stiffness: 180, damping: 22 });
   const imgY = useSpring(useTransform(mouseY, [-0.5, 0.5], [10, -10]), { stiffness: 180, damping: 22 });
-  // Dynamic shadow shifts with tilt
   const shadowX = useSpring(useTransform(mouseX, [-0.5, 0.5], [12, -12]), springCfg);
   const shadowY = useSpring(useTransform(mouseY, [-0.5, 0.5], [12, -12]), springCfg);
   const boxShadow = useTransform(
     [shadowX, shadowY],
     ([sx, sy]) => `${sx}px ${sy}px 30px -8px hsl(var(--primary) / 0.18), ${(sx as number) * 0.5}px ${(sy as number) * 0.5}px 60px -15px hsl(var(--foreground) / 0.1)`
   );
-  // Inner edge shadows for 3D box illusion
   const innerTop = useSpring(useTransform(mouseY, [-0.5, 0.5], [0.35, 0]), springCfg);
   const innerBottom = useSpring(useTransform(mouseY, [-0.5, 0.5], [0, 0.35]), springCfg);
   const innerLeft = useSpring(useTransform(mouseX, [-0.5, 0.5], [0.35, 0]), springCfg);
   const innerRight = useSpring(useTransform(mouseX, [-0.5, 0.5], [0, 0.35]), springCfg);
+  // Text parallax — floats toward the viewer
+  const textX = useSpring(useTransform(mouseX, [-0.5, 0.5], [-4, 4]), { stiffness: 200, damping: 24 });
+  const textY = useSpring(useTransform(mouseY, [-0.5, 0.5], [-3, 3]), { stiffness: 200, damping: 24 });
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (isMobile) return;
     const rect = cardRef.current?.getBoundingClientRect();
     if (!rect) return;
     mouseX.set((e.clientX - rect.left) / rect.width - 0.5);
     mouseY.set((e.clientY - rect.top) / rect.height - 0.5);
-  }, [mouseX, mouseY]);
+  }, [mouseX, mouseY, isMobile]);
 
   const handleMouseLeave = useCallback(() => {
     mouseX.set(0);
@@ -75,49 +78,55 @@ const ProductCard: React.FC<ProductCardProps> = ({
       ref={cardRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      style={{
+      style={isMobile ? {} : {
         rotateX,
         rotateY,
         transformPerspective: 800,
         transformStyle: "preserve-3d",
         boxShadow,
       }}
+      whileHover={isMobile ? { y: -4 } : undefined}
+      transition={{ duration: 0.3 }}
       className={`group glass rounded-3xl overflow-hidden will-change-transform ${className}`}
     >
       <Link to={`/product/${slug}`} className="block" onClick={() => trackClick("product_card", slug, window.location.pathname, { product_name: name })}>
         {/* Image with parallax offset + 3D box effect */}
-        <div className="relative aspect-square overflow-hidden bg-secondary/20" style={{ transformStyle: "preserve-3d" }}>
+        <div className="relative aspect-square overflow-hidden bg-secondary/20" style={isMobile ? {} : { transformStyle: "preserve-3d" }}>
           <motion.img
             src={thumbnail || "/placeholder.svg"}
             alt={name}
-            style={{ x: imgX, y: imgY, scale: 1.12 }}
-            className="w-full h-full object-cover"
+            style={isMobile ? {} : { x: imgX, y: imgY, scale: 1.12 }}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
-          {/* Glare overlay */}
-          <motion.div
-            className="pointer-events-none absolute inset-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            style={{
-              background: useTransform(
-                [glareX, glareY],
-                ([gx, gy]) => `radial-gradient(circle at ${gx}% ${gy}%, hsl(var(--primary) / 0.15) 0%, transparent 60%)`
-              ),
-            }}
-          />
-          {/* 3D box inner edge shadows */}
-          <motion.div
-            className="pointer-events-none absolute inset-0 z-[11] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            style={{
-              boxShadow: useTransform(
-                [innerTop, innerBottom, innerLeft, innerRight],
-                ([t, b, l, r]) =>
-                  `inset 0 ${16 * (t as number)}px ${20 * (t as number)}px -6px hsl(var(--foreground) / ${(t as number) * 0.6}), ` +
-                  `inset 0 -${16 * (b as number)}px ${20 * (b as number)}px -6px hsl(var(--foreground) / ${(b as number) * 0.6}), ` +
-                  `inset ${16 * (l as number)}px 0 ${20 * (l as number)}px -6px hsl(var(--foreground) / ${(l as number) * 0.5}), ` +
-                  `inset -${16 * (r as number)}px 0 ${20 * (r as number)}px -6px hsl(var(--foreground) / ${(r as number) * 0.5})`
-              ),
-            }}
-          />
+          {!isMobile && (
+            <>
+              {/* Glare overlay */}
+              <motion.div
+                className="pointer-events-none absolute inset-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{
+                  background: useTransform(
+                    [glareX, glareY],
+                    ([gx, gy]) => `radial-gradient(circle at ${gx}% ${gy}%, hsl(var(--primary) / 0.15) 0%, transparent 60%)`
+                  ),
+                }}
+              />
+              {/* 3D box inner edge shadows */}
+              <motion.div
+                className="pointer-events-none absolute inset-0 z-[11] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{
+                  boxShadow: useTransform(
+                    [innerTop, innerBottom, innerLeft, innerRight],
+                    ([t, b, l, r]) =>
+                      `inset 0 ${16 * (t as number)}px ${20 * (t as number)}px -6px hsl(var(--foreground) / ${(t as number) * 0.6}), ` +
+                      `inset 0 -${16 * (b as number)}px ${20 * (b as number)}px -6px hsl(var(--foreground) / ${(b as number) * 0.6}), ` +
+                      `inset ${16 * (l as number)}px 0 ${20 * (l as number)}px -6px hsl(var(--foreground) / ${(l as number) * 0.5}), ` +
+                      `inset -${16 * (r as number)}px 0 ${20 * (r as number)}px -6px hsl(var(--foreground) / ${(r as number) * 0.5})`
+                  ),
+                }}
+              />
+            </>
+          )}
           {discount > 0 && (
             <span className="absolute top-3 left-3 btn-pill bg-destructive text-destructive-foreground text-xs py-1 px-3 z-20">
               -{discount}%
@@ -142,8 +151,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         </div>
 
-        {/* Info */}
-        <div className="p-4" style={{ transform: "translateZ(20px)" }}>
+        {/* Info — floats above card surface with parallax */}
+        <motion.div
+          className="p-4"
+          style={isMobile ? {} : { x: textX, y: textY, translateZ: 30 }}
+        >
           <h3 className="font-medium text-foreground text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors">
             {name}
           </h3>
@@ -168,7 +180,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               </span>
             )}
           </div>
-        </div>
+        </motion.div>
       </Link>
     </motion.div>
   );
