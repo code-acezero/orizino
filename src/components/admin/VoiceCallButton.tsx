@@ -51,6 +51,10 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
         await initiateWebRTC();
       } else if (payload.action === "rejected") {
         setCallState("rejected");
+        if (callLogIdRef.current) {
+          supabase.from("call_logs").update({ status: "rejected", ended_at: new Date().toISOString() }).eq("id", callLogIdRef.current).then(() => {});
+          callLogIdRef.current = null;
+        }
         setTimeout(() => setCallState("idle"), 2000);
       }
     });
