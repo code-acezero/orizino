@@ -124,9 +124,23 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const innerBottom = useSpring(useTransform(mouseY, [-0.5, 0.5], [0, 0.35]), springCfg);
   const innerLeft = useSpring(useTransform(mouseX, [-0.5, 0.5], [0.35, 0]), springCfg);
   const innerRight = useSpring(useTransform(mouseX, [-0.5, 0.5], [0, 0.35]), springCfg);
-  // Text parallax — floats toward the viewer
+  // Text parallax
   const textX = useSpring(useTransform(mouseX, [-0.5, 0.5], [-4, 4]), { stiffness: 200, damping: 24 });
   const textY = useSpring(useTransform(mouseY, [-0.5, 0.5], [-3, 3]), { stiffness: 200, damping: 24 });
+
+  // Pre-compute motion values outside conditional JSX to avoid hooks-in-conditionals error
+  const glareBackground = useTransform(
+    [glareX, glareY],
+    ([gx, gy]) => `radial-gradient(circle at ${gx}% ${gy}%, hsl(var(--primary) / 0.15) 0%, transparent 60%)`
+  );
+  const innerBoxShadow = useTransform(
+    [innerTop, innerBottom, innerLeft, innerRight],
+    ([t, b, l, r]) =>
+      `inset 0 ${16 * (t as number)}px ${20 * (t as number)}px -6px hsl(var(--foreground) / ${(t as number) * 0.6}), ` +
+      `inset 0 -${16 * (b as number)}px ${20 * (b as number)}px -6px hsl(var(--foreground) / ${(b as number) * 0.6}), ` +
+      `inset ${16 * (l as number)}px 0 ${20 * (l as number)}px -6px hsl(var(--foreground) / ${(l as number) * 0.5}), ` +
+      `inset -${16 * (r as number)}px 0 ${20 * (r as number)}px -6px hsl(var(--foreground) / ${(r as number) * 0.5})`
+  );
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (isMobile) return;
@@ -176,26 +190,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
               {/* Glare overlay */}
               <motion.div
                 className="pointer-events-none absolute inset-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{
-                  background: useTransform(
-                    [glareX, glareY],
-                    ([gx, gy]) => `radial-gradient(circle at ${gx}% ${gy}%, hsl(var(--primary) / 0.15) 0%, transparent 60%)`
-                  ),
-                }}
+                style={{ background: glareBackground }}
               />
               {/* 3D box inner edge shadows */}
               <motion.div
                 className="pointer-events-none absolute inset-0 z-[11] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{
-                  boxShadow: useTransform(
-                    [innerTop, innerBottom, innerLeft, innerRight],
-                    ([t, b, l, r]) =>
-                      `inset 0 ${16 * (t as number)}px ${20 * (t as number)}px -6px hsl(var(--foreground) / ${(t as number) * 0.6}), ` +
-                      `inset 0 -${16 * (b as number)}px ${20 * (b as number)}px -6px hsl(var(--foreground) / ${(b as number) * 0.6}), ` +
-                      `inset ${16 * (l as number)}px 0 ${20 * (l as number)}px -6px hsl(var(--foreground) / ${(l as number) * 0.5}), ` +
-                      `inset -${16 * (r as number)}px 0 ${20 * (r as number)}px -6px hsl(var(--foreground) / ${(r as number) * 0.5})`
-                  ),
-                }}
+                style={{ boxShadow: innerBoxShadow }}
               />
             </>
           )}
@@ -227,7 +227,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         </div>
 
-        {/* Info — floats above card surface with parallax */}
+        {/* Info with parallax depth */}
         <motion.div
           className="p-4"
           style={isMobile ? {} : { x: textX, y: textY, translateZ: 30 }}
