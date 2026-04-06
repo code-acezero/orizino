@@ -28,6 +28,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
   const [catOpen, setCatOpen] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const mobileBottomNavId = "mobile-bottom-nav";
 
   // Load nav style from DB
   const { data: mobileConfig } = useQuery({
@@ -156,7 +157,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
       : "-999px";
 
     return (
-      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
+      <nav id={mobileBottomNavId} className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
         <div className="bottom-nav-bar relative">
           <ul className="bottom-nav-list">
             {items.map((item, index) => {
@@ -191,7 +192,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
       : "-999px";
 
     return (
-      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden flex justify-center pb-[env(safe-area-inset-bottom)]">
+      <nav id={mobileBottomNavId} className="fixed bottom-0 left-0 right-0 z-50 lg:hidden flex justify-center pb-[env(safe-area-inset-bottom)]">
         <div className="notch-nav-wrapper w-full" ref={navRef}>
           <div className="notch-indicator" style={{ left: notchLeft, transition: "left 0.4s cubic-bezier(0.4, 0, 0.2, 1)" }}>
             <div className="notch-dot" />
@@ -226,7 +227,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
   // STYLE 3: Pill / Capsule (floating)
   // ══════════════════════════════════════════════
   const renderPill = () => (
-    <nav className="fixed bottom-3 left-3 right-3 z-50 lg:hidden">
+    <nav id={mobileBottomNavId} className="fixed bottom-3 left-3 right-3 z-50 lg:hidden">
       <div className="pill-nav-bar">
         {items.map((item, index) => {
           const isActive = index === activeIndex;
@@ -260,7 +261,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
   // STYLE 4: Glow Dock
   // ══════════════════════════════════════════════
   const renderGlow = () => (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
+    <nav id={mobileBottomNavId} className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
       <div className="glow-nav-bar">
         {items.map((item, index) => {
           const isActive = index === activeIndex;
@@ -302,7 +303,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
     const cx = activeIndex >= 0 ? (activeIndex + 0.5) * (400 / itemCount) : -100;
 
     return (
-      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
+      <nav id={mobileBottomNavId} className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
         <div className="wave-nav-bar">
           <svg className="wave-nav-svg" viewBox="0 0 400 62" preserveAspectRatio="none">
             <motion.path
