@@ -39,6 +39,40 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const queryClient = useQueryClient();
   const [addingToCart, setAddingToCart] = useState(false);
   const [quickViewOpen, setQuickViewOpen] = useState(false);
+  const [inWishlist, setInWishlist] = useState(false);
+  const [togglingWishlist, setTogglingWishlist] = useState(false);
+
+  // Check wishlist status on mount
+  React.useEffect(() => {
+    let cancelled = false;
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user || cancelled) return;
+      supabase.from("wishlist_items").select("id").eq("user_id", user.id).eq("product_id", id).maybeSingle()
+        .then(({ data }) => { if (!cancelled) setInWishlist(!!data); });
+    });
+    return () => { cancelled = true; };
+  }, [id]);
+
+  const handleToggleWishlist = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast.error("Please sign in to use wishlist"); return; }
+    setTogglingWishlist(true);
+    try {
+      if (inWishlist) {
+        await supabase.from("wishlist_items").delete().eq("user_id", user.id).eq("product_id", id);
+        setInWishlist(false);
+        toast.success("Removed from wishlist");
+      } else {
+        await supabase.from("wishlist_items").insert({ user_id: user.id, product_id: id });
+        setInWishlist(true);
+        toast.success("Added to wishlist");
+      }
+      queryClient.invalidateQueries({ queryKey: ["wishlist"] });
+    } catch { toast.error("Failed to update wishlist"); }
+    finally { setTogglingWishlist(false); }
+  }, [id, inWishlist, queryClient]);
 
   const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
