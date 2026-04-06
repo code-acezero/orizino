@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Bot, User, Headphones } from "lucide-react";
+import { X, Send, Bot, User, Headphones, Phone, PhoneOff, Mic, MicOff, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import wolfMascot from "@/assets/wolf-mascot.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
+import { toast } from "@/lib/app-toast";
 
 interface Msg {
   role: "user" | "assistant" | "system";
@@ -50,7 +51,6 @@ function useScrollVisibility() {
 
       lastY = y;
 
-      // Show again after scroll stops
       if (scrollTimer.current) clearTimeout(scrollTimer.current);
       scrollTimer.current = setTimeout(() => setVisible(true), 800);
     };
@@ -65,6 +65,87 @@ function useScrollVisibility() {
   return visible;
 }
 
+/* ── Inline Incoming Call UI (inside widget) ── */
+const IncomingCallWidget: React.FC<{
+  visible: boolean;
+  onAccept: () => void;
+  onReject: () => void;
+}> = ({ visible, onAccept, onReject }) => (
+  <AnimatePresence>
+    {visible && (
+      <motion.div
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ opacity: 1, height: "auto" }}
+        exit={{ opacity: 0, height: 0 }}
+        className="border-b border-border/50 overflow-hidden"
+      >
+        <div className="p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full bg-green-500/20 animate-ping" />
+              <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+                <Phone className="w-5 h-5 text-white" />
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Incoming Voice Call</p>
+              <p className="text-[11px] text-muted-foreground">Support agent calling...</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-center gap-4">
+            <button
+              onClick={onReject}
+              className="w-11 h-11 rounded-full bg-destructive/90 hover:bg-destructive flex items-center justify-center transition-all shadow-lg"
+            >
+              <PhoneOff className="w-5 h-5 text-white" />
+            </button>
+            <button
+              onClick={onAccept}
+              className="w-11 h-11 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center transition-all shadow-lg animate-pulse"
+            >
+              <Phone className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
+
+/* ── Active Call Bar (inside widget) ── */
+const ActiveCallWidget: React.FC<{
+  duration: number;
+  muted: boolean;
+  onToggleMute: () => void;
+  onHangup: () => void;
+}> = ({ duration, muted, onToggleMute, onHangup }) => {
+  const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
+  return (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: "auto" }}
+      exit={{ opacity: 0, height: 0 }}
+      className="border-b border-green-500/20 overflow-hidden"
+    >
+      <div className="flex items-center justify-between gap-3 px-4 py-2.5 bg-green-500/10">
+        <div className="flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
+          <span className="text-xs font-medium text-green-600">Call Active</span>
+          <span className="text-[11px] text-muted-foreground font-mono">{fmt(duration)}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button onClick={onToggleMute} className="w-7 h-7 rounded-full hover:bg-secondary/50 flex items-center justify-center transition-colors">
+            {muted ? <MicOff className="w-3.5 h-3.5 text-destructive" /> : <Mic className="w-3.5 h-3.5 text-green-500" />}
+          </button>
+          <button onClick={onHangup} className="w-7 h-7 rounded-full hover:bg-destructive/10 flex items-center justify-center transition-colors text-destructive">
+            <PhoneOff className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 const AIChatWidget: React.FC = () => {
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -78,14 +159,26 @@ const AIChatWidget: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollVisible = useScrollVisibility();
 
-  // Smart positioning: detect if sticky bar or bottom nav overlaps and move up
+  // Call state
+  const [incomingCall, setIncomingCall] = useState(false);
+  const [callActive, setCallActive] = useState(false);
+  const [callDuration, setCallDuration] = useState(0);
+  const [callMuted, setCallMuted] = useState(false);
+  const peerRef = useRef<RTCPeerConnection | null>(null);
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const callChannelRef = useRef<any>(null);
+  const pendingOfferRef = useRef<string | null>(null);
+
+  // Smart positioning
   const [mascotBottomPx, setMascotBottomPx] = useState(80);
   useEffect(() => {
     const recalc = () => {
       if (window.innerWidth >= 1024) { setMascotBottomPx(24); return; }
       const bottomNavTray = document.getElementById("mobile-bottom-nav-tray");
       const stickyBar = document.getElementById("sticky-add-to-cart");
-      let highestTop = window.innerHeight - 64; // default: above bottom nav (~4rem)
+      let highestTop = window.innerHeight - 64;
       if (bottomNavTray) highestTop = Math.min(highestTop, bottomNavTray.getBoundingClientRect().top);
       if (stickyBar) highestTop = Math.min(highestTop, stickyBar.getBoundingClientRect().top);
       const offset = window.innerHeight - highestTop + 12;
@@ -132,6 +225,21 @@ const AIChatWidget: React.FC = () => {
     )
   );
 
+  // Fetch previous conversations for deletion
+  const { data: pastConversations = [], refetch: refetchConvs } = useQuery({
+    queryKey: ["user-past-convs", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("support_conversations")
+        .select("id, subject, status, created_at")
+        .eq("user_id", user!.id)
+        .order("updated_at", { ascending: false });
+      return data || [];
+    },
+    enabled: !!user && open,
+    staleTime: 30_000,
+  });
+
   const { data: liveMessages = [] } = useQuery({
     queryKey: ["live-support-messages", liveConvId],
     queryFn: async () => {
@@ -142,6 +250,165 @@ const AIChatWidget: React.FC = () => {
     enabled: !!liveConvId && liveMode,
     refetchInterval: 2000,
   });
+
+  // Listen for incoming calls on any active conversation
+  useEffect(() => {
+    if (!user) return;
+
+    // Find active conversation to listen on
+    const setupCallChannel = async () => {
+      const { data } = await supabase
+        .from("support_conversations")
+        .select("id")
+        .eq("user_id", user.id)
+        .in("status", ["open", "assigned"])
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!data?.id) return;
+
+      const channel = supabase.channel(`call-${data.id}`, {
+        config: { broadcast: { self: false } },
+      });
+
+      channel.on("broadcast", { event: "call-request" }, ({ payload }) => {
+        if (payload.action === "incoming") {
+          setIncomingCall(true);
+          // Auto-open widget
+          setOpen(true);
+          setTimeout(() => setIncomingCall(false), 30000);
+        }
+      });
+
+      channel.on("broadcast", { event: "call-signal" }, async ({ payload }) => {
+        if (payload.type === "offer" && payload.from === "admin") {
+          pendingOfferRef.current = payload.sdp;
+        }
+        if (payload.type === "ice-candidate" && payload.from === "admin" && peerRef.current) {
+          await peerRef.current.addIceCandidate(new RTCIceCandidate(payload.candidate));
+        }
+        if (payload.type === "hangup") {
+          hangupCall();
+        }
+      });
+
+      channel.subscribe();
+      callChannelRef.current = channel;
+    };
+
+    setupCallChannel();
+
+    return () => {
+      if (callChannelRef.current) {
+        supabase.removeChannel(callChannelRef.current);
+        callChannelRef.current = null;
+      }
+    };
+  }, [user?.id, liveConvId]);
+
+  const acceptCall = async () => {
+    setIncomingCall(false);
+
+    callChannelRef.current?.send({
+      type: "broadcast",
+      event: "call-response",
+      payload: { action: "accepted" },
+    });
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      localStreamRef.current = stream;
+
+      const pc = new RTCPeerConnection({
+        iceServers: [
+          { urls: "stun:stun.l.google.com:19302" },
+          { urls: "stun:stun1.l.google.com:19302" },
+        ],
+      });
+      peerRef.current = pc;
+
+      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+
+      pc.ontrack = (event) => {
+        if (remoteAudioRef.current) {
+          remoteAudioRef.current.srcObject = event.streams[0];
+          remoteAudioRef.current.play().catch(() => {});
+        }
+      };
+
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          callChannelRef.current?.send({
+            type: "broadcast",
+            event: "call-signal",
+            payload: { type: "ice-candidate", candidate: event.candidate, from: "user" },
+          });
+        }
+      };
+
+      pc.oniceconnectionstatechange = () => {
+        if (pc.iceConnectionState === "connected") {
+          setCallActive(true);
+          timerRef.current = setInterval(() => setCallDuration((d) => d + 1), 1000);
+        }
+        if (pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed") {
+          hangupCall();
+        }
+      };
+
+      if (pendingOfferRef.current) {
+        await pc.setRemoteDescription(new RTCSessionDescription({ type: "offer", sdp: pendingOfferRef.current }));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+
+        callChannelRef.current?.send({
+          type: "broadcast",
+          event: "call-signal",
+          payload: { type: "answer", sdp: answer.sdp, from: "user" },
+        });
+      }
+
+      setCallActive(true);
+    } catch (err) {
+      console.error("Failed to accept call:", err);
+    }
+  };
+
+  const rejectCall = () => {
+    setIncomingCall(false);
+    callChannelRef.current?.send({
+      type: "broadcast",
+      event: "call-response",
+      payload: { action: "rejected" },
+    });
+  };
+
+  const hangupCall = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach((t) => t.stop());
+      localStreamRef.current = null;
+    }
+    if (peerRef.current) {
+      peerRef.current.close();
+      peerRef.current = null;
+    }
+    pendingOfferRef.current = null;
+    setCallActive(false);
+    setCallDuration(0);
+    setCallMuted(false);
+  }, []);
+
+  const toggleCallMute = () => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getAudioTracks().forEach((t) => { t.enabled = !t.enabled; });
+      setCallMuted(!callMuted);
+    }
+  };
 
   useEffect(() => {
     if (!liveConvId || !liveMode) return;
@@ -234,16 +501,35 @@ const AIChatWidget: React.FC = () => {
     }
   };
 
+  const deleteConversation = async (convId: string) => {
+    try {
+      // Delete messages first, then conversation
+      await supabase.from("support_messages").delete().eq("conversation_id", convId);
+      await supabase.from("support_conversations").delete().eq("id", convId);
+      if (liveConvId === convId) {
+        setLiveMode(false);
+        setLiveConvId(null);
+        setMessages([{ role: "assistant", content: welcomeMessage }]);
+      }
+      refetchConvs();
+      toast.success("Chat deleted");
+    } catch {
+      toast.error("Failed to delete chat");
+    }
+  };
+
   if (isAdminPage || isLandingPage || !isEnabled) return null;
 
-  // When chat is open, always show; when closed, respect scroll visibility
   const showMascot = !open && scrollVisible;
+  const showCallRing = incomingCall && !open;
 
   return (
     <>
-      {/* Floating wolf mascot button — hides while scrolling */}
+      <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
+
+      {/* Floating wolf mascot button */}
       <AnimatePresence>
-        {showMascot && (
+        {(showMascot || showCallRing) && (
           <motion.button
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
@@ -255,13 +541,28 @@ const AIChatWidget: React.FC = () => {
             aria-label="Open support chat"
           >
             <div className="relative w-16 h-16">
-              {/* Ambient glow behind mascot */}
+              {/* Incoming call ring animation */}
+              {incomingCall && (
+                <>
+                  <motion.div
+                    className="absolute inset-[-12px] rounded-full border-2 border-green-500/60"
+                    animate={{ scale: [1, 1.4, 1], opacity: [0.8, 0, 0.8] }}
+                    transition={{ repeat: Infinity, duration: 1.2 }}
+                  />
+                  <motion.div
+                    className="absolute inset-[-6px] rounded-full border-2 border-green-400/80"
+                    animate={{ scale: [1, 1.25, 1], opacity: [1, 0.3, 1] }}
+                    transition={{ repeat: Infinity, duration: 1, delay: 0.3 }}
+                  />
+                </>
+              )}
+
+              {/* Ambient glow */}
               <motion.div
-                className="absolute inset-[-8px] rounded-full bg-primary/20 blur-xl"
+                className={`absolute inset-[-8px] rounded-full blur-xl ${incomingCall ? "bg-green-500/40" : "bg-primary/20"}`}
                 animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
-                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                transition={{ repeat: Infinity, duration: incomingCall ? 1 : 3, ease: "easeInOut" }}
               />
-              {/* Secondary glow ring */}
               <motion.div
                 className="absolute inset-[-4px] rounded-full border border-primary/20"
                 animate={{ scale: [1, 1.15, 1], opacity: [0.2, 0.5, 0.2] }}
@@ -270,25 +571,39 @@ const AIChatWidget: React.FC = () => {
 
               {/* Wolf mascot */}
               <div className="relative w-16 h-16 flex items-center justify-center">
-                <img
-                  src={wolfMascot}
-                  alt="Support"
-                  className="w-14 h-14 object-contain drop-shadow-[0_0_12px_hsl(var(--primary)/0.5)] group-hover:drop-shadow-[0_0_20px_hsl(var(--primary)/0.7)] transition-all duration-300 group-hover:scale-110"
-                />
+                {incomingCall ? (
+                  <motion.div
+                    className="w-14 h-14 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center"
+                    animate={{ rotate: [0, -10, 10, -10, 0] }}
+                    transition={{ repeat: Infinity, duration: 0.5 }}
+                  >
+                    <Phone className="w-7 h-7 text-white" />
+                  </motion.div>
+                ) : (
+                  <img
+                    src={wolfMascot}
+                    alt="Support"
+                    className="w-14 h-14 object-contain drop-shadow-[0_0_12px_hsl(var(--primary)/0.5)] group-hover:drop-shadow-[0_0_20px_hsl(var(--primary)/0.7)] transition-all duration-300 group-hover:scale-110"
+                  />
+                )}
               </div>
 
               {/* Bubble particles */}
-              <BubbleParticle delay={0} size={5} x={-6} y={10} duration={3.5} />
-              <BubbleParticle delay={0.8} size={4} x={52} y={5} duration={4} />
-              <BubbleParticle delay={1.5} size={6} x={20} y={-4} duration={3} />
-              <BubbleParticle delay={2.2} size={3} x={46} y={20} duration={4.5} />
-              <BubbleParticle delay={0.4} size={4} x={-2} y={40} duration={3.8} />
+              {!incomingCall && (
+                <>
+                  <BubbleParticle delay={0} size={5} x={-6} y={10} duration={3.5} />
+                  <BubbleParticle delay={0.8} size={4} x={52} y={5} duration={4} />
+                  <BubbleParticle delay={1.5} size={6} x={20} y={-4} duration={3} />
+                  <BubbleParticle delay={2.2} size={3} x={46} y={20} duration={4.5} />
+                  <BubbleParticle delay={0.4} size={4} x={-2} y={40} duration={3.8} />
+                </>
+              )}
 
-              {/* Online pulse dot */}
+              {/* Online / Call pulse dot */}
               <motion.div
-                className="absolute top-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-background shadow-[0_0_6px_theme(colors.emerald.400)]"
+                className={`absolute top-0 right-0 w-3 h-3 rounded-full border-2 border-background shadow-[0_0_6px_theme(colors.emerald.400)] ${incomingCall ? "bg-green-400" : "bg-emerald-400"}`}
                 animate={{ scale: [1, 1.3, 1] }}
-                transition={{ repeat: Infinity, duration: 2 }}
+                transition={{ repeat: Infinity, duration: incomingCall ? 0.6 : 2 }}
               />
             </div>
           </motion.button>
@@ -311,8 +626,10 @@ const AIChatWidget: React.FC = () => {
               <div className="flex-1">
                 <p className="text-sm font-semibold text-foreground">{agentName || "Support"}</p>
                 <div className="flex items-center gap-1.5">
-                  <div className={`w-1.5 h-1.5 rounded-full ${liveMode ? "bg-emerald-400" : "bg-primary"}`} />
-                  <p className="text-[10px] text-muted-foreground">{liveMode ? "Live agent" : "AI assistant"}</p>
+                  <div className={`w-1.5 h-1.5 rounded-full ${callActive ? "bg-green-400 animate-pulse" : liveMode ? "bg-emerald-400" : "bg-primary"}`} />
+                  <p className="text-[10px] text-muted-foreground">
+                    {callActive ? "Voice call active" : liveMode ? "Live agent" : "AI assistant"}
+                  </p>
                 </div>
               </div>
               {user && !liveMode && (
@@ -324,6 +641,21 @@ const AIChatWidget: React.FC = () => {
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
+
+            {/* Incoming call UI */}
+            <IncomingCallWidget visible={incomingCall} onAccept={acceptCall} onReject={rejectCall} />
+
+            {/* Active call bar */}
+            <AnimatePresence>
+              {callActive && (
+                <ActiveCallWidget
+                  duration={callDuration}
+                  muted={callMuted}
+                  onToggleMute={toggleCallMute}
+                  onHangup={hangupCall}
+                />
+              )}
+            </AnimatePresence>
 
             {/* Messages */}
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -358,6 +690,28 @@ const AIChatWidget: React.FC = () => {
                         animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.15 }} />
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Past conversations with delete option */}
+              {!liveMode && !callActive && pastConversations.length > 0 && messages.length <= 1 && (
+                <div className="mt-4 pt-3 border-t border-border/30">
+                  <p className="text-[11px] text-muted-foreground mb-2">Previous chats</p>
+                  {pastConversations.slice(0, 5).map((conv: any) => (
+                    <div key={conv.id} className="flex items-center justify-between gap-2 py-1.5 px-2 rounded-lg hover:bg-secondary/30 group">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-foreground truncate">{conv.subject}</p>
+                        <p className="text-[10px] text-muted-foreground">{conv.status} · {new Date(conv.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <button
+                        onClick={() => deleteConversation(conv.id)}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-destructive/10 text-destructive transition-all"
+                        title="Delete chat"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
