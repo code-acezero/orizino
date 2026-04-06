@@ -218,16 +218,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </div>
           {/* Floating Add to Cart */}
           <motion.button
-            initial={{ y: 20, opacity: 0 }}
-            whileInView={{ y: 20, opacity: 0 }}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onClick={handleAddToCart}
+            disabled={addingToCart}
             className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-2.5 text-xs font-semibold
               translate-y-5 opacity-0 group-hover:translate-y-0 group-hover:opacity-100
               transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]
-              hover:brightness-110 active:scale-95"
+              hover:brightness-110 active:scale-95 disabled:opacity-70"
           >
-            <ShoppingCart className="w-3.5 h-3.5" />
-            Add to Cart
+            {addingToCart ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShoppingCart className="w-3.5 h-3.5" />}
+            {addingToCart ? "Adding..." : "Add to Cart"}
           </motion.button>
         </motion.div>
       </Link>
