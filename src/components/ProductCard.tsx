@@ -104,6 +104,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
               ),
             }}
           />
+          {/* 3D box inner edge shadows */}
+          <motion.div
+            className="pointer-events-none absolute inset-0 z-[11] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            style={{
+              boxShadow: useTransform(
+                [innerTop, innerBottom, innerLeft, innerRight],
+                ([t, b, l, r]) =>
+                  `inset 0 ${16 * (t as number)}px ${20 * (t as number)}px -6px hsl(var(--foreground) / ${(t as number) * 0.6}), ` +
+                  `inset 0 -${16 * (b as number)}px ${20 * (b as number)}px -6px hsl(var(--foreground) / ${(b as number) * 0.6}), ` +
+                  `inset ${16 * (l as number)}px 0 ${20 * (l as number)}px -6px hsl(var(--foreground) / ${(l as number) * 0.5}), ` +
+                  `inset -${16 * (r as number)}px 0 ${20 * (r as number)}px -6px hsl(var(--foreground) / ${(r as number) * 0.5})`
+              ),
+            }}
+          />
           {discount > 0 && (
             <span className="absolute top-3 left-3 btn-pill bg-destructive text-destructive-foreground text-xs py-1 px-3 z-20">
               -{discount}%
