@@ -161,7 +161,7 @@ const ParallaxSlider: React.FC = () => {
 
   const cfg = configData || defaultConfig;
 
-  const slides = useMemo(() => dbSlides.map((s) => ({
+  const slides = useMemo(() => dbSlides.map((s: any) => ({
     id: s.id,
     title: s.title,
     subtitle: s.subtitle || "",
@@ -169,6 +169,7 @@ const ParallaxSlider: React.FC = () => {
     image: s.image_url,
     cta: s.cta_text || "",
     ctaLink: s.cta_link || "/shop",
+    textAlign: (s.text_align as string) || "left",
   })), [dbSlides]);
 
   const wrap = useCallback((n: number) => ((n % slides.length) + slides.length) % slides.length, [slides.length]);
@@ -322,8 +323,14 @@ const ParallaxSlider: React.FC = () => {
         </motion.div>
       </AnimatePresence>
 
+      {/* ── Overlay gradient ── */}
+      <div className="absolute inset-0 z-[10] pointer-events-none parallax-overlay" />
+
+      {/* ── Vignette ── */}
+      {cfg.show_vignette && <div className="absolute inset-0 z-[12] pointer-events-none" style={{ boxShadow: "inset 0 0 120px 40px rgba(0,0,0,0.5)" }} />}
+
       {/* ── Particle / dust overlay ── */}
-      {cfg.show_particles && (
+      {cfg.show_particles && containerSize.w > 0 && containerSize.h > 0 && (
         <ParticleOverlay
           width={containerSize.w}
           height={containerSize.h}
@@ -333,18 +340,16 @@ const ParallaxSlider: React.FC = () => {
         />
       )}
 
-      {/* ── Vignette ── */}
-      {cfg.show_vignette && <div className="absolute inset-0 z-[12] pointer-events-none parallax-vignette" />}
-
-      {/* ── Overlay gradient ── */}
-      <div className="absolute inset-0 z-10 pointer-events-none parallax-overlay" />
-
       {/* ── Text layer (moves slightly WITH mouse = foreground depth) ── */}
       <motion.div
-        className="absolute inset-0 z-20 flex items-end"
+        className={`absolute inset-0 z-20 flex items-end ${
+          currentSlide.textAlign === "center" ? "justify-center" : currentSlide.textAlign === "right" ? "justify-end" : "justify-start"
+        }`}
         style={{ x: textX, y: textY, transformStyle: "preserve-3d" }}
       >
-        <div className="container mx-auto px-4 md:px-8 lg:px-16 pb-20 md:pb-16">
+        <div className={`container mx-auto px-4 md:px-8 lg:px-16 pb-20 md:pb-16 ${
+          currentSlide.textAlign === "center" ? "text-center flex flex-col items-center" : currentSlide.textAlign === "right" ? "text-right flex flex-col items-end" : ""
+        }`}>
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={`text-${currentSlide.id}`}
@@ -352,7 +357,7 @@ const ParallaxSlider: React.FC = () => {
               initial="enter"
               animate="center"
               exit="exit"
-              className="max-w-lg"
+              className={`max-w-lg ${currentSlide.textAlign === "center" ? "items-center" : currentSlide.textAlign === "right" ? "items-end" : ""}`}
             >
               {subtitleEl(currentSlide.subtitle)}
               <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold font-display mb-3 md:mb-4 leading-tight text-white drop-shadow-lg">

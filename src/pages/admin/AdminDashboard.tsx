@@ -8,6 +8,7 @@ import {
   Package, ShoppingCart, Users, DollarSign, TrendingUp, TrendingDown,
   Star, ArrowRight, Clock, CheckCircle2, XCircle, Truck, Eye,
   BarChart3, Activity, Layers, Filter, AlertTriangle, Globe, ExternalLink,
+  Phone,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import DeviceBrowserBreakdown from "@/components/admin/DeviceBrowserBreakdown";
@@ -15,7 +16,7 @@ import GeoBreakdown from "@/components/admin/GeoBreakdown";
 import { format, subDays, startOfDay, differenceInDays } from "date-fns";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell,
+  ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar,
 } from "recharts";
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
@@ -607,6 +608,9 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
 
+      {/* Call Analytics */}
+      <CallAnalyticsSection dateRange={dateRange} />
+
       {/* Visitor World Map */}
       <GeoBreakdown analyticsData={analyticsData} />
 
@@ -835,6 +839,152 @@ const AdminDashboard = () => {
         </div>
       </div>
     </motion.div>
+  );
+};
+
+/* ── Call Analytics Section ── */
+const CallAnalyticsSection = ({ dateRange }: { dateRange: { from: string; to: string; days: number; label: string } }) => {
+  const { data: callLogs = [] } = useQuery({
+    queryKey: ["admin-call-analytics", dateRange.from, dateRange.to],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("call_logs")
+        .select("*")
+        .gte("created_at", dateRange.from)
+        .lte("created_at", dateRange.to)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 30_000,
+  });
+
+  const analytics = useMemo(() => {
+    if (!callLogs.length) return null;
+
+    const totalCalls = callLogs.length;
+    const completed = callLogs.filter((c: any) => c.status === "completed");
+    const connected = callLogs.filter((c: any) => c.status === "connected" || c.status === "completed");
+    const missed = callLogs.filter((c: any) => c.status === "missed").length;
+    const rejected = callLogs.filter((c: any) => c.status === "rejected").length;
+
+    const completionRate = totalCalls > 0 ? ((connected.length / totalCalls) * 100).toFixed(1) : "0";
+    const avgDuration = completed.length > 0
+      ? Math.round(completed.reduce((s: number, c: any) => s + (c.duration_seconds || 0), 0) / completed.length)
+      : 0;
+
+    // Calls per day chart
+    const dailyMap: Record<string, number> = {};
+    for (let i = dateRange.days - 1; i >= 0; i--) {
+      const d = format(subDays(new Date(dateRange.to), i), "MMM dd");
+      dailyMap[d] = 0;
+    }
+    callLogs.forEach((c: any) => {
+      const d = format(new Date(c.created_at), "MMM dd");
+      if (d in dailyMap) dailyMap[d]++;
+    });
+    const dailyChart = Object.entries(dailyMap).map(([date, calls]) => ({ date, calls }));
+
+    // Status breakdown
+    const statusData = [
+      { name: "Completed", value: completed.length, fill: "hsl(160, 84%, 45%)" },
+      { name: "Missed", value: missed, fill: "hsl(0, 84%, 60%)" },
+      { name: "Rejected", value: rejected, fill: "hsl(45, 90%, 55%)" },
+      { name: "Other", value: totalCalls - completed.length - missed - rejected, fill: "hsl(215, 20%, 50%)" },
+    ].filter(s => s.value > 0);
+
+    return { totalCalls, completionRate, avgDuration, missed, dailyChart, statusData };
+  }, [callLogs, dateRange]);
+
+  if (!analytics) {
+    return null;
+  }
+
+  const formatDuration = (seconds: number) => {
+    if (seconds < 60) return `${seconds}s`;
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}m ${s}s`;
+  };
+
+  return (
+    <Card className="glass">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Phone className="w-4 h-4 text-primary" />
+              Call Analytics
+            </CardTitle>
+            <CardDescription>{dateRange.label}: {analytics.totalCalls} total calls</CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* KPI row */}
+          <div className="lg:col-span-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="p-3 rounded-xl border border-border/40 bg-secondary/10 text-center">
+              <p className="text-xs text-muted-foreground">Total Calls</p>
+              <p className="text-xl font-display font-bold">{analytics.totalCalls}</p>
+            </div>
+            <div className="p-3 rounded-xl border border-border/40 bg-secondary/10 text-center">
+              <p className="text-xs text-muted-foreground">Completion Rate</p>
+              <p className="text-xl font-display font-bold text-primary">{analytics.completionRate}%</p>
+            </div>
+            <div className="p-3 rounded-xl border border-border/40 bg-secondary/10 text-center">
+              <p className="text-xs text-muted-foreground">Avg Duration</p>
+              <p className="text-xl font-display font-bold">{formatDuration(analytics.avgDuration)}</p>
+            </div>
+            <div className="p-3 rounded-xl border border-border/40 bg-secondary/10 text-center">
+              <p className="text-xs text-muted-foreground">Missed Calls</p>
+              <p className="text-xl font-display font-bold text-destructive">{analytics.missed}</p>
+            </div>
+          </div>
+
+          {/* Calls per day chart */}
+          <div className="lg:col-span-2">
+            <p className="text-sm font-medium mb-3">Calls Per Day</p>
+            <div className="h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={analytics.dailyChart} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 15%, 18%)" />
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: "hsl(215, 15%, 55%)" }} tickLine={false} axisLine={{ stroke: "hsl(220, 15%, 18%)" }} />
+                  <YAxis tick={{ fontSize: 10, fill: "hsl(215, 15%, 55%)" }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <Tooltip contentStyle={{ backgroundColor: "hsl(220, 20%, 10%)", border: "1px solid hsl(220, 15%, 18%)", borderRadius: "12px", fontSize: "12px" }} />
+                  <Bar dataKey="calls" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Status breakdown */}
+          <div>
+            <p className="text-sm font-medium mb-3">Call Outcomes</p>
+            <div className="h-[160px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={analytics.statusData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={4} dataKey="value" strokeWidth={0}>
+                    {analytics.statusData.map((entry: any, i: number) => (
+                      <Cell key={i} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ backgroundColor: "hsl(220, 20%, 10%)", border: "1px solid hsl(220, 15%, 18%)", borderRadius: "12px", fontSize: "12px" }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {analytics.statusData.map((entry: any) => (
+                <div key={entry.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.fill }} />
+                  {entry.name} ({entry.value})
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

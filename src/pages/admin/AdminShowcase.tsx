@@ -90,6 +90,7 @@ const emptySlide = {
   text_color: "",
   transition_type: "fade",
   product_id: null as string | null,
+  text_align: "left",
 };
 
 /* ── Live Slide Preview ── */
@@ -836,6 +837,18 @@ const AdminShowcase = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div><Label>CTA Text</Label><Input value={editing.cta_text || ""} onChange={(e) => setEditing({ ...editing, cta_text: e.target.value })} /></div>
                   <div><Label>CTA Link</Label><Input value={editing.cta_link || ""} onChange={(e) => setEditing({ ...editing, cta_link: e.target.value })} /></div>
+                </div>
+
+                <div>
+                  <Label>Text & Button Alignment</Label>
+                  <Select value={editing.text_align || "left"} onValueChange={(v) => setEditing({ ...editing, text_align: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="left">Left</SelectItem>
+                      <SelectItem value="center">Center</SelectItem>
+                      <SelectItem value="right">Right</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <Card className="border-border/50">
