@@ -1,10 +1,13 @@
-import React, { useRef, useCallback } from "react";
+import React, { useRef, useCallback, useState } from "react";
 import { Link } from "react-router-dom";
-import { Heart, ShoppingCart, Star } from "lucide-react";
+import { Heart, ShoppingCart, Star, Loader2 } from "lucide-react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { trackClick } from "@/hooks/use-analytics";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export interface ProductCardProps {
   id: string;
@@ -19,6 +22,7 @@ export interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
+  id,
   name,
   price,
   compareAtPrice,
@@ -31,6 +35,34 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const { formatPrice } = useCurrency();
   const cardRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
+  const [addingToCart, setAddingToCart] = useState(false);
+
+  const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast.error("Please sign in to add items to cart"); return; }
+    setAddingToCart(true);
+    try {
+      const { data: existing } = await supabase
+        .from("cart_items")
+        .select("id, quantity")
+        .eq("user_id", user.id)
+        .eq("product_id", id)
+        .is("variant_id", null)
+        .maybeSingle();
+      if (existing) {
+        await supabase.from("cart_items").update({ quantity: existing.quantity + 1 }).eq("id", existing.id);
+      } else {
+        await supabase.from("cart_items").insert({ user_id: user.id, product_id: id, quantity: 1 });
+      }
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      queryClient.invalidateQueries({ queryKey: ["cart-count"] });
+      toast.success(`${name} added to cart`);
+    } catch { toast.error("Failed to add to cart"); }
+    finally { setAddingToCart(false); }
+  }, [id, name, queryClient]);
 
   const discount = compareAtPrice
     ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
@@ -186,16 +218,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </div>
           {/* Floating Add to Cart */}
           <motion.button
-            initial={{ y: 20, opacity: 0 }}
-            whileInView={{ y: 20, opacity: 0 }}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onClick={handleAddToCart}
+            disabled={addingToCart}
             className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-2.5 text-xs font-semibold
               translate-y-5 opacity-0 group-hover:translate-y-0 group-hover:opacity-100
               transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]
-              hover:brightness-110 active:scale-95"
+              hover:brightness-110 active:scale-95 disabled:opacity-70"
           >
-            <ShoppingCart className="w-3.5 h-3.5" />
-            Add to Cart
+            {addingToCart ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShoppingCart className="w-3.5 h-3.5" />}
+            {addingToCart ? "Adding..." : "Add to Cart"}
           </motion.button>
         </motion.div>
       </Link>
