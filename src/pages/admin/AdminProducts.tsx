@@ -583,69 +583,155 @@ const AdminProducts = () => {
 
         {/* Product Page Layout */}
         <TabsContent value="page-layout" className="mt-4">
-          <div className="space-y-6 max-w-3xl">
-            <Card className="glass">
-              <CardHeader>
-                <CardTitle>Product Page Layout</CardTitle>
-                <CardDescription>Choose the visual style for product detail pages.</CardDescription>
+          <div className="space-y-6 max-w-4xl">
+
+            {/* Recommended Combinations */}
+            <Card className="glass border-primary/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base"><Sparkles className="w-4 h-4 text-primary" /> Recommended Combinations</CardTitle>
+                <CardDescription>Click a recommendation to auto-apply both settings.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {([
-                    { id: "minimal", label: "Apple-Style Minimal", desc: "Clean whitespace, large typography, no glass effects" },
-                    { id: "premium", label: "Premium E-Commerce", desc: "Glassmorphism, gradient accents, trust badges, micro-interactions" },
-                    { id: "editorial", label: "Editorial / Magazine", desc: "Full-width imagery, asymmetric layout, storytelling format" },
-                  ] as const).map((opt) => (
+                    { layout: "dark-luxury", gallery: "infinity", label: "✨ Luxury Immersive", desc: "Dark luxury + Infinity Loop — premium cinematic experience" },
+                    { layout: "glass", gallery: "coverflow", label: "🔮 Glass Coverflow", desc: "Glassmorphism + Coverflow — modern & interactive" },
+                    { layout: "neon", gallery: "parallax-stack", label: "⚡ Neon Stack", desc: "Neon + Parallax Stack — bold, energetic, eye-catching" },
+                    { layout: "minimal", gallery: "default", label: "🤍 Clean Classic", desc: "Minimal + Classic Gallery — Apple-style simplicity" },
+                    { layout: "magazine", gallery: "mosaic", label: "📰 Editorial Grid", desc: "Magazine + Mosaic — storytelling, editorial feel" },
+                    { layout: "glass", gallery: "filmstrip", label: "🎬 Cinematic Film", desc: "Glass + Filmstrip — vintage cinema aesthetic" },
+                  ] as const).map((rec) => (
                     <button
-                      key={opt.id}
-                      onClick={() => setPageLayout(opt.id)}
-                      className={`text-left p-4 rounded-2xl border-2 transition-all ${
-                        pageLayout === opt.id
-                          ? "border-primary bg-primary/10"
-                          : "border-border/50 hover:border-primary/30"
+                      key={rec.label}
+                      onClick={() => { setPageLayout(rec.layout); setGalleryStyle(rec.gallery); }}
+                      className={`text-left p-3 rounded-xl border transition-all text-xs ${
+                        pageLayout === rec.layout && galleryStyle === rec.gallery
+                          ? "border-primary bg-primary/10 ring-1 ring-primary/30"
+                          : "border-border/50 hover:border-primary/30 hover:bg-secondary/30"
                       }`}
                     >
-                      <p className="font-semibold text-foreground text-sm">{opt.label}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{opt.desc}</p>
-                      {pageLayout === opt.id && (
-                        <Badge variant="default" className="mt-2">Active</Badge>
-                      )}
+                      <p className="font-semibold text-foreground">{rec.label}</p>
+                      <p className="text-muted-foreground mt-0.5 leading-relaxed">{rec.desc}</p>
                     </button>
                   ))}
                 </div>
               </CardContent>
             </Card>
 
+            {/* Page Layout Style */}
             <Card className="glass">
               <CardHeader>
-                <CardTitle>Image Gallery Style</CardTitle>
-                <CardDescription>Choose how product images are displayed on the detail page.</CardDescription>
+                <CardTitle>Page Layout Style</CardTitle>
+                <CardDescription>Choose the visual theme for product detail pages.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {([
-                    { id: "default", label: "Classic Gallery", desc: "Traditional thumbnail-based gallery with zoom lens and lightbox" },
-                    { id: "infinity", label: "Infinity Loop", desc: "GSAP-powered infinite 3D carousel with blurred background transitions" },
+                    { id: "dark-luxury", label: "Dark Luxury", desc: "Deep blacks, gold accents, premium feel with subtle glow effects", emoji: "🖤", preview: "bg-gradient-to-br from-black via-gray-900 to-black" },
+                    { id: "glass", label: "Glassmorphism", desc: "Frosted glass cards, blur effects, translucent layers with depth", emoji: "🔮", preview: "bg-gradient-to-br from-primary/20 via-background to-primary/10" },
+                    { id: "neon", label: "Neon Glow", desc: "Vibrant neon accents, electric shadows, cyberpunk energy", emoji: "⚡", preview: "bg-gradient-to-br from-background via-primary/5 to-background" },
+                    { id: "minimal", label: "Apple Minimal", desc: "Pure whitespace, clean typography, zero decoration", emoji: "🤍", preview: "bg-gradient-to-br from-white via-gray-50 to-white dark:from-gray-950 dark:via-gray-900 dark:to-gray-950" },
+                    { id: "magazine", label: "Editorial Magazine", desc: "Full-width hero, asymmetric grid, storytelling format", emoji: "📰", preview: "bg-gradient-to-br from-amber-50 via-background to-orange-50 dark:from-amber-950/30 dark:via-background dark:to-orange-950/30" },
                   ] as const).map((opt) => (
                     <button
                       key={opt.id}
-                      onClick={() => setGalleryStyle(opt.id)}
-                      className={`text-left p-4 rounded-2xl border-2 transition-all ${
-                        galleryStyle === opt.id
-                          ? "border-primary bg-primary/10"
-                          : "border-border/50 hover:border-primary/30"
+                      onClick={() => setPageLayout(opt.id)}
+                      className={`text-left rounded-2xl border-2 transition-all overflow-hidden ${
+                        pageLayout === opt.id ? "border-primary ring-2 ring-primary/20 scale-[1.02]" : "border-border/50 hover:border-primary/30"
                       }`}
                     >
-                      <p className="font-semibold text-foreground text-sm">{opt.label}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{opt.desc}</p>
-                      {galleryStyle === opt.id && (
-                        <Badge variant="default" className="mt-2">Active</Badge>
-                      )}
+                      <div className={`h-20 ${opt.preview} relative flex items-center justify-center`}>
+                        <span className="text-3xl">{opt.emoji}</span>
+                        {pageLayout === opt.id && (
+                          <Badge variant="default" className="absolute top-2 right-2 text-[10px] py-0">Active</Badge>
+                        )}
+                      </div>
+                      <div className="p-3">
+                        <p className="font-semibold text-foreground text-sm">{opt.label}</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{opt.desc}</p>
+                      </div>
                     </button>
                   ))}
                 </div>
               </CardContent>
             </Card>
+
+            {/* Gallery Style */}
+            <Card className="glass">
+              <CardHeader>
+                <CardTitle>Image Gallery Style</CardTitle>
+                <CardDescription>Choose how product images are displayed.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {([
+                    { id: "default", label: "Classic Gallery", desc: "Thumbnail strip, zoom lens, lightbox — reliable & familiar", emoji: "🖼️" },
+                    { id: "infinity", label: "Infinity Loop", desc: "3D GSAP infinite carousel with blur transitions & auto-play", emoji: "♾️" },
+                    { id: "coverflow", label: "Coverflow 3D", desc: "iTunes-style coverflow with perspective rotation", emoji: "💿" },
+                    { id: "filmstrip", label: "Filmstrip Cinema", desc: "Vintage film aesthetic with sprocket frames", emoji: "🎬" },
+                    { id: "mosaic", label: "Grid Mosaic", desc: "Pinterest-style adaptive grid with hover zoom", emoji: "🧩" },
+                    { id: "parallax-stack", label: "Parallax Stack", desc: "Stacked cards with 3D tilt and depth parallax", emoji: "📚" },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.id}
+                      onClick={() => setGalleryStyle(opt.id)}
+                      className={`text-left p-4 rounded-2xl border-2 transition-all ${
+                        galleryStyle === opt.id ? "border-primary bg-primary/10 ring-1 ring-primary/20" : "border-border/50 hover:border-primary/30"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xl">{opt.emoji}</span>
+                        <p className="font-semibold text-foreground text-sm">{opt.label}</p>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">{opt.desc}</p>
+                      {galleryStyle === opt.id && <Badge variant="default" className="mt-2 text-[10px] py-0">Active</Badge>}
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Live Preview */}
+            <Card className="glass">
+              <CardHeader>
+                <CardTitle>Live Preview</CardTitle>
+                <CardDescription>Current selection: <strong>{pageLayout}</strong> layout + <strong>{galleryStyle}</strong> gallery</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-xl border border-border/50 overflow-hidden bg-background/50 p-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Mock gallery preview */}
+                    <div className={`aspect-square rounded-xl overflow-hidden relative ${
+                      pageLayout === "dark-luxury" ? "bg-black" : pageLayout === "neon" ? "bg-background border border-primary/20 shadow-[0_0_20px_hsl(var(--primary)/0.1)]" : "bg-secondary/10"
+                    }`}>
+                      <div className="absolute inset-4 rounded-lg bg-muted/20 flex items-center justify-center">
+                        <span className="text-4xl opacity-30">
+                          {galleryStyle === "infinity" ? "♾️" : galleryStyle === "coverflow" ? "💿" : galleryStyle === "filmstrip" ? "🎬" : galleryStyle === "mosaic" ? "🧩" : galleryStyle === "parallax-stack" ? "📚" : "🖼️"}
+                        </span>
+                      </div>
+                      <div className="absolute bottom-2 left-2 right-2 text-center">
+                        <span className="text-[10px] text-muted-foreground bg-background/60 backdrop-blur px-2 py-0.5 rounded-full">{galleryStyle} gallery</span>
+                      </div>
+                    </div>
+                    {/* Mock info preview */}
+                    <div className="space-y-2 py-2">
+                      <div className={`h-2 rounded-full w-16 ${pageLayout === "neon" ? "bg-primary/40 shadow-[0_0_6px_hsl(var(--primary)/0.3)]" : "bg-primary/20"}`} />
+                      <div className={`h-4 rounded-full w-3/4 ${pageLayout === "dark-luxury" ? "bg-white/20" : "bg-foreground/15"}`} />
+                      <div className="flex gap-1">{Array.from({length:5}).map((_,i) => <div key={i} className="w-3 h-3 rounded-full bg-primary/30" />)}</div>
+                      <div className={`h-6 rounded-full w-1/2 ${
+                        pageLayout === "dark-luxury" ? "bg-amber-400/20" : pageLayout === "neon" ? "bg-primary/30 shadow-[0_0_8px_hsl(var(--primary)/0.2)]" : "bg-foreground/15"
+                      }`} />
+                      <div className="h-2 rounded-full w-full bg-muted/20 mt-2" />
+                      <div className="h-2 rounded-full w-5/6 bg-muted/20" />
+                      <div className={`h-8 rounded-xl w-full mt-3 ${
+                        pageLayout === "neon" ? "bg-primary/20 border border-primary/30" : "bg-primary/15"
+                      }`} />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <Button className="w-full" onClick={() => saveLayoutMutation.mutate()} disabled={saveLayoutMutation.isPending}>
               {saveLayoutMutation.isPending ? "Saving..." : "Save Product Page Settings"}
             </Button>
