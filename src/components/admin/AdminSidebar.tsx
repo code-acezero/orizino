@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
   SidebarContent,
@@ -79,26 +81,51 @@ export function AdminSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
 
+  const { data: openSupportCount = 0 } = useQuery({
+    queryKey: ["admin-open-support-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("support_conversations")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "open");
+      return count || 0;
+    },
+    refetchInterval: 10000,
+  });
+
   const isActive = (path: string) =>
     path === "/admin"
       ? location.pathname === "/admin"
       : location.pathname.startsWith(path);
+
+  const getBadge = (url: string) => {
+    if (url === "/admin/support" && openSupportCount > 0) return openSupportCount;
+    return null;
+  };
 
   const renderGroup = (label: string, items: typeof mainItems) => (
     <SidebarGroup>
       <SidebarGroupLabel>{label}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                <NavLink to={item.url} end={item.url === "/admin"}>
-                  <item.icon className="h-4 w-4" />
-                  {!collapsed && <span>{item.title}</span>}
-                </NavLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {items.map((item) => {
+            const badge = getBadge(item.url);
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                  <NavLink to={item.url} end={item.url === "/admin"}>
+                    <item.icon className="h-4 w-4" />
+                    {!collapsed && <span>{item.title}</span>}
+                    {badge != null && (
+                      <span className="ml-auto min-w-[20px] h-5 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5">
+                        {badge}
+                      </span>
+                    )}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
