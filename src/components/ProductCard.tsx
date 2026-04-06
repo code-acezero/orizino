@@ -22,6 +22,7 @@ export interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
+  id,
   name,
   price,
   compareAtPrice,
@@ -32,6 +33,36 @@ const ProductCard: React.FC<ProductCardProps> = ({
   className = "",
 }) => {
   const { formatPrice } = useCurrency();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
+  const [addingToCart, setAddingToCart] = useState(false);
+
+  const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast.error("Please sign in to add items to cart"); return; }
+    setAddingToCart(true);
+    try {
+      const { data: existing } = await supabase
+        .from("cart_items")
+        .select("id, quantity")
+        .eq("user_id", user.id)
+        .eq("product_id", id)
+        .is("variant_id", null)
+        .maybeSingle();
+      if (existing) {
+        await supabase.from("cart_items").update({ quantity: existing.quantity + 1 }).eq("id", existing.id);
+      } else {
+        await supabase.from("cart_items").insert({ user_id: user.id, product_id: id, quantity: 1 });
+      }
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      queryClient.invalidateQueries({ queryKey: ["cart-count"] });
+      toast.success(`${name} added to cart`);
+    } catch { toast.error("Failed to add to cart"); }
+    finally { setAddingToCart(false); }
+  }, [id, name, queryClient]);
   const cardRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
