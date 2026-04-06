@@ -8,6 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { toast } from "@/lib/app-toast";
+import { getIceServers } from "@/lib/ice-servers";
 
 interface Msg {
   role: "user" | "assistant" | "system";
@@ -320,11 +321,9 @@ const AIChatWidget: React.FC = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       localStreamRef.current = stream;
 
+      const iceServers = await getIceServers();
       const pc = new RTCPeerConnection({
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:19302" },
-        ],
+        iceServers: iceServers as RTCIceServer[],
       });
       peerRef.current = pc;
 
