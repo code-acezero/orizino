@@ -982,6 +982,7 @@ export type Database = {
           product_id: string | null
           sort_order: number
           subtitle: string | null
+          text_align: string
           text_color: string | null
           title: string
           transition_type: string
@@ -997,6 +998,7 @@ export type Database = {
           product_id?: string | null
           sort_order?: number
           subtitle?: string | null
+          text_align?: string
           text_color?: string | null
           title: string
           transition_type?: string
@@ -1012,6 +1014,7 @@ export type Database = {
           product_id?: string | null
           sort_order?: number
           subtitle?: string | null
+          text_align?: string
           text_color?: string | null
           title?: string
           transition_type?: string
