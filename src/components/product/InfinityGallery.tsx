@@ -4,7 +4,6 @@ import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import gsap from "gsap";
 import ZoomableImage from "@/components/product/ZoomableImage";
-import gsap from "gsap";
 
 interface InfinityGalleryProps {
   images: string[];
