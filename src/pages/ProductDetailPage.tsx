@@ -13,6 +13,7 @@ import Footer from "@/components/Footer";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ProductCard from "@/components/ProductCard";
 import ImageGallery from "@/components/product/ImageGallery";
+import InfinityGallery from "@/components/product/InfinityGallery";
 import ProductTabs from "@/components/product/ProductTabs";
 import ProductActions from "@/components/product/ProductActions";
 import CurrencyWidget from "@/components/product/CurrencyWidget";
@@ -23,6 +24,7 @@ import NotifyWhenAvailable from "@/components/product/NotifyWhenAvailable";
 import { Badge } from "@/components/ui/badge";
 
 type LayoutStyle = "minimal" | "premium" | "editorial";
+type GalleryStyle = "default" | "infinity";
 
 const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -36,7 +38,7 @@ const ProductDetailPage: React.FC = () => {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
   // Fetch product page layout setting
-  const { data: layoutStyle } = useQuery<LayoutStyle>({
+  const { data: pageSettings } = useQuery({
     queryKey: ["product-page-layout"],
     queryFn: async () => {
       const { data } = await supabase
@@ -44,11 +46,15 @@ const ProductDetailPage: React.FC = () => {
         .select("value")
         .eq("key", "product_page_layout")
         .maybeSingle();
-      const val = (data?.value as any)?.value ?? data?.value;
-      return (val as LayoutStyle) || "premium";
+      const val = (data?.value as any) || {};
+      return {
+        layout: (typeof val === "string" ? val : val.layout || val.value || "premium") as LayoutStyle,
+        gallery: ((val as any).gallery || "default") as GalleryStyle,
+      };
     },
   });
-  const layout: LayoutStyle = layoutStyle || "premium";
+  const layout: LayoutStyle = pageSettings?.layout || "premium";
+  const galleryStyle: GalleryStyle = pageSettings?.gallery || "default";
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", slug],
@@ -312,7 +318,10 @@ const ProductDetailPage: React.FC = () => {
         {isEditorial && (
           <div className="space-y-12">
             {/* Full-width hero image */}
-            <ImageGallery key={selectedColor || "default"} images={images} productName={product.name} discount={discount} layout="editorial" />
+            {galleryStyle === "infinity"
+              ? <InfinityGallery key={selectedColor || "default"} images={images} productName={product.name} discount={discount} />
+              : <ImageGallery key={selectedColor || "default"} images={images} productName={product.name} discount={discount} layout="editorial" />
+            }
 
             {/* Content below */}
             <div className="grid md:grid-cols-5 gap-10">
@@ -430,7 +439,10 @@ const ProductDetailPage: React.FC = () => {
         {!isEditorial && (
           <>
             <div className="grid md:grid-cols-2 gap-10">
-              <ImageGallery key={selectedColor || "default"} images={images} productName={product.name} discount={discount} layout={layout} />
+              {galleryStyle === "infinity"
+                ? <InfinityGallery key={selectedColor || "default"} images={images} productName={product.name} discount={discount} />
+                : <ImageGallery key={selectedColor || "default"} images={images} productName={product.name} discount={discount} layout={layout} />
+              }
 
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                 {productCat && (
