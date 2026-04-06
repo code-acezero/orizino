@@ -886,8 +886,10 @@ const AdminShowcase = () => {
                     <>
                       <img src={editing.image_url} alt="" className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-gradient-to-r from-background/70 to-transparent" />
-                      <div className="absolute inset-0 flex items-end p-4">
-                        <div>
+                      <div className={`absolute inset-0 flex items-end p-4 ${
+                        editing.text_align === "center" ? "justify-center text-center" : editing.text_align === "right" ? "justify-end text-right" : ""
+                      }`}>
+                        <div className={editing.text_align === "center" ? "flex flex-col items-center" : editing.text_align === "right" ? "flex flex-col items-end" : ""}>
                           {editing.subtitle && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary inline-block mb-1">{editing.subtitle}</span>}
                           <h3 className="text-base font-display font-bold" style={editing.text_color ? { color: editing.text_color } : undefined}>{editing.title || "Slide Title"}</h3>
                           {editing.description && <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">{editing.description}</p>}
