@@ -8,6 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { toast } from "@/lib/app-toast";
+import { getIceServers } from "@/lib/ice-servers";
 
 interface Msg {
   role: "user" | "assistant" | "system";

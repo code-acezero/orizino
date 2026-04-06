@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { getIceServers } from "@/lib/ice-servers";
 
 interface VoiceCallButtonProps {
   conversationId: string;
@@ -78,11 +79,10 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       localStreamRef.current = stream;
 
+      const iceServers = await getIceServers();
+
       const pc = new RTCPeerConnection({
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:19302" },
-        ],
+        iceServers: iceServers as RTCIceServer[],
       });
       peerRef.current = pc;
 
