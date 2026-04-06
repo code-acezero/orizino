@@ -337,7 +337,9 @@ const ProductDetailPage: React.FC = () => {
   );
 
   // === Shared product info section ===
-  const ProductInfo = ({ sticky = false }: { sticky?: boolean }) => (
+  const ProductInfo = ({ sticky = false }: { sticky?: boolean }) => {
+    // Memoize title/rating outside of quantity-dependent content
+    return (
     <div className={`space-y-3 sm:space-y-4 md:space-y-5 ${sticky ? "md:sticky md:top-24" : ""}`}>
       {productCat && (
         <motion.span initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
@@ -346,19 +348,18 @@ const ProductDetailPage: React.FC = () => {
         </motion.span>
       )}
 
-      <motion.h1 initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-        className={`font-bold font-display leading-tight ${
-          isMobile
-            ? "text-xl"
-            : layout === "magazine"
-              ? "text-4xl md:text-5xl italic"
-              : "text-3xl md:text-4xl"
-        } ${cfg.textClass}`}>
+      <h1 className={`font-bold font-display leading-tight ${
+        isMobile
+          ? "text-xl"
+          : layout === "magazine"
+            ? "text-4xl md:text-5xl italic"
+            : "text-3xl md:text-4xl"
+      } ${cfg.textClass}`}>
         {product.name}
-      </motion.h1>
+      </h1>
 
       {/* Rating */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="flex items-center gap-1.5 sm:gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2">
         <div className="flex">
           {Array.from({ length: 5 }).map((_, i) => (
             <Star key={i} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${i < Math.round(product.avg_rating || 0)
@@ -367,10 +368,10 @@ const ProductDetailPage: React.FC = () => {
           ))}
         </div>
         <span className="text-xs sm:text-sm text-muted-foreground">{product.avg_rating?.toFixed(1) || "0"} ({product.review_count || 0})</span>
-      </motion.div>
+      </div>
 
       {/* Price */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
+      <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
         <span className={isMobile ? cfg.mobilePriceClass : cfg.priceClass}>{formatPrice(effectivePrice)}</span>
         {product.compare_at_price && (
           <span className="text-sm sm:text-lg text-muted-foreground line-through">{formatPrice(product.compare_at_price)}</span>
@@ -383,7 +384,7 @@ const ProductDetailPage: React.FC = () => {
             Save {discount}%
           </span>
         )}
-      </motion.div>
+      </div>
 
       <CurrencyWidget price={effectivePrice} />
 
@@ -429,7 +430,8 @@ const ProductDetailPage: React.FC = () => {
         </div>
       )}
     </div>
-  );
+    );
+  };
 
   // === MAGAZINE layout: full-width gallery, then split content ===
   const isMagazine = layout === "magazine";
