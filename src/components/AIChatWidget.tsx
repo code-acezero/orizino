@@ -79,27 +79,24 @@ const AIChatWidget: React.FC = () => {
   const scrollVisible = useScrollVisibility();
 
   // Smart positioning: detect if sticky bar or bottom nav overlaps and move up
-  const [mascotBottom, setMascotBottom] = useState("bottom-20");
+  const [mascotBottomPx, setMascotBottomPx] = useState(80);
   useEffect(() => {
     const recalc = () => {
-      if (window.innerWidth >= 1024) { setMascotBottom("bottom-6"); return; }
+      if (window.innerWidth >= 1024) { setMascotBottomPx(24); return; }
       const stickyBar = document.getElementById("sticky-add-to-cart");
-      const bottomNav = document.querySelector("nav[data-bottom-nav]") || document.querySelector(".fixed.bottom-0");
-      let highestTop = window.innerHeight;
+      let highestTop = window.innerHeight - 64; // default: above bottom nav (~4rem)
       if (stickyBar) highestTop = Math.min(highestTop, stickyBar.getBoundingClientRect().top);
-      else if (bottomNav) highestTop = Math.min(highestTop, bottomNav.getBoundingClientRect().top);
       const offset = window.innerHeight - highestTop + 12;
-      setMascotBottom(`bottom-[${Math.max(offset, 80)}px]`);
+      setMascotBottomPx(Math.max(offset, 80));
     };
     recalc();
     window.addEventListener("scroll", recalc, { passive: true });
     window.addEventListener("resize", recalc, { passive: true });
-    const observer = new MutationObserver(recalc);
-    observer.observe(document.body, { childList: true, subtree: true });
+    const interval = setInterval(recalc, 1000);
     return () => {
       window.removeEventListener("scroll", recalc);
       window.removeEventListener("resize", recalc);
-      observer.disconnect();
+      clearInterval(interval);
     };
   }, []);
 
