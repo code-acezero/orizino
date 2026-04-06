@@ -239,14 +239,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
             ))}
             <span className="text-xs text-muted-foreground ml-1">({reviewCount})</span>
           </div>
-          <div className="flex items-center gap-2 mt-auto">
-            <span className="font-bold text-foreground group-hover:animate-[priceGlow_1.5s_ease-in-out_infinite] transition-all duration-300"
+          <div className="flex items-center gap-2 mt-auto lg:flex-row lg:items-center flex-col items-center">
+            <span className="font-bold text-foreground group-hover:animate-[priceGlow_1.5s_ease-in-out_infinite] transition-all duration-300 text-sm lg:text-base"
               style={{ textShadow: 'none' }}
             >
               {formatPrice(price)}
             </span>
             {compareAtPrice && (
-              <span className="text-sm text-muted-foreground line-through">
+              <span className="text-xs lg:text-sm text-muted-foreground line-through">
                 {formatPrice(compareAtPrice)}
               </span>
             )}
