@@ -140,6 +140,13 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
     }
   }, [images, activeIndex, updateBackground]);
 
+  // Pause auto-play on user interaction, resume after idle
+  const pauseAutoPlay = useCallback(() => {
+    setAutoPlaying(false);
+    if (idleTimer.current) clearTimeout(idleTimer.current);
+    idleTimer.current = setTimeout(() => setAutoPlaying(true), AUTO_PLAY_IDLE_DELAY);
+  }, []);
+
   const goNext = useCallback(() => {
     if (!animRef.current) return;
     scrubTo(animRef.current.scrub.vars.totalTime + spacing);
@@ -150,9 +157,30 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
     scrubTo(animRef.current.scrub.vars.totalTime - spacing);
   }, [scrubTo]);
 
+  // Auto-play effect
+  useEffect(() => {
+    if (!autoPlaying || lightboxOpen || images.length <= 1) {
+      if (autoPlayTimer.current) clearInterval(autoPlayTimer.current);
+      autoPlayTimer.current = null;
+      return;
+    }
+    autoPlayTimer.current = setInterval(() => {
+      goNext();
+    }, AUTO_PLAY_INTERVAL);
+    return () => {
+      if (autoPlayTimer.current) clearInterval(autoPlayTimer.current);
+    };
+  }, [autoPlaying, lightboxOpen, goNext, images.length]);
+
+  // Cleanup idle timer
+  useEffect(() => {
+    return () => { if (idleTimer.current) clearTimeout(idleTimer.current); };
+  }, []);
+
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.changedTouches[0].clientX;
-  }, []);
+    pauseAutoPlay();
+  }, [pauseAutoPlay]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     const dx = e.changedTouches[0].clientX - touchStartX.current;
@@ -163,9 +191,10 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
+    pauseAutoPlay();
     if (e.deltaY > 0 || e.deltaX > 0) goNext();
     else goPrev();
-  }, [goNext, goPrev]);
+  }, [goNext, goPrev, pauseAutoPlay]);
 
   // Simple fallback for single image
   if (images.length <= 1) {
