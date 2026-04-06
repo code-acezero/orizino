@@ -18,7 +18,6 @@ import InfinityGallery from "@/components/product/InfinityGallery";
 import ProductTabs from "@/components/product/ProductTabs";
 import ProductActions from "@/components/product/ProductActions";
 import CurrencyWidget from "@/components/product/CurrencyWidget";
-import StickyAddToCart from "@/components/product/StickyAddToCart";
 import VariantSelector from "@/components/product/VariantSelector";
 import VariantComparison from "@/components/product/VariantComparison";
 import NotifyWhenAvailable from "@/components/product/NotifyWhenAvailable";
@@ -438,7 +437,19 @@ const ProductDetailPage: React.FC = () => {
 
   return (
     <div className={`min-h-screen ${layout === "dark-luxury" ? "bg-black/20" : ""}`}>
-      <Navbar />
+      <Navbar
+        bottomNavProductTray={{
+          product: {
+            name: product.name,
+            price: effectivePrice,
+            thumbnail: selectedVariant?.image_url ?? product.thumbnail,
+            stockQuantity: effectiveStock,
+          },
+          onAddToCart: addToCart,
+          onBuyNow: buyNow,
+          addingToCart,
+        }}
+      />
       <main className={`container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8 ${isMagazine ? "max-w-6xl" : ""}`}>
         <Breadcrumbs
           items={[
@@ -514,8 +525,6 @@ const ProductDetailPage: React.FC = () => {
       </main>
 
       <Footer />
-      <StickyAddToCart product={{ name: product.name, price: product.price, thumbnail: product.thumbnail, stock_quantity: product.stock_quantity }}
-        onAddToCart={addToCart} onBuyNow={buyNow} addingToCart={addingToCart} />
     </div>
   );
 };

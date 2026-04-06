@@ -83,8 +83,10 @@ const AIChatWidget: React.FC = () => {
   useEffect(() => {
     const recalc = () => {
       if (window.innerWidth >= 1024) { setMascotBottomPx(24); return; }
+      const bottomNavTray = document.getElementById("mobile-bottom-nav-tray");
       const stickyBar = document.getElementById("sticky-add-to-cart");
       let highestTop = window.innerHeight - 64; // default: above bottom nav (~4rem)
+      if (bottomNavTray) highestTop = Math.min(highestTop, bottomNavTray.getBoundingClientRect().top);
       if (stickyBar) highestTop = Math.min(highestTop, stickyBar.getBoundingClientRect().top);
       const offset = window.innerHeight - highestTop + 12;
       setMascotBottomPx(Math.max(offset, 80));

@@ -1,14 +1,28 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, LayoutGrid, ShoppingCart, Heart, User, ChevronDown } from "lucide-react";
+import { Home, LayoutGrid, ShoppingCart, Heart, User, ChevronDown, Zap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 
+export interface BottomNavProductTray {
+  product: {
+    name: string;
+    price: number;
+    thumbnail?: string | null;
+    stockQuantity: number;
+  };
+  onAddToCart: () => void;
+  onBuyNow: () => void;
+  addingToCart: boolean;
+}
+
 interface BottomNavProps {
   onSearchClick: () => void;
   onAuthClick: () => void;
+  productTray?: BottomNavProductTray;
 }
 
 const NAV_ITEMS = [
@@ -21,14 +35,17 @@ const NAV_ITEMS = [
 
 type NavStyle = "liquid" | "notch" | "pill" | "glow" | "wave";
 
-const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => {
+const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick, productTray }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { formatPrice } = useCurrency();
   const [catOpen, setCatOpen] = useState(false);
+  const [trayVisible, setTrayVisible] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const mobileBottomNavId = "mobile-bottom-nav";
+  const canShowProductTray = Boolean(productTray && location.pathname.startsWith("/product/"));
 
   // Load nav style from DB
   const { data: mobileConfig } = useQuery({
@@ -80,6 +97,31 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
 
   const activeIndex = getActiveIndex();
 
+  useEffect(() => {
+    if (!canShowProductTray) {
+      setTrayVisible(false);
+      return;
+    }
+
+    const updateTrayVisibility = () => {
+      if (window.innerWidth >= 1024) {
+        setTrayVisible(false);
+        return;
+      }
+
+      setTrayVisible(window.scrollY > 500);
+    };
+
+    updateTrayVisibility();
+    window.addEventListener("scroll", updateTrayVisibility, { passive: true });
+    window.addEventListener("resize", updateTrayVisibility);
+
+    return () => {
+      window.removeEventListener("scroll", updateTrayVisibility);
+      window.removeEventListener("resize", updateTrayVisibility);
+    };
+  }, [canShowProductTray]);
+
   const handleClick = (item: typeof items[0], index: number) => {
     if (item.path === "__categories__") {
       setCatOpen(!catOpen);
@@ -97,6 +139,58 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
         {cartCount > 99 ? "99+" : cartCount}
       </span>
     ) : null;
+
+  const renderProductTray = (surfaceClassName = "") => (
+    <AnimatePresence>
+      {canShowProductTray && trayVisible && productTray && (
+        <motion.div
+          id="mobile-bottom-nav-tray"
+          initial={{ y: 24, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 24, opacity: 0 }}
+          transition={{ type: "spring", damping: 24, stiffness: 280 }}
+          className="relative z-[60] -mb-px lg:hidden"
+        >
+          <div className={`glass-strong border-t border-border/50 overflow-hidden ${surfaceClassName}`}>
+            <div className="flex items-center gap-2 px-3 py-2.5">
+              {productTray.product.thumbnail && (
+                <img
+                  src={productTray.product.thumbnail}
+                  alt=""
+                  className="w-9 h-9 rounded-xl object-cover shrink-0"
+                />
+              )}
+
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-foreground">{productTray.product.name}</p>
+                <p className="text-lg font-bold text-gradient leading-none mt-1">{formatPrice(productTray.product.price)}</p>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={productTray.onAddToCart}
+                  disabled={productTray.addingToCart || productTray.product.stockQuantity === 0}
+                  className="h-10 px-3 rounded-full bg-secondary text-secondary-foreground text-sm font-semibold inline-flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  {productTray.addingToCart ? "Adding..." : "Cart"}
+                </button>
+
+                <button
+                  onClick={productTray.onBuyNow}
+                  disabled={productTray.product.stockQuantity === 0}
+                  className="h-10 px-3.5 rounded-full bg-gradient-primary text-primary-foreground text-sm font-semibold inline-flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  <Zap className="w-4 h-4" />
+                  Buy Now
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 
   // ── Categories Panel (shared) ──
   const CategoriesPanel = (
@@ -158,6 +252,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
 
     return (
       <nav id={mobileBottomNavId} className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
+        {renderProductTray("border-x-0 rounded-none")}
         <div className="bottom-nav-bar relative">
           <ul className="bottom-nav-list">
             {items.map((item, index) => {
@@ -193,6 +288,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
 
     return (
       <nav id={mobileBottomNavId} className="fixed bottom-0 left-0 right-0 z-50 lg:hidden flex justify-center pb-[env(safe-area-inset-bottom)]">
+        {renderProductTray("mx-2 rounded-t-2xl border-x border-border/50")}
         <div className="notch-nav-wrapper w-full" ref={navRef}>
           <div className="notch-indicator" style={{ left: notchLeft, transition: "left 0.4s cubic-bezier(0.4, 0, 0.2, 1)" }}>
             <div className="notch-dot" />
@@ -228,6 +324,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
   // ══════════════════════════════════════════════
   const renderPill = () => (
     <nav id={mobileBottomNavId} className="fixed bottom-3 left-3 right-3 z-50 lg:hidden">
+      {renderProductTray("rounded-t-[1.75rem] border-x border-border/50")}
       <div className="pill-nav-bar">
         {items.map((item, index) => {
           const isActive = index === activeIndex;
@@ -262,6 +359,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
   // ══════════════════════════════════════════════
   const renderGlow = () => (
     <nav id={mobileBottomNavId} className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
+      {renderProductTray("border-x-0 rounded-none")}
       <div className="glow-nav-bar">
         {items.map((item, index) => {
           const isActive = index === activeIndex;
@@ -304,6 +402,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
 
     return (
       <nav id={mobileBottomNavId} className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
+        {renderProductTray("border-x-0 rounded-none")}
         <div className="wave-nav-bar">
           <svg className="wave-nav-svg" viewBox="0 0 400 62" preserveAspectRatio="none">
             <motion.path
