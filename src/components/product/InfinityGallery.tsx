@@ -249,6 +249,7 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
                   boxShadow: "0 15px 40px rgba(0,0,0,0.6)",
                   backfaceVisibility: "hidden",
                   willChange: "transform, opacity",
+                  transition: "opacity 0.6s ease-in-out",
                 }}
                 onClick={() => {
                   const realIndex = i % images.length;
