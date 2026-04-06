@@ -31,6 +31,7 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const channelRef = useRef<any>(null);
+  const callLogIdRef = useRef<string | null>(null);
 
   const formatDuration = (s: number) => {
     const m = Math.floor(s / 60);
@@ -109,6 +110,10 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
         if (pc.iceConnectionState === "connected") {
           setCallState("connected");
           timerRef.current = setInterval(() => setDuration((d) => d + 1), 1000);
+          // Update call log to connected
+          if (callLogIdRef.current) {
+            supabase.from("call_logs").update({ status: "connected" }).eq("id", callLogIdRef.current).then(() => {});
+          }
         }
         if (pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed") {
           endCall();
@@ -133,6 +138,15 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
 
   const startCall = useCallback(async () => {
     setCallState("requesting");
+
+    // Create call log entry
+    const { data: logData } = await supabase.from("call_logs").insert({
+      conversation_id: conversationId,
+      caller_id: adminId,
+      receiver_id: userId,
+      status: "initiated",
+    }).select("id").single();
+    if (logData) callLogIdRef.current = logData.id;
 
     // Send call request to customer via broadcast
     channelRef.current?.send({
@@ -159,11 +173,27 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
     setTimeout(() => {
       if (callState === "requesting") {
         setCallState("idle");
+        // Update log as missed
+        if (callLogIdRef.current) {
+          supabase.from("call_logs").update({ status: "missed", ended_at: new Date().toISOString() }).eq("id", callLogIdRef.current).then(() => {});
+          callLogIdRef.current = null;
+        }
       }
     }, 30000);
   }, [conversationId, adminId, userId, callState]);
 
   const endCall = useCallback(() => {
+    // Log call end
+    if (callLogIdRef.current) {
+      const finalStatus = callState === "connected" ? "completed" : callState === "rejected" ? "rejected" : "missed";
+      supabase.from("call_logs").update({
+        status: finalStatus,
+        duration_seconds: duration,
+        ended_at: new Date().toISOString(),
+      }).eq("id", callLogIdRef.current).then(() => {});
+      callLogIdRef.current = null;
+    }
+
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -186,7 +216,7 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
     setCallState("idle");
     setDuration(0);
     setMuted(false);
-  }, []);
+  }, [callState, duration]);
 
   const toggleMute = useCallback(() => {
     if (localStreamRef.current) {
