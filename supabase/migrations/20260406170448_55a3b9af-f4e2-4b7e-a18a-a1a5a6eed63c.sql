@@ -1,0 +1,1 @@
+ALTER TABLE public.showcase_slides ADD COLUMN IF NOT EXISTS text_align text NOT NULL DEFAULT 'left';
