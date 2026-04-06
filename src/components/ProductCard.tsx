@@ -38,6 +38,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const [addingToCart, setAddingToCart] = useState(false);
+  const [quickViewOpen, setQuickViewOpen] = useState(false);
 
   const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
