@@ -541,3 +541,14 @@
     }
   }
 }
+
+@keyframes priceGlow {
+  0%, 100% {
+    text-shadow: 0 0 0px transparent;
+    transform: scale(1);
+  }
+  50% {
+    text-shadow: 0 0 8px hsl(var(--primary) / 0.5), 0 0 16px hsl(var(--primary) / 0.2);
+    transform: scale(1.04);
+  }
+}
