@@ -37,12 +37,26 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [8, -8]), { stiffness: 260, damping: 20 });
-  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-8, 8]), { stiffness: 260, damping: 20 });
-  const glareX = useSpring(useTransform(mouseX, [-0.5, 0.5], [0, 100]), { stiffness: 260, damping: 20 });
-  const glareY = useSpring(useTransform(mouseY, [-0.5, 0.5], [0, 100]), { stiffness: 260, damping: 20 });
-  const imgX = useSpring(useTransform(mouseX, [-0.5, 0.5], [6, -6]), { stiffness: 200, damping: 24 });
-  const imgY = useSpring(useTransform(mouseY, [-0.5, 0.5], [6, -6]), { stiffness: 200, damping: 24 });
+  const springCfg = { stiffness: 260, damping: 20 };
+  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [10, -10]), springCfg);
+  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-10, 10]), springCfg);
+  const glareX = useSpring(useTransform(mouseX, [-0.5, 0.5], [0, 100]), springCfg);
+  const glareY = useSpring(useTransform(mouseY, [-0.5, 0.5], [0, 100]), springCfg);
+  // Image shifts opposite to tilt for depth
+  const imgX = useSpring(useTransform(mouseX, [-0.5, 0.5], [10, -10]), { stiffness: 180, damping: 22 });
+  const imgY = useSpring(useTransform(mouseY, [-0.5, 0.5], [10, -10]), { stiffness: 180, damping: 22 });
+  // Dynamic shadow shifts with tilt
+  const shadowX = useSpring(useTransform(mouseX, [-0.5, 0.5], [12, -12]), springCfg);
+  const shadowY = useSpring(useTransform(mouseY, [-0.5, 0.5], [12, -12]), springCfg);
+  const boxShadow = useTransform(
+    [shadowX, shadowY],
+    ([sx, sy]) => `${sx}px ${sy}px 30px -8px hsl(var(--primary) / 0.18), ${(sx as number) * 0.5}px ${(sy as number) * 0.5}px 60px -15px hsl(var(--foreground) / 0.1)`
+  );
+  // Inner edge shadows for 3D box illusion
+  const innerTop = useSpring(useTransform(mouseY, [-0.5, 0.5], [0.35, 0]), springCfg);
+  const innerBottom = useSpring(useTransform(mouseY, [-0.5, 0.5], [0, 0.35]), springCfg);
+  const innerLeft = useSpring(useTransform(mouseX, [-0.5, 0.5], [0.35, 0]), springCfg);
+  const innerRight = useSpring(useTransform(mouseX, [-0.5, 0.5], [0, 0.35]), springCfg);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const rect = cardRef.current?.getBoundingClientRect();
@@ -66,17 +80,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
         rotateY,
         transformPerspective: 800,
         transformStyle: "preserve-3d",
+        boxShadow,
       }}
       className={`group glass rounded-3xl overflow-hidden will-change-transform ${className}`}
     >
       <Link to={`/product/${slug}`} className="block" onClick={() => trackClick("product_card", slug, window.location.pathname, { product_name: name })}>
-        {/* Image with parallax offset */}
-        <div className="relative aspect-square overflow-hidden bg-secondary/20">
+        {/* Image with parallax offset + 3D box effect */}
+        <div className="relative aspect-square overflow-hidden bg-secondary/20" style={{ transformStyle: "preserve-3d" }}>
           <motion.img
             src={thumbnail || "/placeholder.svg"}
             alt={name}
-            style={{ x: imgX, y: imgY, scale: 1.08 }}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            style={{ x: imgX, y: imgY, scale: 1.12 }}
+            className="w-full h-full object-cover"
             loading="lazy"
           />
           {/* Glare overlay */}
