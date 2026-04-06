@@ -12,6 +12,9 @@ interface InfinityGalleryProps {
 
 const MIN_CARDS = 12;
 
+const AUTO_PLAY_INTERVAL = 3500; // ms between auto-advances
+const AUTO_PLAY_IDLE_DELAY = 5000; // ms of inactivity before auto-play resumes
+
 const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, discount = 0 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLUListElement>(null);
@@ -24,6 +27,9 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
   const isMobile = useIsMobile();
   const touchStartX = useRef(0);
   const spacing = 0.1;
+  const autoPlayTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [autoPlaying, setAutoPlaying] = useState(true);
 
   // Duplicate images to ensure enough cards for GSAP seamless loop
   const expandedImages = useMemo(() => {
