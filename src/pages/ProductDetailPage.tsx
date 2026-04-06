@@ -318,7 +318,10 @@ const ProductDetailPage: React.FC = () => {
         {isEditorial && (
           <div className="space-y-12">
             {/* Full-width hero image */}
-            <ImageGallery key={selectedColor || "default"} images={images} productName={product.name} discount={discount} layout="editorial" />
+            {galleryStyle === "infinity"
+              ? <InfinityGallery key={selectedColor || "default"} images={images} productName={product.name} discount={discount} />
+              : <ImageGallery key={selectedColor || "default"} images={images} productName={product.name} discount={discount} layout="editorial" />
+            }
 
             {/* Content below */}
             <div className="grid md:grid-cols-5 gap-10">
