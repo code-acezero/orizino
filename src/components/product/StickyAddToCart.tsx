@@ -15,9 +15,14 @@ interface StickyAddToCartProps {
   addingToCart: boolean;
 }
 
+const MOBILE_BOTTOM_NAV_ID = "mobile-bottom-nav";
+const DEFAULT_MOBILE_NAV_OFFSET = 61;
+const MOBILE_NAV_OVERLAP_PX = 2;
+
 const StickyAddToCart: React.FC<StickyAddToCartProps> = ({ product, onAddToCart, onBuyNow, addingToCart }) => {
   const { formatPrice } = useCurrency();
   const [visible, setVisible] = useState(false);
+  const [bottomOffset, setBottomOffset] = useState(DEFAULT_MOBILE_NAV_OFFSET);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -25,6 +30,34 @@ const StickyAddToCart: React.FC<StickyAddToCartProps> = ({ product, onAddToCart,
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const updateBottomOffset = () => {
+      if (window.innerWidth >= 1024) {
+        setBottomOffset(0);
+        return;
+      }
+
+      const mobileBottomNav = document.getElementById(MOBILE_BOTTOM_NAV_ID);
+      if (!mobileBottomNav) {
+        setBottomOffset(DEFAULT_MOBILE_NAV_OFFSET);
+        return;
+      }
+
+      const { top } = mobileBottomNav.getBoundingClientRect();
+      const nextOffset = Math.max(window.innerHeight - top - MOBILE_NAV_OVERLAP_PX, 0);
+      setBottomOffset(nextOffset);
+    };
+
+    updateBottomOffset();
+    window.addEventListener("resize", updateBottomOffset);
+    window.addEventListener("scroll", updateBottomOffset, { passive: true });
+
+    return () => {
+      window.removeEventListener("resize", updateBottomOffset);
+      window.removeEventListener("scroll", updateBottomOffset);
+    };
   }, []);
 
   return (
@@ -35,8 +68,9 @@ const StickyAddToCart: React.FC<StickyAddToCartProps> = ({ product, onAddToCart,
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="fixed left-0 right-0 z-[49] glass-strong border-t border-border/50 border-b-0 bottom-[61px] lg:bottom-0 lg:z-50"
+          className="fixed left-0 right-0 z-[49] glass-strong border-t border-border/50 border-b-0 lg:z-50"
           id="sticky-add-to-cart"
+          style={{ bottom: bottomOffset }}
         >
           <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3 flex items-center gap-2 sm:gap-4">
             {product.thumbnail && (
