@@ -78,6 +78,28 @@ const AIChatWidget: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollVisible = useScrollVisibility();
 
+  // Smart positioning: detect if sticky bar or bottom nav overlaps and move up
+  const [mascotBottomPx, setMascotBottomPx] = useState(80);
+  useEffect(() => {
+    const recalc = () => {
+      if (window.innerWidth >= 1024) { setMascotBottomPx(24); return; }
+      const stickyBar = document.getElementById("sticky-add-to-cart");
+      let highestTop = window.innerHeight - 64; // default: above bottom nav (~4rem)
+      if (stickyBar) highestTop = Math.min(highestTop, stickyBar.getBoundingClientRect().top);
+      const offset = window.innerHeight - highestTop + 12;
+      setMascotBottomPx(Math.max(offset, 80));
+    };
+    recalc();
+    window.addEventListener("scroll", recalc, { passive: true });
+    window.addEventListener("resize", recalc, { passive: true });
+    const interval = setInterval(recalc, 1000);
+    return () => {
+      window.removeEventListener("scroll", recalc);
+      window.removeEventListener("resize", recalc);
+      clearInterval(interval);
+    };
+  }, []);
+
   const isAdminPage = location.pathname.startsWith("/admin");
   const isLandingPage = location.pathname === "/";
 
@@ -226,7 +248,8 @@ const AIChatWidget: React.FC = () => {
             exit={{ scale: 0, rotate: 180, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             onClick={() => setOpen(true)}
-            className="fixed bottom-20 lg:bottom-6 right-4 z-50 group"
+            className="fixed right-4 z-50 group transition-all duration-300"
+            style={{ bottom: mascotBottomPx }}
             aria-label="Open support chat"
           >
             <div className="relative w-16 h-16">
