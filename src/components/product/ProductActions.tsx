@@ -50,68 +50,84 @@ const ProductActions: React.FC<ProductActionsProps> = ({
         )}
       </div>
 
-      {/* Row 1: Quantity + Wishlist + Share */}
-      <div className="flex items-center gap-1.5 sm:gap-2">
-        <div className={`flex items-center gap-0.5 sm:gap-1 px-1 sm:px-1.5 py-0.5 sm:py-1 shrink-0 ${isMinimal ? "border border-border rounded-lg" : "glass rounded-full"}`}>
-          <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-1 sm:p-1.5 rounded-full hover:bg-secondary/50">
-            <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          </button>
-          <span className="w-6 sm:w-7 text-center font-semibold text-foreground text-xs sm:text-sm">{quantity}</span>
-          <button onClick={() => setQuantity(Math.min(maxQuantity, quantity + 1))} className="p-1 sm:p-1.5 rounded-full hover:bg-secondary/50">
-            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          </button>
+      {/* ── Mobile / Tablet: two rows ── */}
+      <div className="lg:hidden space-y-2">
+        {/* Row 1: Quantity + Wishlist + Share */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className={`flex items-center gap-0.5 sm:gap-1 px-1 sm:px-1.5 py-0.5 sm:py-1 shrink-0 ${isMinimal ? "border border-border rounded-lg" : "glass rounded-full"}`}>
+            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-1 sm:p-1.5 rounded-full hover:bg-secondary/50">
+              <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </button>
+            <span className="w-6 sm:w-7 text-center font-semibold text-foreground text-xs sm:text-sm">{quantity}</span>
+            <button onClick={() => setQuantity(Math.min(maxQuantity, quantity + 1))} className="p-1 sm:p-1.5 rounded-full hover:bg-secondary/50">
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </button>
+          </div>
+          <div className="flex-1" />
+          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={onToggleWishlist}
+            className={`p-2 sm:p-2.5 shrink-0 text-foreground hover:text-primary ${isMinimal ? "border border-border rounded-lg" : "glass rounded-full"}`}>
+            <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          </motion.button>
+          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={handleShare}
+            className={`p-2 sm:p-2.5 shrink-0 text-foreground hover:text-primary ${isMinimal ? "border border-border rounded-lg" : "glass rounded-full"}`}>
+            <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          </motion.button>
         </div>
-        <div className="flex-1" />
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={onToggleWishlist}
-          className={`p-2 sm:p-2.5 shrink-0 text-foreground hover:text-primary ${isMinimal ? "border border-border rounded-lg" : "glass rounded-full"}`}
-        >
-          <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={handleShare}
-          className={`p-2 sm:p-2.5 shrink-0 text-foreground hover:text-primary ${isMinimal ? "border border-border rounded-lg" : "glass rounded-full"}`}
-        >
-          <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        </motion.button>
+        {/* Row 2: Add to Cart + Buy Now */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={onAddToCart} disabled={addingToCart || !inStock}
+            className={`flex-1 min-w-0 font-semibold py-2 sm:py-2.5 flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm disabled:opacity-50 ${
+              isMinimal ? "bg-foreground text-background rounded-lg" : "btn-pill bg-gradient-primary text-primary-foreground"
+            }`}>
+            {addingToCart ? (
+              <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <><ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="truncate">Add to Cart</span></>
+            )}
+          </motion.button>
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={onBuyNow} disabled={!inStock}
+            className={`flex-1 min-w-0 font-semibold py-2 sm:py-2.5 flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm disabled:opacity-50 ${
+              isMinimal ? "border border-border rounded-lg text-foreground hover:bg-secondary/30" : "btn-pill glass-strong text-foreground hover:border-primary/30"
+            }`}>
+            <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="truncate">Buy Now</span>
+          </motion.button>
+        </div>
       </div>
 
-      {/* Row 2: Add to Cart + Buy Now */}
-      <div className="flex items-center gap-1.5 sm:gap-2">
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={onAddToCart}
-          disabled={addingToCart || !inStock}
-          className={`flex-1 min-w-0 font-semibold py-2 sm:py-2.5 flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm disabled:opacity-50 ${
+      {/* ── Desktop: single row ── */}
+      <div className="hidden lg:flex items-center gap-2">
+        <div className={`flex items-center gap-1 px-1.5 py-1 shrink-0 ${isMinimal ? "border border-border rounded-lg" : "glass rounded-full"}`}>
+          <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-1.5 rounded-full hover:bg-secondary/50">
+            <Minus className="w-4 h-4" />
+          </button>
+          <span className="w-7 text-center font-semibold text-foreground text-sm">{quantity}</span>
+          <button onClick={() => setQuantity(Math.min(maxQuantity, quantity + 1))} className="p-1.5 rounded-full hover:bg-secondary/50">
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
+        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={onAddToCart} disabled={addingToCart || !inStock}
+          className={`flex-1 min-w-0 font-semibold py-2.5 flex items-center justify-center gap-2 text-sm disabled:opacity-50 ${
             isMinimal ? "bg-foreground text-background rounded-lg" : "btn-pill bg-gradient-primary text-primary-foreground"
-          }`}
-        >
+          }`}>
           {addingToCart ? (
-            <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
           ) : (
-            <>
-              <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="truncate">Add to Cart</span>
-            </>
+            <><ShoppingCart className="w-4 h-4" /><span className="truncate">Add to Cart</span></>
           )}
         </motion.button>
-
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={onBuyNow}
-          disabled={!inStock}
-          className={`flex-1 min-w-0 font-semibold py-2 sm:py-2.5 flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm disabled:opacity-50 ${
+        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={onBuyNow} disabled={!inStock}
+          className={`flex-1 min-w-0 font-semibold py-2.5 flex items-center justify-center gap-2 text-sm disabled:opacity-50 ${
             isMinimal ? "border border-border rounded-lg text-foreground hover:bg-secondary/30" : "btn-pill glass-strong text-foreground hover:border-primary/30"
-          }`}
-        >
-          <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span className="truncate">Buy Now</span>
+          }`}>
+          <Zap className="w-4 h-4" /><span className="truncate">Buy Now</span>
+        </motion.button>
+        <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={onToggleWishlist}
+          className={`p-2.5 shrink-0 text-foreground hover:text-primary ${isMinimal ? "border border-border rounded-lg" : "glass rounded-full"}`}>
+          <Heart className="w-4 h-4" />
+        </motion.button>
+        <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={handleShare}
+          className={`p-2.5 shrink-0 text-foreground hover:text-primary ${isMinimal ? "border border-border rounded-lg" : "glass rounded-full"}`}>
+          <Share2 className="w-4 h-4" />
         </motion.button>
       </div>
     </div>
