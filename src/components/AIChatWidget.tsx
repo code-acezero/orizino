@@ -226,7 +226,7 @@ const AIChatWidget: React.FC = () => {
             exit={{ scale: 0, rotate: 180, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             onClick={() => setOpen(true)}
-            className="fixed bottom-20 lg:bottom-6 right-4 z-50 group"
+            className={`fixed right-4 z-50 group transition-all duration-300 lg:bottom-6 ${mascotBottom}`}
             aria-label="Open support chat"
           >
             <div className="relative w-16 h-16">
