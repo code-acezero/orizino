@@ -33,11 +33,12 @@ const ParallaxStackGallery = lazy(() => import("@/components/product/ParallaxSta
 export type LayoutStyle = "dark-luxury" | "glass" | "neon" | "minimal" | "magazine";
 export type GalleryStyle = "default" | "infinity" | "coverflow" | "filmstrip" | "mosaic" | "parallax-stack";
 
-const LAYOUT_CONFIGS: Record<LayoutStyle, { containerClass: string; textClass: string; priceClass: string; cardClass: string; accentBorder: string }> = {
+const LAYOUT_CONFIGS: Record<LayoutStyle, { containerClass: string; textClass: string; priceClass: string; mobilePriceClass: string; cardClass: string; accentBorder: string }> = {
   "dark-luxury": {
     containerClass: "bg-black/40",
     textClass: "text-white",
     priceClass: "text-4xl md:text-5xl font-black tracking-tight text-white",
+    mobilePriceClass: "text-2xl font-black tracking-tight text-white",
     cardClass: "bg-white/5 border border-white/10 backdrop-blur-lg",
     accentBorder: "border-amber-400/30",
   },
@@ -45,6 +46,7 @@ const LAYOUT_CONFIGS: Record<LayoutStyle, { containerClass: string; textClass: s
     containerClass: "",
     textClass: "text-foreground",
     priceClass: "text-4xl font-bold text-gradient",
+    mobilePriceClass: "text-2xl font-bold text-gradient",
     cardClass: "glass",
     accentBorder: "border-primary/30",
   },
@@ -52,6 +54,7 @@ const LAYOUT_CONFIGS: Record<LayoutStyle, { containerClass: string; textClass: s
     containerClass: "",
     textClass: "text-foreground",
     priceClass: "text-4xl font-black text-primary drop-shadow-[0_0_15px_hsl(var(--primary)/0.5)]",
+    mobilePriceClass: "text-2xl font-black text-primary drop-shadow-[0_0_15px_hsl(var(--primary)/0.5)]",
     cardClass: "bg-background/80 border border-primary/20 shadow-[0_0_30px_hsl(var(--primary)/0.1)]",
     accentBorder: "border-primary/40",
   },
@@ -59,6 +62,7 @@ const LAYOUT_CONFIGS: Record<LayoutStyle, { containerClass: string; textClass: s
     containerClass: "",
     textClass: "text-foreground",
     priceClass: "text-3xl font-semibold text-foreground tracking-tight",
+    mobilePriceClass: "text-xl font-semibold text-foreground tracking-tight",
     cardClass: "bg-transparent",
     accentBorder: "border-border",
   },
@@ -66,6 +70,7 @@ const LAYOUT_CONFIGS: Record<LayoutStyle, { containerClass: string; textClass: s
     containerClass: "",
     textClass: "text-foreground",
     priceClass: "text-4xl font-display font-bold text-foreground italic",
+    mobilePriceClass: "text-2xl font-display font-bold text-foreground italic",
     cardClass: "glass rounded-3xl",
     accentBorder: "border-primary/20",
   },
@@ -268,15 +273,15 @@ const ProductDetailPage: React.FC = () => {
     return (
       <div className="min-h-screen">
         <Navbar />
-        <div className="container mx-auto px-4 py-8">
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="aspect-square rounded-3xl bg-secondary/10 animate-pulse" />
-            <div className="space-y-4 py-4">
-              <div className="h-4 bg-secondary/10 rounded-full w-24 animate-pulse" />
-              <div className="h-8 bg-secondary/10 rounded-full w-3/4 animate-pulse" />
-              <div className="h-5 bg-secondary/10 rounded-full w-1/2 animate-pulse" />
-              <div className="h-10 bg-secondary/10 rounded-full w-1/3 animate-pulse" />
-              <div className="h-12 bg-secondary/10 rounded-full w-full animate-pulse mt-8" />
+        <div className="container mx-auto px-3 sm:px-4 py-6 md:py-8">
+          <div className="grid md:grid-cols-2 gap-4 md:gap-8">
+            <div className="aspect-square rounded-2xl md:rounded-3xl bg-secondary/10 animate-pulse" />
+            <div className="space-y-3 md:space-y-4 py-2 md:py-4">
+              <div className="h-3 md:h-4 bg-secondary/10 rounded-full w-24 animate-pulse" />
+              <div className="h-6 md:h-8 bg-secondary/10 rounded-full w-3/4 animate-pulse" />
+              <div className="h-4 md:h-5 bg-secondary/10 rounded-full w-1/2 animate-pulse" />
+              <div className="h-8 md:h-10 bg-secondary/10 rounded-full w-1/3 animate-pulse" />
+              <div className="h-10 md:h-12 bg-secondary/10 rounded-full w-full animate-pulse mt-6 md:mt-8" />
             </div>
           </div>
         </div>
@@ -287,8 +292,8 @@ const ProductDetailPage: React.FC = () => {
   if (!product) {
     return (
       <div className="min-h-screen"><Navbar />
-        <div className="container mx-auto px-4 py-20 text-center">
-          <h1 className="text-2xl font-bold text-foreground">Product not found</h1>
+        <div className="container mx-auto px-3 sm:px-4 py-16 md:py-20 text-center">
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">Product not found</h1>
         </div>
       </div>
     );
@@ -305,23 +310,23 @@ const ProductDetailPage: React.FC = () => {
   const VariantBadges = () => (
     <AnimatePresence>
       {(selectedSize || selectedColor) && (
-        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-muted-foreground">Selected:</span>
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <span className="text-[10px] sm:text-xs text-muted-foreground">Selected:</span>
           <AnimatePresence mode="popLayout">
             {selectedSize && (
               <motion.div key="size" layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}>
-                <Badge variant="secondary" className="gap-1 pl-2.5 pr-1.5 py-1">
+                <Badge variant="secondary" className="gap-1 pl-2 pr-1 py-0.5 sm:py-1 text-[10px] sm:text-xs">
                   Size: {selectedSize}
-                  <button onClick={() => setSelectedSize(null)} className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-3 h-3" /></button>
+                  <button onClick={() => setSelectedSize(null)} className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-2.5 h-2.5 sm:w-3 sm:h-3" /></button>
                 </Badge>
               </motion.div>
             )}
             {selectedColor && (
               <motion.div key="color" layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}>
-                <Badge variant="secondary" className="gap-1.5 pl-2 pr-1.5 py-1">
-                  <span className="w-3 h-3 rounded-full border border-border/50 inline-block shrink-0" style={{ backgroundColor: selectedColor.toLowerCase() }} />
+                <Badge variant="secondary" className="gap-1 pl-1.5 pr-1 py-0.5 sm:py-1 text-[10px] sm:text-xs">
+                  <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border border-border/50 inline-block shrink-0" style={{ backgroundColor: selectedColor.toLowerCase() }} />
                   {selectedColor}
-                  <button onClick={() => setSelectedColor(null)} className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-3 h-3" /></button>
+                  <button onClick={() => setSelectedColor(null)} className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5"><X className="w-2.5 h-2.5 sm:w-3 sm:h-3" /></button>
                 </Badge>
               </motion.div>
             )}
@@ -333,42 +338,48 @@ const ProductDetailPage: React.FC = () => {
 
   // === Shared product info section ===
   const ProductInfo = ({ sticky = false }: { sticky?: boolean }) => (
-    <div className={`space-y-5 ${sticky ? "md:sticky md:top-24" : ""}`}>
+    <div className={`space-y-3 sm:space-y-4 md:space-y-5 ${sticky ? "md:sticky md:top-24" : ""}`}>
       {productCat && (
         <motion.span initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-          className={`inline-block text-xs font-semibold tracking-[0.2em] uppercase ${layout === "neon" ? "text-primary" : "text-primary"}`}>
+          className="inline-block text-[10px] sm:text-xs font-semibold tracking-[0.15em] sm:tracking-[0.2em] uppercase text-primary">
           {productCat.name}
         </motion.span>
       )}
 
       <motion.h1 initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-        className={`font-bold font-display leading-tight ${isMobile ? "text-2xl" : layout === "magazine" ? "text-4xl md:text-5xl italic" : "text-3xl md:text-4xl"} ${cfg.textClass}`}>
+        className={`font-bold font-display leading-tight ${
+          isMobile
+            ? "text-xl"
+            : layout === "magazine"
+              ? "text-4xl md:text-5xl italic"
+              : "text-3xl md:text-4xl"
+        } ${cfg.textClass}`}>
         {product.name}
       </motion.h1>
 
       {/* Rating */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="flex items-center gap-2">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="flex items-center gap-1.5 sm:gap-2">
         <div className="flex">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Star key={i} className={`w-4 h-4 ${i < Math.round(product.avg_rating || 0)
+            <Star key={i} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${i < Math.round(product.avg_rating || 0)
               ? layout === "neon" ? "fill-primary text-primary drop-shadow-[0_0_4px_hsl(var(--primary)/0.6)]" : "fill-primary text-primary"
               : "text-muted-foreground/30"}`} />
           ))}
         </div>
-        <span className="text-sm text-muted-foreground">{product.avg_rating?.toFixed(1) || "0"} ({product.review_count || 0})</span>
+        <span className="text-xs sm:text-sm text-muted-foreground">{product.avg_rating?.toFixed(1) || "0"} ({product.review_count || 0})</span>
       </motion.div>
 
       {/* Price */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="flex items-baseline gap-3 flex-wrap">
-        <span className={cfg.priceClass}>{formatPrice(effectivePrice)}</span>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
+        <span className={isMobile ? cfg.mobilePriceClass : cfg.priceClass}>{formatPrice(effectivePrice)}</span>
         {product.compare_at_price && (
-          <span className="text-lg text-muted-foreground line-through">{formatPrice(product.compare_at_price)}</span>
+          <span className="text-sm sm:text-lg text-muted-foreground line-through">{formatPrice(product.compare_at_price)}</span>
         )}
         {discount > 0 && (
-          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+          <span className={`text-[10px] sm:text-xs font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full ${
             layout === "neon" ? "bg-primary/20 text-primary border border-primary/30" : "bg-primary/10 text-primary"
           }`}>
-            {layout === "neon" && <Zap className="w-3 h-3 inline mr-1" />}
+            {layout === "neon" && <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3 inline mr-0.5 sm:mr-1" />}
             Save {discount}%
           </span>
         )}
@@ -377,7 +388,7 @@ const ProductDetailPage: React.FC = () => {
       <CurrencyWidget price={effectivePrice} />
 
       {product.short_description && (
-        <p className="text-sm text-muted-foreground leading-relaxed">{product.short_description}</p>
+        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{product.short_description}</p>
       )}
 
       {hasVariants && (
@@ -403,15 +414,15 @@ const ProductDetailPage: React.FC = () => {
 
       {/* Trust badges */}
       {layout !== "minimal" && (
-        <div className="grid grid-cols-2 gap-2 pt-2">
+        <div className="grid grid-cols-2 gap-1.5 sm:gap-2 pt-1 sm:pt-2">
           {trustBadges.map((badge) => (
-            <div key={badge.label} className={`${cfg.cardClass} rounded-xl p-3 flex items-center gap-2.5`}>
-              <div className={`p-1.5 rounded-lg ${layout === "neon" ? "bg-primary/10 shadow-[0_0_10px_hsl(var(--primary)/0.2)]" : "bg-primary/10"}`}>
-                <badge.icon className={`w-3.5 h-3.5 ${layout === "neon" ? "text-primary drop-shadow-[0_0_4px_hsl(var(--primary)/0.5)]" : "text-primary"}`} />
+            <div key={badge.label} className={`${cfg.cardClass} rounded-lg sm:rounded-xl p-2 sm:p-3 flex items-center gap-1.5 sm:gap-2.5`}>
+              <div className={`p-1 sm:p-1.5 rounded-md sm:rounded-lg shrink-0 ${layout === "neon" ? "bg-primary/10 shadow-[0_0_10px_hsl(var(--primary)/0.2)]" : "bg-primary/10"}`}>
+                <badge.icon className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${layout === "neon" ? "text-primary drop-shadow-[0_0_4px_hsl(var(--primary)/0.5)]" : "text-primary"}`} />
               </div>
-              <div>
-                <p className="text-[11px] font-semibold text-foreground">{badge.label}</p>
-                <p className="text-[9px] text-muted-foreground">{badge.sub}</p>
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-[11px] font-semibold text-foreground leading-tight truncate">{badge.label}</p>
+                <p className="text-[8px] sm:text-[9px] text-muted-foreground leading-tight truncate">{badge.sub}</p>
               </div>
             </div>
           ))}
@@ -426,7 +437,7 @@ const ProductDetailPage: React.FC = () => {
   return (
     <div className={`min-h-screen ${layout === "dark-luxury" ? "bg-black/20" : ""}`}>
       <Navbar />
-      <main className={`container mx-auto px-4 py-6 md:py-8 ${isMagazine ? "max-w-6xl" : ""}`}>
+      <main className={`container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8 ${isMagazine ? "max-w-6xl" : ""}`}>
         <Breadcrumbs
           items={[
             { label: "Home", href: "/home" },
@@ -434,15 +445,15 @@ const ProductDetailPage: React.FC = () => {
             ...(productCat ? [{ label: productCat.name, href: `/categories/${productCat.slug}` }] : []),
             { label: product.name },
           ]}
-          className="mb-4 md:mb-6"
+          className="mb-3 sm:mb-4 md:mb-6"
         />
 
         {isMagazine ? (
-          /* Magazine: Full-width gallery → split content */
-          <div className="space-y-8 md:space-y-12">
+          /* Magazine: Full-width gallery then split content */
+          <div className="space-y-6 sm:space-y-8 md:space-y-12">
             {renderGallery()}
-            <div className="grid md:grid-cols-5 gap-8 md:gap-12">
-              <div className="md:col-span-3 space-y-8">
+            <div className="grid md:grid-cols-5 gap-6 sm:gap-8 md:gap-12">
+              <div className="md:col-span-3 space-y-6 sm:space-y-8">
                 <ProductInfo />
               </div>
               <div className="md:col-span-2">
@@ -456,7 +467,7 @@ const ProductDetailPage: React.FC = () => {
         ) : (
           /* All other layouts: side-by-side on desktop, stacked on mobile */
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-10">
               <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
                 {renderGallery()}
               </motion.div>
@@ -464,7 +475,7 @@ const ProductDetailPage: React.FC = () => {
                 <ProductInfo sticky />
               </motion.div>
             </div>
-            <section className="mt-12 md:mt-16">
+            <section className="mt-8 sm:mt-12 md:mt-16">
               <ProductTabs
                 product={{ id: product.id, description: product.description, specifications: product.specifications as any }}
                 reviews={mergedReviews} ownReviewIds={ownReviewIds} layout={layout === "minimal" ? "minimal" : "premium"}
@@ -475,19 +486,19 @@ const ProductDetailPage: React.FC = () => {
 
         {/* Related Products */}
         {relatedProducts && relatedProducts.length > 0 && (
-          <section className="mt-12 md:mt-16">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className={`font-bold font-display text-foreground ${layout === "minimal" ? "text-xl" : "text-2xl"}`}>
-                {layout === "neon" && <Sparkles className="w-5 h-5 inline mr-2 text-primary" />}
+          <section className="mt-8 sm:mt-12 md:mt-16">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <h2 className={`font-bold font-display text-foreground ${layout === "minimal" ? "text-lg sm:text-xl" : "text-xl sm:text-2xl"}`}>
+                {layout === "neon" && <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 inline mr-1.5 sm:mr-2 text-primary" />}
                 You May Also Like
               </h2>
               {productCat && (
-                <Link to={`/categories/${productCat.slug}`} className="text-sm text-primary hover:underline">
-                  View all →
+                <Link to={`/categories/${productCat.slug}`} className="text-xs sm:text-sm text-primary hover:underline">
+                  View all
                 </Link>
               )}
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
               {relatedProducts.map((p, i) => (
                 <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
                   <ProductCard id={p.id} name={p.name} price={p.price}
