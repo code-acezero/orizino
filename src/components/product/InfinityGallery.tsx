@@ -249,6 +249,7 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
                   boxShadow: "0 15px 40px rgba(0,0,0,0.6)",
                   backfaceVisibility: "hidden",
                   willChange: "transform, opacity",
+                  transition: "opacity 0.6s ease-in-out",
                 }}
                 onClick={() => {
                   const realIndex = i % images.length;
@@ -268,18 +269,20 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
 
         {/* Left arrow */}
         <button
-          onClick={() => { pauseAutoPlay(); goPrev(); }}
-          className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-20 p-1 text-white/60 hover:text-white transition-colors duration-200 hover:scale-110"
+          onClick={(e) => { e.stopPropagation(); pauseAutoPlay(); goPrev(); }}
+          className="absolute left-1 sm:left-5 top-1/2 -translate-y-1/2 z-30 p-2 sm:p-1 text-white/60 hover:text-white active:text-white transition-colors duration-200 hover:scale-110 active:scale-95"
+          style={{ touchAction: "manipulation" }}
         >
-          <ChevronLeft className="w-6 h-6 sm:w-7 sm:h-7 drop-shadow-lg" />
+          <ChevronLeft className="w-7 h-7 sm:w-7 sm:h-7 drop-shadow-lg" />
         </button>
 
         {/* Right arrow */}
         <button
-          onClick={() => { pauseAutoPlay(); goNext(); }}
-          className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 p-1 text-white/60 hover:text-white transition-colors duration-200 hover:scale-110"
+          onClick={(e) => { e.stopPropagation(); pauseAutoPlay(); goNext(); }}
+          className="absolute right-1 sm:right-5 top-1/2 -translate-y-1/2 z-30 p-2 sm:p-1 text-white/60 hover:text-white active:text-white transition-colors duration-200 hover:scale-110 active:scale-95"
+          style={{ touchAction: "manipulation" }}
         >
-          <ChevronRight className="w-6 h-6 sm:w-7 sm:h-7 drop-shadow-lg" />
+          <ChevronRight className="w-7 h-7 sm:w-7 sm:h-7 drop-shadow-lg" />
         </button>
 
         {/* Counter */}
