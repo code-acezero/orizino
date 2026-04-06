@@ -23,19 +23,6 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
   const touchStartX = useRef(0);
   const spacing = 0.1;
 
-  // If only 1 image, show simple view
-  if (images.length <= 1) {
-    return (
-      <div className="relative rounded-3xl overflow-hidden aspect-square glass cursor-zoom-in" onClick={() => setLightboxOpen(true)}>
-        <img src={images[0]} alt={productName} className="w-full h-full object-cover" />
-        {discount > 0 && (
-          <span className="absolute top-4 left-4 text-sm font-semibold py-1 px-4 btn-pill bg-destructive text-destructive-foreground">-{discount}%</span>
-        )}
-        <LightboxModal open={lightboxOpen} onClose={() => setLightboxOpen(false)} images={images} productName={productName} startIndex={0} />
-      </div>
-    );
-  }
-
   const updateBackground = useCallback((url: string) => {
     const nextIdx = (currentBgRef.current + 1) % 2;
     const nextBg = nextIdx === 0 ? bgRef1.current : bgRef2.current;
@@ -58,15 +45,12 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
     const cards = Array.from(cardsRef.current.children) as HTMLElement[];
     if (cards.length === 0) return;
 
-    // Set initial bg
     if (bgRef1.current) {
       bgRef1.current.style.backgroundImage = `url(${images[0]})`;
       bgRef1.current.style.opacity = "1";
     }
 
     const blurVal = isMobile ? "0px" : "4px";
-
-    // Build seamless loop
     const overlap = Math.ceil(1 / spacing);
     const startTime = cards.length * spacing + 0.5;
     const loopTime = (cards.length + overlap) * spacing + 1;
@@ -128,7 +112,6 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
     scrub.vars.totalTime = snapped;
     scrub.invalidate().restart();
 
-    // Update active index
     const totalDuration = seamlessLoop.duration();
     const progress = ((snapped % totalDuration) + totalDuration) % totalDuration / totalDuration;
     let idx = Math.round(progress * images.length) % images.length;
@@ -149,7 +132,6 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
     scrubTo(animRef.current.scrub.vars.totalTime - spacing);
   }, [scrubTo]);
 
-  // Touch swipe
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.changedTouches[0].clientX;
   }, []);
@@ -161,12 +143,24 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
     }
   }, [goNext, goPrev]);
 
-  // Mouse wheel
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
     if (e.deltaY > 0 || e.deltaX > 0) goNext();
     else goPrev();
   }, [goNext, goPrev]);
+
+  // Simple fallback for single image
+  if (images.length <= 1) {
+    return (
+      <div className="relative rounded-3xl overflow-hidden aspect-square glass cursor-zoom-in" onClick={() => setLightboxOpen(true)}>
+        <img src={images[0]} alt={productName} className="w-full h-full object-cover" />
+        {discount > 0 && (
+          <span className="absolute top-4 left-4 text-sm font-semibold py-1 px-4 btn-pill bg-destructive text-destructive-foreground">-{discount}%</span>
+        )}
+        <LightboxModal open={lightboxOpen} onClose={() => setLightboxOpen(false)} images={images} productName={productName} startIndex={0} />
+      </div>
+    );
+  }
 
   const cardWidth = isMobile ? "55vw" : "14rem";
   const cardHeight = isMobile ? "45vh" : "20rem";
