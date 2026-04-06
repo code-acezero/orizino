@@ -205,7 +205,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick, produ
           <motion.div
             initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 350 }}
-            className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-50 lg:hidden"
+            className={`fixed left-0 right-0 z-50 lg:hidden ${canShowProductTray && trayVisible ? "bottom-[calc(8rem+env(safe-area-inset-bottom))]" : "bottom-[calc(4.5rem+env(safe-area-inset-bottom))]"}`}
           >
             <div className="bg-card border-t border-border rounded-t-2xl max-h-[60vh] overflow-y-auto p-4 shadow-lg">
               <div className="flex items-center justify-between mb-3">
@@ -287,7 +287,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick, produ
       : "-999px";
 
     return (
-      <nav id={mobileBottomNavId} className="fixed bottom-0 left-0 right-0 z-50 lg:hidden flex justify-center pb-[env(safe-area-inset-bottom)]">
+      <nav id={mobileBottomNavId} className="fixed bottom-0 left-0 right-0 z-50 lg:hidden flex flex-col justify-end pb-[env(safe-area-inset-bottom)]">
         {renderProductTray("mx-2 rounded-t-2xl border-x border-border/50")}
         <div className="notch-nav-wrapper w-full" ref={navRef}>
           <div className="notch-indicator" style={{ left: notchLeft, transition: "left 0.4s cubic-bezier(0.4, 0, 0.2, 1)" }}>
