@@ -12,6 +12,9 @@ interface InfinityGalleryProps {
 
 const MIN_CARDS = 12;
 
+const AUTO_PLAY_INTERVAL = 3500; // ms between auto-advances
+const AUTO_PLAY_IDLE_DELAY = 5000; // ms of inactivity before auto-play resumes
+
 const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, discount = 0 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLUListElement>(null);
@@ -24,6 +27,9 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
   const isMobile = useIsMobile();
   const touchStartX = useRef(0);
   const spacing = 0.1;
+  const autoPlayTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [autoPlaying, setAutoPlaying] = useState(true);
 
   // Duplicate images to ensure enough cards for GSAP seamless loop
   const expandedImages = useMemo(() => {
@@ -134,6 +140,13 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
     }
   }, [images, activeIndex, updateBackground]);
 
+  // Pause auto-play on user interaction, resume after idle
+  const pauseAutoPlay = useCallback(() => {
+    setAutoPlaying(false);
+    if (idleTimer.current) clearTimeout(idleTimer.current);
+    idleTimer.current = setTimeout(() => setAutoPlaying(true), AUTO_PLAY_IDLE_DELAY);
+  }, []);
+
   const goNext = useCallback(() => {
     if (!animRef.current) return;
     scrubTo(animRef.current.scrub.vars.totalTime + spacing);
@@ -144,9 +157,30 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
     scrubTo(animRef.current.scrub.vars.totalTime - spacing);
   }, [scrubTo]);
 
+  // Auto-play effect
+  useEffect(() => {
+    if (!autoPlaying || lightboxOpen || images.length <= 1) {
+      if (autoPlayTimer.current) clearInterval(autoPlayTimer.current);
+      autoPlayTimer.current = null;
+      return;
+    }
+    autoPlayTimer.current = setInterval(() => {
+      goNext();
+    }, AUTO_PLAY_INTERVAL);
+    return () => {
+      if (autoPlayTimer.current) clearInterval(autoPlayTimer.current);
+    };
+  }, [autoPlaying, lightboxOpen, goNext, images.length]);
+
+  // Cleanup idle timer
+  useEffect(() => {
+    return () => { if (idleTimer.current) clearTimeout(idleTimer.current); };
+  }, []);
+
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.changedTouches[0].clientX;
-  }, []);
+    pauseAutoPlay();
+  }, [pauseAutoPlay]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     const dx = e.changedTouches[0].clientX - touchStartX.current;
@@ -157,9 +191,10 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
+    pauseAutoPlay();
     if (e.deltaY > 0 || e.deltaX > 0) goNext();
     else goPrev();
-  }, [goNext, goPrev]);
+  }, [goNext, goPrev, pauseAutoPlay]);
 
   // Simple fallback for single image
   if (images.length <= 1) {
@@ -232,11 +267,11 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
 
         {/* Controls */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-5">
-          <button onClick={goPrev} className="w-12 h-12 rounded-full bg-white/5 border border-white/10 backdrop-blur-lg flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-300 hover:scale-110">
+          <button onClick={() => { pauseAutoPlay(); goPrev(); }} className="w-12 h-12 rounded-full bg-white/5 border border-white/10 backdrop-blur-lg flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-300 hover:scale-110">
             <ChevronLeft className="w-5 h-5" />
           </button>
           <span className="text-white/60 text-xs font-medium tracking-wider">{activeIndex + 1} / {images.length}</span>
-          <button onClick={goNext} className="w-12 h-12 rounded-full bg-white/5 border border-white/10 backdrop-blur-lg flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-300 hover:scale-110">
+          <button onClick={() => { pauseAutoPlay(); goNext(); }} className="w-12 h-12 rounded-full bg-white/5 border border-white/10 backdrop-blur-lg flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-300 hover:scale-110">
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
