@@ -267,11 +267,11 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
 
         {/* Controls */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-5">
-          <button onClick={goPrev} className="w-12 h-12 rounded-full bg-white/5 border border-white/10 backdrop-blur-lg flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-300 hover:scale-110">
+          <button onClick={() => { pauseAutoPlay(); goPrev(); }} className="w-12 h-12 rounded-full bg-white/5 border border-white/10 backdrop-blur-lg flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-300 hover:scale-110">
             <ChevronLeft className="w-5 h-5" />
           </button>
           <span className="text-white/60 text-xs font-medium tracking-wider">{activeIndex + 1} / {images.length}</span>
-          <button onClick={goNext} className="w-12 h-12 rounded-full bg-white/5 border border-white/10 backdrop-blur-lg flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-300 hover:scale-110">
+          <button onClick={() => { pauseAutoPlay(); goNext(); }} className="w-12 h-12 rounded-full bg-white/5 border border-white/10 backdrop-blur-lg flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-300 hover:scale-110">
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
