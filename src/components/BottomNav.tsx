@@ -226,7 +226,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
   // STYLE 3: Pill / Capsule (floating)
   // ══════════════════════════════════════════════
   const renderPill = () => (
-    <nav className="fixed bottom-3 left-4 right-4 z-50 lg:hidden">
+    <nav className="fixed bottom-3 left-3 right-3 z-50 lg:hidden">
       <div className="pill-nav-bar">
         {items.map((item, index) => {
           const isActive = index === activeIndex;
@@ -234,11 +234,11 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
             <button key={item.label} onClick={() => handleClick(item, index)}
               className={`pill-nav-item${isActive ? " active" : ""}`}>
               <motion.div
-                animate={isActive ? { scale: 1.15, y: -2 } : { scale: 1, y: 0 }}
+                animate={isActive ? { scale: 1.1, y: -1 } : { scale: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 className="relative"
               >
-                <item.icon className="w-5 h-5" />
+                <item.icon className="w-[18px] h-[18px]" />
                 {item.label === "Cart" && <CartBadge />}
               </motion.div>
               <AnimatePresence>
