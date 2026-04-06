@@ -63,8 +63,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
     } catch { toast.error("Failed to add to cart"); }
     finally { setAddingToCart(false); }
   }, [id, name, queryClient]);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const isMobile = useIsMobile();
 
   const discount = compareAtPrice
     ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
