@@ -321,11 +321,9 @@ const AIChatWidget: React.FC = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       localStreamRef.current = stream;
 
+      const iceServers = await getIceServers();
       const pc = new RTCPeerConnection({
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:19302" },
-        ],
+        iceServers: iceServers as RTCIceServer[],
       });
       peerRef.current = pc;
 
