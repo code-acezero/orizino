@@ -78,6 +78,31 @@ const AIChatWidget: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollVisible = useScrollVisibility();
 
+  // Smart positioning: detect if sticky bar or bottom nav overlaps and move up
+  const [mascotBottom, setMascotBottom] = useState("bottom-20");
+  useEffect(() => {
+    const recalc = () => {
+      if (window.innerWidth >= 1024) { setMascotBottom("bottom-6"); return; }
+      const stickyBar = document.getElementById("sticky-add-to-cart");
+      const bottomNav = document.querySelector("nav[data-bottom-nav]") || document.querySelector(".fixed.bottom-0");
+      let highestTop = window.innerHeight;
+      if (stickyBar) highestTop = Math.min(highestTop, stickyBar.getBoundingClientRect().top);
+      else if (bottomNav) highestTop = Math.min(highestTop, bottomNav.getBoundingClientRect().top);
+      const offset = window.innerHeight - highestTop + 12;
+      setMascotBottom(`bottom-[${Math.max(offset, 80)}px]`);
+    };
+    recalc();
+    window.addEventListener("scroll", recalc, { passive: true });
+    window.addEventListener("resize", recalc, { passive: true });
+    const observer = new MutationObserver(recalc);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => {
+      window.removeEventListener("scroll", recalc);
+      window.removeEventListener("resize", recalc);
+      observer.disconnect();
+    };
+  }, []);
+
   const isAdminPage = location.pathname.startsWith("/admin");
   const isLandingPage = location.pathname === "/";
 
