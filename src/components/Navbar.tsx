@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Search, ShoppingCart, Heart, User, ChevronDown, LogOut, Settings, LayoutGrid,
+  Search, ShoppingCart, Heart, User, ChevronDown, LogOut, Settings, LayoutGrid, ArrowRight,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -11,7 +11,6 @@ import { supabase } from "@/integrations/supabase/client";
 import AuthModal from "@/components/AuthModal";
 import BottomNav, { type BottomNavProductTray } from "@/components/BottomNav";
 import NotificationBell from "@/components/NotificationBell";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface NavbarProps {
@@ -53,7 +52,6 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
   const siteIconUrl = (siteSettings?.site_icon_url as string) || "";
   const logoStyle = (siteSettings?.logo_display_style as string) || "rounded";
 
-  // Fetch user profile for avatar
   const { data: userProfile } = useQuery({
     queryKey: ["user-profile-nav", user?.id],
     queryFn: async () => {
@@ -101,7 +99,6 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
     staleTime: 30000,
   });
 
-  // Close category dropdown when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (catDropRef.current && !catDropRef.current.contains(e.target as Node)) {
@@ -151,7 +148,20 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
                 <form onSubmit={handleSearchSubmit} className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search..."
-                    className="w-full pl-9 pr-3 py-2 rounded-full bg-secondary/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 transition-all" />
+                    className="w-full pl-9 pr-9 py-2 rounded-full bg-secondary/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 transition-all" />
+                  <AnimatePresence>
+                    {searchQuery.trim() && (
+                      <motion.button
+                        type="submit"
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.5 }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center"
+                      >
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
                 </form>
               </div>
 
@@ -209,7 +219,6 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
                                   )}
                                 </Link>
 
-                                {/* Subcategory flyout */}
                                 <AnimatePresence>
                                   {hoveredCat === cat.id && children.length > 0 && (
                                     <motion.div
@@ -254,16 +263,25 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
                 <form onSubmit={handleSearchSubmit} className="relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={t("nav.search")}
-                    className="w-full pl-11 pr-4 py-2.5 rounded-full bg-secondary/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 transition-all" />
+                    className="w-full pl-11 pr-10 py-2.5 rounded-full bg-secondary/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 transition-all" />
+                  <AnimatePresence>
+                    {searchQuery.trim() && (
+                      <motion.button
+                        type="submit"
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.5 }}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors"
+                      >
+                        <ArrowRight className="w-4 h-4" />
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
                 </form>
               </div>
 
-              {/* Right: Actions */}
+              {/* Right: Actions — order: notification > currency > wishlist > cart > user */}
               <div className="flex items-center gap-1 shrink-0 ml-auto lg:ml-0">
-                {/* Language switcher */}
-                <div className="hidden lg:block">
-                  <LanguageSwitcher compact />
-                </div>
                 {/* Currency selector */}
                 {enabledCurrencies.length > 1 && (
                   <div className="relative hidden lg:block">
@@ -300,6 +318,10 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
                     </AnimatePresence>
                   </div>
                 )}
+
+                {/* Notification bell (dynamic island) */}
+                {user && <NotificationBell />}
+
                 <Link to="/wishlist" className="hidden lg:flex p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all">
                   <Heart className="w-5 h-5" />
                 </Link>
@@ -311,8 +333,6 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
                     </span>
                   )}
                 </Link>
-
-                {user && <NotificationBell />}
 
                 {/* Desktop user menu */}
                 {user ? (
@@ -377,7 +397,6 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
           </div>
         </div>
       </nav>
-
 
       <BottomNav onSearchClick={() => {}} onAuthClick={() => setAuthOpen(true)} productTray={bottomNavProductTray} />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
