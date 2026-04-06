@@ -284,7 +284,7 @@ const ParallaxSlider: React.FC = () => {
   return (
     <motion.div
       ref={containerRef}
-      className="parallax-slider-root relative w-full overflow-hidden h-[35vh] md:h-[40vh] lg:h-[45vh] max-h-[450px] md:max-h-[500px] lg:max-h-[540px]"
+      className="parallax-slider-root relative w-full overflow-hidden h-[35vh] md:h-[40vh] lg:h-[50vh] max-h-[400px] md:max-h-[480px] lg:max-h-[580px]"
       style={{
         minHeight: "200px",
         perspective: "1000px",
@@ -345,7 +345,7 @@ const ParallaxSlider: React.FC = () => {
         }`}
         style={{ x: textX, y: textY, transformStyle: "preserve-3d" }}
       >
-        <div className={`container mx-auto px-4 md:px-8 lg:px-16 pb-20 md:pb-16 ${
+        <div className={`container mx-auto px-4 md:px-8 lg:px-16 pb-14 md:pb-16 lg:pb-20 ${
           currentSlide.textAlign === "center" ? "text-center flex flex-col items-center" : currentSlide.textAlign === "right" ? "text-right flex flex-col items-end" : ""
         }`}>
           <AnimatePresence mode="wait" initial={false}>
@@ -355,14 +355,14 @@ const ParallaxSlider: React.FC = () => {
               initial="enter"
               animate="center"
               exit="exit"
-              className={`max-w-lg ${currentSlide.textAlign === "center" ? "items-center" : currentSlide.textAlign === "right" ? "items-end" : ""}`}
+              className={`max-w-xs md:max-w-md lg:max-w-lg ${currentSlide.textAlign === "center" ? "items-center" : currentSlide.textAlign === "right" ? "items-end" : ""}`}
             >
               {subtitleEl(currentSlide.subtitle)}
-              <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold font-display mb-3 md:mb-4 leading-tight text-white drop-shadow-lg">
+              <h1 className="text-2xl md:text-4xl lg:text-6xl font-bold font-display mb-2 md:mb-3 lg:mb-4 leading-tight text-white drop-shadow-lg">
                 {currentSlide.title}
               </h1>
               {currentSlide.description && (
-                <p className="text-sm md:text-lg text-white/80 mb-4 md:mb-6 max-w-md line-clamp-2 md:line-clamp-none drop-shadow">
+                <p className="text-xs md:text-base lg:text-lg text-white/80 mb-3 md:mb-4 lg:mb-6 max-w-[280px] md:max-w-sm lg:max-w-md line-clamp-2 drop-shadow">
                   {currentSlide.description}
                 </p>
               )}
@@ -372,7 +372,7 @@ const ParallaxSlider: React.FC = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => trackClick("slider_cta", currentSlide.id, "/home", { cta_text: currentSlide.cta, cta_link: currentSlide.ctaLink })}
-                  className={`inline-flex items-center rounded-full font-semibold text-sm md:text-lg px-6 md:px-8 py-2.5 md:py-3 shadow-lg transition-all duration-300 ${ctaClasses[cfg.cta_style] || ctaClasses.gradient}`}
+                  className={`inline-flex items-center rounded-full font-semibold text-xs md:text-sm lg:text-lg px-4 md:px-6 lg:px-8 py-2 md:py-2.5 lg:py-3 shadow-lg transition-all duration-300 ${ctaClasses[cfg.cta_style] || ctaClasses.gradient}`}
                 >
                   {currentSlide.cta}
                 </motion.a>
@@ -384,22 +384,22 @@ const ParallaxSlider: React.FC = () => {
 
       {/* ── Navigation controls ── */}
       {slides.length > 1 && (cfg.show_arrows || cfg.show_dots) && (
-        <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 z-30">
+        <div className="absolute bottom-2 md:bottom-4 lg:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 md:gap-3 lg:gap-4 z-30">
           {cfg.show_arrows && (
             <motion.button onClick={goPrev} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-              className="w-10 h-10 rounded-full bg-foreground/10 backdrop-blur-sm border border-foreground/10 flex items-center justify-center text-white hover:bg-foreground/20 transition-colors">
-              <ChevronLeft className="w-5 h-5" />
+              className="w-8 h-8 md:w-9 md:h-9 lg:w-10 lg:h-10 rounded-full bg-foreground/10 backdrop-blur-sm border border-foreground/10 flex items-center justify-center text-white hover:bg-foreground/20 transition-colors">
+              <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
             </motion.button>
           )}
           {cfg.show_dots && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 md:gap-2">
               {slides.map((_, i) => renderDot(i))}
             </div>
           )}
           {cfg.show_arrows && (
             <motion.button onClick={goNext} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-              className="w-10 h-10 rounded-full bg-foreground/10 backdrop-blur-sm border border-foreground/10 flex items-center justify-center text-white hover:bg-foreground/20 transition-colors">
-              <ChevronRight className="w-5 h-5" />
+              className="w-8 h-8 md:w-9 md:h-9 lg:w-10 lg:h-10 rounded-full bg-foreground/10 backdrop-blur-sm border border-foreground/10 flex items-center justify-center text-white hover:bg-foreground/20 transition-colors">
+              <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
             </motion.button>
           )}
         </div>
