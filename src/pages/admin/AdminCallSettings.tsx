@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/app-toast";
-import { Phone, Server, Shield, Wifi } from "lucide-react";
+import { Phone, Server, Shield, Wifi, Clock, PhoneIncoming, PhoneOff, PhoneMissed, CheckCircle2 } from "lucide-react";
+import { format } from "date-fns";
 
 interface IceConfig {
   stun_enabled: boolean;
@@ -210,8 +211,94 @@ const AdminCallSettings = () => {
       <Button onClick={save} disabled={saving} className="rounded-xl w-full">
         {saving ? "Saving..." : "Save Voice Call Settings"}
       </Button>
+
+      {/* Call History */}
+      <CallHistory />
     </div>
   );
 };
+
+const statusConfig: Record<string, { icon: any; color: string; label: string }> = {
+  initiated: { icon: PhoneIncoming, color: "text-amber-500", label: "Initiated" },
+  connected: { icon: Phone, color: "text-blue-500", label: "Connected" },
+  completed: { icon: CheckCircle2, color: "text-green-500", label: "Completed" },
+  missed: { icon: PhoneMissed, color: "text-muted-foreground", label: "Missed" },
+  rejected: { icon: PhoneOff, color: "text-destructive", label: "Rejected" },
+};
+
+function CallHistory() {
+  const { data: logs = [] } = useQuery({
+    queryKey: ["call-logs"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("call_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      return data || [];
+    },
+    refetchInterval: 15000,
+  });
+
+  const callerIds = [...new Set(logs.map((l: any) => l.caller_id).concat(logs.map((l: any) => l.receiver_id)))];
+  const { data: profiles = [] } = useQuery({
+    queryKey: ["call-log-profiles", callerIds],
+    queryFn: async () => {
+      if (!callerIds.length) return [];
+      const { data } = await supabase.from("profiles").select("id, full_name").in("id", callerIds);
+      return data || [];
+    },
+    enabled: callerIds.length > 0,
+  });
+
+  const getName = (id: string) => profiles.find((p: any) => p.id === id)?.full_name || "Unknown";
+  const fmtDur = (s: number) => s > 0 ? `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}` : "—";
+
+  return (
+    <div className="border border-border rounded-2xl p-5 space-y-4">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+          <Clock className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <h3 className="font-semibold text-foreground">Call History</h3>
+          <p className="text-xs text-muted-foreground">Recent voice calls between agents and customers</p>
+        </div>
+      </div>
+
+      {logs.length === 0 ? (
+        <p className="text-sm text-muted-foreground text-center py-6">No call history yet</p>
+      ) : (
+        <div className="space-y-2 max-h-[400px] overflow-y-auto">
+          {logs.map((log: any) => {
+            const cfg = statusConfig[log.status] || statusConfig.initiated;
+            const Icon = cfg.icon;
+            return (
+              <div key={log.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-secondary/30 border border-border/50">
+                <div className="flex items-center gap-3">
+                  <Icon className={`w-4 h-4 ${cfg.color}`} />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      {getName(log.caller_id)} → {getName(log.receiver_id)}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {format(new Date(log.created_at), "MMM d, yyyy · HH:mm")}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className={`text-[10px] ${cfg.color}`}>
+                    {cfg.label}
+                  </Badge>
+                  <span className="text-xs font-mono text-muted-foreground">{fmtDur(log.duration_seconds)}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default AdminCallSettings;
