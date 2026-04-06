@@ -284,10 +284,32 @@ const AIChatWidget: React.FC = () => {
 
       channel.on("broadcast", { event: "call-signal" }, async ({ payload }) => {
         if (payload.type === "offer" && payload.from === "admin") {
-          pendingOfferRef.current = payload.sdp;
+          // If peer connection already exists (user accepted), process immediately
+          const pc = peerRef.current;
+          if (pc && pc.signalingState !== "closed") {
+            try {
+              await pc.setRemoteDescription(new RTCSessionDescription({ type: "offer", sdp: payload.sdp }));
+              const answer = await pc.createAnswer();
+              await pc.setLocalDescription(answer);
+              callChannelRef.current?.send({
+                type: "broadcast",
+                event: "call-signal",
+                payload: { type: "answer", sdp: answer.sdp, from: "user" },
+              });
+            } catch (err) {
+              console.error("Failed to process offer:", err);
+            }
+          } else {
+            // Store for later processing in acceptCall
+            pendingOfferRef.current = payload.sdp;
+          }
         }
         if (payload.type === "ice-candidate" && payload.from === "admin" && peerRef.current) {
-          await peerRef.current.addIceCandidate(new RTCIceCandidate(payload.candidate));
+          try {
+            await peerRef.current.addIceCandidate(new RTCIceCandidate(payload.candidate));
+          } catch (err) {
+            console.error("Failed to add ICE candidate:", err);
+          }
         }
         if (payload.type === "hangup") {
           hangupCall();
@@ -367,8 +389,7 @@ const AIChatWidget: React.FC = () => {
           payload: { type: "answer", sdp: answer.sdp, from: "user" },
         });
       }
-
-      setCallActive(true);
+      // Don't set callActive here — wait for ICE connected state
     } catch (err) {
       console.error("Failed to accept call:", err);
     }
