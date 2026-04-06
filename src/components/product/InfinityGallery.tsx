@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback, useState } from "react";
+import React, { useEffect, useRef, useCallback, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -10,6 +10,8 @@ interface InfinityGalleryProps {
   discount?: number;
 }
 
+const MIN_CARDS = 12;
+
 const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, discount = 0 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLUListElement>(null);
@@ -18,10 +20,20 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
   const currentBgRef = useRef(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const animRef = useRef<{ seamlessLoop: gsap.core.Timeline; scrub: gsap.core.Tween; iteration: number } | null>(null);
+  const animRef = useRef<{ seamlessLoop: gsap.core.Timeline; scrub: gsap.core.Tween } | null>(null);
   const isMobile = useIsMobile();
   const touchStartX = useRef(0);
   const spacing = 0.1;
+
+  // Duplicate images to ensure enough cards for GSAP seamless loop
+  const expandedImages = useMemo(() => {
+    if (images.length >= MIN_CARDS) return images;
+    const result: string[] = [];
+    while (result.length < MIN_CARDS) {
+      result.push(...images);
+    }
+    return result.slice(0, Math.max(MIN_CARDS, images.length));
+  }, [images]);
 
   const updateBackground = useCallback((url: string) => {
     const nextIdx = (currentBgRef.current + 1) % 2;
@@ -40,7 +52,7 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
   }, []);
 
   useEffect(() => {
-    if (!cardsRef.current || images.length < 2) return;
+    if (!cardsRef.current || expandedImages.length < 2) return;
 
     const cards = Array.from(cardsRef.current.children) as HTMLElement[];
     if (cards.length === 0) return;
@@ -91,7 +103,7 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
 
     const scrub = gsap.to(seamlessLoop, { totalTime: 0, duration: 0.5, ease: "power1.out", paused: true });
 
-    animRef.current = { seamlessLoop, scrub, iteration: 0 };
+    animRef.current = { seamlessLoop, scrub };
 
     // Auto-advance to first visible position
     const initTime = gsap.utils.snap(spacing, spacing * 2);
@@ -103,7 +115,7 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
       scrub.kill();
       rawSequence.kill();
     };
-  }, [images, isMobile, updateBackground]);
+  }, [expandedImages, isMobile, images, updateBackground]);
 
   const scrubTo = useCallback((totalTime: number) => {
     if (!animRef.current) return;
@@ -192,7 +204,7 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
             className="absolute m-0 p-0"
             style={{ width: cardWidth, height: cardHeight, top: "50%", left: "50%", transform: "translate(-50%, -50%)", transformStyle: "preserve-3d" }}
           >
-            {images.map((img, i) => (
+            {expandedImages.map((img, i) => (
               <li
                 key={i}
                 className="absolute inset-0 list-none rounded-xl overflow-hidden bg-cover bg-center cursor-pointer"
@@ -203,13 +215,14 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
                   willChange: "transform, opacity",
                 }}
                 onClick={() => {
-                  setActiveIndex(i);
+                  const realIndex = i % images.length;
+                  setActiveIndex(realIndex);
                   setLightboxOpen(true);
                 }}
               >
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                 <div className="absolute bottom-4 left-0 w-full px-4 text-center z-10">
-                  <span className="block text-[0.7rem] text-white/70 tracking-widest uppercase mb-1">Image {i + 1}</span>
+                  <span className="block text-[0.7rem] text-white/70 tracking-widest uppercase mb-1">Image {(i % images.length) + 1}</span>
                   <h3 className="text-base font-display font-medium text-white drop-shadow-lg">{productName}</h3>
                 </div>
               </li>
