@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/app-toast";
-import { Send, MessageCircle, User, Clock, CheckCircle2, UserCheck, PhoneCall, ExternalLink } from "lucide-react";
+import { Send, MessageCircle, User, Clock, CheckCircle2, UserCheck, PhoneCall, ExternalLink, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import VoiceCallButton from "@/components/admin/VoiceCallButton";
 import { format } from "date-fns";
 
@@ -153,6 +154,18 @@ const AdminSupport = () => {
     qc.invalidateQueries({ queryKey: ["admin-support-conversations"] });
   };
 
+  const deleteConversation = async (id: string) => {
+    try {
+      await supabase.from("support_messages").delete().eq("conversation_id", id);
+      await supabase.from("support_conversations").delete().eq("id", id);
+      if (selectedConv === id) setSelectedConv(null);
+      qc.invalidateQueries({ queryKey: ["admin-support-conversations"] });
+      toast.success("Conversation deleted");
+    } catch {
+      toast.error("Failed to delete conversation");
+    }
+  };
+
   const selectedConvData = conversations.find((c: any) => c.id === selectedConv);
   const selectedProfile = selectedConvData ? getProfile(selectedConvData.user_id) : null;
   const linkedImportReq = importRequests.find((r: any) => r.conversation_id === selectedConv);
@@ -182,10 +195,10 @@ const AdminSupport = () => {
               const claimed = conv.assigned_to != null;
               const claimedByMe = conv.assigned_to === user?.id;
               return (
-                <button
+                <div
                   key={conv.id}
                   onClick={() => setSelectedConv(conv.id)}
-                  className={`w-full text-left p-3 border-b border-border hover:bg-secondary/30 transition-colors ${
+                  className={`w-full text-left p-3 border-b border-border hover:bg-secondary/30 transition-colors cursor-pointer group ${
                     selectedConv === conv.id ? "bg-primary/5 border-l-2 border-l-primary" : ""
                   }`}
                 >
@@ -202,6 +215,27 @@ const AdminSupport = () => {
                       <Badge variant={conv.status === "open" ? "destructive" : "secondary"} className="text-[10px]">
                         {conv.status}
                       </Badge>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button
+                            onClick={(e) => e.stopPropagation()}
+                            className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-destructive/10 text-destructive transition-all"
+                            title="Delete conversation"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete conversation?</AlertDialogTitle>
+                            <AlertDialogDescription>This will permanently delete all messages in this conversation.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteConversation(conv.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground truncate">{conv.subject}</p>
@@ -209,7 +243,7 @@ const AdminSupport = () => {
                     <Clock className="w-3 h-3" />
                     {format(new Date(conv.updated_at), "MMM d, HH:mm")}
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>

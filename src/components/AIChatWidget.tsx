@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Bot, User, Headphones, Phone, PhoneOff, Mic, MicOff, Trash2 } from "lucide-react";
+import { X, Send, Bot, User, Headphones, Phone, PhoneOff, Mic, MicOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import wolfMascot from "@/assets/wolf-mascot.png";
 import { useAuth } from "@/contexts/AuthContext";
@@ -501,21 +501,22 @@ const AIChatWidget: React.FC = () => {
     }
   };
 
-  const deleteConversation = async (convId: string) => {
-    try {
-      // Delete messages first, then conversation
-      await supabase.from("support_messages").delete().eq("conversation_id", convId);
-      await supabase.from("support_conversations").delete().eq("id", convId);
-      if (liveConvId === convId) {
-        setLiveMode(false);
-        setLiveConvId(null);
-        setMessages([{ role: "assistant", content: welcomeMessage }]);
-      }
-      refetchConvs();
-      toast.success("Chat deleted");
-    } catch {
-      toast.error("Failed to delete chat");
-    }
+  const requestCall = async () => {
+    if (!user || !liveConvId) return;
+    // Send a message requesting a call
+    await supabase.from("support_messages").insert({
+      conversation_id: liveConvId, sender_id: user.id, sender_type: "user",
+      content: "📞 I'd like to request a voice call with a support agent.",
+    });
+    // Also create a notification for admins
+    await supabase.from("notifications").insert({
+      title: "📞 Call Request",
+      message: "A customer is requesting a voice call.",
+      type: "support",
+      priority: "high",
+      link_url: "/admin/support",
+    });
+    toast.success("Call request sent to support agent");
   };
 
   if (isAdminPage || isLandingPage || !isEnabled) return null;
@@ -637,6 +638,11 @@ const AIChatWidget: React.FC = () => {
                   <Headphones className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
                 </button>
               )}
+              {user && liveMode && !callActive && (
+                <button onClick={requestCall} className="p-2 rounded-xl hover:bg-green-500/10 transition-colors" title="Request voice call">
+                  <Phone className="w-4 h-4 text-green-500 hover:text-green-600 transition-colors" />
+                </button>
+              )}
               <button onClick={() => setOpen(false)} className="p-2 rounded-xl hover:bg-secondary/50 transition-colors">
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
@@ -693,23 +699,14 @@ const AIChatWidget: React.FC = () => {
                 </div>
               )}
 
-              {/* Past conversations with delete option */}
+              {/* Past conversations (read-only for users) */}
               {!liveMode && !callActive && pastConversations.length > 0 && messages.length <= 1 && (
                 <div className="mt-4 pt-3 border-t border-border/30">
                   <p className="text-[11px] text-muted-foreground mb-2">Previous chats</p>
                   {pastConversations.slice(0, 5).map((conv: any) => (
-                    <div key={conv.id} className="flex items-center justify-between gap-2 py-1.5 px-2 rounded-lg hover:bg-secondary/30 group">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-foreground truncate">{conv.subject}</p>
-                        <p className="text-[10px] text-muted-foreground">{conv.status} · {new Date(conv.created_at).toLocaleDateString()}</p>
-                      </div>
-                      <button
-                        onClick={() => deleteConversation(conv.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-destructive/10 text-destructive transition-all"
-                        title="Delete chat"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
+                    <div key={conv.id} className="py-1.5 px-2 rounded-lg hover:bg-secondary/30">
+                      <p className="text-xs text-foreground truncate">{conv.subject}</p>
+                      <p className="text-[10px] text-muted-foreground">{conv.status} · {new Date(conv.created_at).toLocaleDateString()}</p>
                     </div>
                   ))}
                 </div>
