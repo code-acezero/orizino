@@ -225,8 +225,8 @@ const AIChatWidget: React.FC = () => {
     )
   );
 
-  // Fetch previous conversations for deletion
-  const { data: pastConversations = [], refetch: refetchConvs } = useQuery({
+  // Fetch previous conversations (read-only display)
+  const { data: pastConversations = [] } = useQuery({
     queryKey: ["user-past-convs", user?.id],
     queryFn: async () => {
       const { data } = await supabase
