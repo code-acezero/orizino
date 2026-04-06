@@ -65,13 +65,17 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ productId, open, onOpen
       const matchedVariant = variants?.find(v =>
         (!selectedSize || v.size === selectedSize) && (!selectedColor || v.color === selectedColor)
       );
-      const { data: existing } = await supabase
+      let query = supabase
         .from("cart_items")
         .select("id, quantity")
         .eq("user_id", user.id)
-        .eq("product_id", productId)
-        .eq("variant_id", matchedVariant?.id ?? null as any)
-        .maybeSingle();
+        .eq("product_id", productId);
+      if (matchedVariant?.id) {
+        query = query.eq("variant_id", matchedVariant.id);
+      } else {
+        query = query.is("variant_id", null);
+      }
+      const { data: existing } = await query.maybeSingle();
       if (existing) {
         await supabase.from("cart_items").update({ quantity: existing.quantity + quantity }).eq("id", existing.id);
       } else {
