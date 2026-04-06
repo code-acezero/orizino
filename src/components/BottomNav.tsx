@@ -148,73 +148,85 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
   // ══════════════════════════════════════════════
   // STYLE 1: Liquid Ball
   // ══════════════════════════════════════════════
-  const renderLiquid = () => (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
-      <div className="bottom-nav-bar relative">
-        <ul className="bottom-nav-list">
-          {items.map((item, index) => {
-            const isActive = index === activeIndex;
-            return (
-              <li key={item.label} className={`bottom-nav-item${isActive ? " active" : ""}`}>
-                <button onClick={() => handleClick(item, index)} className="bottom-nav-link">
-                  <span className="bottom-nav-icon">
-                    <item.icon className="w-5 h-5" />
-                    {item.label === "Cart" && <CartBadge />}
-                  </span>
-                  <span className="bottom-nav-text">{item.label}</span>
-                </button>
-              </li>
-            );
-          })}
-          <div className="bottom-nav-indicator"
-            style={{ transform: activeIndex >= 0 ? `translateX(calc(60px * ${activeIndex}))` : "translateX(-999px)" }} />
-        </ul>
-      </div>
-      <div className="h-[env(safe-area-inset-bottom)] bg-background" />
-    </nav>
-  );
+  const renderLiquid = () => {
+    const itemCount = items.length;
+    const itemWidthPercent = 100 / itemCount;
+    const indicatorLeft = activeIndex >= 0
+      ? `calc(${activeIndex * itemWidthPercent}% + ${itemWidthPercent / 2}% - 21px)`
+      : "-999px";
+
+    return (
+      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
+        <div className="bottom-nav-bar relative">
+          <ul className="bottom-nav-list">
+            {items.map((item, index) => {
+              const isActive = index === activeIndex;
+              return (
+                <li key={item.label} className={`bottom-nav-item${isActive ? " active" : ""}`}>
+                  <button onClick={() => handleClick(item, index)} className="bottom-nav-link">
+                    <span className="bottom-nav-icon">
+                      <item.icon className="w-[18px] h-[18px]" />
+                      {item.label === "Cart" && <CartBadge />}
+                    </span>
+                    <span className="bottom-nav-text">{item.label}</span>
+                  </button>
+                </li>
+              );
+            })}
+            <div className="bottom-nav-indicator" style={{ left: indicatorLeft, transition: "left 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55)" }} />
+          </ul>
+        </div>
+        <div className="h-[env(safe-area-inset-bottom)] bg-background" />
+      </nav>
+    );
+  };
 
   // ══════════════════════════════════════════════
   // STYLE 2: Notch
   // ══════════════════════════════════════════════
-  const renderNotch = () => (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden flex justify-center pb-[env(safe-area-inset-bottom)]">
-      <div className="notch-nav-wrapper" ref={navRef}>
-        <div className="notch-indicator" style={{
-          transform: activeIndex >= 0 ? `translateX(${activeIndex * 64 + 12}px)` : "translateX(-999px)",
-        }}>
-          <div className="notch-dot" />
+  const renderNotch = () => {
+    const itemCount = items.length;
+    const notchLeft = activeIndex >= 0
+      ? `calc(${(activeIndex + 0.5) * (100 / itemCount)}% - 26px)`
+      : "-999px";
+
+    return (
+      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden flex justify-center pb-[env(safe-area-inset-bottom)]">
+        <div className="notch-nav-wrapper w-full" ref={navRef}>
+          <div className="notch-indicator" style={{ left: notchLeft, transition: "left 0.4s cubic-bezier(0.4, 0, 0.2, 1)" }}>
+            <div className="notch-dot" />
+          </div>
+          <div className="notch-navbar">
+            {items.map((item, index) => {
+              const isActive = index === activeIndex;
+              return (
+                <button key={item.label}
+                  ref={el => { itemRefs.current[index] = el; }}
+                  onClick={() => handleClick(item, index)}
+                  className={`notch-nav-item${isActive ? " active" : ""}`}>
+                  <item.icon className="w-[22px] h-[22px]" />
+                  <AnimatePresence>
+                    {isActive && (
+                      <motion.span initial={{ maxHeight: 0, opacity: 0, y: 4 }} animate={{ maxHeight: 24, opacity: 1, y: 0 }} exit={{ maxHeight: 0, opacity: 0, y: 4 }}
+                        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                        className="notch-label overflow-hidden">{item.label}</motion.span>
+                    )}
+                  </AnimatePresence>
+                  {item.label === "Cart" && <CartBadge />}
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <div className="notch-navbar">
-          {items.map((item, index) => {
-            const isActive = index === activeIndex;
-            return (
-              <button key={item.label}
-                ref={el => { itemRefs.current[index] = el; }}
-                onClick={() => handleClick(item, index)}
-                className={`notch-nav-item${isActive ? " active" : ""}`}>
-                <item.icon className="w-[26px] h-[26px]" />
-                <AnimatePresence>
-                  {isActive && (
-                    <motion.span initial={{ maxHeight: 0, opacity: 0, y: 4 }} animate={{ maxHeight: 24, opacity: 1, y: 0 }} exit={{ maxHeight: 0, opacity: 0, y: 4 }}
-                      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                      className="notch-label overflow-hidden">{item.label}</motion.span>
-                  )}
-                </AnimatePresence>
-                {item.label === "Cart" && <CartBadge />}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </nav>
-  );
+      </nav>
+    );
+  };
 
   // ══════════════════════════════════════════════
   // STYLE 3: Pill / Capsule (floating)
   // ══════════════════════════════════════════════
   const renderPill = () => (
-    <nav className="fixed bottom-3 left-4 right-4 z-50 lg:hidden">
+    <nav className="fixed bottom-3 left-3 right-3 z-50 lg:hidden">
       <div className="pill-nav-bar">
         {items.map((item, index) => {
           const isActive = index === activeIndex;
@@ -222,11 +234,11 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
             <button key={item.label} onClick={() => handleClick(item, index)}
               className={`pill-nav-item${isActive ? " active" : ""}`}>
               <motion.div
-                animate={isActive ? { scale: 1.15, y: -2 } : { scale: 1, y: 0 }}
+                animate={isActive ? { scale: 1.1, y: -1 } : { scale: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 className="relative"
               >
-                <item.icon className="w-5 h-5" />
+                <item.icon className="w-[18px] h-[18px]" />
                 {item.label === "Cart" && <CartBadge />}
               </motion.div>
               <AnimatePresence>
@@ -256,16 +268,16 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
             <button key={item.label} onClick={() => handleClick(item, index)}
               className={`glow-nav-item${isActive ? " active" : ""}`}>
               <motion.div
-                animate={isActive ? { scale: 1.3, y: -10 } : { scale: 1, y: 0 }}
+                animate={isActive ? { scale: 1.25, y: -8 } : { scale: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 500, damping: 22 }}
                 className="relative"
               >
-                <item.icon className={`w-5 h-5 transition-all duration-300 ${isActive ? "drop-shadow-[0_0_8px_hsl(var(--primary))]" : ""}`} />
+                <item.icon className={`w-[18px] h-[18px] transition-all duration-300 ${isActive ? "drop-shadow-[0_0_6px_hsl(var(--primary))]" : ""}`} />
                 {item.label === "Cart" && <CartBadge />}
                 {isActive && (
                   <motion.div
                     layoutId="glow-ring"
-                    className="absolute -inset-3 rounded-full border-2 border-primary/40"
+                    className="absolute -inset-2.5 rounded-full border-2 border-primary/40"
                     transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   />
                 )}
@@ -285,48 +297,53 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
   // ══════════════════════════════════════════════
   // STYLE 5: Wave
   // ══════════════════════════════════════════════
-  const renderWave = () => (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
-      <div className="wave-nav-bar">
-        <svg className="wave-nav-svg" viewBox="0 0 400 70" preserveAspectRatio="none">
-          <motion.path
-            animate={{
-              d: activeIndex >= 0
-                ? `M0,20 L${activeIndex * 80 + 10},20 Q${activeIndex * 80 + 40},0 ${activeIndex * 80 + 40},-15 Q${activeIndex * 80 + 40},0 ${activeIndex * 80 + 70},20 L400,20 L400,70 L0,70 Z`
-                : "M0,20 L400,20 L400,70 L0,70 Z"
-            }}
-            transition={{ type: "spring", stiffness: 300, damping: 28 }}
-            fill="hsl(var(--card))"
-            stroke="hsl(var(--border))"
-            strokeWidth="0.5"
-          />
-        </svg>
-        <div className="wave-nav-items">
-          {items.map((item, index) => {
-            const isActive = index === activeIndex;
-            return (
-              <button key={item.label} onClick={() => handleClick(item, index)}
-                className={`wave-nav-item${isActive ? " active" : ""}`}>
-                <motion.div
-                  animate={isActive ? { y: -22, scale: 1.1 } : { y: 0, scale: 1 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 22 }}
-                  className={`relative flex items-center justify-center ${isActive ? "w-10 h-10 rounded-full bg-primary shadow-lg" : ""}`}
-                >
-                  <item.icon className={`w-5 h-5 ${isActive ? "text-primary-foreground" : "text-muted-foreground"}`} />
-                  {item.label === "Cart" && <CartBadge />}
-                </motion.div>
-                <motion.span
-                  animate={{ opacity: isActive ? 1 : 0.5, y: isActive ? -4 : 0 }}
-                  className="wave-label"
-                >{item.label}</motion.span>
-              </button>
-            );
-          })}
+  const renderWave = () => {
+    const itemCount = items.length;
+    const cx = activeIndex >= 0 ? (activeIndex + 0.5) * (400 / itemCount) : -100;
+
+    return (
+      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
+        <div className="wave-nav-bar">
+          <svg className="wave-nav-svg" viewBox="0 0 400 62" preserveAspectRatio="none">
+            <motion.path
+              animate={{
+                d: activeIndex >= 0
+                  ? `M0,18 L${cx - 30},18 Q${cx},0 ${cx},-12 Q${cx},0 ${cx + 30},18 L400,18 L400,62 L0,62 Z`
+                  : "M0,18 L400,18 L400,62 L0,62 Z"
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 28 }}
+              fill="hsl(var(--card))"
+              stroke="hsl(var(--border))"
+              strokeWidth="0.5"
+            />
+          </svg>
+          <div className="wave-nav-items">
+            {items.map((item, index) => {
+              const isActive = index === activeIndex;
+              return (
+                <button key={item.label} onClick={() => handleClick(item, index)}
+                  className={`wave-nav-item${isActive ? " active" : ""}`}>
+                  <motion.div
+                    animate={isActive ? { y: -18, scale: 1.1 } : { y: 0, scale: 1 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 22 }}
+                    className={`relative flex items-center justify-center ${isActive ? "w-9 h-9 rounded-full bg-primary shadow-lg" : ""}`}
+                  >
+                    <item.icon className={`w-[18px] h-[18px] ${isActive ? "text-primary-foreground" : "text-muted-foreground"}`} />
+                    {item.label === "Cart" && <CartBadge />}
+                  </motion.div>
+                  <motion.span
+                    animate={{ opacity: isActive ? 1 : 0.5, y: isActive ? -2 : 0 }}
+                    className="wave-label"
+                  >{item.label}</motion.span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
-      <div className="h-[env(safe-area-inset-bottom)] bg-card" />
-    </nav>
-  );
+        <div className="h-[env(safe-area-inset-bottom)] bg-card" />
+      </nav>
+    );
+  };
 
   const renderNav = () => {
     switch (navStyle) {
