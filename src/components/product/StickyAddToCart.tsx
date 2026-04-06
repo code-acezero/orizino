@@ -35,8 +35,7 @@ const StickyAddToCart: React.FC<StickyAddToCartProps> = ({ product, onAddToCart,
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="fixed left-0 right-0 z-[49] glass-strong border-b-0 border-t border-border/50 bottom-[env(safe-area-inset-bottom)] lg:bottom-0 lg:z-50"
-          style={{ bottom: window.innerWidth < 1024 ? 'calc(4rem + env(safe-area-inset-bottom))' : '0' }}
+          className="fixed left-0 right-0 z-[49] glass-strong border-t border-border/50 rounded-t-none bottom-16 lg:bottom-0 lg:z-50"
           id="sticky-add-to-cart"
         >
           <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3 flex items-center gap-2 sm:gap-4">
