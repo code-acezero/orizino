@@ -91,7 +91,7 @@ const AdminProducts = () => {
     },
   });
 
-  const [pageLayout, setPageLayout] = useState("premium");
+  const [pageLayout, setPageLayout] = useState("glass");
   const [galleryStyle, setGalleryStyle] = useState("default");
 
   useEffect(() => {
