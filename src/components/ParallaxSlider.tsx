@@ -284,20 +284,9 @@ const ParallaxSlider: React.FC = () => {
   return (
     <motion.div
       ref={containerRef}
-      className="parallax-slider-root relative w-full overflow-hidden"
+      className="parallax-slider-root relative w-full overflow-hidden h-[35vh] md:h-[40vh] lg:h-[45vh] max-h-[450px] md:max-h-[500px] lg:max-h-[540px]"
       style={{
         minHeight: "200px",
-        perspective: "1000px",
-      }}
-      data-slider-height={cfg.height}
-      // Responsive height: mobile 35vh, tablet 40vh, desktop -10%
-      className={`parallax-slider-root relative w-full overflow-hidden h-[35vh] md:h-[40vh] lg:h-[45vh] max-h-[450px] md:max-h-[500px] lg:max-h-[540px]`}
-      onMouseEnter={() => cfg.pause_on_hover && setPaused(true)}
-      onMouseLeave={onMouseLeaveReset}
-      onMouseMove={onMouseMove}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
-    >
         perspective: "1000px",
         rotateX,
         rotateY,
