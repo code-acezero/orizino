@@ -103,10 +103,15 @@ const ParallaxSlider: React.FC = () => {
     mouseY.set(0.5);
   }, [mouseX, mouseY]);
 
-  // Measure container for particle canvas
+  // Measure container for particle canvas — immediate + ResizeObserver
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    // Immediate measurement so particles render on first paint
+    const rect = el.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      setContainerSize({ w: rect.width, h: rect.height });
+    }
     const ro = new ResizeObserver(([entry]) => {
       setContainerSize({ w: entry.contentRect.width, h: entry.contentRect.height });
     });
