@@ -38,6 +38,7 @@ const NotificationBell: React.FC = () => {
         .from("notifications")
         .select("*")
         .or(`user_id.eq.${user!.id},user_id.is.null`)
+        .not("type", "in", '("support","call")')
         .order("created_at", { ascending: false })
         .limit(20);
       if (error) throw error;
