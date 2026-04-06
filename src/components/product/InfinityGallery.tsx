@@ -225,8 +225,8 @@ const InfinityGallery: React.FC<InfinityGalleryProps> = ({ images, productName, 
       >
         {/* Blurred background */}
         <div className="absolute inset-0 z-0">
-          <div ref={bgRef1} className="absolute -inset-[10%] w-[120%] h-[120%] bg-cover bg-center transition-opacity duration-1000" style={{ filter: "blur(40px) brightness(0.4)", opacity: 0 }} />
-          <div ref={bgRef2} className="absolute -inset-[10%] w-[120%] h-[120%] bg-cover bg-center transition-opacity duration-1000" style={{ filter: "blur(40px) brightness(0.4)", opacity: 0 }} />
+          <div ref={bgRef1} className="absolute -inset-[10%] w-[120%] h-[120%] bg-cover bg-center" style={{ filter: "blur(40px) brightness(0.4)", opacity: 0, transition: "opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1)" }} />
+          <div ref={bgRef2} className="absolute -inset-[10%] w-[120%] h-[120%] bg-cover bg-center" style={{ filter: "blur(40px) brightness(0.4)", opacity: 0, transition: "opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1)" }} />
         </div>
 
         {/* Noise overlay */}
