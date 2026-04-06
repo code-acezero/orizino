@@ -9,12 +9,16 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AuthModal from "@/components/AuthModal";
-import BottomNav from "@/components/BottomNav";
+import BottomNav, { type BottomNavProductTray } from "@/components/BottomNav";
 import NotificationBell from "@/components/NotificationBell";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const Navbar: React.FC = () => {
+interface NavbarProps {
+  bottomNavProductTray?: BottomNavProductTray;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [catDropOpen, setCatDropOpen] = useState(false);
   const [hoveredCat, setHoveredCat] = useState<string | null>(null);
@@ -362,7 +366,7 @@ const Navbar: React.FC = () => {
       </nav>
 
 
-      <BottomNav onSearchClick={() => {}} onAuthClick={() => setAuthOpen(true)} />
+      <BottomNav onSearchClick={() => {}} onAuthClick={() => setAuthOpen(true)} productTray={bottomNavProductTray} />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </>
   );
