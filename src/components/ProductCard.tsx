@@ -39,6 +39,40 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const queryClient = useQueryClient();
   const [addingToCart, setAddingToCart] = useState(false);
   const [quickViewOpen, setQuickViewOpen] = useState(false);
+  const [inWishlist, setInWishlist] = useState(false);
+  const [togglingWishlist, setTogglingWishlist] = useState(false);
+
+  // Check wishlist status on mount
+  React.useEffect(() => {
+    let cancelled = false;
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user || cancelled) return;
+      supabase.from("wishlist_items").select("id").eq("user_id", user.id).eq("product_id", id).maybeSingle()
+        .then(({ data }) => { if (!cancelled) setInWishlist(!!data); });
+    });
+    return () => { cancelled = true; };
+  }, [id]);
+
+  const handleToggleWishlist = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast.error("Please sign in to use wishlist"); return; }
+    setTogglingWishlist(true);
+    try {
+      if (inWishlist) {
+        await supabase.from("wishlist_items").delete().eq("user_id", user.id).eq("product_id", id);
+        setInWishlist(false);
+        toast.success("Removed from wishlist");
+      } else {
+        await supabase.from("wishlist_items").insert({ user_id: user.id, product_id: id });
+        setInWishlist(true);
+        toast.success("Added to wishlist");
+      }
+      queryClient.invalidateQueries({ queryKey: ["wishlist"] });
+    } catch { toast.error("Failed to update wishlist"); }
+    finally { setTogglingWishlist(false); }
+  }, [id, inWishlist, queryClient]);
 
   const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -175,16 +209,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="glass rounded-full p-2 text-foreground hover:text-primary"
+              onClick={handleToggleWishlist}
+              disabled={togglingWishlist}
+              className={`glass rounded-full p-2 transition-colors ${inWishlist ? "text-destructive" : "text-foreground hover:text-primary"}`}
             >
-              <Heart className="w-4 h-4" />
+              <Heart className={`w-4 h-4 ${inWishlist ? "fill-destructive" : ""}`} />
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
+              onClick={handleAddToCart}
+              disabled={addingToCart}
               className="glass rounded-full p-2 text-foreground hover:text-primary"
             >
-              <ShoppingCart className="w-4 h-4" />
+              {addingToCart ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShoppingCart className="w-4 h-4" />}
             </motion.button>
           </div>
         </div>
