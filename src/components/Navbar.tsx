@@ -91,7 +91,15 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
   const parentCategories = dbCategories.filter((c) => !c.parent_id);
   const getChildren = (parentId: string) => dbCategories.filter((c) => c.parent_id === parentId);
 
-  // unreadCount query removed - handled by NotificationBell component
+  const { data: cartCount } = useQuery({
+    queryKey: ["cart-count", user?.id],
+    queryFn: async () => {
+      const { count } = await supabase.from("cart_items").select("*", { count: "exact", head: true }).eq("user_id", user!.id);
+      return count || 0;
+    },
+    enabled: !!user,
+    staleTime: 30000,
+  });
 
   // Close category dropdown when clicking outside
   useEffect(() => {
