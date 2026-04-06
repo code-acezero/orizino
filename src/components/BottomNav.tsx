@@ -184,38 +184,43 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick }) => 
   // ══════════════════════════════════════════════
   // STYLE 2: Notch
   // ══════════════════════════════════════════════
-  const renderNotch = () => (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden flex justify-center pb-[env(safe-area-inset-bottom)]">
-      <div className="notch-nav-wrapper" ref={navRef}>
-        <div className="notch-indicator" style={{
-          transform: activeIndex >= 0 ? `translateX(${activeIndex * 64 + 12}px)` : "translateX(-999px)",
-        }}>
-          <div className="notch-dot" />
+  const renderNotch = () => {
+    const itemCount = items.length;
+    const notchLeft = activeIndex >= 0
+      ? `calc(${(activeIndex + 0.5) * (100 / itemCount)}% - 26px)`
+      : "-999px";
+
+    return (
+      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden flex justify-center pb-[env(safe-area-inset-bottom)]">
+        <div className="notch-nav-wrapper w-full" ref={navRef}>
+          <div className="notch-indicator" style={{ left: notchLeft, transition: "left 0.4s cubic-bezier(0.4, 0, 0.2, 1)" }}>
+            <div className="notch-dot" />
+          </div>
+          <div className="notch-navbar">
+            {items.map((item, index) => {
+              const isActive = index === activeIndex;
+              return (
+                <button key={item.label}
+                  ref={el => { itemRefs.current[index] = el; }}
+                  onClick={() => handleClick(item, index)}
+                  className={`notch-nav-item${isActive ? " active" : ""}`}>
+                  <item.icon className="w-[22px] h-[22px]" />
+                  <AnimatePresence>
+                    {isActive && (
+                      <motion.span initial={{ maxHeight: 0, opacity: 0, y: 4 }} animate={{ maxHeight: 24, opacity: 1, y: 0 }} exit={{ maxHeight: 0, opacity: 0, y: 4 }}
+                        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                        className="notch-label overflow-hidden">{item.label}</motion.span>
+                    )}
+                  </AnimatePresence>
+                  {item.label === "Cart" && <CartBadge />}
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <div className="notch-navbar">
-          {items.map((item, index) => {
-            const isActive = index === activeIndex;
-            return (
-              <button key={item.label}
-                ref={el => { itemRefs.current[index] = el; }}
-                onClick={() => handleClick(item, index)}
-                className={`notch-nav-item${isActive ? " active" : ""}`}>
-                <item.icon className="w-[26px] h-[26px]" />
-                <AnimatePresence>
-                  {isActive && (
-                    <motion.span initial={{ maxHeight: 0, opacity: 0, y: 4 }} animate={{ maxHeight: 24, opacity: 1, y: 0 }} exit={{ maxHeight: 0, opacity: 0, y: 4 }}
-                      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                      className="notch-label overflow-hidden">{item.label}</motion.span>
-                  )}
-                </AnimatePresence>
-                {item.label === "Cart" && <CartBadge />}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </nav>
-  );
+      </nav>
+    );
+  };
 
   // ══════════════════════════════════════════════
   // STYLE 3: Pill / Capsule (floating)
