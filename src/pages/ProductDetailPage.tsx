@@ -13,6 +13,7 @@ import Footer from "@/components/Footer";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ProductCard from "@/components/ProductCard";
 import ImageGallery from "@/components/product/ImageGallery";
+import InfinityGallery from "@/components/product/InfinityGallery";
 import ProductTabs from "@/components/product/ProductTabs";
 import ProductActions from "@/components/product/ProductActions";
 import CurrencyWidget from "@/components/product/CurrencyWidget";
