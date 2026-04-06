@@ -236,6 +236,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </motion.button>
         </motion.div>
       </Link>
+      <QuickViewModal productId={id} open={quickViewOpen} onOpenChange={setQuickViewOpen} />
     </motion.div>
   );
 };
