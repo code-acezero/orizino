@@ -275,22 +275,47 @@
   border-radius: 16px 16px 0 0;
   margin: 0 8px;
   border-top: 1px solid hsl(var(--border));
+  overflow: visible;
 }
 
 .notch-indicator {
   position: absolute;
-  top: -4px;
+  top: -5px;
   width: 52px;
-  height: 22px;
-  background: hsl(var(--background));
+  height: 24px;
+  background: hsl(var(--card));
   z-index: 10;
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  clip-path: path('M0,18 L6,18 C12,18 14,6 26,5 C38,6 40,18 46,18 L52,18 Z');
+  pointer-events: none;
+  border-radius: 0 0 26px 26px;
+}
+
+.notch-indicator::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -10px;
+  width: 10px;
+  height: 10px;
+  background: transparent;
+  border-top-right-radius: 10px;
+  box-shadow: 3px -3px 0 0 hsl(var(--card));
+}
+
+.notch-indicator::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -10px;
+  width: 10px;
+  height: 10px;
+  background: transparent;
+  border-top-left-radius: 10px;
+  box-shadow: -3px -3px 0 0 hsl(var(--card));
 }
 
 .notch-dot {
   position: absolute;
-  top: 10px;
+  bottom: 4px;
   left: 50%;
   transform: translateX(-50%);
   width: 8px;
@@ -304,7 +329,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 6px 12px 10px;
+  padding: 8px 12px 10px;
   position: relative;
   z-index: 1;
 }
