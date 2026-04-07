@@ -389,6 +389,8 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick, produ
                     )}
                   </AnimatePresence>
                   {item.label === "Cart" && <CartBadge />}
+                  {item.label === "Wishlist" && <WishlistBadge />}
+                  <RippleEffect active={ripple?.index === index} />
                 </button>
               );
             })}
