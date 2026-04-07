@@ -163,6 +163,14 @@ const TrackedSection: React.FC<{ sectionId: string; children: React.ReactNode }>
 const HomePage: React.FC = () => {
   useSeoMeta("home", "Home | Ace Marketplace");
   usePageViewTracker("/home");
+  const queryClient = useQueryClient();
+
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries();
+    await new Promise((r) => setTimeout(r, 600));
+  }, [queryClient]);
+
+  const { pullDistance, refreshing } = usePullToRefresh(handleRefresh);
   const { data: featuredProducts = [], isLoading } = useQuery({
     queryKey: ["featured-products"],
     queryFn: async () => {
