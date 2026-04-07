@@ -70,10 +70,18 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeSpeed;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
+  }
+
+  /* Hardware-accelerate common animated elements */
+  img, video, canvas {
+    content-visibility: auto;
   }
 }
 
@@ -195,6 +203,7 @@
   justify-content: center;
   transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55), color 0.3s;
   color: hsl(var(--muted-foreground));
+  will-change: transform;
 }
 
 .bottom-nav-item.active .bottom-nav-icon {
@@ -233,6 +242,7 @@
   animation: liquid-idle 3s ease-in-out infinite;
   z-index: 2;
   pointer-events: none;
+  will-change: border-radius;
 }
 
 @keyframes liquid-idle {
@@ -528,19 +538,26 @@
   }
 }
 
-/* Mobile performance optimizations */
+/* ── Mobile performance optimizations ── */
 @media (max-width: 768px) {
   * {
     -webkit-tap-highlight-color: transparent;
   }
+
+  /* Reduce backdrop-filter on mobile for performance */
   .glass,
   .glass-strong {
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
   }
-  img {
-    content-visibility: auto;
+
+  /* Disable 3D transforms on touch devices for smoother scrolling */
+  .group {
+    transform: none !important;
+    perspective: none !important;
   }
+
+  /* Reduce animation complexity */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
@@ -548,6 +565,11 @@
       transition-duration: 0.01ms !important;
     }
   }
+}
+
+/* GPU acceleration hints for frequently animated elements */
+.will-change-transform {
+  will-change: transform;
 }
 
 @keyframes priceGlow {
