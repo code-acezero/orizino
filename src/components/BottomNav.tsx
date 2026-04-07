@@ -315,6 +315,9 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick, produ
                     {/* Icon centered inside ball */}
                     <item.icon className={`w-5 h-5 relative z-10 transition-colors duration-300 ${isActive ? "text-primary-foreground" : "text-muted-foreground"}`} />
                     {item.label === "Cart" && <CartBadge className="z-20" />}
+                    {item.label === "Wishlist" && <WishlistBadge className="z-20" />}
+                  </motion.div>
+                  <RippleEffect active={ripple?.index === index} />
                   </motion.div>
 
                   {/* Label */}
