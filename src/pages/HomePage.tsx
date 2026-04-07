@@ -1,20 +1,22 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import ParallaxSlider from "@/components/ParallaxSlider";
 import CategoryGrid from "@/components/CategoryGrid";
 import ProductCard from "@/components/ProductCard";
+import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import Footer from "@/components/Footer";
 import HomePopup from "@/components/HomePopup";
 import SaleCountdown from "@/components/SaleCountdown";
 import SalePopup from "@/components/SalePopup";
 import LiveVisitorCounter from "@/components/LiveVisitorCounter";
 import DeliveryOfferBanner from "@/components/DeliveryOfferBanner";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 import { usePageViewTracker, useSectionTracker, trackClick } from "@/hooks/use-analytics";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
+import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 
 interface SaleConfig {
   id: string;
@@ -161,6 +163,14 @@ const TrackedSection: React.FC<{ sectionId: string; children: React.ReactNode }>
 const HomePage: React.FC = () => {
   useSeoMeta("home", "Home | Ace Marketplace");
   usePageViewTracker("/home");
+  const queryClient = useQueryClient();
+
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries();
+    await new Promise((r) => setTimeout(r, 600));
+  }, [queryClient]);
+
+  const { pullDistance, refreshing } = usePullToRefresh(handleRefresh);
   const { data: featuredProducts = [], isLoading } = useQuery({
     queryKey: ["featured-products"],
     queryFn: async () => {
@@ -450,7 +460,7 @@ const HomePage: React.FC = () => {
             </motion.div>
             <div className={`grid grid-cols-2 md:grid-cols-3 ${sectionCols} gap-4`}>
               {isLoading
-                ? Array.from({ length: cfg.product_count || 8 }).map((_, i) => <div key={i} className="aspect-[3/4] rounded-3xl bg-secondary/30 animate-pulse" />)
+                ? Array.from({ length: cfg.product_count || 8 }).map((_, i) => <ProductCardSkeleton key={i} className={cardExtra} />)
                 : featuredProducts.slice(0, cfg.product_count || 8).map((product, i) => (
                     <motion.div key={product.id} {...anim} viewport={{ once: true }} transition={{ delay: i * layout.animation_delay }}>
                       <ProductCard id={product.id} name={product.name} price={Number(product.price)} compareAtPrice={product.compare_at_price ? Number(product.compare_at_price) : undefined} thumbnail={product.thumbnail ?? undefined} avgRating={product.avg_rating ? Number(product.avg_rating) : undefined} reviewCount={product.review_count ?? undefined} slug={product.slug} className={cardExtra} />
@@ -508,7 +518,19 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen pb-20 lg:pb-0" style={getPatternStyle(layout.page_bg_pattern)}>
+    <div className="min-h-screen pb-20 lg:pb-0 relative" style={getPatternStyle(layout.page_bg_pattern)}>
+      {/* Pull-to-refresh indicator */}
+      {(pullDistance > 0 || refreshing) && (
+        <div
+          className="fixed top-0 left-0 right-0 z-[100] flex justify-center pointer-events-none"
+          style={{ transform: `translateY(${refreshing ? 60 : pullDistance}px)`, transition: refreshing ? "transform 0.3s ease" : "none" }}
+        >
+          <div className="glass rounded-full p-2.5 shadow-lg mt-2">
+            <Loader2 className={`w-5 h-5 text-primary ${refreshing ? "animate-spin" : ""}`}
+              style={{ transform: refreshing ? "none" : `rotate(${pullDistance * 3}deg)` }} />
+          </div>
+        </div>
+      )}
       <Navbar />
       <HomePopup />
       {popupSales.map((sale: SaleConfig) => <SalePopup key={sale.id} sale={sale} />)}
