@@ -1,3 +1,4 @@
+import React, { Suspense, lazy } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -6,64 +7,76 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/AdminRoute";
-import AdminLayout from "@/components/admin/AdminLayout";
-import LandingPage from "./pages/LandingPage";
-import HomePage from "./pages/HomePage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
-import ProfilePage from "./pages/ProfilePage";
-import SettingsPage from "./pages/SettingsPage";
-import ShopPage from "./pages/ShopPage";
-import CategoryPage from "./pages/CategoryPage";
-import ProductDetailPage from "./pages/ProductDetailPage";
-import CartPage from "./pages/CartPage";
-import CheckoutPage from "./pages/CheckoutPage";
-import OrdersPage from "./pages/OrdersPage";
-import WishlistPage from "./pages/WishlistPage";
-import SupportPage from "./pages/SupportPage";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminProducts from "./pages/admin/AdminProducts";
-import AdminCategories from "./pages/admin/AdminCategories";
-import AdminOrders from "./pages/admin/AdminOrders";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminReviews from "./pages/admin/AdminReviews";
-import AdminBanners from "./pages/admin/AdminBanners";
-import AdminRequests from "./pages/admin/AdminRequests";
-import AdminSettings from "./pages/admin/AdminSettings";
-import AdminShowcase from "./pages/admin/AdminShowcase";
-import AdminHome from "./pages/admin/AdminHome";
-import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
-import AdminCoupons from "./pages/admin/AdminCoupons";
-import AdminShipping from "./pages/admin/AdminShipping";
-import AdminSupport from "./pages/admin/AdminSupport";
-import AdminApiKeys from "./pages/admin/AdminApiKeys";
-import AdminAISettings from "./pages/admin/AdminAISettings";
-import AdminUserPromos from "./pages/admin/AdminUserPromos";
-import AdminDeliveryOffers from "./pages/admin/AdminDeliveryOffers";
-import AdminCmsPages from "./pages/admin/AdminCmsPages";
-import AdminLanding from "./pages/admin/AdminLanding";
-import AdminBranding from "./pages/admin/AdminBranding";
-import AdminMobileUI from "./pages/admin/AdminMobileUI";
-import AdminCallSettings from "./pages/admin/AdminCallSettings";
-import CmsPage from "./pages/CmsPage";
-import NotFound from "./pages/NotFound";
 import SiteThemeProvider from "./components/SiteThemeProvider";
 import AppToastOverlay from "./components/AppToastOverlay";
-import AIChatWidget from "./components/AIChatWidget";
-import PromoPopup from "./components/PromoPopup";
 import { useDynamicFavicon } from "./hooks/use-dynamic-favicon";
+
+// Eagerly load critical pages
+import HomePage from "./pages/HomePage";
+import LandingPage from "./pages/LandingPage";
+
+// Lazy load everything else
+const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const ShopPage = lazy(() => import("./pages/ShopPage"));
+const CategoryPage = lazy(() => import("./pages/CategoryPage"));
+const ProductDetailPage = lazy(() => import("./pages/ProductDetailPage"));
+const CartPage = lazy(() => import("./pages/CartPage"));
+const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
+const OrdersPage = lazy(() => import("./pages/OrdersPage"));
+const WishlistPage = lazy(() => import("./pages/WishlistPage"));
+const SupportPage = lazy(() => import("./pages/SupportPage"));
+const CmsPage = lazy(() => import("./pages/CmsPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const AIChatWidget = lazy(() => import("./components/AIChatWidget"));
+const PromoPopup = lazy(() => import("./components/PromoPopup"));
+
+// Lazy admin pages
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminProducts = lazy(() => import("./pages/admin/AdminProducts"));
+const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
+const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminReviews = lazy(() => import("./pages/admin/AdminReviews"));
+const AdminBanners = lazy(() => import("./pages/admin/AdminBanners"));
+const AdminRequests = lazy(() => import("./pages/admin/AdminRequests"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+const AdminShowcase = lazy(() => import("./pages/admin/AdminShowcase"));
+const AdminHome = lazy(() => import("./pages/admin/AdminHome"));
+const AdminAnnouncements = lazy(() => import("./pages/admin/AdminAnnouncements"));
+const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
+const AdminShipping = lazy(() => import("./pages/admin/AdminShipping"));
+const AdminSupport = lazy(() => import("./pages/admin/AdminSupport"));
+const AdminApiKeys = lazy(() => import("./pages/admin/AdminApiKeys"));
+const AdminAISettings = lazy(() => import("./pages/admin/AdminAISettings"));
+const AdminUserPromos = lazy(() => import("./pages/admin/AdminUserPromos"));
+const AdminDeliveryOffers = lazy(() => import("./pages/admin/AdminDeliveryOffers"));
+const AdminCmsPages = lazy(() => import("./pages/admin/AdminCmsPages"));
+const AdminLanding = lazy(() => import("./pages/admin/AdminLanding"));
+const AdminBranding = lazy(() => import("./pages/admin/AdminBranding"));
+const AdminMobileUI = lazy(() => import("./pages/admin/AdminMobileUI"));
+const AdminCallSettings = lazy(() => import("./pages/admin/AdminCallSettings"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,       // 5 min — data stays fresh, no refetch on mount
-      gcTime: 30 * 60 * 1000,          // 30 min — keep in cache even when unused
-      refetchOnWindowFocus: false,     // don't refetch when tab regains focus
-      refetchOnReconnect: false,       // don't refetch on network reconnect
-      refetchOnMount: false,           // don't refetch when component remounts
-      retry: 1,                        // retry once on failure
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
+      retry: 1,
     },
   },
 });
+
+const PageFallback = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 const AppContent = () => {
   useDynamicFavicon();
@@ -80,8 +93,11 @@ const App = () => (
           <CurrencyProvider>
           <SiteThemeProvider />
           <AppContent />
-          <AIChatWidget />
-          <PromoPopup />
+          <Suspense fallback={null}>
+            <AIChatWidget />
+            <PromoPopup />
+          </Suspense>
+          <Suspense fallback={<PageFallback />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/home" element={<HomePage />} />
@@ -139,9 +155,9 @@ const App = () => (
               <Route path="call-settings" element={<AdminCallSettings />} />
             </Route>
             <Route path="/page/:slug" element={<CmsPage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
           </CurrencyProvider>
           </LanguageProvider>
         </AuthProvider>
