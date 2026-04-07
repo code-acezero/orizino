@@ -247,21 +247,21 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick, produ
     const itemCount = items.length;
     const itemWidthPercent = 100 / itemCount;
     const indicatorLeft = activeIndex >= 0
-      ? `calc(${activeIndex * itemWidthPercent}% + ${itemWidthPercent / 2}% - 21px)`
+      ? `calc(${activeIndex * itemWidthPercent}% + ${itemWidthPercent / 2}% - 24px)`
       : "-999px";
 
     return (
       <nav id={mobileBottomNavId} className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
         {renderProductTray("border-x-0 rounded-none")}
-        <div className="bottom-nav-bar relative">
-          <ul className="bottom-nav-list">
+        <div className="bottom-nav-bar relative" style={{ overflow: "visible" }}>
+          <ul className="bottom-nav-list" style={{ overflow: "visible" }}>
             {items.map((item, index) => {
               const isActive = index === activeIndex;
               return (
                 <li key={item.label} className={`bottom-nav-item${isActive ? " active" : ""}`}>
                   <button onClick={() => handleClick(item, index)} className="bottom-nav-link">
                     <span className="bottom-nav-icon">
-                      <item.icon className="w-[18px] h-[18px]" />
+                      <item.icon className="w-5 h-5" />
                       {item.label === "Cart" && <CartBadge />}
                     </span>
                     <span className="bottom-nav-text">{item.label}</span>
@@ -272,7 +272,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick, produ
             <div className="bottom-nav-indicator" style={{ left: indicatorLeft, transition: "left 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55)" }} />
           </ul>
         </div>
-        <div className="h-[env(safe-area-inset-bottom)] bg-background" />
+        <div className="h-[env(safe-area-inset-bottom)] bg-card" />
       </nav>
     );
   };
@@ -289,10 +289,12 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick, produ
     return (
       <nav id={mobileBottomNavId} className="fixed bottom-0 left-0 right-0 z-50 lg:hidden flex flex-col justify-end pb-[env(safe-area-inset-bottom)]">
         {renderProductTray("mx-2 rounded-t-2xl border-x border-border/50")}
-        <div className="notch-nav-wrapper w-full" ref={navRef}>
-          <div className="notch-indicator" style={{ left: notchLeft, transition: "left 0.4s cubic-bezier(0.4, 0, 0.2, 1)" }}>
-            <div className="notch-dot" />
-          </div>
+        <div className="notch-nav-wrapper w-full" ref={navRef} style={{ overflow: "visible" }}>
+          {activeIndex >= 0 && (
+            <div className="notch-indicator" style={{ left: notchLeft, transition: "left 0.4s cubic-bezier(0.4, 0, 0.2, 1)" }}>
+              <div className="notch-dot" />
+            </div>
+          )}
           <div className="notch-navbar">
             {items.map((item, index) => {
               const isActive = index === activeIndex;
@@ -301,7 +303,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick, produ
                   ref={el => { itemRefs.current[index] = el; }}
                   onClick={() => handleClick(item, index)}
                   className={`notch-nav-item${isActive ? " active" : ""}`}>
-                  <item.icon className="w-[22px] h-[22px]" />
+                  <item.icon className="w-5 h-5" />
                   <AnimatePresence>
                     {isActive && (
                       <motion.span initial={{ maxHeight: 0, opacity: 0, y: 4 }} animate={{ maxHeight: 24, opacity: 1, y: 0 }} exit={{ maxHeight: 0, opacity: 0, y: 4 }}
