@@ -513,6 +513,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick, produ
                   >
                     <item.icon className={`w-[18px] h-[18px] ${isActive ? "text-primary-foreground" : "text-muted-foreground"}`} />
                     {item.label === "Cart" && <CartBadge />}
+                    {item.label === "Wishlist" && <WishlistBadge />}
                   </motion.div>
                   <motion.span
                     animate={{ opacity: isActive ? 1 : 0.5, y: isActive ? -2 : 0 }}
