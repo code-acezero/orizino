@@ -73,20 +73,18 @@ const ParallaxSlider: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollY = useMotionValue(0);
 
-  // ── Mouse position (0-1 range, 0.5 = center) ──
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
 
-  // True parallax: image layer moves OPPOSITE to mouse, text moves WITH mouse (less)
-  // This creates the depth illusion like a real 3D parallax slider
-  const imgX = useSpring(useTransform(mouseX, [0, 1], [8, -8]), { stiffness: 100, damping: 30 });
-  const imgY = useSpring(useTransform(mouseY, [0, 1], [6, -6]), { stiffness: 100, damping: 30 });
-  const textX = useSpring(useTransform(mouseX, [0, 1], [-4, 4]), { stiffness: 120, damping: 30 });
-  const textY = useSpring(useTransform(mouseY, [0, 1], [-3, 3]), { stiffness: 120, damping: 30 });
+  // Reduced parallax: image moves only ±5px, text ±2px — subtle depth without breaking the effect
+  const imgX = useSpring(useTransform(mouseX, [0, 1], [5, -5]), { stiffness: 120, damping: 35 });
+  const imgY = useSpring(useTransform(mouseY, [0, 1], [4, -4]), { stiffness: 120, damping: 35 });
+  const textX = useSpring(useTransform(mouseX, [0, 1], [-2, 2]), { stiffness: 140, damping: 35 });
+  const textY = useSpring(useTransform(mouseY, [0, 1], [-1.5, 1.5]), { stiffness: 140, damping: 35 });
 
-  // Subtle 3D rotation on the whole container
-  const rotateX = useSpring(useTransform(mouseY, [0, 1], [0.8, -0.8]), { stiffness: 120, damping: 30 });
-  const rotateY = useSpring(useTransform(mouseX, [0, 1], [-1, 1]), { stiffness: 120, damping: 30 });
+  // Very subtle 3D tilt
+  const rotateX = useSpring(useTransform(mouseY, [0, 1], [0.5, -0.5]), { stiffness: 140, damping: 35 });
+  const rotateY = useSpring(useTransform(mouseX, [0, 1], [-0.7, 0.7]), { stiffness: 140, damping: 35 });
 
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
@@ -103,11 +101,9 @@ const ParallaxSlider: React.FC = () => {
     mouseY.set(0.5);
   }, [mouseX, mouseY]);
 
-  // Measure container for particle canvas — immediate + ResizeObserver
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    // Immediate measurement so particles render on first paint
     const rect = el.getBoundingClientRect();
     if (rect.width > 0 && rect.height > 0) {
       setContainerSize({ w: rect.width, h: rect.height });
@@ -119,7 +115,6 @@ const ParallaxSlider: React.FC = () => {
     return () => ro.disconnect();
   }, []);
 
-  // Scroll-based parallax
   useEffect(() => {
     const handleScroll = () => {
       if (!containerRef.current) return;
@@ -134,8 +129,8 @@ const ParallaxSlider: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [scrollY]);
 
-  const parallaxScrollY = useTransform(scrollY, [300, -300], [-25, 25]);
-  const smoothScrollY = useSpring(parallaxScrollY, { stiffness: 100, damping: 30 });
+  const parallaxScrollY = useTransform(scrollY, [300, -300], [-15, 15]);
+  const smoothScrollY = useSpring(parallaxScrollY, { stiffness: 120, damping: 35 });
 
   const { data: dbSlides = [] } = useQuery({
     queryKey: ["showcase-slides"],
@@ -186,10 +181,8 @@ const ParallaxSlider: React.FC = () => {
   const goPrev = useCallback(() => { setDirection(-1); setCurrent((c) => wrap(c - 1)); }, [wrap]);
   const goNext = useCallback(() => { setDirection(1); setCurrent((c) => wrap(c + 1)); }, [wrap]);
 
-  // Preload
   useEffect(() => { slides.forEach((s) => { const img = new Image(); img.src = s.image; }); }, [slides]);
 
-  // Touch swipe
   const onTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.changedTouches[0].screenX; };
   const onTouchEnd = (e: React.TouchEvent) => {
     const diff = e.changedTouches[0].screenX - touchStartX.current;
@@ -197,7 +190,6 @@ const ParallaxSlider: React.FC = () => {
     if (diff > 50) goPrev();
   };
 
-  // Keyboard
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") goPrev();
@@ -215,10 +207,10 @@ const ParallaxSlider: React.FC = () => {
 
   const imageVariants = {
     enter: (d: number) => ({
-      x: d > 0 ? "6%" : "-6%",
-      scale: 1.05,
+      x: d > 0 ? "4%" : "-4%",
+      scale: 1.03,
       opacity: 0,
-      filter: "brightness(0.5)",
+      filter: "brightness(0.6)",
     }),
     center: {
       x: "0%",
@@ -228,21 +220,21 @@ const ParallaxSlider: React.FC = () => {
       transition: { duration: dur, ease: [0.25, 0.46, 0.45, 0.94] as const },
     },
     exit: (d: number) => ({
-      x: d > 0 ? "-6%" : "6%",
-      scale: 0.97,
+      x: d > 0 ? "-4%" : "4%",
+      scale: 0.98,
       opacity: 0,
-      filter: "brightness(0.5)",
+      filter: "brightness(0.6)",
       transition: { duration: dur * 0.7, ease: [0.25, 0.46, 0.45, 0.94] as const },
     }),
   };
 
   const textVariants = {
-    enter: { opacity: 0, y: 40, scale: 0.97 },
+    enter: { opacity: 0, y: 30, scale: 0.98 },
     center: {
       opacity: 1, y: 0, scale: 1,
-      transition: { duration: 0.6, delay: dur * 0.4, ease: "easeOut" as const },
+      transition: { duration: 0.5, delay: dur * 0.35, ease: "easeOut" as const },
     },
-    exit: { opacity: 0, y: -20, scale: 0.98, transition: { duration: 0.3 } },
+    exit: { opacity: 0, y: -15, scale: 0.98, transition: { duration: 0.25 } },
   };
 
   const ctaClasses: Record<string, string> = {
@@ -254,9 +246,9 @@ const ParallaxSlider: React.FC = () => {
 
   const subtitleEl = (text: string) => {
     if (!text) return null;
-    if (cfg.subtitle_style === "badge") return <span className="inline-block rounded-full bg-primary/20 text-primary text-sm px-4 py-1 mb-3 font-medium">{text}</span>;
-    if (cfg.subtitle_style === "underline") return <span className="inline-block text-primary text-sm mb-3 border-b-2 border-primary pb-1">{text}</span>;
-    return <span className="inline-block text-primary text-sm mb-3 font-medium">{text}</span>;
+    if (cfg.subtitle_style === "badge") return <span className="inline-block rounded-full bg-primary/20 text-primary text-[10px] md:text-xs lg:text-sm px-3 md:px-4 py-0.5 md:py-1 mb-2 md:mb-3 font-medium">{text}</span>;
+    if (cfg.subtitle_style === "underline") return <span className="inline-block text-primary text-[10px] md:text-xs lg:text-sm mb-2 md:mb-3 border-b-2 border-primary pb-0.5 md:pb-1">{text}</span>;
+    return <span className="inline-block text-primary text-[10px] md:text-xs lg:text-sm mb-2 md:mb-3 font-medium">{text}</span>;
   };
 
   const renderDot = (i: number) => {
@@ -264,7 +256,7 @@ const ParallaxSlider: React.FC = () => {
     if (cfg.dot_style === "number") {
       return (
         <button key={i} onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }}
-          className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center transition-all duration-300 ${active ? "bg-primary text-primary-foreground scale-110" : "bg-muted-foreground/30 text-muted-foreground hover:bg-muted-foreground/50"}`}>
+          className={`w-6 h-6 md:w-7 md:h-7 rounded-full text-[10px] md:text-xs font-bold flex items-center justify-center transition-all duration-300 ${active ? "bg-primary text-primary-foreground scale-110" : "bg-muted-foreground/30 text-muted-foreground hover:bg-muted-foreground/50"}`}>
           {i + 1}
         </button>
       );
@@ -272,145 +264,159 @@ const ParallaxSlider: React.FC = () => {
     if (cfg.dot_style === "dash" || cfg.dot_style === "pill") {
       return (
         <button key={i} onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }}
-          className={`h-1.5 rounded-full transition-all duration-500 ${active ? "w-10 bg-primary" : "w-3 bg-muted-foreground/40 hover:bg-muted-foreground/60"}`} />
+          className={`h-1 md:h-1.5 rounded-full transition-all duration-500 ${active ? "w-7 md:w-10 bg-primary" : "w-2 md:w-3 bg-muted-foreground/40 hover:bg-muted-foreground/60"}`} />
       );
     }
     return (
       <button key={i} onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }}
-        className={`w-3 h-3 rounded-full transition-all duration-300 ${active ? "bg-primary scale-125" : "bg-muted-foreground/40 hover:bg-muted-foreground/60"}`} />
+        className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-all duration-300 ${active ? "bg-primary scale-125" : "bg-muted-foreground/40 hover:bg-muted-foreground/60"}`} />
     );
   };
 
   return (
-    <motion.div
-      ref={containerRef}
-      className="parallax-slider-root relative w-full overflow-hidden h-[35vh] md:h-[40vh] lg:h-[50vh] max-h-[400px] md:max-h-[480px] lg:max-h-[580px]"
-      style={{
-        minHeight: "200px",
-        perspective: "1000px",
-        rotateX,
-        rotateY,
-        transformStyle: "preserve-3d",
-      }}
-      onMouseEnter={() => cfg.pause_on_hover && setPaused(true)}
-      onMouseLeave={onMouseLeaveReset}
-      onMouseMove={onMouseMove}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
-    >
-      {/* ── Background image layer (moves opposite to mouse = parallax depth) ── */}
-      <AnimatePresence initial={false} custom={direction} mode="sync">
-        <motion.div
-          key={currentSlide.id}
-          custom={direction}
-          variants={imageVariants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          className="absolute inset-[-12px] w-[calc(100%+24px)] h-[calc(100%+24px)]"
-          style={{ x: imgX, y: imgY }}
-        >
-          <motion.div className="w-full h-full" style={{ y: smoothScrollY }}>
-            <img
-              src={currentSlide.image}
-              alt={currentSlide.title}
-              className={`w-full h-full object-cover ${cfg.ken_burns ? "parallax-ken-burns" : ""}`}
-              loading="eager"
-            />
-          </motion.div>
-        </motion.div>
-      </AnimatePresence>
+    <div className="relative">
+      {/* Gradient mesh background behind slider */}
+      <div className="absolute -inset-4 -z-10 opacity-60 blur-2xl pointer-events-none" aria-hidden="true"
+        style={{
+          background: `
+            radial-gradient(ellipse 50% 60% at 15% 20%, hsl(var(--primary) / 0.2), transparent),
+            radial-gradient(ellipse 40% 50% at 80% 30%, hsl(var(--accent) / 0.15), transparent),
+            radial-gradient(ellipse 60% 40% at 50% 90%, hsl(var(--primary) / 0.1), transparent),
+            radial-gradient(ellipse 30% 40% at 90% 80%, hsl(var(--accent) / 0.12), transparent)
+          `,
+        }}
+      />
 
-      {/* ── Overlay gradient ── */}
-      <div className="absolute inset-0 z-[10] pointer-events-none parallax-overlay" />
-
-      {/* ── Edge blend: feather edges into background ── */}
-      <div className="absolute inset-0 z-[11] pointer-events-none" style={{
-        boxShadow: "inset 0 0 40px 20px hsl(var(--background))",
-      }} />
-
-      {/* ── Vignette ── */}
-      {cfg.show_vignette && <div className="absolute inset-0 z-[12] pointer-events-none" style={{ boxShadow: "inset 0 0 80px 25px rgba(0,0,0,0.4)" }} />}
-
-      {/* ── Particle / dust overlay ── */}
-      {cfg.show_particles && containerSize.w > 0 && containerSize.h > 0 && (
-        <ParticleOverlay
-          width={containerSize.w}
-          height={containerSize.h}
-          count={cfg.particle_count}
-          speed={cfg.particle_speed}
-          size={cfg.particle_size}
-        />
-      )}
-
-      {/* ── Text layer (moves slightly WITH mouse = foreground depth) ── */}
       <motion.div
-        className={`absolute inset-0 z-20 flex items-end ${
-          currentSlide.textAlign === "center" ? "justify-center" : currentSlide.textAlign === "right" ? "justify-end" : "justify-start"
-        }`}
-        style={{ x: textX, y: textY, transformStyle: "preserve-3d" }}
+        ref={containerRef}
+        className="parallax-slider-root relative w-full overflow-hidden h-[35vh] md:h-[40vh] lg:h-[50vh] max-h-[400px] md:max-h-[480px] lg:max-h-[580px] rounded-2xl md:rounded-3xl"
+        style={{
+          minHeight: "200px",
+          perspective: "1200px",
+          rotateX: isMobile ? 0 : rotateX,
+          rotateY: isMobile ? 0 : rotateY,
+          transformStyle: "preserve-3d",
+        }}
+        onMouseEnter={() => cfg.pause_on_hover && setPaused(true)}
+        onMouseLeave={onMouseLeaveReset}
+        onMouseMove={onMouseMove}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
       >
-        <div className={`container mx-auto px-4 md:px-8 lg:px-16 pb-14 md:pb-16 lg:pb-20 ${
-          currentSlide.textAlign === "center" ? "text-center flex flex-col items-center" : currentSlide.textAlign === "right" ? "text-right flex flex-col items-end" : ""
-        }`}>
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={`text-${currentSlide.id}`}
-              variants={textVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              className={`max-w-xs md:max-w-md lg:max-w-lg ${currentSlide.textAlign === "center" ? "items-center" : currentSlide.textAlign === "right" ? "items-end" : ""}`}
-            >
-              {subtitleEl(currentSlide.subtitle)}
-              <h1 className="text-2xl md:text-4xl lg:text-6xl font-bold font-display mb-2 md:mb-3 lg:mb-4 leading-tight text-white drop-shadow-lg">
-                {currentSlide.title}
-              </h1>
-              {currentSlide.description && (
-                <p className="text-xs md:text-base lg:text-lg text-white/80 mb-3 md:mb-4 lg:mb-6 max-w-[280px] md:max-w-sm lg:max-w-md line-clamp-2 drop-shadow">
-                  {currentSlide.description}
-                </p>
-              )}
-              {currentSlide.cta && (
-                <motion.a
-                  href={currentSlide.ctaLink}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => trackClick("slider_cta", currentSlide.id, "/home", { cta_text: currentSlide.cta, cta_link: currentSlide.ctaLink })}
-                  className={`inline-flex items-center rounded-full font-semibold text-xs md:text-sm lg:text-lg px-4 md:px-6 lg:px-8 py-2 md:py-2.5 lg:py-3 shadow-lg transition-all duration-300 ${ctaClasses[cfg.cta_style] || ctaClasses.gradient}`}
-                >
-                  {currentSlide.cta}
-                </motion.a>
-              )}
+        {/* Background image layer */}
+        <AnimatePresence initial={false} custom={direction} mode="sync">
+          <motion.div
+            key={currentSlide.id}
+            custom={direction}
+            variants={imageVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            className="absolute inset-[-8px] w-[calc(100%+16px)] h-[calc(100%+16px)]"
+            style={isMobile ? {} : { x: imgX, y: imgY }}
+          >
+            <motion.div className="w-full h-full" style={isMobile ? {} : { y: smoothScrollY }}>
+              <img
+                src={currentSlide.image}
+                alt={currentSlide.title}
+                className={`w-full h-full object-cover ${cfg.ken_burns ? "parallax-ken-burns" : ""}`}
+                loading="eager"
+              />
             </motion.div>
-          </AnimatePresence>
-        </div>
-      </motion.div>
+          </motion.div>
+        </AnimatePresence>
 
-      {/* ── Navigation controls ── */}
-      {slides.length > 1 && (cfg.show_arrows || cfg.show_dots) && (
-        <div className="absolute bottom-2 md:bottom-4 lg:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 md:gap-3 lg:gap-4 z-30">
-          {cfg.show_arrows && (
-            <motion.button onClick={goPrev} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-              className="w-8 h-8 md:w-9 md:h-9 lg:w-10 lg:h-10 rounded-full bg-foreground/10 backdrop-blur-sm border border-foreground/10 flex items-center justify-center text-white hover:bg-foreground/20 transition-colors">
-              <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
-            </motion.button>
-          )}
-          {cfg.show_dots && (
-            <div className="flex items-center gap-1.5 md:gap-2">
-              {slides.map((_, i) => renderDot(i))}
-            </div>
-          )}
-          {cfg.show_arrows && (
-            <motion.button onClick={goNext} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-              className="w-8 h-8 md:w-9 md:h-9 lg:w-10 lg:h-10 rounded-full bg-foreground/10 backdrop-blur-sm border border-foreground/10 flex items-center justify-center text-white hover:bg-foreground/20 transition-colors">
-              <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
-            </motion.button>
-          )}
-        </div>
-      )}
-    </motion.div>
+        {/* Overlay gradient */}
+        <div className="absolute inset-0 z-[10] pointer-events-none parallax-overlay" />
+
+        {/* Edge blend */}
+        <div className="absolute inset-0 z-[11] pointer-events-none" style={{
+          boxShadow: "inset 0 0 50px 25px hsl(var(--background)), inset 0 0 100px 10px hsl(var(--background) / 0.3)",
+        }} />
+
+        {/* Vignette */}
+        {cfg.show_vignette && <div className="absolute inset-0 z-[12] pointer-events-none" style={{ boxShadow: "inset 0 0 80px 25px rgba(0,0,0,0.35)" }} />}
+
+        {/* Particles — skip on mobile */}
+        {!isMobile && cfg.show_particles && containerSize.w > 0 && containerSize.h > 0 && (
+          <ParticleOverlay
+            width={containerSize.w}
+            height={containerSize.h}
+            count={Math.min(cfg.particle_count, 25)}
+            speed={cfg.particle_speed}
+            size={cfg.particle_size}
+          />
+        )}
+
+        {/* Text layer */}
+        <motion.div
+          className={`absolute inset-0 z-20 flex items-end ${
+            currentSlide.textAlign === "center" ? "justify-center" : currentSlide.textAlign === "right" ? "justify-end" : "justify-start"
+          }`}
+          style={isMobile ? {} : { x: textX, y: textY, transformStyle: "preserve-3d" }}
+        >
+          <div className={`container mx-auto px-4 md:px-8 lg:px-16 pb-10 md:pb-14 lg:pb-18 ${
+            currentSlide.textAlign === "center" ? "text-center flex flex-col items-center" : currentSlide.textAlign === "right" ? "text-right flex flex-col items-end" : ""
+          }`}>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={`text-${currentSlide.id}`}
+                variants={textVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                className={`max-w-[85vw] md:max-w-md lg:max-w-lg ${currentSlide.textAlign === "center" ? "items-center" : currentSlide.textAlign === "right" ? "items-end" : ""}`}
+              >
+                {subtitleEl(currentSlide.subtitle)}
+                <h1 className="text-xl md:text-3xl lg:text-5xl xl:text-6xl font-bold font-display mb-1.5 md:mb-2 lg:mb-4 leading-tight text-white drop-shadow-lg line-clamp-2">
+                  {currentSlide.title}
+                </h1>
+                {currentSlide.description && (
+                  <p className="text-[11px] md:text-sm lg:text-base text-white/80 mb-2.5 md:mb-4 lg:mb-6 max-w-[260px] md:max-w-sm lg:max-w-md line-clamp-2 drop-shadow">
+                    {currentSlide.description}
+                  </p>
+                )}
+                {currentSlide.cta && (
+                  <motion.a
+                    href={currentSlide.ctaLink}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => trackClick("slider_cta", currentSlide.id, "/home", { cta_text: currentSlide.cta, cta_link: currentSlide.ctaLink })}
+                    className={`inline-flex items-center rounded-full font-semibold text-[11px] md:text-sm lg:text-base px-4 md:px-6 lg:px-8 py-1.5 md:py-2.5 lg:py-3 shadow-lg transition-all duration-300 ${ctaClasses[cfg.cta_style] || ctaClasses.gradient}`}
+                  >
+                    {currentSlide.cta}
+                  </motion.a>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </motion.div>
+
+        {/* Navigation controls */}
+        {slides.length > 1 && (cfg.show_arrows || cfg.show_dots) && (
+          <div className="absolute bottom-2 md:bottom-4 lg:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 md:gap-3 lg:gap-4 z-30">
+            {cfg.show_arrows && (
+              <motion.button onClick={goPrev} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                className="w-7 h-7 md:w-9 md:h-9 lg:w-10 lg:h-10 rounded-full bg-foreground/10 backdrop-blur-sm border border-foreground/10 flex items-center justify-center text-white hover:bg-foreground/20 transition-colors">
+                <ChevronLeft className="w-3.5 h-3.5 md:w-5 md:h-5" />
+              </motion.button>
+            )}
+            {cfg.show_dots && (
+              <div className="flex items-center gap-1 md:gap-1.5 lg:gap-2">
+                {slides.map((_, i) => renderDot(i))}
+              </div>
+            )}
+            {cfg.show_arrows && (
+              <motion.button onClick={goNext} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                className="w-7 h-7 md:w-9 md:h-9 lg:w-10 lg:h-10 rounded-full bg-foreground/10 backdrop-blur-sm border border-foreground/10 flex items-center justify-center text-white hover:bg-foreground/20 transition-colors">
+                <ChevronRight className="w-3.5 h-3.5 md:w-5 md:h-5" />
+              </motion.button>
+            )}
+          </div>
+        )}
+      </motion.div>
+    </div>
   );
 };
 
-export default ParallaxSlider;
+export default React.memo(ParallaxSlider);

@@ -158,8 +158,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <motion.div
       ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
+      onMouseMove={isMobile ? undefined : handleMouseMove}
+      onMouseLeave={isMobile ? undefined : handleMouseLeave}
       style={isMobile ? {} : {
         rotateX,
         rotateY,
@@ -169,7 +169,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       }}
       whileHover={isMobile ? { y: -4 } : undefined}
       transition={{ duration: 0.3 }}
-      className={`group glass rounded-3xl overflow-hidden will-change-transform flex flex-col h-full ${className}`}
+      className={`group glass rounded-3xl overflow-hidden flex flex-col h-full ${className}`}
     >
       <Link to={`/product/${slug}`} className="flex flex-col flex-1" onClick={() => trackClick("product_card", slug, window.location.pathname, { product_name: name })}>
         {/* Image with parallax offset + 3D box effect */}
