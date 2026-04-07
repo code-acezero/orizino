@@ -1,0 +1,1 @@
+UPDATE site_settings SET value = '{"value": {"nav_style": "wave"}}'::jsonb WHERE key = 'mobile_ui_config'
