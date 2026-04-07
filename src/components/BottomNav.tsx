@@ -244,33 +244,59 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick, produ
   // STYLE 1: Liquid Ball
   // ══════════════════════════════════════════════
   const renderLiquid = () => {
-    const itemCount = items.length;
-    const itemWidthPercent = 100 / itemCount;
-    const indicatorLeft = activeIndex >= 0
-      ? `calc(${activeIndex * itemWidthPercent}% + ${itemWidthPercent / 2}% - 24px)`
-      : "-999px";
-
     return (
       <nav id={mobileBottomNavId} className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
         {renderProductTray("border-x-0 rounded-none")}
-        <div className="bottom-nav-bar relative" style={{ overflow: "visible" }}>
-          <ul className="bottom-nav-list" style={{ overflow: "visible" }}>
+        <div className="bg-card border-t border-border relative" style={{ overflow: "visible" }}>
+          <div className="flex w-full relative" style={{ overflow: "visible" }}>
             {items.map((item, index) => {
               const isActive = index === activeIndex;
               return (
-                <li key={item.label} className={`bottom-nav-item${isActive ? " active" : ""}`}>
-                  <button onClick={() => handleClick(item, index)} className="bottom-nav-link">
-                    <span className="bottom-nav-icon">
-                      <item.icon className="w-5 h-5" />
-                      {item.label === "Cart" && <CartBadge />}
-                    </span>
-                    <span className="bottom-nav-text">{item.label}</span>
-                  </button>
-                </li>
+                <button
+                  key={item.label}
+                  onClick={() => handleClick(item, index)}
+                  className="flex-1 flex flex-col items-center justify-center h-[62px] bg-transparent border-none cursor-pointer relative"
+                  style={{ WebkitTapHighlightColor: "transparent" }}
+                >
+                  {/* Animated ball behind the active icon */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="liquid-ball"
+                      className="absolute rounded-full border-4 border-card"
+                      style={{
+                        width: 48,
+                        height: 48,
+                        top: -24,
+                        background: "hsl(var(--primary))",
+                        boxShadow: "0 0 12px hsl(var(--primary) / 0.5), 0 4px 16px hsl(var(--primary) / 0.3)",
+                      }}
+                      transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                    />
+                  )}
+
+                  {/* Icon */}
+                  <motion.div
+                    animate={isActive ? { y: -26 } : { y: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                    className="relative z-10 flex items-center justify-center"
+                  >
+                    <item.icon className={`w-5 h-5 transition-colors duration-300 ${isActive ? "text-primary-foreground" : "text-muted-foreground"}`} />
+                    {item.label === "Cart" && <CartBadge />}
+                  </motion.div>
+
+                  {/* Label */}
+                  <motion.span
+                    animate={isActive ? { opacity: 1, y: -10, scale: 1 } : { opacity: 0, y: 4, scale: 0.8 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                    className="absolute bottom-1.5 text-[10px] font-semibold tracking-wide"
+                    style={{ color: "hsl(var(--primary))" }}
+                  >
+                    {item.label}
+                  </motion.span>
+                </button>
               );
             })}
-            <div className="bottom-nav-indicator" style={{ left: indicatorLeft, transition: "left 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55)" }} />
-          </ul>
+          </div>
         </div>
         <div className="h-[env(safe-area-inset-bottom)] bg-card" />
       </nav>
