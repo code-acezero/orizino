@@ -79,14 +79,14 @@ const ParallaxSlider: React.FC = () => {
 
   // True parallax: image layer moves OPPOSITE to mouse, text moves WITH mouse (less)
   // This creates the depth illusion like a real 3D parallax slider
-  const imgX = useSpring(useTransform(mouseX, [0, 1], [20, -20]), { stiffness: 80, damping: 25 });
-  const imgY = useSpring(useTransform(mouseY, [0, 1], [15, -15]), { stiffness: 80, damping: 25 });
-  const textX = useSpring(useTransform(mouseX, [0, 1], [-8, 8]), { stiffness: 120, damping: 30 });
-  const textY = useSpring(useTransform(mouseY, [0, 1], [-5, 5]), { stiffness: 120, damping: 30 });
+  const imgX = useSpring(useTransform(mouseX, [0, 1], [8, -8]), { stiffness: 100, damping: 30 });
+  const imgY = useSpring(useTransform(mouseY, [0, 1], [6, -6]), { stiffness: 100, damping: 30 });
+  const textX = useSpring(useTransform(mouseX, [0, 1], [-4, 4]), { stiffness: 120, damping: 30 });
+  const textY = useSpring(useTransform(mouseY, [0, 1], [-3, 3]), { stiffness: 120, damping: 30 });
 
   // Subtle 3D rotation on the whole container
-  const rotateX = useSpring(useTransform(mouseY, [0, 1], [1.5, -1.5]), { stiffness: 100, damping: 25 });
-  const rotateY = useSpring(useTransform(mouseX, [0, 1], [-2, 2]), { stiffness: 100, damping: 25 });
+  const rotateX = useSpring(useTransform(mouseY, [0, 1], [0.8, -0.8]), { stiffness: 120, damping: 30 });
+  const rotateY = useSpring(useTransform(mouseX, [0, 1], [-1, 1]), { stiffness: 120, damping: 30 });
 
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
@@ -307,7 +307,7 @@ const ParallaxSlider: React.FC = () => {
           initial="enter"
           animate="center"
           exit="exit"
-          className="absolute inset-[-30px] w-[calc(100%+60px)] h-[calc(100%+60px)]"
+          className="absolute inset-[-12px] w-[calc(100%+24px)] h-[calc(100%+24px)]"
           style={{ x: imgX, y: imgY }}
         >
           <motion.div className="w-full h-full" style={{ y: smoothScrollY }}>
@@ -324,8 +324,13 @@ const ParallaxSlider: React.FC = () => {
       {/* ── Overlay gradient ── */}
       <div className="absolute inset-0 z-[10] pointer-events-none parallax-overlay" />
 
+      {/* ── Edge blend: feather edges into background ── */}
+      <div className="absolute inset-0 z-[11] pointer-events-none" style={{
+        boxShadow: "inset 0 0 40px 20px hsl(var(--background))",
+      }} />
+
       {/* ── Vignette ── */}
-      {cfg.show_vignette && <div className="absolute inset-0 z-[12] pointer-events-none" style={{ boxShadow: "inset 0 0 120px 40px rgba(0,0,0,0.5)" }} />}
+      {cfg.show_vignette && <div className="absolute inset-0 z-[12] pointer-events-none" style={{ boxShadow: "inset 0 0 80px 25px rgba(0,0,0,0.4)" }} />}
 
       {/* ── Particle / dust overlay ── */}
       {cfg.show_particles && containerSize.w > 0 && containerSize.h > 0 && (
