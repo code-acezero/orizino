@@ -242,6 +242,10 @@
   75% { border-radius: 48% 52% 53% 47% / 46% 48% 52% 54%; }
 }
 
+.liquid-blob-morph {
+  animation: liquid-idle 3s ease-in-out infinite;
+}
+
 .bottom-nav-indicator::before {
   content: '';
   position: absolute;
