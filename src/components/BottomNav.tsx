@@ -455,6 +455,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick, produ
               >
                 <item.icon className={`w-[18px] h-[18px] transition-all duration-300 ${isActive ? "drop-shadow-[0_0_6px_hsl(var(--primary))]" : ""}`} />
                 {item.label === "Cart" && <CartBadge />}
+                {item.label === "Wishlist" && <WishlistBadge />}
                 {isActive && (
                   <motion.div
                     layoutId="glow-ring"
