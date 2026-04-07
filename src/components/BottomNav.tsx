@@ -419,6 +419,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick, produ
               >
                 <item.icon className="w-[18px] h-[18px]" />
                 {item.label === "Cart" && <CartBadge />}
+                {item.label === "Wishlist" && <WishlistBadge />}
               </motion.div>
               <AnimatePresence>
                 {isActive && (
