@@ -460,7 +460,7 @@ const HomePage: React.FC = () => {
             </motion.div>
             <div className={`grid grid-cols-2 md:grid-cols-3 ${sectionCols} gap-4`}>
               {isLoading
-                ? Array.from({ length: cfg.product_count || 8 }).map((_, i) => <div key={i} className="aspect-[3/4] rounded-3xl bg-secondary/30 animate-pulse" />)
+                ? Array.from({ length: cfg.product_count || 8 }).map((_, i) => <ProductCardSkeleton key={i} className={cardExtra} />)
                 : featuredProducts.slice(0, cfg.product_count || 8).map((product, i) => (
                     <motion.div key={product.id} {...anim} viewport={{ once: true }} transition={{ delay: i * layout.animation_delay }}>
                       <ProductCard id={product.id} name={product.name} price={Number(product.price)} compareAtPrice={product.compare_at_price ? Number(product.compare_at_price) : undefined} thumbnail={product.thumbnail ?? undefined} avgRating={product.avg_rating ? Number(product.avg_rating) : undefined} reviewCount={product.review_count ?? undefined} slug={product.slug} className={cardExtra} />
