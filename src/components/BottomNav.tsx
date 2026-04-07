@@ -83,6 +83,18 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick, produ
     },
     enabled: !!user,
     staleTime: 30 * 1000,
+    refetchOnMount: true,
+  });
+
+  const { data: wishlistCount = 0 } = useQuery({
+    queryKey: ["wishlist-count", user?.id],
+    queryFn: async () => {
+      const { count } = await supabase.from("wishlist_items").select("*", { count: "exact", head: true }).eq("user_id", user!.id);
+      return count || 0;
+    },
+    enabled: !!user,
+    staleTime: 30 * 1000,
+    refetchOnMount: true,
   });
 
   const items = NAV_ITEMS.map((item) => ({

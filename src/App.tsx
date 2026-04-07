@@ -52,7 +52,18 @@ import AIChatWidget from "./components/AIChatWidget";
 import PromoPopup from "./components/PromoPopup";
 import { useDynamicFavicon } from "./hooks/use-dynamic-favicon";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,       // 5 min — data stays fresh, no refetch on mount
+      gcTime: 30 * 60 * 1000,          // 30 min — keep in cache even when unused
+      refetchOnWindowFocus: false,     // don't refetch when tab regains focus
+      refetchOnReconnect: false,       // don't refetch on network reconnect
+      refetchOnMount: false,           // don't refetch when component remounts
+      retry: 1,                        // retry once on failure
+    },
+  },
+});
 
 const AppContent = () => {
   useDynamicFavicon();
