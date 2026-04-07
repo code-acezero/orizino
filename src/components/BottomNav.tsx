@@ -289,10 +289,12 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick, produ
     return (
       <nav id={mobileBottomNavId} className="fixed bottom-0 left-0 right-0 z-50 lg:hidden flex flex-col justify-end pb-[env(safe-area-inset-bottom)]">
         {renderProductTray("mx-2 rounded-t-2xl border-x border-border/50")}
-        <div className="notch-nav-wrapper w-full" ref={navRef}>
-          <div className="notch-indicator" style={{ left: notchLeft, transition: "left 0.4s cubic-bezier(0.4, 0, 0.2, 1)" }}>
-            <div className="notch-dot" />
-          </div>
+        <div className="notch-nav-wrapper w-full" ref={navRef} style={{ overflow: "visible" }}>
+          {activeIndex >= 0 && (
+            <div className="notch-indicator" style={{ left: notchLeft, transition: "left 0.4s cubic-bezier(0.4, 0, 0.2, 1)" }}>
+              <div className="notch-dot" />
+            </div>
+          )}
           <div className="notch-navbar">
             {items.map((item, index) => {
               const isActive = index === activeIndex;
@@ -301,7 +303,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick, produ
                   ref={el => { itemRefs.current[index] = el; }}
                   onClick={() => handleClick(item, index)}
                   className={`notch-nav-item${isActive ? " active" : ""}`}>
-                  <item.icon className="w-[22px] h-[22px]" />
+                  <item.icon className="w-5 h-5" />
                   <AnimatePresence>
                     {isActive && (
                       <motion.span initial={{ maxHeight: 0, opacity: 0, y: 4 }} animate={{ maxHeight: 24, opacity: 1, y: 0 }} exit={{ maxHeight: 0, opacity: 0, y: 4 }}
