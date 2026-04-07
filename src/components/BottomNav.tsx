@@ -134,7 +134,10 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick, produ
     };
   }, [canShowProductTray]);
 
+  const [ripple, setRipple] = useState<{ index: number; key: number } | null>(null);
+
   const handleClick = (item: typeof items[0], index: number) => {
+    setRipple({ index, key: Date.now() });
     if (item.path === "__categories__") {
       setCatOpen(!catOpen);
     } else if (item.path === "__auth__") {
@@ -150,6 +153,25 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick, produ
       <span className={`absolute -top-1 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center ${className}`}>
         {cartCount > 99 ? "99+" : cartCount}
       </span>
+    ) : null;
+
+  const WishlistBadge = ({ className = "" }: { className?: string }) =>
+    wishlistCount > 0 ? (
+      <span className={`absolute -top-1 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center ${className}`}>
+        {wishlistCount > 99 ? "99+" : wishlistCount}
+      </span>
+    ) : null;
+
+  const RippleEffect = ({ active }: { active: boolean }) =>
+    active && ripple ? (
+      <motion.span
+        key={ripple.key}
+        initial={{ scale: 0, opacity: 0.4 }}
+        animate={{ scale: 2.5, opacity: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="absolute inset-0 m-auto w-8 h-8 rounded-full pointer-events-none"
+        style={{ background: "hsl(var(--primary) / 0.25)" }}
+      />
     ) : null;
 
   const renderProductTray = (surfaceClassName = "") => (
