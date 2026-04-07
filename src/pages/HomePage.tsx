@@ -518,7 +518,19 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen pb-20 lg:pb-0" style={getPatternStyle(layout.page_bg_pattern)}>
+    <div className="min-h-screen pb-20 lg:pb-0 relative" style={getPatternStyle(layout.page_bg_pattern)}>
+      {/* Pull-to-refresh indicator */}
+      {(pullDistance > 0 || refreshing) && (
+        <div
+          className="fixed top-0 left-0 right-0 z-[100] flex justify-center pointer-events-none"
+          style={{ transform: `translateY(${refreshing ? 60 : pullDistance}px)`, transition: refreshing ? "transform 0.3s ease" : "none" }}
+        >
+          <div className="glass rounded-full p-2.5 shadow-lg mt-2">
+            <Loader2 className={`w-5 h-5 text-primary ${refreshing ? "animate-spin" : ""}`}
+              style={{ transform: refreshing ? "none" : `rotate(${pullDistance * 3}deg)` }} />
+          </div>
+        </div>
+      )}
       <Navbar />
       <HomePopup />
       {popupSales.map((sale: SaleConfig) => <SalePopup key={sale.id} sale={sale} />)}
