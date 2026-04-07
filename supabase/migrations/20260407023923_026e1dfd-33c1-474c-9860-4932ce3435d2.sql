@@ -1,0 +1,1 @@
+UPDATE site_settings SET value = '{"value": {"nav_style": "glow"}}'::jsonb WHERE key = 'mobile_ui_config'
