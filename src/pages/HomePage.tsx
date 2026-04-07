@@ -1,20 +1,22 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import ParallaxSlider from "@/components/ParallaxSlider";
 import CategoryGrid from "@/components/CategoryGrid";
 import ProductCard from "@/components/ProductCard";
+import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import Footer from "@/components/Footer";
 import HomePopup from "@/components/HomePopup";
 import SaleCountdown from "@/components/SaleCountdown";
 import SalePopup from "@/components/SalePopup";
 import LiveVisitorCounter from "@/components/LiveVisitorCounter";
 import DeliveryOfferBanner from "@/components/DeliveryOfferBanner";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 import { usePageViewTracker, useSectionTracker, trackClick } from "@/hooks/use-analytics";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
+import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 
 interface SaleConfig {
   id: string;
