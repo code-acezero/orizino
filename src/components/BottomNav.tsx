@@ -318,7 +318,6 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, onAuthClick, produ
                     {item.label === "Wishlist" && <WishlistBadge className="z-20" />}
                   </motion.div>
                   <RippleEffect active={ripple?.index === index} />
-                  </motion.div>
 
                   {/* Label */}
                   <motion.span
