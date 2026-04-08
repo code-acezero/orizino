@@ -14,6 +14,7 @@ import { useDynamicFavicon } from "./hooks/use-dynamic-favicon";
 // Eagerly load critical pages
 import HomePage from "./pages/HomePage";
 import LandingPage from "./pages/LandingPage";
+import AuthPage from "./pages/AuthPage";
 
 // Lazy load everything else
 const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
@@ -101,7 +102,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/home" element={<HomePage />} />
-            <Route path="/auth" element={<Navigate to="/home" replace />} />
+            <Route path="/auth" element={<AuthPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/shop" element={<ShopPage />} />
             <Route path="/categories/:slug" element={<CategoryPage />} />

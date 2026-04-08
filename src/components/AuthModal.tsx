@@ -85,7 +85,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose }) => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="relative glass-strong rounded-3xl p-8 w-full max-w-md"
+            className="relative liquid-glass-card rounded-3xl p-8 w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
             <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full hover:bg-secondary/50 text-muted-foreground">
