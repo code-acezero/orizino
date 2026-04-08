@@ -19,10 +19,6 @@ const AuthPage: React.FC = () => {
   const [forgotMode, setForgotMode] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  if (user) return <Navigate to="/home" replace />;
-
-  // Particle background
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
