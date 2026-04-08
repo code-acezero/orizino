@@ -13,6 +13,7 @@ import SaleCountdown from "@/components/SaleCountdown";
 import SalePopup from "@/components/SalePopup";
 import LiveVisitorCounter from "@/components/LiveVisitorCounter";
 import DeliveryOfferBanner from "@/components/DeliveryOfferBanner";
+import GradientMeshBg from "@/components/GradientMeshBg";
 import { Sparkles, Loader2 } from "lucide-react";
 import { usePageViewTracker, useSectionTracker, trackClick } from "@/hooks/use-analytics";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
@@ -519,6 +520,8 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-20 lg:pb-0 relative" style={getPatternStyle(layout.page_bg_pattern)}>
+      {/* Animated gradient mesh background */}
+      <GradientMeshBg variant="mixed" />
       {/* Pull-to-refresh indicator */}
       {(pullDistance > 0 || refreshing) && (
         <div
