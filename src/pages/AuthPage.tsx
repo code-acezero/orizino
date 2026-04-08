@@ -108,6 +108,8 @@ const AuthPage: React.FC = () => {
     };
   }, []);
 
+  if (user) return <Navigate to="/home" replace />;
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
