@@ -101,6 +101,8 @@ const ParallaxSlider: React.FC = () => {
     mouseY.set(0.5);
   }, [mouseX, mouseY]);
 
+  const slidesLoaded = dbSlides.length > 0;
+
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -113,7 +115,7 @@ const ParallaxSlider: React.FC = () => {
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [slides.length]);
+  }, [slidesLoaded]);
 
   useEffect(() => {
     const handleScroll = () => {
