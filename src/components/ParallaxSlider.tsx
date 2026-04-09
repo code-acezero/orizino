@@ -101,21 +101,6 @@ const ParallaxSlider: React.FC = () => {
     mouseY.set(0.5);
   }, [mouseX, mouseY]);
 
-  const slidesLoaded = dbSlides.length > 0;
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    if (rect.width > 0 && rect.height > 0) {
-      setContainerSize({ w: rect.width, h: rect.height });
-    }
-    const ro = new ResizeObserver(([entry]) => {
-      setContainerSize({ w: entry.contentRect.width, h: entry.contentRect.height });
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [slidesLoaded]);
 
   useEffect(() => {
     const handleScroll = () => {
