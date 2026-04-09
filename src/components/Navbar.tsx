@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import AuthModal from "@/components/AuthModal";
+
 import BottomNav, { type BottomNavProductTray } from "@/components/BottomNav";
 import NotificationBell from "@/components/NotificationBell";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -23,7 +23,7 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
   const [hoveredCat, setHoveredCat] = useState<string | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [authOpen, setAuthOpen] = useState(false);
+  
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -355,7 +355,7 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
                     </AnimatePresence>
                   </div>
                 ) : (
-                  <button onClick={() => setAuthOpen(true)} className="hidden lg:flex p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all">
+                  <button onClick={() => navigate("/auth", { state: { from: location.pathname } })} className="hidden lg:flex p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all">
                     <User className="w-5 h-5" />
                   </button>
                 )}
@@ -387,7 +387,7 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
                       </AnimatePresence>
                     </>
                   ) : (
-                    <button onClick={() => setAuthOpen(true)} className="p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all">
+                    <button onClick={() => navigate("/auth", { state: { from: location.pathname } })} className="p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all">
                       <User className="w-5 h-5" />
                     </button>
                   )}
@@ -398,8 +398,7 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
         </div>
       </nav>
 
-      <BottomNav onSearchClick={() => {}} onAuthClick={() => setAuthOpen(true)} productTray={bottomNavProductTray} />
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+      <BottomNav onSearchClick={() => {}} onAuthClick={() => navigate("/auth", { state: { from: location.pathname } })} productTray={bottomNavProductTray} />
     </>
   );
 };

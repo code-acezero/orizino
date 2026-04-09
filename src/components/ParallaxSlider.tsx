@@ -101,19 +101,6 @@ const ParallaxSlider: React.FC = () => {
     mouseY.set(0.5);
   }, [mouseX, mouseY]);
 
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    if (rect.width > 0 && rect.height > 0) {
-      setContainerSize({ w: rect.width, h: rect.height });
-    }
-    const ro = new ResizeObserver(([entry]) => {
-      setContainerSize({ w: entry.contentRect.width, h: entry.contentRect.height });
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -166,6 +153,21 @@ const ParallaxSlider: React.FC = () => {
     ctaLink: s.cta_link || "/shop",
     textAlign: (s.text_align as string) || "left",
   })), [dbSlides]);
+
+  // Measure container size — re-run when slides load so ref is attached
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      setContainerSize({ w: rect.width, h: rect.height });
+    }
+    const ro = new ResizeObserver(([entry]) => {
+      setContainerSize({ w: entry.contentRect.width, h: entry.contentRect.height });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [slides.length]);
 
   const wrap = useCallback((n: number) => ((n % slides.length) + slides.length) % slides.length, [slides.length]);
 
