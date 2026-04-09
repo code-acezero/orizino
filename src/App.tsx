@@ -8,7 +8,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/AdminRoute";
 import SiteThemeProvider from "./components/SiteThemeProvider";
-import AppToastOverlay from "./components/AppToastOverlay";
+
 import { useDynamicFavicon } from "./hooks/use-dynamic-favicon";
 
 // Eagerly load critical pages
