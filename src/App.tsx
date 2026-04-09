@@ -87,7 +87,7 @@ const AppContent = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AppToastOverlay />
+      {/* Toasts now only show in NotificationBell dynamic island */}
       <BrowserRouter>
         <AuthProvider>
           <LanguageProvider>

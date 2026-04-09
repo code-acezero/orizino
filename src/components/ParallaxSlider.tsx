@@ -113,7 +113,7 @@ const ParallaxSlider: React.FC = () => {
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [slides.length]);
 
   useEffect(() => {
     const handleScroll = () => {
