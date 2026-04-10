@@ -1,12 +1,12 @@
 import React, { useRef, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring, animate } from "framer-motion";
-import { ArrowRight, Sparkles, Star, Zap, Globe, Package, Users, Heart, ChevronRight, ChevronDown, Target, Eye, ShoppingBag, Shield, Truck } from "lucide-react";
+import { ArrowRight, Sparkles, Star, Zap, Globe, Package, Users, Heart, ChevronRight, ChevronDown, Target, Eye, ShoppingBag, Shield, Truck, RotateCcw, Headphones, Lock, Menu, X } from "lucide-react";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const iconMap: Record<string, any> = { ShoppingBag, Shield, Truck, Sparkles, Star, Zap, Globe, Package, Users, Heart };
 
@@ -41,6 +41,7 @@ interface LandingConfig {
   showcase_description: string;
   showcase_cta_text: string;
   showcase_cta_link: string;
+  showcase_product_id: string;
 }
 
 const defaultLandingConfig: LandingConfig = {
@@ -54,8 +55,10 @@ const defaultLandingConfig: LandingConfig = {
   mission_text: "", vision_text: "",
   showcase_image_url: "", showcase_headline: "", showcase_description: "",
   showcase_cta_text: "Shop Now", showcase_cta_link: "/home",
+  showcase_product_id: "",
 };
 
+/* ── Animated Counter ── */
 const AnimatedCounter: React.FC<{ value: string; inView: boolean }> = ({ value, inView }) => {
   const num = parseInt(value.replace(/[^0-9]/g, ""));
   const suffix = value.replace(/[0-9]/g, "");
@@ -69,6 +72,7 @@ const AnimatedCounter: React.FC<{ value: string; inView: boolean }> = ({ value, 
   return <span>{display}{suffix}</span>;
 };
 
+/* ── 3D Tilt Card ── */
 const TiltCard: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = "" }) => {
   const ref = useRef<HTMLDivElement>(null);
   const rotX = useMotionValue(0);
@@ -90,6 +94,101 @@ const TiltCard: React.FC<{ children: React.ReactNode; className?: string }> = ({
   );
 };
 
+/* ═══════════════ CUSTOM LANDING NAV ═══════════════ */
+const LandingNav: React.FC<{ siteName: string; logoUrl: string }> = ({ siteName, logoUrl }) => {
+  const { user } = useAuth();
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handler, { passive: true });
+    return () => window.removeEventListener("scroll", handler);
+  }, []);
+
+  return (
+    <motion.nav
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.6, delay: 0.1 }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        scrolled
+          ? "bg-background/70 backdrop-blur-2xl border-b border-border/20 shadow-[0_4px_30px_hsl(0_0%_0%/0.1)]"
+          : "bg-transparent"
+      }`}
+    >
+      <div className="container mx-auto px-4 flex items-center justify-between h-16">
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2">
+          {logoUrl ? (
+            <img src={logoUrl} alt={siteName} className="h-8 w-auto" />
+          ) : (
+            <span className="text-lg font-display font-bold text-gradient">{siteName || "Store"}</span>
+          )}
+        </Link>
+
+        {/* Desktop links */}
+        <div className="hidden md:flex items-center gap-8">
+          <Link to="/home" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Home</Link>
+          <Link to="/shop" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Shop</Link>
+          <Link to="/support" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Support</Link>
+          {user ? (
+            <Link to="/home">
+              <motion.span whileHover={{ scale: 1.05 }} className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium border border-primary/20 hover:bg-primary/20 transition-colors">
+                Enter Store <ArrowRight className="w-3.5 h-3.5" />
+              </motion.span>
+            </Link>
+          ) : (
+            <Link to="/auth">
+              <motion.span whileHover={{ scale: 1.05 }} className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium shadow-[0_2px_12px_hsl(var(--primary)/0.3)]">
+                Sign In <ArrowRight className="w-3.5 h-3.5" />
+              </motion.span>
+            </Link>
+          )}
+        </div>
+
+        {/* Mobile hamburger */}
+        <button className="md:hidden p-2" onClick={() => setMobileOpen(!mobileOpen)}>
+          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+      </div>
+
+      {/* Mobile menu */}
+      <motion.div
+        initial={false}
+        animate={{ height: mobileOpen ? "auto" : 0, opacity: mobileOpen ? 1 : 0 }}
+        className="md:hidden overflow-hidden bg-background/90 backdrop-blur-2xl border-b border-border/20"
+      >
+        <div className="px-4 py-4 space-y-3">
+          <Link to="/home" className="block text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>Home</Link>
+          <Link to="/shop" className="block text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>Shop</Link>
+          <Link to="/support" className="block text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>Support</Link>
+          <Link to={user ? "/home" : "/auth"} className="block text-sm font-medium text-primary" onClick={() => setMobileOpen(false)}>
+            {user ? "Enter Store" : "Sign In"}
+          </Link>
+        </div>
+      </motion.div>
+    </motion.nav>
+  );
+};
+
+/* ═══════════════ LANDING FOOTER ═══════════════ */
+const LandingFooter: React.FC<{ siteName: string }> = ({ siteName }) => (
+  <footer className="relative border-t border-border/10">
+    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-transparent" />
+    <div className="relative container mx-auto px-4 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
+      <p className="text-xs text-muted-foreground/60">© {new Date().getFullYear()} {siteName}. All rights reserved.</p>
+      <Link to="/home">
+        <motion.span whileHover={{ scale: 1.05 }}
+          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-primary/30 text-primary text-xs font-semibold hover:bg-primary/10 transition-colors">
+          Enter Store <ArrowRight className="w-3 h-3" />
+        </motion.span>
+      </Link>
+    </div>
+  </footer>
+);
+
+/* ═══════════════ MAIN PAGE ═══════════════ */
 const LandingPage: React.FC = () => {
   useSeoMeta("landing", "Welcome");
   const heroRef = useRef<HTMLDivElement>(null);
@@ -111,6 +210,8 @@ const LandingPage: React.FC = () => {
 
   const rawName = siteSettings?.site_name;
   const siteName = String(typeof rawName === "object" && rawName !== null ? (rawName as any).value ?? "" : rawName ?? "");
+  const rawLogo = siteSettings?.logo_url;
+  const logoUrl = String(typeof rawLogo === "object" && rawLogo !== null ? (rawLogo as any).value ?? "" : rawLogo ?? "");
   const landingRaw = siteSettings?.landing_config;
   const cfg: LandingConfig = { ...defaultLandingConfig, ...(typeof landingRaw === "object" && landingRaw !== null ? landingRaw : {}) };
 
@@ -132,6 +233,18 @@ const LandingPage: React.FC = () => {
     staleTime: 10 * 60 * 1000,
   });
 
+  // Fetch showcase product if configured
+  const { data: showcaseProduct } = useQuery({
+    queryKey: ["showcase-product", cfg.showcase_product_id],
+    queryFn: async () => {
+      const { data } = await supabase.from("products").select("name, slug, price, compare_at_price, short_description, thumbnail, images").eq("id", cfg.showcase_product_id).maybeSingle();
+      return data;
+    },
+    enabled: !!cfg.showcase_product_id,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const { formatPrice } = useCurrency();
   const statsRef = useRef(null);
   const statsInView = useInView(statsRef, { once: true, margin: "-100px" });
   const hasHeroContent = cfg.hero_title_line1 || cfg.hero_title_line2 || cfg.hero_subtitle;
@@ -144,45 +257,59 @@ const LandingPage: React.FC = () => {
     }),
   };
 
+  const trustSignals = [
+    { icon: Truck, title: "Free Shipping", desc: "On orders over $50" },
+    { icon: Lock, title: "Secure Payments", desc: "256-bit SSL encryption" },
+    { icon: Headphones, title: "24/7 Support", desc: "Always here for you" },
+    { icon: RotateCcw, title: "Easy Returns", desc: "30-day return policy" },
+  ];
+
   return (
     <div className="min-h-screen bg-background overflow-x-hidden flex flex-col">
-      {/* Use main Navbar */}
-      <Navbar />
+      {/* Custom minimal landing nav */}
+      <LandingNav siteName={siteName} logoUrl={logoUrl} />
 
       {/* ═══════════════ HERO ═══════════════ */}
-      <section ref={heroRef} className="relative min-h-[90vh] flex items-center justify-center overflow-hidden" style={{ perspective: "1200px" }}>
+      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden" style={{ perspective: "1200px" }}>
         <div className="absolute inset-0">
           {cfg.hero_bg_url ? (
             <>
-              <img src={cfg.hero_bg_url} alt="" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
+              <motion.img src={cfg.hero_bg_url} alt="" className="w-full h-full object-cover"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ repeat: Infinity, duration: 20, ease: "easeInOut" }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/40 to-background" />
             </>
           ) : (
             <>
               <div className="absolute inset-0 bg-background" />
               <motion.div className="absolute inset-0" style={{ y: heroY }}>
-                <div className="absolute inset-0 opacity-[0.04]" style={{
+                {/* Grid pattern */}
+                <div className="absolute inset-0 opacity-[0.03]" style={{
                   backgroundImage: `linear-gradient(hsl(var(--primary)/0.4) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)/0.4) 1px, transparent 1px)`,
                   backgroundSize: '80px 80px',
                 }} />
-                {/* Radial pulse behind center */}
-                <motion.div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full"
-                  style={{ background: "radial-gradient(circle, hsl(var(--primary)/0.08), transparent 60%)" }}
-                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+
+                {/* Cinematic radial pulse */}
+                <motion.div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] rounded-full"
+                  style={{ background: "radial-gradient(circle, hsl(var(--primary)/0.1), transparent 60%)" }}
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.8, 0.4] }}
                   transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
                 />
+
                 {/* Glow orbs */}
-                <motion.div className="absolute top-[10%] right-[15%] w-[500px] h-[500px] rounded-full blur-[150px]"
-                  style={{ background: "radial-gradient(circle, hsl(var(--primary)/0.1), transparent 70%)" }}
-                  animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }}
+                <motion.div className="absolute top-[10%] right-[15%] w-[600px] h-[600px] rounded-full blur-[180px]"
+                  style={{ background: "radial-gradient(circle, hsl(var(--primary)/0.12), transparent 70%)" }}
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.7, 0.3] }}
                   transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
                 />
-                <motion.div className="absolute bottom-[15%] left-[5%] w-[400px] h-[400px] rounded-full blur-[120px]"
-                  style={{ background: "radial-gradient(circle, hsl(var(--accent)/0.08), transparent 70%)" }}
-                  animate={{ scale: [1, 1.2, 1] }}
+                <motion.div className="absolute bottom-[15%] left-[5%] w-[500px] h-[500px] rounded-full blur-[150px]"
+                  style={{ background: "radial-gradient(circle, hsl(var(--accent)/0.1), transparent 70%)" }}
+                  animate={{ scale: [1, 1.25, 1] }}
                   transition={{ repeat: Infinity, duration: 10, ease: "easeInOut", delay: 2 }}
                 />
-                {/* 3D floating shapes */}
+
+                {/* Floating 3D shapes */}
                 <motion.div className="absolute top-[25%] right-[12%] w-28 h-28 border border-primary/10 rounded-2xl"
                   style={{ transformStyle: "preserve-3d" }}
                   animate={{ rotateX: [0, 360], rotateY: [0, 180], y: [0, -30, 0] }}
@@ -199,22 +326,37 @@ const LandingPage: React.FC = () => {
                 >
                   <div className="w-full h-full border border-primary/8 transform rotate-45" />
                 </motion.div>
-                {/* Enhanced particles — 20 with varied sizes and glow */}
-                {Array.from({ length: 20 }).map((_, i) => {
-                  const size = 2 + (i % 4);
-                  const left = 5 + ((i * 4.7) % 90);
-                  const top = 10 + ((i * 7.3) % 80);
+
+                {/* Lens flare streaks */}
+                <motion.div className="absolute top-[30%] left-0 w-[60%] h-[1px]"
+                  style={{ background: "linear-gradient(90deg, transparent, hsl(var(--primary)/0.15), transparent)" }}
+                  animate={{ x: ["-100%", "200%"], opacity: [0, 0.6, 0] }}
+                  transition={{ repeat: Infinity, duration: 8, ease: "easeInOut", delay: 3 }}
+                />
+                <motion.div className="absolute top-[60%] right-0 w-[40%] h-[1px]"
+                  style={{ background: "linear-gradient(90deg, transparent, hsl(var(--accent)/0.1), transparent)" }}
+                  animate={{ x: ["200%", "-100%"], opacity: [0, 0.4, 0] }}
+                  transition={{ repeat: Infinity, duration: 10, ease: "easeInOut", delay: 5 }}
+                />
+
+                {/* 30+ Particles with varied sizes, colors, glow */}
+                {Array.from({ length: 32 }).map((_, i) => {
+                  const size = 1 + (i % 7);
+                  const left = 3 + ((i * 3.1) % 94);
+                  const top = 5 + ((i * 5.7) % 90);
+                  const isPrimary = i % 3 === 0;
+                  const isAccent = i % 3 === 1;
                   return (
                     <motion.div key={i}
                       className="absolute rounded-full"
                       style={{
                         left: `${left}%`, top: `${top}%`,
                         width: size, height: size,
-                        background: i % 3 === 0 ? "hsl(var(--primary)/0.6)" : "hsl(var(--accent)/0.4)",
-                        boxShadow: i % 3 === 0 ? "0 0 8px hsl(var(--primary)/0.3)" : "none",
+                        background: isPrimary ? "hsl(var(--primary)/0.6)" : isAccent ? "hsl(var(--accent)/0.4)" : "hsl(var(--foreground)/0.15)",
+                        boxShadow: isPrimary ? `0 0 ${size * 3}px hsl(var(--primary)/0.3)` : "none",
                       }}
-                      animate={{ y: [0, -(15 + i * 3), 0], opacity: [0.15, 0.6, 0.15] }}
-                      transition={{ repeat: Infinity, duration: 3 + (i % 5) * 0.8, delay: i * 0.2 }}
+                      animate={{ y: [0, -(12 + i * 2), 0], opacity: [0.1, 0.7, 0.1], scale: [0.8, 1.2, 0.8] }}
+                      transition={{ repeat: Infinity, duration: 2.5 + (i % 6) * 0.7, delay: i * 0.15 }}
                     />
                   );
                 })}
@@ -269,7 +411,7 @@ const LandingPage: React.FC = () => {
                   {cfg.hero_cta_primary || "Start Shopping"} <ArrowRight className="w-4 h-4" />
                 </motion.span>
               </Link>
-              <Link to="/home">
+              <Link to="/shop">
                 <motion.span whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
                   className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full border border-border/60 text-foreground font-medium text-sm hover:bg-secondary/50 backdrop-blur-sm transition-colors">
                   {cfg.hero_cta_secondary || "Explore"} <ChevronRight className="w-4 h-4" />
@@ -282,6 +424,27 @@ const LandingPage: React.FC = () => {
         <motion.div className="absolute bottom-8 left-1/2 -translate-x-1/2" animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 2 }}>
           <ChevronDown className="w-5 h-5 text-muted-foreground/50" />
         </motion.div>
+      </section>
+
+      {/* ═══════════════ TRUST SIGNALS ═══════════════ */}
+      <section className="py-12 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.02] to-transparent" />
+        <div className="container mx-auto px-4 relative">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {trustSignals.map((signal, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
+                <div className="text-center p-5 rounded-2xl border border-border/10 bg-card/20 backdrop-blur-sm hover:border-primary/20 transition-all group">
+                  <motion.div className="w-10 h-10 mx-auto rounded-xl bg-primary/10 flex items-center justify-center mb-3"
+                    whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}>
+                    <signal.icon className="w-5 h-5 text-primary" />
+                  </motion.div>
+                  <p className="text-xs font-semibold text-foreground mb-0.5">{signal.title}</p>
+                  <p className="text-[10px] text-muted-foreground">{signal.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* ═══════════════ ABOUT US ═══════════════ */}
@@ -341,10 +504,17 @@ const LandingPage: React.FC = () => {
                   <TiltCard className="h-full">
                     <div className="rounded-3xl border border-border/30 bg-card/40 backdrop-blur-xl p-8 h-full hover:border-primary/30 transition-colors relative overflow-hidden group">
                       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <motion.div className="absolute -top-2 -right-2 w-24 h-24 rounded-full bg-primary/5 blur-2xl"
+                        animate={{ scale: [1, 1.3, 1] }}
+                        transition={{ repeat: Infinity, duration: 4 }}
+                      />
                       <div className="relative z-10">
-                        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
+                        <motion.div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-5"
+                          animate={{ y: [0, -4, 0] }}
+                          transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                        >
                           <Target className="w-7 h-7 text-primary" />
-                        </div>
+                        </motion.div>
                         <h3 className="font-display font-bold text-xl text-foreground mb-3">Our Mission</h3>
                         <p className="text-muted-foreground leading-relaxed text-sm">{cfg.mission_text}</p>
                       </div>
@@ -357,10 +527,17 @@ const LandingPage: React.FC = () => {
                   <TiltCard className="h-full">
                     <div className="rounded-3xl border border-border/30 bg-card/40 backdrop-blur-xl p-8 h-full hover:border-accent/30 transition-colors relative overflow-hidden group">
                       <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <motion.div className="absolute -top-2 -left-2 w-24 h-24 rounded-full bg-accent/5 blur-2xl"
+                        animate={{ scale: [1, 1.3, 1] }}
+                        transition={{ repeat: Infinity, duration: 5, delay: 1 }}
+                      />
                       <div className="relative z-10">
-                        <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mb-5">
+                        <motion.div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mb-5"
+                          animate={{ y: [0, -4, 0] }}
+                          transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut", delay: 0.5 }}
+                        >
                           <Eye className="w-7 h-7 text-accent-foreground" />
-                        </div>
+                        </motion.div>
                         <h3 className="font-display font-bold text-xl text-foreground mb-3">Our Vision</h3>
                         <p className="text-muted-foreground leading-relaxed text-sm">{cfg.vision_text}</p>
                       </div>
@@ -373,29 +550,54 @@ const LandingPage: React.FC = () => {
         </section>
       )}
 
-      {/* ═══════════════ BRAND SHOWCASE ═══════════════ */}
-      {cfg.show_brand_showcase && (cfg.showcase_image_url || cfg.showcase_headline) && (
-        <section className="py-16 md:py-24">
+      {/* ═══════════════ BRANDED PRODUCT HIGHLIGHT ═══════════════ */}
+      {cfg.show_brand_showcase && (showcaseProduct || cfg.showcase_image_url || cfg.showcase_headline) && (
+        <section className="py-20 md:py-32 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/[0.03] via-transparent to-accent/[0.03]" />
           <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-2 gap-10 items-center max-w-5xl mx-auto">
-              {cfg.showcase_image_url && (
-                <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
-                  <TiltCard>
-                    <div className="rounded-3xl overflow-hidden border border-border/30 shadow-2xl">
-                      <img src={cfg.showcase_image_url} alt={cfg.showcase_headline || "Brand showcase"} className="w-full h-auto object-cover" loading="lazy" />
+            <div className="grid md:grid-cols-2 gap-12 lg:gap-20 items-center max-w-6xl mx-auto">
+              {/* Product image with parallax float */}
+              <motion.div initial={{ opacity: 0, x: -60 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 1 }}>
+                <TiltCard>
+                  <div className="relative">
+                    <motion.div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-primary/10 to-accent/10 blur-2xl"
+                      animate={{ scale: [1, 1.05, 1], opacity: [0.3, 0.5, 0.3] }}
+                      transition={{ repeat: Infinity, duration: 5 }}
+                    />
+                    <div className="relative rounded-3xl overflow-hidden border border-border/30 shadow-[0_20px_80px_hsl(var(--primary)/0.15)]">
+                      <motion.img
+                        src={showcaseProduct?.thumbnail || showcaseProduct?.images?.[0] || cfg.showcase_image_url}
+                        alt={showcaseProduct?.name || cfg.showcase_headline || "Brand showcase"}
+                        className="w-full h-auto object-cover aspect-square"
+                        loading="lazy"
+                        animate={{ y: [0, -8, 0] }}
+                        transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+                      />
                     </div>
-                  </TiltCard>
-                </motion.div>
-              )}
-              <motion.div initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.2 }}>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-primary mb-4">Our Brand</p>
-                <h2 className="text-3xl md:text-4xl font-bold font-display text-foreground mb-6 leading-tight">
-                  {cfg.showcase_headline || "Premium Quality"}
+                  </div>
+                </TiltCard>
+              </motion.div>
+
+              {/* Product details */}
+              <motion.div initial={{ opacity: 0, x: 60 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 1, delay: 0.2 }}>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-primary mb-4">Featured Product</p>
+                <h2 className="text-3xl md:text-5xl font-bold font-display text-foreground mb-4 leading-tight">
+                  {showcaseProduct?.name || cfg.showcase_headline || "Premium Quality"}
                 </h2>
-                <p className="text-muted-foreground leading-relaxed mb-8">{cfg.showcase_description}</p>
-                <Link to={cfg.showcase_cta_link || "/home"}>
-                  <motion.span whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-                    className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-primary-foreground font-semibold text-sm shadow-[0_4px_20px_hsl(var(--primary)/0.3)]">
+                {(showcaseProduct?.price || showcaseProduct?.compare_at_price) && (
+                  <div className="flex items-baseline gap-3 mb-4">
+                    <span className="text-2xl font-bold text-gradient">{formatPrice(showcaseProduct.price)}</span>
+                    {showcaseProduct.compare_at_price && showcaseProduct.compare_at_price > showcaseProduct.price && (
+                      <span className="text-lg text-muted-foreground line-through">{formatPrice(showcaseProduct.compare_at_price)}</span>
+                    )}
+                  </div>
+                )}
+                <p className="text-muted-foreground leading-relaxed mb-8 text-base">
+                  {showcaseProduct?.short_description || cfg.showcase_description}
+                </p>
+                <Link to={showcaseProduct ? `/product/${showcaseProduct.slug}` : (cfg.showcase_cta_link || "/home")}>
+                  <motion.span whileHover={{ scale: 1.04, boxShadow: "0 8px 40px hsl(var(--primary)/0.4)" }} whileTap={{ scale: 0.97 }}
+                    className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-primary text-primary-foreground font-semibold text-sm shadow-[0_4px_20px_hsl(var(--primary)/0.3)]">
                     {cfg.showcase_cta_text || "Shop Now"} <ArrowRight className="w-4 h-4" />
                   </motion.span>
                 </Link>
@@ -414,11 +616,15 @@ const LandingPage: React.FC = () => {
               {cfg.stats.map((stat, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.12 }}>
                   <TiltCard>
-                    <div className="text-center rounded-2xl border border-border/20 bg-card/30 backdrop-blur-sm p-6 hover:border-primary/20 transition-colors">
-                      <p className="text-3xl md:text-4xl font-bold font-display text-gradient">
+                    <div className="text-center rounded-2xl border border-border/20 bg-card/30 backdrop-blur-sm p-6 hover:border-primary/20 transition-colors relative overflow-hidden">
+                      <motion.div className="absolute inset-0 bg-primary/[0.02]"
+                        animate={{ opacity: [0, 0.5, 0] }}
+                        transition={{ repeat: Infinity, duration: 3, delay: i * 0.5 }}
+                      />
+                      <p className="text-3xl md:text-5xl font-bold font-display text-gradient relative z-10">
                         <AnimatedCounter value={stat.value} inView={statsInView} />
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
+                      <p className="text-xs text-muted-foreground mt-2 relative z-10">{stat.label}</p>
                     </div>
                   </TiltCard>
                 </motion.div>
@@ -476,7 +682,10 @@ const LandingPage: React.FC = () => {
                 <motion.div key={cat.slug} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.07 }}>
                   <Link to={`/categories/${cat.slug}`} className="group block rounded-2xl overflow-hidden relative h-40 hover:scale-[1.02] transition-transform">
                     {cat.image_url ? (
-                      <img src={cat.image_url} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
+                      <motion.img src={cat.image_url} alt={cat.name} className="w-full h-full object-cover" loading="lazy"
+                        whileHover={{ scale: 1.1 }}
+                        transition={{ duration: 0.7 }}
+                      />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-primary/10 to-accent/10" />
                     )}
@@ -518,7 +727,7 @@ const LandingPage: React.FC = () => {
                     </div>
                     <p className="text-xs text-muted-foreground mb-4 leading-relaxed italic">"{t.text}"</p>
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center text-primary-foreground text-xs font-bold">
                         {t.name.charAt(0)}
                       </div>
                       <p className="text-xs font-semibold text-foreground">{t.name}</p>
@@ -537,14 +746,17 @@ const LandingPage: React.FC = () => {
           <div className="container mx-auto px-4">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
               className="rounded-3xl border border-border/30 bg-card/30 backdrop-blur-xl p-10 md:p-16 text-center relative overflow-hidden">
-              <motion.div className="absolute top-10 left-10 w-20 h-20 border border-primary/10 rounded-full"
-                animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.5, 0.2] }}
-                transition={{ repeat: Infinity, duration: 5 }}
-              />
-              <motion.div className="absolute bottom-10 right-10 w-14 h-14 border border-accent/10 rounded-lg"
-                animate={{ rotate: [0, 90, 180, 270, 360] }}
-                transition={{ repeat: Infinity, duration: 15, ease: "linear" }}
-              />
+              {/* Floating particle ring */}
+              {Array.from({ length: 8 }).map((_, i) => (
+                <motion.div key={i} className="absolute w-2 h-2 rounded-full bg-primary/20"
+                  style={{
+                    left: `${50 + 35 * Math.cos((i / 8) * Math.PI * 2)}%`,
+                    top: `${50 + 35 * Math.sin((i / 8) * Math.PI * 2)}%`,
+                  }}
+                  animate={{ scale: [0.5, 1.5, 0.5], opacity: [0.2, 0.6, 0.2] }}
+                  transition={{ repeat: Infinity, duration: 3, delay: i * 0.3 }}
+                />
+              ))}
               <div className="absolute inset-0 opacity-10" style={{ background: "radial-gradient(circle at 50% 50%, hsl(var(--primary)/0.3), transparent 70%)" }} />
               <div className="relative z-10">
                 <h2 className="text-2xl md:text-4xl font-bold font-display text-foreground mb-4">
@@ -567,7 +779,8 @@ const LandingPage: React.FC = () => {
         </section>
       )}
 
-      <Footer />
+      {/* Landing-specific minimal footer */}
+      <LandingFooter siteName={siteName} />
     </div>
   );
 };
