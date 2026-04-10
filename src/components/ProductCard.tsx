@@ -269,6 +269,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
             ))}
             <span className="text-xs text-muted-foreground ml-1">({reviewCount})</span>
           </div>
+          {/* Color swatches */}
+          {variantInfo?.colors && variantInfo.colors.length > 0 && (
+            <div className="flex items-center gap-1.5 mb-2">
+              {variantInfo.colors.slice(0, 5).map((color) => (
+                <span
+                  key={color}
+                  title={color}
+                  className="w-3.5 h-3.5 rounded-full border border-border/50 shrink-0"
+                  style={{ backgroundColor: getColorHex(color) }}
+                />
+              ))}
+              {variantInfo.colors.length > 5 && (
+                <span className="text-[10px] text-muted-foreground">+{variantInfo.colors.length - 5}</span>
+              )}
+            </div>
+          )}
           <div className="flex items-center gap-2 mt-auto lg:flex-row lg:items-center flex-col items-center">
             <span className="font-bold text-foreground group-hover:animate-[priceGlow_1.5s_ease-in-out_infinite] transition-all duration-300 text-sm lg:text-base"
               style={{ textShadow: 'none' }}
