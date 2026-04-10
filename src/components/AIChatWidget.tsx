@@ -9,6 +9,7 @@ import { useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { toast } from "@/lib/app-toast";
 import { getIceServers } from "@/lib/ice-servers";
+import { playRingtone, stopRingtone } from "@/lib/sounds";
 
 interface Msg {
   role: "user" | "assistant" | "system";
