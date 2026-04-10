@@ -24,6 +24,8 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
   disabled = false,
 }) => {
   const [callState, setCallState] = useState<"idle" | "requesting" | "calling" | "connected" | "rejected">("idle");
+  const callStateRef = useRef(callState);
+  callStateRef.current = callState;
   const [muted, setMuted] = useState(false);
   const [duration, setDuration] = useState(0);
   const peerRef = useRef<RTCPeerConnection | null>(null);
@@ -175,7 +177,7 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
 
     // Timeout after 30s
     setTimeout(() => {
-      if (callState === "requesting") {
+      if (callStateRef.current === "requesting") {
         setCallState("idle");
         // Update log as missed
         if (callLogIdRef.current) {

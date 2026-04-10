@@ -7,7 +7,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/app-toast";
 import QuickViewModal from "@/components/QuickViewModal";
 
 export interface ProductCardProps {
