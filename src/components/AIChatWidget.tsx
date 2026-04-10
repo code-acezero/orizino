@@ -210,7 +210,7 @@ const AIChatWidget: React.FC = () => {
     };
   }, []);
 
-  const isAdminPage = location.pathname.startsWith("/admin");
+  const isAdminPage = location.pathname.startsWith("/origin");
   const isLandingPage = location.pathname === "/";
 
   const { data: aiConfig } = useQuery({
@@ -548,7 +548,7 @@ const AIChatWidget: React.FC = () => {
       message: "A customer is requesting a voice call.",
       type: "support",
       priority: "high",
-      link_url: "/admin/support",
+      link_url: "/origin/support",
     });
     toast.success("Call request sent to support agent");
   };
