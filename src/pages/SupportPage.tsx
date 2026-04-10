@@ -109,6 +109,12 @@ const SupportPage: React.FC = () => {
 
   // Call state
   const [incomingCall, setIncomingCall] = useState(false);
+
+  // Play/stop ringtone on incoming call
+  useEffect(() => {
+    if (incomingCall) { playRingtone(); } else { stopRingtone(); }
+    return () => stopRingtone();
+  }, [incomingCall]);
   const [callActive, setCallActive] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [callMuted, setCallMuted] = useState(false);
