@@ -3,15 +3,17 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdminRole } from "@/components/AdminRoute";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import NotificationBell from "@/components/NotificationBell";
 
-import { LogOut, User } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 const AdminLayout: React.FC = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const role = useAdminRole();
 
   const { data: profile } = useQuery({
     queryKey: ["admin-profile", user?.id],
@@ -38,7 +40,7 @@ const AdminLayout: React.FC = () => {
           <header className="h-14 flex items-center border-b border-border px-4 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
             <SidebarTrigger className="mr-4" />
             <span className="font-display text-sm text-muted-foreground">
-              Zero Marketplace Admin
+              {profile?.full_name ? `${profile.full_name} — Admin` : "Admin Panel"}
             </span>
 
             {/* Right side: notifications + profile */}
@@ -59,7 +61,7 @@ const AdminLayout: React.FC = () => {
                 )}
                 <div className="hidden sm:block">
                   <p className="text-xs font-medium text-foreground leading-tight">{profile?.full_name || "Admin"}</p>
-                  <p className="text-[10px] text-muted-foreground leading-tight">Administrator</p>
+                  <p className="text-[10px] text-muted-foreground leading-tight">{role === "moderator" ? "Moderator" : "Administrator"}</p>
                 </div>
               </div>
 

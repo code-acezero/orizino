@@ -416,13 +416,13 @@ const ProductDetailPage: React.FC = () => {
         </motion.span>
       )}
 
-      <h1 className={`font-bold font-display leading-tight ${
+      <h1 className={`font-bold leading-tight ${
         isMobile
           ? "text-xl"
           : layout === "magazine"
             ? "text-4xl md:text-5xl italic"
             : "text-3xl md:text-4xl"
-      } ${cfg.textClass}`}>
+      } ${cfg.textClass}`} style={{ fontFamily: 'var(--font-title, var(--font-display))' }}>
         {product.name}
       </h1>
 

@@ -33,6 +33,11 @@ const LOGO_EFFECTS = [
   { id: "blur-bg", label: "Frosted", desc: "Blurred background" },
 ];
 
+const CUSTOM_FONTS = [
+  "Agraham", "Bilderberg", "Nevera", "OrangeAvenue", "PrimorStylish",
+  "ProdesStencil", "Rostex", "SingleGrinch", "Transcity", "Zaslia",
+];
+
 const AdminBranding = () => {
   const qc = useQueryClient();
   const [logoUrl, setLogoUrl] = useState("");
@@ -41,11 +46,12 @@ const AdminBranding = () => {
   const [logoEffect, setLogoEffect] = useState("none");
   const [siteName, setSiteName] = useState("");
   const [titleColors, setTitleColors] = useState<Record<number, string>>({});
+  const [titleFont, setTitleFont] = useState("");
 
   const { data: settings } = useQuery({
     queryKey: ["admin-branding"],
     queryFn: async () => {
-      const { data } = await supabase.from("site_settings").select("key, value").in("key", ["logo_url", "site_icon_url", "logo_display_style", "logo_effect", "site_name", "title_letter_colors"]);
+      const { data } = await supabase.from("site_settings").select("key, value").in("key", ["logo_url", "site_icon_url", "logo_display_style", "logo_effect", "site_name", "title_letter_colors", "title_font"]);
       const map: Record<string, any> = {};
       data?.forEach((s) => {
         const val = s.value;
@@ -66,6 +72,7 @@ const AdminBranding = () => {
       if (settings.title_letter_colors && typeof settings.title_letter_colors === "object") {
         setTitleColors(settings.title_letter_colors as Record<number, string>);
       }
+      setTitleFont((settings.title_font as string) || "");
     }
   }, [settings]);
 
@@ -77,6 +84,7 @@ const AdminBranding = () => {
         { key: "logo_display_style", value: logoStyle },
         { key: "logo_effect", value: logoEffect },
         { key: "title_letter_colors", value: titleColors },
+        { key: "title_font", value: titleFont },
       ];
       for (const item of items) {
         await supabase.from("site_settings").upsert({ key: item.key, value: item.value as any, updated_at: new Date().toISOString() }, { onConflict: "key" });
@@ -210,8 +218,37 @@ const AdminBranding = () => {
           </Card>
         </div>
 
-        {/* Right: Live previews */}
+        {/* Right: Title Font + Live previews */}
         <div className="space-y-4">
+          {/* Title Font Picker */}
+          <Card className="glass">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Title Display Font</CardTitle>
+              <CardDescription className="text-xs">Used for site name, category & product titles</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-1.5 max-h-[200px] overflow-y-auto pr-1">
+                <button onClick={() => setTitleFont("")}
+                  className={`text-left px-2.5 py-2 rounded-lg text-xs transition-all ${!titleFont ? "border-primary bg-primary/10 border" : "border border-border/50 hover:border-primary/30"}`}>
+                  <span className="font-medium">Default</span>
+                </button>
+                {CUSTOM_FONTS.map((f) => (
+                  <button key={f} onClick={() => setTitleFont(f)}
+                    className={`text-left px-2.5 py-2 rounded-lg text-xs transition-all ${titleFont === f ? "border-primary bg-primary/10 border" : "border border-border/50 hover:border-primary/30"}`}>
+                    <span style={{ fontFamily: `'${f}', sans-serif` }} className="text-sm">{f}</span>
+                  </button>
+                ))}
+              </div>
+              {titleFont && (
+                <div className="mt-3 p-3 rounded-xl bg-secondary/30 border border-border/30">
+                  <p className="text-[10px] text-muted-foreground mb-1">Preview</p>
+                  <p className="text-2xl font-bold" style={{ fontFamily: `'${titleFont}', sans-serif` }}>
+                    {siteName || "Your Brand"}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
           <Card className="glass">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2"><Monitor className="w-4 h-4" /> Live Preview</CardTitle>
