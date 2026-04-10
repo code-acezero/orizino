@@ -273,6 +273,7 @@ const AdminLanding = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="features">
           <Card>
             <CardHeader>
               <CardTitle>Features</CardTitle>
