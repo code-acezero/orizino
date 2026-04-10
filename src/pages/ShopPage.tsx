@@ -183,10 +183,10 @@ const ShopPage: React.FC = () => {
   }, [allVariants, selectedSizes, selectedColors]);
 
   const { data: products, isLoading } = useQuery({
-    queryKey: ["products", selectedCategory, sort],
+    queryKey: ["products", activeCategoryIds, sort],
     queryFn: async () => {
       let query = supabase.from("products").select("*").eq("is_active", true);
-      if (selectedCategory) query = query.eq("category_id", selectedCategory);
+      if (activeCategoryIds && activeCategoryIds.length > 0) query = query.in("category_id", activeCategoryIds);
       switch (sort) {
         case "price_asc": query = query.order("price", { ascending: true }); break;
         case "price_desc": query = query.order("price", { ascending: false }); break;
