@@ -57,12 +57,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
     queryFn: async () => {
       const { data } = await supabase
         .from("product_variants")
-        .select("color, size")
+        .select("color, size, stock_quantity")
         .eq("product_id", id)
         .eq("is_active", true);
       const colors = [...new Set((data || []).map(v => v.color).filter(Boolean))] as string[];
       const sizes = [...new Set((data || []).map(v => v.size).filter(Boolean))] as string[];
-      return { hasVariants: (data?.length || 0) > 0, colors, sizes };
+      const totalVariantStock = (data || []).reduce((sum, v) => sum + (v.stock_quantity || 0), 0);
+      return { hasVariants: (data?.length || 0) > 0, colors, sizes, totalVariantStock };
     },
     staleTime: 60000,
   });
@@ -235,6 +236,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
               -{discount}%
             </span>
           )}
+          {(() => {
+            const stock = variantInfo?.hasVariants ? variantInfo.totalVariantStock : undefined;
+            if (stock !== undefined && stock <= 0) return (
+              <span className="absolute bottom-3 left-3 bg-muted text-muted-foreground text-[10px] font-semibold py-0.5 px-2 rounded-full z-20">Out of stock</span>
+            );
+            if (stock !== undefined && stock > 0 && stock < 5) return (
+              <span className="absolute bottom-3 left-3 bg-destructive/90 text-destructive-foreground text-[10px] font-semibold py-0.5 px-2 rounded-full z-20">Low stock</span>
+            );
+            return null;
+          })()}
           {/* Quick actions */}
           <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
             <motion.button
