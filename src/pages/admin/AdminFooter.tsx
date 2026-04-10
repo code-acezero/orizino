@@ -49,7 +49,7 @@ const AdminFooter: React.FC = () => {
     queryKey: ["admin-footer-config"],
     queryFn: async () => {
       const { data } = await supabase.from("site_settings").select("value").eq("key", "footer_config").maybeSingle();
-      return data?.value as FooterConfig | null;
+      return (data?.value as unknown as FooterConfig) || null;
     },
     staleTime: 0,
     refetchOnMount: true,
