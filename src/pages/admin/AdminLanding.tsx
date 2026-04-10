@@ -240,7 +240,39 @@ const AdminLanding = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="features">
+        <TabsContent value="showcase">
+          <Card>
+            <CardHeader>
+              <CardTitle>Brand Showcase</CardTitle>
+              <CardDescription>Showcase your brand with a portfolio-style section</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Showcase Image</Label>
+                <ImageUpload bucket="banners" folder="showcase" value={form.showcase_image_url} onUploaded={(url) => setForm({ ...form, showcase_image_url: url })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Headline</Label>
+                <Input value={form.showcase_headline} onChange={(e) => setForm({ ...form, showcase_headline: e.target.value })} placeholder="Premium Quality" />
+              </div>
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Textarea value={form.showcase_description} onChange={(e) => setForm({ ...form, showcase_description: e.target.value })} rows={4} />
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>CTA Text</Label>
+                  <Input value={form.showcase_cta_text} onChange={(e) => setForm({ ...form, showcase_cta_text: e.target.value })} placeholder="Shop Now" />
+                </div>
+                <div className="space-y-2">
+                  <Label>CTA Link</Label>
+                  <Input value={form.showcase_cta_link} onChange={(e) => setForm({ ...form, showcase_cta_link: e.target.value })} placeholder="/home" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
           <Card>
             <CardHeader>
               <CardTitle>Features</CardTitle>
