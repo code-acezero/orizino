@@ -116,8 +116,8 @@ const CheckoutPage: React.FC = () => {
     },
     product_variants: cartState.buyNowItem.variantId ? {
       id: cartState.buyNowItem.variantId,
-      size: cartState.buyNowItem.variantLabel?.split(" / ")?.[0] || null,
-      color: cartState.buyNowItem.variantLabel?.split(" / ")?.[1] || null,
+      size: cartState.buyNowItem.selectedSize ?? null,
+      color: cartState.buyNowItem.selectedColor ?? null,
       price_override: cartState.buyNowItem.price,
     } : null,
   }] : null;
@@ -207,16 +207,6 @@ const CheckoutPage: React.FC = () => {
 
     setLoading(true);
 
-    if (isBuyNow && cartState.buyNowItem) {
-      // For buy-now: add to cart first, then create order
-      const item = cartState.buyNowItem;
-      let query = supabase.from("cart_items").select("id, quantity").eq("user_id", user.id).eq("product_id", item.productId);
-      if (item.variantId) query = query.eq("variant_id", item.variantId); else query = query.is("variant_id", null);
-      const { data: existing } = await query.maybeSingle();
-      if (existing) await supabase.from("cart_items").update({ quantity: item.quantity }).eq("id", existing.id);
-      else await supabase.from("cart_items").insert({ user_id: user.id, product_id: item.productId, quantity: item.quantity, variant_id: item.variantId } as any);
-    }
-
     const { data, error } = await supabase.functions.invoke("create-order", {
       body: {
         shipping_address: address,
@@ -227,6 +217,7 @@ const CheckoutPage: React.FC = () => {
         gift_wrap: giftWrap,
         gift_message: giftMessage,
         shipping_method_id: selectedShipping?.id,
+        buy_now_item: isBuyNow ? cartState.buyNowItem : null,
       },
     });
     setLoading(false);
