@@ -577,8 +577,32 @@ const ProductDetailPage: React.FC = () => {
           /* All other layouts: side-by-side on desktop, stacked on mobile */
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-10">
-              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
                 {renderGallery()}
+                {/* Fill space under gallery: product highlights / specs preview */}
+                {product.specifications && Object.keys(product.specifications as Record<string, any>).length > 0 && (
+                  <div className={`${cfg.cardClass} rounded-2xl p-4 sm:p-5 space-y-3`}>
+                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <Package className="w-4 h-4 text-primary" /> Quick Specs
+                    </h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {Object.entries(product.specifications as Record<string, any>).slice(0, 6).map(([key, val]) => (
+                        <div key={key} className="text-xs">
+                          <span className="text-muted-foreground">{key}</span>
+                          <p className="text-foreground font-medium truncate">{String(val)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* Tags */}
+                {product.tags && product.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {product.tags.map((tag: string) => (
+                      <Badge key={tag} variant="secondary" className="text-[10px]">{tag}</Badge>
+                    ))}
+                  </div>
+                )}
               </motion.div>
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
                 <ProductInfo sticky />

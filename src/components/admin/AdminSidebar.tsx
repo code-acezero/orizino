@@ -76,7 +76,7 @@ const contentItems: MenuItem[] = [
   { title: "Reviews", url: "/origin/reviews", icon: Star },
   { title: "Announcements", url: "/origin/announcements", icon: Megaphone },
   { title: "CMS Pages", url: "/origin/cms-pages", icon: MessageSquare, adminOnly: true },
-  { title: "Requests", url: "/origin/requests", icon: MessageSquare, adminOnly: true },
+  { title: "Product Requests", url: "/origin/requests", icon: MessageSquare, adminOnly: true },
 ];
 
 const systemItems: MenuItem[] = [
