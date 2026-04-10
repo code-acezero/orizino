@@ -68,6 +68,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
     staleTime: 60000,
   });
   const hasVariants = variantInfo?.hasVariants ?? undefined;
+  const totalStock = variantInfo?.hasVariants ? variantInfo.totalVariantStock : undefined;
+  const isSoldOut = totalStock !== undefined && totalStock <= 0;
 
   // Check wishlist status on mount
   React.useEffect(() => {
@@ -236,13 +238,26 @@ const ProductCard: React.FC<ProductCardProps> = ({
               -{discount}%
             </span>
           )}
+          {/* Sold out overlay */}
+          {isSoldOut && (
+            <div className="absolute inset-0 z-[15] bg-background/60 flex items-center justify-center">
+              <span className="text-sm font-bold text-muted-foreground tracking-wider uppercase">Sold Out</span>
+            </div>
+          )}
+          {/* Stock badge */}
           {(() => {
-            const stock = variantInfo?.hasVariants ? variantInfo.totalVariantStock : undefined;
-            if (stock !== undefined && stock <= 0) return (
-              <span className="absolute bottom-3 left-3 bg-muted text-muted-foreground text-[10px] font-semibold py-0.5 px-2 rounded-full z-20">Out of stock</span>
+            if (totalStock === undefined) return null;
+            if (totalStock <= 0) return null; // handled by overlay
+            if (totalStock < 5) return (
+              <span className="absolute bottom-3 left-3 bg-destructive/90 text-destructive-foreground text-[10px] font-semibold py-0.5 px-2 rounded-full z-20 group/stock cursor-default">
+                Low stock
+                <span className="hidden group-hover/stock:inline"> — {totalStock} left</span>
+              </span>
             );
-            if (stock !== undefined && stock > 0 && stock < 5) return (
-              <span className="absolute bottom-3 left-3 bg-destructive/90 text-destructive-foreground text-[10px] font-semibold py-0.5 px-2 rounded-full z-20">Low stock</span>
+            if (totalStock < 10) return (
+              <span className="absolute bottom-3 left-3 bg-accent text-accent-foreground text-[10px] font-semibold py-0.5 px-2 rounded-full z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                {totalStock} left
+              </span>
             );
             return null;
           })()}
@@ -330,17 +345,19 @@ const ProductCard: React.FC<ProductCardProps> = ({
             )}
           </div>
           {/* Floating Add to Cart */}
-          <motion.button
-            onClick={handleAddToCart}
-            disabled={addingToCart}
-            className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-2.5 text-xs font-semibold
-              translate-y-5 opacity-0 group-hover:translate-y-0 group-hover:opacity-100
-              transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]
-              hover:brightness-110 active:scale-95 disabled:opacity-70"
-          >
-            {addingToCart ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShoppingCart className="w-3.5 h-3.5" />}
-            {addingToCart ? "Adding..." : "Add to Cart"}
-          </motion.button>
+          {!isSoldOut && (
+            <motion.button
+              onClick={handleAddToCart}
+              disabled={addingToCart}
+              className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-2.5 text-xs font-semibold
+                translate-y-5 opacity-0 group-hover:translate-y-0 group-hover:opacity-100
+                transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]
+                hover:brightness-110 active:scale-95 disabled:opacity-70"
+            >
+              {addingToCart ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShoppingCart className="w-3.5 h-3.5" />}
+              {addingToCart ? "Adding..." : "Add to Cart"}
+            </motion.button>
+          )}
         </motion.div>
       </Link>
       <QuickViewModal productId={id} open={quickViewOpen} onOpenChange={setQuickViewOpen} />
