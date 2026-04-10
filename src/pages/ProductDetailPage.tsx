@@ -1,4 +1,5 @@
-import React, { useState, lazy, Suspense } from "react";
+import React, { useState, lazy, Suspense, useEffect } from "react";
+import { useLayout } from "@/contexts/LayoutContext";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -308,7 +309,7 @@ const ProductDetailPage: React.FC = () => {
 
   if (!product) {
     return (
-      <div className="min-h-screen"><Navbar />
+      <div className="min-h-screen">
         <div className="container mx-auto px-3 sm:px-4 py-16 md:py-20 text-center">
           <h1 className="text-xl md:text-2xl font-bold text-foreground">Product not found</h1>
         </div>
@@ -455,19 +456,7 @@ const ProductDetailPage: React.FC = () => {
 
   return (
     <div className={`min-h-screen ${layout === "dark-luxury" ? "bg-black/20" : ""}`}>
-      <Navbar
-        bottomNavProductTray={{
-          product: {
-            name: product.name,
-            price: effectivePrice,
-            thumbnail: selectedVariant?.image_url ?? product.thumbnail,
-            stockQuantity: effectiveStock,
-          },
-          onAddToCart: addToCart,
-          onBuyNow: buyNow,
-          addingToCart,
-        }}
-      />
+      <ProductTrayEffect product={product} effectivePrice={effectivePrice} selectedVariant={selectedVariant} effectiveStock={effectiveStock} addToCart={addToCart} buyNow={buyNow} addingToCart={addingToCart} />
       <main className={`container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8 ${isMagazine ? "max-w-6xl" : ""}`}>
         <Breadcrumbs
           items={[
