@@ -43,8 +43,10 @@ export async function getIceServers(): Promise<IceServerConfig[]> {
 
     // Self-hosted Coturn
     if (config.coturn_enabled && config.coturn_url) {
+      const raw = config.coturn_url as string;
+      const coturnUrl = /^(turn|turns|stun):/.test(raw) ? raw : `turn:${raw}`;
       servers.push({
-        urls: config.coturn_url,
+        urls: coturnUrl,
         username: config.coturn_username || undefined,
         credential: config.coturn_credential || undefined,
       });

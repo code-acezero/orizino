@@ -7,7 +7,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { toast } from "sonner";
+import { toast } from "@/lib/app-toast";
 
 interface QuickViewModalProps {
   productId: string;
