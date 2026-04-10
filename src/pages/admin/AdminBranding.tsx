@@ -45,13 +45,18 @@ const AdminBranding = () => {
   const [logoStyle, setLogoStyle] = useState("rounded");
   const [logoEffect, setLogoEffect] = useState("none");
   const [siteName, setSiteName] = useState("");
+  const [siteDescription, setSiteDescription] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [supportUrl, setSupportUrl] = useState("");
+  const [address, setAddress] = useState("");
   const [titleColors, setTitleColors] = useState<Record<number, string>>({});
   const [titleFont, setTitleFont] = useState("");
 
   const { data: settings } = useQuery({
     queryKey: ["admin-branding"],
     queryFn: async () => {
-      const { data } = await supabase.from("site_settings").select("key, value").in("key", ["logo_url", "site_icon_url", "logo_display_style", "logo_effect", "site_name", "title_letter_colors", "title_font"]);
+      const { data } = await supabase.from("site_settings").select("key, value").in("key", ["logo_url", "site_icon_url", "logo_display_style", "logo_effect", "site_name", "site_description", "contact_email", "contact_phone", "support_url", "address", "title_letter_colors", "title_font"]);
       const map: Record<string, any> = {};
       data?.forEach((s) => {
         const val = s.value;
@@ -69,6 +74,12 @@ const AdminBranding = () => {
       setLogoEffect((settings.logo_effect as string) || "none");
       const rawName = settings.site_name;
       setSiteName(String(typeof rawName === "object" && rawName !== null ? (rawName as any).value ?? "" : rawName ?? ""));
+      const rawDesc = settings.site_description;
+      setSiteDescription(String(typeof rawDesc === "object" && rawDesc !== null ? (rawDesc as any).value ?? "" : rawDesc ?? ""));
+      setContactEmail(String(settings.contact_email || ""));
+      setContactPhone(String(settings.contact_phone || ""));
+      setSupportUrl(String(settings.support_url || ""));
+      setAddress(String(settings.address || ""));
       if (settings.title_letter_colors && typeof settings.title_letter_colors === "object") {
         setTitleColors(settings.title_letter_colors as Record<number, string>);
       }
@@ -79,6 +90,12 @@ const AdminBranding = () => {
   const saveMutation = useMutation({
     mutationFn: async () => {
       const items: { key: string; value: any }[] = [
+        { key: "site_name", value: siteName },
+        { key: "site_description", value: siteDescription },
+        { key: "contact_email", value: contactEmail },
+        { key: "contact_phone", value: contactPhone },
+        { key: "support_url", value: supportUrl },
+        { key: "address", value: address },
         { key: "logo_url", value: logoUrl },
         { key: "site_icon_url", value: iconUrl },
         { key: "logo_display_style", value: logoStyle },
