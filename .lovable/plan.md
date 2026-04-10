@@ -1,189 +1,161 @@
-
-
-# Comprehensive Site Overhaul: Landing Page, Search, Payments, Missing Features
+# Final Site Overhaul: Landing Page, Sounds, Support UI, and Polish
 
 ## Summary
-Redesign the landing page as a brand portfolio (remove featured products, add branded product showcase), fix search/navigation UX, add payment gateway configuration (Stripe + Bangladeshi gateways with personal account fallback), remove hardcoded data, and fill in missing e-commerce features.
+
+Rebuild the landing page as a fully immersive cinematic brand portfolio with its own minimal nav and footer style, add sound effects for calls and notifications, show AI agent name/avatar in support chat, and complete remaining site features.
 
 ---
 
-## 1. Landing Page Overhaul
+## 1. Landing Page -- Own Nav + No Bottom Nav
 
-### 1a. Replace Featured Products with Branded Product Showcase
-- Remove the `show_featured_products` section and `featuredProducts` query
-- Add a new "Brand Showcase" section: full-width split layout with a large product/brand image on one side and product details + CTA on the other, styled as a portfolio piece
-- Admin config: `showcase_product_id`, `showcase_image_url`, `showcase_headline`, `showcase_description`
+### 1a. Custom Minimal Landing Nav
 
-### 1b. Center Hero Content + Enhanced Particles
-- Change hero layout from left-aligned `max-w-3xl` to `text-center mx-auto max-w-4xl`
-- Increase floating particles from 8 to ~20 with varied sizes, glow effects, and staggered upward drift
-- Add subtle radial gradient pulse behind the centered text
+- Remove the `<Navbar />` import from LandingPage. Instead, build a slim, transparent floating nav bar inside LandingPage itself with: logo/site name (left), and limited links: "Home", "Shop", "Support", "Sign In" (right).
+- No bottom nav on mobile for landing page (it's already outside MainLayout, so BottomNav won't render).
+- Style: absolute positioned, transparent bg with blur on scroll, minimal and cinematic.
 
-### 1c. Replace Landing Nav with Main Navbar
-- Remove the custom floating glass nav in LandingPage
-- Instead, use the shared `Navbar` component (import from MainLayout pattern) or wrap the landing route inside MainLayout
-- This ensures consistent branding, search, cart, and user menu
+### 1b. Landing-Specific Footer
 
-### 1d. Remove Hardcoded Data
-- Audit `defaultLandingConfig` — keep as empty defaults (already mostly empty)
-- Remove hardcoded `"Ace Marketplace"` from CheckoutPage `useSeoMeta`
-- Remove `"Zero Marketplace"` default from AdminSettings
-- Replace all hardcoded site names with dynamic `site_name` from settings
-- Check Footer, Navbar, and other components for hardcoded brand references
+- Replace `<Footer />` in LandingPage with a compact inline footer: single row with copyright, social links, and "Enter Store" CTA. Styled differently from the main footer -- minimal, dark glass strip.
 
 ---
 
-## 2. Search Bar Redesign
+## 2. Landing Page Cinematic Overhaul
 
-### 2a. New Search UI
-- Redesign desktop search: glass-morphic input with animated expanding focus state, subtle glow border, and microphone icon placeholder
-- Mobile search: redesign with larger touch targets, slide-down animation
+### 2a. Enhanced Hero
 
-### 2b. Search Without Page Reload
-- Currently `handleSearchSubmit` navigates to `/shop?q=...` which causes a full route change
-- If already on `/shop`, update the URL query parameter without re-mounting the page using `useSearchParams` + `replace: true`
-- If on another page, navigate to `/shop?q=...` normally but the Navbar won't re-render since it's in MainLayout
+- Increase particle count to 30+ with more variation (size 1-8px, multiple colors, staggered drift).
+- Add a slow cinematic camera zoom effect on the hero background (scale 1 to 1.05 over 20s loop).
+- Add floating light streaks / lens flare divs drifting across.
+- Scroll-driven parallax layers (foreground text moves faster than background shapes).
 
----
+### 2b. Branded Product Highlight Section (New)
 
-## 3. Mobile Top Menu & Dynamic Island Fix
+- Large full-width section with a hero-sized product image on one side (with parallax float) and detailed product info on the other: name, price, short description, "Shop Now" CTA.
+- Fetches the product configured in `showcase_product_id` from the `products` table (or falls back to `showcase_image_url` / `showcase_headline` from landing_config).
+- Cinematic reveal animation: image slides in from left, text fades in from right.
 
-- Review `NotificationBell` dynamic island positioning — ensure it doesn't overlap with mobile search bar
-- Fix mobile navbar height and z-index conflicts with BottomNav
-- Ensure the dynamic island notification popup doesn't push content or break layout on small screens
-- Add `safe-area-inset` padding for notched devices
+### 2c. Rich Data Sections
 
----
+- About Us: Add animated word-by-word reveal on scroll.
+- Mission/Vision: Add glowing border animation on hover, floating icon animation.
+- Stats: Larger typography, add subtle background pulse per stat card.
+- Categories: Full-bleed image cards with cinematic zoom-on-hover and overlay gradient.
+- CTA: Add floating particle ring around the CTA button.
 
-## 4. Payment Gateway Configuration
+### 2d. New Section: "Why Us" / Trust Signals
 
-### 4a. Admin Payment Settings Page
-Create new admin page `src/pages/admin/AdminPaymentGateways.tsx` with tabs:
-- **Stripe**: API key fields (publishable + secret), webhook URL display, enable/disable toggle
-- **bKash Merchant**: App Key, App Secret, Username, Password fields
-- **Nagad Merchant**: Merchant ID, Public Key, Private Key
-- **SSLCommerz**: Store ID, Store Password, sandbox toggle
-- **Personal Accounts** (interim): For each gateway (bKash, Nagad, Upay, Rocket):
-  - Account number field
-  - Account holder name
-  - QR code image upload
-  - Custom payment instructions text
-
-### 4b. Checkout Integration
-- Update `CheckoutPage.tsx`: When user selects bKash/Nagad/Upay/Rocket, show:
-  - The configured account number
-  - QR code image (if uploaded)
-  - Payment instructions
-  - Transaction ID input field for user to enter after sending money
-  - Store transaction ID in the order record
-
-### 4c. Database
-- Store payment gateway configs in `site_settings` with keys like `payment_bkash_personal`, `payment_nagad_personal`, `payment_stripe_config`, etc.
-- Add `transaction_id` column to `orders` table
-- Add admin sidebar entry under Commerce group
+- Animated icons grid: Free Shipping, Secure Payments, 24/7 Support, Easy Returns.
+- Each with a micro-animation on scroll entrance.
 
 ---
 
-## 5. Missing E-Commerce Features
+## 3. Support Chat -- Avatar + Name Display
 
-### 5a. Order Tracking
-- Order status timeline already exists (`OrderTrackingTimeline`). Verify it's wired up on the user's order detail view.
+### 3a. AIChatWidget Header
 
-### 5b. Return/Refund Request System
-- Add `return_requests` table: `id, order_id, user_id, reason, status (pending/approved/rejected/completed), admin_notes, created_at`
-- Add return request button on user's order page (only for delivered orders)
-- Admin page to manage return requests
+- Change header from `{agentName || "Support"}` to show avatar inline and name in format: `Support ({agentName})` when agentName exists.
+- Show the `<AgentAvatar />` component (already exists) beside the name consistently. set the current morcot as the default/main avatar. remove harcoded avatar and upload the moscott through admin panel, but match the color and theme of the avatar.
 
-### 5c. Product Compare
-- Add compare functionality: users can select 2-3 products to compare side-by-side
-- Floating compare bar at bottom when products are selected
+### 3b. SupportPage Header
 
-### 5d. Recently Viewed Products
-- Track recently viewed products in localStorage
-- Show "Recently Viewed" section on HomePage and ShopPage
-
-### 5e. Email Notifications (skeleton)
-- Order confirmation, shipping update, delivery confirmation notification templates
-- Already have Resend API key configured — wire up order status change triggers
+- Similarly update the SupportPage chat header to show the AI agent name in bracket format with avatar.
 
 ---
 
-## 6. User Profile & Settings Additions
+## 4. Sound Effects
+
+### 4a. Ringtone for Support Calls
+
+- Generate a short ringtone using Web Audio API (oscillator-based melody) -- no external files needed.
+- Play on incoming call in `AIChatWidget` and `SupportPage` when `incomingCall` becomes true.
+- Loop until accepted/rejected/timeout. Stop on `acceptCall` or `rejectCall`.
+
+### 4b. Notification Sound
+
+- Generate a short notification chime using Web Audio API (two-tone ascending beep).
+- Play in `NotificationBell` when a new unread notification arrives (compare previous count).
+- Respect the user's `sound` preference from settings (`notifPrefs.sound`).
+
+### 4c. Implementation
+
+- Create `src/lib/sounds.ts` with functions: `playRingtone()`, `stopRingtone()`, `playNotificationSound()` -- all using `AudioContext` + `OscillatorNode` (no external audio files).
+
+---
+
+## 5. Hardcoded Data Removal (Final Pass)
+
+- Scan CheckoutPage, AdminSettings, Footer, Navbar for any remaining hardcoded brand names.
+- Replace with dynamic `site_name` from `site_settings`.
+
+---
+
+## 6. Profile & Settings Additions
 
 ### 6a. Profile Page
-- Add "Account Info" section showing: email, join date, total orders, total spend
-- Add "Referral Code" display (generate unique code per user stored in preferences)
-- Add "Download My Data" button (GDPR compliance)
-- Add order return history tab
+
+- Add "Account Overview" card: email, join date, total orders count, total spend.
+- Add "Referral Code" display (auto-generate from user ID substring).
+- Add "Return History" tab showing user's return_requests.
 
 ### 6b. Settings Page
-- Add "Two-Factor Authentication" placeholder/coming-soon section
-- Add "Login Activity" section showing recent login timestamps
-- Add "Connected Devices" placeholder
-- Add "Email Preferences" with granular opt-in/out for marketing, order updates, newsletter
-- Add "Data & Privacy" section with data export and account deletion request
+
+- Add "Data & Privacy" section: "Download My Data" button (exports profile + orders as JSON), "Delete Account" request.
+- Add "Email Preferences" section with toggles for marketing, order updates, newsletter.
+- Add "Login Activity" placeholder showing "Coming soon".
 
 ---
 
-## 7. Admin Sidebar Update
-- Add "Payment Gateways" entry under Commerce group
-- Add "Returns" entry under Commerce group (for return requests)
+## 7. Recently Viewed Products
+
+- Create `src/hooks/use-recently-viewed.ts`: stores last 10 viewed product IDs in localStorage.
+- Call from `ProductDetailPage` on mount.
+- Show "Recently Viewed" carousel on HomePage and ShopPage (query products by stored IDs).
+
+## 8. product return workflow
+
+- add proper return policy and workflow
+- product return option with proper intigration and echo system
+
+## 9. admin route change
+
+- change admin route from /admin to /origin for better security.
 
 ---
 
 ## Technical Details
 
 ### New Files
-| File | Purpose |
-|------|---------|
-| `src/pages/admin/AdminPaymentGateways.tsx` | Payment gateway configuration |
-| `src/pages/admin/AdminReturns.tsx` | Return request management |
 
-### Database Migration
-```sql
--- Add transaction_id to orders
-ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS transaction_id text;
 
--- Return requests table
-CREATE TABLE public.return_requests (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  order_id uuid NOT NULL,
-  user_id uuid NOT NULL,
-  reason text NOT NULL,
-  status text NOT NULL DEFAULT 'pending',
-  admin_notes text,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-ALTER TABLE public.return_requests ENABLE ROW LEVEL SECURITY;
--- RLS policies for return_requests
-CREATE POLICY "Users can create return requests" ON public.return_requests FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can view own returns" ON public.return_requests FOR SELECT TO authenticated USING (auth.uid() = user_id);
-CREATE POLICY "Admins can manage returns" ON public.return_requests FOR ALL TO authenticated USING (has_role(auth.uid(), 'admin')) WITH CHECK (has_role(auth.uid(), 'admin'));
+| File                               | Purpose                                                |
+| ---------------------------------- | ------------------------------------------------------ |
+| `src/lib/sounds.ts`                | Web Audio API ringtone + notification sound generators |
+| `src/hooks/use-recently-viewed.ts` | localStorage-based recently viewed product tracking    |
 
--- Add payment config keys to RLS allowlist
--- (will update site_settings public read policy to include payment_* keys)
-```
 
 ### Files to Edit
-| File | Change |
-|------|---------|
-| `src/pages/LandingPage.tsx` | Remove featured products, add brand showcase, center hero, enhance particles, remove custom nav |
-| `src/components/Navbar.tsx` | Redesign search bar, fix mobile layout |
-| `src/components/NotificationBell.tsx` | Fix dynamic island positioning on mobile |
-| `src/pages/CheckoutPage.tsx` | Add personal payment gateway UI with QR codes, transaction ID input, remove hardcoded names |
-| `src/pages/admin/AdminSettings.tsx` | Remove hardcoded "Zero Marketplace" default |
-| `src/pages/ProfilePage.tsx` | Add account info, referral code, return history tab |
-| `src/pages/SettingsPage.tsx` | Add data & privacy, email preferences, login activity sections |
-| `src/components/admin/AdminSidebar.tsx` | Add Payment Gateways and Returns entries |
-| `src/App.tsx` | Add routes for AdminPaymentGateways, AdminReturns; wrap landing in MainLayout |
-| `src/pages/admin/AdminLanding.tsx` | Replace featured products config with brand showcase config |
 
-### Priority Order
-1. Landing page overhaul (visual impact)
-2. Search + navigation fixes (UX critical)
-3. Payment gateway config (business critical)
-4. Hardcoded data removal
-5. Missing features (returns, compare, recently viewed)
-6. Profile/settings additions
 
+| File                                  | Change                                                                                                                                  |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/pages/LandingPage.tsx`           | Complete rebuild: custom minimal nav, cinematic hero, branded product highlight, landing-specific footer, enhanced particles/animations |
+| `src/components/AIChatWidget.tsx`     | Show avatar + `Support (name)` format in header                                                                                         |
+| `src/pages/SupportPage.tsx`           | Show avatar + name bracket format                                                                                                       |
+| `src/components/NotificationBell.tsx` | Play notification sound on new unread                                                                                                   |
+| `src/pages/ProfilePage.tsx`           | Add account overview, referral code, return history                                                                                     |
+| `src/pages/SettingsPage.tsx`          | Add data privacy, email preferences sections                                                                                            |
+| `src/pages/HomePage.tsx`              | Add "Recently Viewed" section                                                                                                           |
+| `src/pages/ProductDetailPage.tsx`     | Track recently viewed                                                                                                                   |
+| `src/pages/CheckoutPage.tsx`          | Remove any remaining hardcoded names                                                                                                    |
+| `src/pages/admin/AdminLanding.tsx`    | Add showcase_product_id picker field                                                                                                    |
+
+
+### Sound Generation Approach
+
+All sounds are synthesized at runtime using the Web Audio API -- no audio files to host or download. This keeps the bundle small and creates unique, custom sounds.
+
+```text
+Ringtone pattern:  C5-E5-G5-C6 arpeggio, 0.15s per note, looped every 2s
+Notification:      E5(0.1s) -> G5(0.15s) ascending two-tone chime
+```
