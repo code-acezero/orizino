@@ -156,27 +156,7 @@ const SettingsPage: React.FC = () => {
                 />
               </div>
 
-              <div className="glass-strong rounded-3xl p-6 space-y-4">
-                <div className="flex items-center gap-2">
-                  <Palette className="w-5 h-5 text-primary" />
-                  <h2 className="text-lg font-semibold font-display text-foreground">Profile Color Theme</h2>
-                </div>
-                <p className="text-xs text-muted-foreground">Customizes your profile page appearance</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {themePalettes.map((th) => (
-                    <button key={th.id} onClick={() => selectTheme(th.id)}
-                      className={`flex items-center gap-2 p-3 rounded-2xl border transition-all ${theme === th.id ? "border-primary bg-primary/10 shadow-sm" : "border-border hover:border-primary/30"}`}>
-                      <div className="flex gap-0.5 w-7 h-7 rounded-full overflow-hidden shadow-inner flex-shrink-0">
-                        {th.preview.slice(0, 3).map((hex, i) => (
-                          <div key={i} className="flex-1 h-full" style={{ background: hex }} />
-                        ))}
-                      </div>
-                      <span className="text-xs text-foreground truncate">{th.name}</span>
-                      {theme === th.id && <Badge variant="secondary" className="ml-auto text-[10px]">Active</Badge>}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* Profile color themes removed — site theme is managed globally */}
             </TabsContent>
 
             {/* Notifications Tab */}

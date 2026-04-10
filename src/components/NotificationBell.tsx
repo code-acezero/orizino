@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { subscribe as subscribeToasts, type AppToast, removeToast as removeAppToast } from "@/lib/app-toast";
 import { playNotificationSound } from "@/lib/sounds";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Notification {
   id: string;
@@ -41,6 +42,7 @@ interface NotificationBellProps {
 const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }) => {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const [islandItem, setIslandItem] = useState<IslandItem | null>(null);
   const [lastSeenId, setLastSeenId] = useState<string | null>(null);
@@ -50,23 +52,15 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }
   const { data: notifications = [] } = useQuery({
     queryKey: ["bell-notifications", user?.id, adminMode ? "admin" : "user"],
     queryFn: async () => {
-      let query = supabase
-        .from("notifications")
-        .select("*");
-
+      let query = supabase.from("notifications").select("*");
       if (adminMode) {
-        // Admin: show all notifications (no user filter) including admin types
         query = query.or(`user_id.is.null,user_id.eq.${user!.id}`);
       } else {
-        // Public: user's own + broadcast, exclude admin types
         query = query
           .or(`user_id.eq.${user!.id},user_id.is.null`)
           .not("type", "in", '("support","call","admin","order_status","low_stock")');
       }
-
-      const { data, error } = await query
-        .order("created_at", { ascending: false })
-        .limit(20);
+      const { data, error } = await query.order("created_at", { ascending: false }).limit(20);
       if (error) throw error;
       return data as Notification[];
     },
@@ -82,7 +76,6 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }
     islandTimerRef.current = setTimeout(() => setIslandItem(null), 4000);
   };
 
-  // Show island for new notifications
   useEffect(() => {
     if (notifications.length > 0 && !open) {
       const latest = notifications[0];
@@ -100,7 +93,6 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }
     }
   }, [notifications, open, lastSeenId]);
 
-  // Subscribe to app toasts and show them in the island
   useEffect(() => {
     const unsub = subscribeToasts((toasts: AppToast[]) => {
       if (toasts.length > 0) {
@@ -117,7 +109,6 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }
     return unsub;
   }, []);
 
-  // Close panel on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (panelRef.current && !panelRef.current.contains(e.target as Node)) setOpen(false);
@@ -166,57 +157,48 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }
 
   return (
     <div className="relative" ref={panelRef}>
-      {/* Dynamic Island container */}
-      <motion.div
-        layout
-        className="flex items-center overflow-hidden rounded-full cursor-pointer"
-        style={{
-          background: isExpanded ? "hsl(var(--secondary) / 0.8)" : "transparent",
-          border: isExpanded ? "1px solid hsl(var(--border) / 0.5)" : "1px solid transparent",
-        }}
-        animate={{
-          width: isExpanded ? 240 : 40,
-          height: 40,
-        }}
-        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-        onClick={() => {
-          if (isExpanded) {
-            setIslandItem(null);
-            setOpen(true);
-          } else {
-            setOpen(!open);
-          }
-        }}
+      {/* Bell icon — always a fixed-size button, never expands inline on mobile */}
+      <button
+        className="flex items-center justify-center shrink-0 w-10 h-10 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all relative"
+        onClick={() => setOpen(!open)}
       >
-        {/* Bell icon - always visible */}
-        <div className="flex items-center justify-center shrink-0 w-10 h-10 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all relative">
-          <Bell className="w-5 h-5" />
-          {unreadCount > 0 && !isExpanded && (
-            <motion.span
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="absolute top-1 right-1 w-4 h-4 rounded-full bg-destructive text-[10px] text-destructive-foreground flex items-center justify-center font-bold"
-            >
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </motion.span>
-          )}
-        </div>
+        <Bell className="w-5 h-5" />
+        {unreadCount > 0 && (
+          <motion.span
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute top-1 right-1 w-4 h-4 rounded-full bg-destructive text-[10px] text-destructive-foreground flex items-center justify-center font-bold"
+          >
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </motion.span>
+        )}
+      </button>
 
-        {/* Expanded island content */}
-        <AnimatePresence>
-          {isExpanded && islandItem && (
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ delay: 0.1 }}
-              className="flex items-center gap-2 pr-3 min-w-0 flex-1"
-            >
+      {/* Dynamic island — drops below the bell on mobile, positioned absolutely */}
+      <AnimatePresence>
+        {isExpanded && islandItem && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scaleY: 0.8 }}
+            animate={{ opacity: 1, y: 0, scaleY: 1 }}
+            exit={{ opacity: 0, y: -8, scaleY: 0.8 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            className={`absolute z-[100] ${
+              isMobile
+                ? "top-full right-0 mt-2 w-72"
+                : "top-full right-0 mt-2 w-64"
+            }`}
+            style={{ transformOrigin: "top right" }}
+            onClick={() => {
+              setIslandItem(null);
+              setOpen(true);
+            }}
+          >
+            <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-secondary/90 backdrop-blur-xl border border-border/50 shadow-lg cursor-pointer">
               {React.createElement(getConfig(islandItem.type).icon, {
-                className: `w-3.5 h-3.5 shrink-0 ${getConfig(islandItem.type).color}`,
+                className: `w-4 h-4 shrink-0 ${getConfig(islandItem.type).color}`,
               })}
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-medium text-foreground truncate leading-tight">
+                <p className="text-xs font-medium text-foreground truncate leading-tight">
                   {islandItem.title}
                 </p>
                 {islandItem.message && (
@@ -231,10 +213,10 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }
               >
                 <X className="w-3 h-3 text-muted-foreground" />
               </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Notification panel */}
       <AnimatePresence>
@@ -247,7 +229,6 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }
             className="absolute top-full right-0 mt-2 w-80 max-h-[420px] z-[100]"
           >
             <div className="glass-strong rounded-2xl border border-border/50 shadow-xl overflow-hidden">
-              {/* Header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
                 <h3 className="text-sm font-semibold text-foreground">Notifications</h3>
                 {unreadCount > 0 && (
@@ -259,8 +240,6 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }
                   </button>
                 )}
               </div>
-
-              {/* List */}
               <div className="overflow-y-auto max-h-[350px] divide-y divide-border/30">
                 {notifications.length === 0 ? (
                   <div className="py-10 text-center text-muted-foreground text-sm">No notifications yet</div>
@@ -286,11 +265,8 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }
                         </div>
                       </div>
                     );
-
                     return notif.link_url ? (
-                      <Link key={notif.id} to={notif.link_url} onClick={() => setOpen(false)}>
-                        {content}
-                      </Link>
+                      <Link key={notif.id} to={notif.link_url} onClick={() => setOpen(false)}>{content}</Link>
                     ) : (
                       <div key={notif.id}>{content}</div>
                     );

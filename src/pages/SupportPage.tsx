@@ -375,9 +375,13 @@ const SupportPage: React.FC = () => {
                 className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 {msg.role === "assistant" && (
-                  <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-4 h-4 text-primary" />
-                  </div>
+                  aiConfig?.avatar_type === "image" && aiConfig?.avatar_url ? (
+                    <img src={aiConfig.avatar_url} alt={agentName} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                      {aiConfig?.avatar_emoji ? <span className="text-base">{aiConfig.avatar_emoji}</span> : <Bot className="w-4 h-4 text-primary" />}
+                    </div>
+                  )
                 )}
                 <div className={`max-w-[75%] rounded-2xl px-5 py-3 ${
                   msg.role === "user"
@@ -399,9 +403,13 @@ const SupportPage: React.FC = () => {
             ))}
             {loading && (
               <div className="flex gap-3">
-                <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
-                  <Bot className="w-4 h-4 text-primary" />
-                </div>
+                {aiConfig?.avatar_type === "image" && aiConfig?.avatar_url ? (
+                  <img src={aiConfig.avatar_url} alt={agentName} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
+                    {aiConfig?.avatar_emoji ? <span className="text-base">{aiConfig.avatar_emoji}</span> : <Bot className="w-4 h-4 text-primary" />}
+                  </div>
+                )}
                 <div className="bg-secondary rounded-2xl px-5 py-3 flex gap-1.5">
                   <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" />
                   <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
