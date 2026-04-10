@@ -3,7 +3,7 @@ import { useLayout } from "@/contexts/LayoutContext";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Shield, Truck, RotateCcw, Package, X, Sparkles, Zap } from "lucide-react";
+import { Star, Shield, Truck, RotateCcw, Package, X, Sparkles, Zap, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/lib/app-toast";
@@ -203,6 +203,33 @@ const ProductDetailPage: React.FC = () => {
       return data || [];
     },
     enabled: !!product?.id,
+  });
+
+  // Fetch applicable coupons and delivery offers for this product
+  const { data: applicableCoupons } = useQuery({
+    queryKey: ["product-coupons", product?.id, product?.category_id],
+    queryFn: async () => {
+      const { data } = await supabase.from("coupons").select("code, description, discount_type, discount_value, min_order_amount, target_categories, target_products")
+        .eq("is_active", true);
+      return (data || []).filter(c => {
+        const cats = (c as any).target_categories as string[] || [];
+        const prods = (c as any).target_products as string[] || [];
+        if (cats.length > 0 && product?.category_id && !cats.includes(product.category_id)) return false;
+        if (prods.length > 0 && product?.id && !prods.includes(product.id)) return false;
+        return true;
+      });
+    },
+    enabled: !!product?.id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: deliveryOffers } = useQuery({
+    queryKey: ["active-delivery-offers"],
+    queryFn: async () => {
+      const { data } = await supabase.from("delivery_offers").select("*").eq("is_active", true);
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000,
   });
 
   const hasVariants = variants.length > 0;
@@ -468,6 +495,39 @@ const ProductDetailPage: React.FC = () => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+      {/* Available offers & vouchers */}
+      {((applicableCoupons && applicableCoupons.length > 0) || (deliveryOffers && deliveryOffers.length > 0)) && layout !== "minimal" && (
+        <div className="space-y-2 pt-1">
+          <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+            <Tag className="w-3 h-3" /> Available Offers
+          </p>
+          <div className="space-y-1.5">
+            {applicableCoupons?.slice(0, 3).map(c => (
+              <div key={c.code} className="flex items-center gap-2 p-2 sm:p-2.5 rounded-xl border border-dashed border-primary/30 bg-primary/[0.03]">
+                <Tag className="w-3.5 h-3.5 text-primary shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono text-[10px] sm:text-xs font-bold text-primary">{c.code}</span>
+                    <Badge variant="secondary" className="text-[8px] sm:text-[9px] px-1.5">
+                      {c.discount_type === "percentage" ? `${c.discount_value}%` : `৳${Number(c.discount_value).toFixed(0)}`} off
+                    </Badge>
+                  </div>
+                  {c.description && <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate">{c.description}</p>}
+                </div>
+              </div>
+            ))}
+            {deliveryOffers?.slice(0, 2).map(offer => (
+              <div key={offer.id} className="flex items-center gap-2 p-2 sm:p-2.5 rounded-xl border border-dashed border-green-500/30 bg-green-500/[0.03]">
+                <Truck className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] sm:text-xs font-medium text-foreground">{offer.title}</p>
+                  {offer.description && <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate">{offer.description}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
