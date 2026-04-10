@@ -33,7 +33,11 @@ interface IslandItem {
   source: "notification" | "toast";
 }
 
-const NotificationBell: React.FC = () => {
+interface NotificationBellProps {
+  adminMode?: boolean;
+}
+
+const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }) => {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -43,13 +47,23 @@ const NotificationBell: React.FC = () => {
   const islandTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: notifications = [] } = useQuery({
-    queryKey: ["bell-notifications", user?.id],
+    queryKey: ["bell-notifications", user?.id, adminMode ? "admin" : "user"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("notifications")
-        .select("*")
-        .or(`user_id.eq.${user!.id},user_id.is.null`)
-        .not("type", "in", '("support","call")')
+        .select("*");
+
+      if (adminMode) {
+        // Admin: show all notifications (no user filter) including admin types
+        query = query.or(`user_id.is.null,user_id.eq.${user!.id}`);
+      } else {
+        // Public: user's own + broadcast, exclude admin types
+        query = query
+          .or(`user_id.eq.${user!.id},user_id.is.null`)
+          .not("type", "in", '("support","call","admin","order_status","low_stock")');
+      }
+
+      const { data, error } = await query
         .order("created_at", { ascending: false })
         .limit(20);
       if (error) throw error;
