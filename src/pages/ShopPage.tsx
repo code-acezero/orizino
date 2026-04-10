@@ -274,7 +274,7 @@ const ShopPage: React.FC = () => {
     <div className="space-y-6">
       {/* Categories */}
       <div>
-        <h3 className="font-display font-semibold text-foreground mb-3">Categories</h3>
+        <h3 className="font-semibold text-foreground mb-3" style={{ fontFamily: 'var(--font-title, var(--font-display))' }}>Categories</h3>
         <div className="space-y-0.5">
           <button
             onClick={() => { setSelectedCategory(""); setExpandedParent(null); setSelectedCustomFilters({}); setSelectedSizes([]); setSelectedColors([]); setSelectedTags([]); }}

@@ -43,7 +43,7 @@ const SiteThemeProvider = () => {
       const { data } = await supabase
         .from("site_settings")
         .select("key, value")
-        .in("key", ["site_theme", "site_mode", "site_customizer"]);
+        .in("key", ["site_theme", "site_mode", "site_customizer", "title_font"]);
       const map: Record<string, any> = {};
       data?.forEach((s) => {
         const val = s.value;
@@ -104,6 +104,19 @@ const SiteThemeProvider = () => {
       if (c.content_padding) html.style.setProperty("--content-padding", `${c.content_padding}px`);
       if (c.card_padding) html.style.setProperty("--card-padding", `${c.card_padding}px`);
       html.dataset.customizer = JSON.stringify(c);
+    }
+
+    // Title font
+    const titleFont = siteSettings.title_font;
+    if (titleFont && typeof titleFont === "string") {
+      html.style.setProperty("--font-title", `'${titleFont}', var(--font-display)`);
+      // Only load Google font if not a custom local font
+      const customFonts = ["Agraham","Bilderberg","Nevera","OrangeAvenue","PrimorStylish","ProdesStencil","Rostex","SingleGrinch","Transcity","Zaslia"];
+      if (!customFonts.includes(titleFont)) {
+        loadGoogleFont(titleFont);
+      }
+    } else {
+      html.style.removeProperty("--font-title");
     }
   }, [siteSettings]);
 

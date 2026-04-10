@@ -140,7 +140,7 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
                     <span className="text-primary-foreground font-bold text-sm">{siteName.charAt(0)}</span>
                   </div>
                 ) : null}
-                {siteName && <span className="font-display font-bold text-xl text-foreground hidden sm:inline">{siteName}</span>}
+                {siteName && <span className="font-bold text-xl text-foreground hidden sm:inline" style={{ fontFamily: 'var(--font-title, var(--font-display))' }}>{siteName}</span>}
               </Link>
 
               {/* Mobile: Search bar */}

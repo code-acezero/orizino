@@ -1,5 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* Custom display fonts */
+@font-face { font-family: 'Agraham'; src: url('/fonts/Agraham.otf') format('opentype'); font-display: swap; }
+@font-face { font-family: 'Bilderberg'; src: url('/fonts/Bilderberg.otf') format('opentype'); font-display: swap; }
+@font-face { font-family: 'Nevera'; src: url('/fonts/Nevera-Regular.otf') format('opentype'); font-display: swap; }
+@font-face { font-family: 'OrangeAvenue'; src: url('/fonts/OrangeAvenue.otf') format('opentype'); font-display: swap; }
+@font-face { font-family: 'PrimorStylish'; src: url('/fonts/PrimorStylish.otf') format('opentype'); font-display: swap; }
+@font-face { font-family: 'ProdesStencil'; src: url('/fonts/ProdesStencil.otf') format('opentype'); font-display: swap; }
+@font-face { font-family: 'Rostex'; src: url('/fonts/Rostex.otf') format('opentype'); font-display: swap; }
+@font-face { font-family: 'SingleGrinch'; src: url('/fonts/SingleGrinch.otf') format('opentype'); font-display: swap; }
+@font-face { font-family: 'Transcity'; src: url('/fonts/Transcity.otf') format('opentype'); font-display: swap; }
+@font-face { font-family: 'Zaslia'; src: url('/fonts/Zaslia.otf') format('opentype'); font-display: swap; }
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

@@ -154,7 +154,7 @@ const Footer: React.FC = () => {
                   : siteIconUrl ? <img src={siteIconUrl} alt={siteName} className="w-7 h-7 rounded-full object-cover" />
                   : siteName ? <div className="w-7 h-7 rounded-full bg-gradient-primary flex items-center justify-center"><span className="text-primary-foreground font-bold text-xs">{siteName.charAt(0)}</span></div>
                   : null}
-                {siteName && <span className="font-display font-bold text-foreground">{siteName}</span>}
+                {siteName && <span className="font-bold text-foreground" style={{ fontFamily: 'var(--font-title, var(--font-display))' }}>{siteName}</span>}
               </Link>
               {cfg.show_newsletter && (
                 <div className="flex gap-2 max-w-xs mb-3">
@@ -254,7 +254,7 @@ const Footer: React.FC = () => {
               : siteIconUrl ? <img src={siteIconUrl} alt={siteName} className="w-6 h-6 rounded-full object-cover" />
               : siteName ? <div className="w-6 h-6 rounded-full bg-gradient-primary flex items-center justify-center"><span className="text-primary-foreground font-bold text-[10px]">{siteName.charAt(0)}</span></div>
               : null}
-            {siteName && <span className="font-display font-semibold text-sm text-foreground">{siteName}</span>}
+            {siteName && <span className="font-semibold text-sm text-foreground" style={{ fontFamily: 'var(--font-title, var(--font-display))' }}>{siteName}</span>}
           </Link>
 
           {/* Link pills */}

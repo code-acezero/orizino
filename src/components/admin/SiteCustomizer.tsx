@@ -129,6 +129,10 @@ const fonts = [
   "Plus Jakarta Sans", "Urbanist", "Lexend", "Nunito Sans",
   "Quicksand", "Raleway", "Crimson Pro", "Libre Baskerville",
   "Josefin Sans", "Bebas Neue", "Archivo", "Work Sans",
+  "── Custom ──",
+  "Agraham", "Bilderberg", "Nevera", "OrangeAvenue",
+  "PrimorStylish", "ProdesStencil", "Rostex", "SingleGrinch",
+  "Transcity", "Zaslia",
 ];
 
 const fontWeights = [

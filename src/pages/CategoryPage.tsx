@@ -181,7 +181,7 @@ const CategoryPage: React.FC = () => {
               <img src={category.icon_url} alt="" className="w-14 h-14 rounded-2xl object-contain bg-background/50 p-2" />
             )}
             <div>
-              <h1 className="text-3xl md:text-5xl font-bold font-display text-foreground drop-shadow-lg">
+              <h1 className="text-3xl md:text-5xl font-bold text-foreground drop-shadow-lg" style={{ fontFamily: 'var(--font-title, var(--font-display))' }}>
                 {category.name}
               </h1>
               {category.description && (
