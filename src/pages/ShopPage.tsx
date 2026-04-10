@@ -261,7 +261,7 @@ const ShopPage: React.FC = () => {
         <h3 className="font-display font-semibold text-foreground mb-3">Categories</h3>
         <div className="space-y-0.5">
           <button
-            onClick={() => { setSelectedCategory(""); setExpandedParent(null); setSelectedCustomFilters({}); }}
+            onClick={() => { setSelectedCategory(""); setExpandedParent(null); setSelectedCustomFilters({}); setSelectedSizes([]); setSelectedColors([]); setSelectedTags([]); }}
             className={`flex items-center gap-2 w-full text-left px-3 py-2.5 rounded-xl text-sm transition-colors ${!selectedCategory ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"}`}
           >
             All Categories
