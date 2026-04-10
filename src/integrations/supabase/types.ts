@@ -307,11 +307,16 @@ export type Database = {
           discount_type: string
           discount_value: number
           expires_at: string | null
+          first_order_only: boolean
           id: string
           is_active: boolean
           max_discount_amount: number | null
+          min_items: number | null
           min_order_amount: number | null
+          per_user_limit: number | null
           starts_at: string | null
+          target_categories: string[] | null
+          target_products: string[] | null
           usage_limit: number | null
           used_count: number | null
         }
@@ -322,11 +327,16 @@ export type Database = {
           discount_type?: string
           discount_value?: number
           expires_at?: string | null
+          first_order_only?: boolean
           id?: string
           is_active?: boolean
           max_discount_amount?: number | null
+          min_items?: number | null
           min_order_amount?: number | null
+          per_user_limit?: number | null
           starts_at?: string | null
+          target_categories?: string[] | null
+          target_products?: string[] | null
           usage_limit?: number | null
           used_count?: number | null
         }
@@ -337,11 +347,16 @@ export type Database = {
           discount_type?: string
           discount_value?: number
           expires_at?: string | null
+          first_order_only?: boolean
           id?: string
           is_active?: boolean
           max_discount_amount?: number | null
+          min_items?: number | null
           min_order_amount?: number | null
+          per_user_limit?: number | null
           starts_at?: string | null
+          target_categories?: string[] | null
+          target_products?: string[] | null
           usage_limit?: number | null
           used_count?: number | null
         }
