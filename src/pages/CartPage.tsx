@@ -108,8 +108,36 @@ const CartPage: React.FC = () => {
     setCouponLoading(false);
     if (!data || error) { toast({ title: "Invalid coupon code", variant: "destructive" }); return; }
     if (data.expires_at && new Date(data.expires_at) < new Date()) { toast({ title: "Coupon expired", variant: "destructive" }); return; }
-    if (data.usage_limit && data.used_count >= data.usage_limit) { toast({ title: "Coupon usage limit reached", variant: "destructive" }); return; }
+    if (data.starts_at && new Date(data.starts_at) > new Date()) { toast({ title: "Coupon not yet active", variant: "destructive" }); return; }
+    if (data.usage_limit && (data.used_count ?? 0) >= data.usage_limit) { toast({ title: "Coupon usage limit reached", variant: "destructive" }); return; }
     if (data.min_order_amount && subtotal < Number(data.min_order_amount)) { toast({ title: `Min order ${formatPrice(Number(data.min_order_amount))}`, variant: "destructive" }); return; }
+
+    // Check min items
+    const itemCount = cartItems?.reduce((s, i) => s + i.quantity, 0) || 0;
+    if ((data as any).min_items && itemCount < (data as any).min_items) { toast({ title: `Minimum ${(data as any).min_items} items required`, variant: "destructive" }); return; }
+
+    // Check category targeting
+    const targetCats = (data as any).target_categories as string[] || [];
+    if (targetCats.length > 0 && cartItems) {
+      const cartCatIds = new Set(cartItems.map(i => (i.products as any)?.category_id).filter(Boolean));
+      const hasMatchingCat = targetCats.some(c => cartCatIds.has(c));
+      if (!hasMatchingCat) { toast({ title: "Coupon not applicable to items in your cart", variant: "destructive" }); return; }
+    }
+
+    // Check product targeting
+    const targetProds = (data as any).target_products as string[] || [];
+    if (targetProds.length > 0 && cartItems) {
+      const cartProdIds = new Set(cartItems.map(i => i.product_id));
+      const hasMatchingProd = targetProds.some(p => cartProdIds.has(p));
+      if (!hasMatchingProd) { toast({ title: "Coupon not applicable to items in your cart", variant: "destructive" }); return; }
+    }
+
+    // Check first order only
+    if ((data as any).first_order_only && user) {
+      const { count } = await supabase.from("orders").select("*", { count: "exact", head: true }).eq("user_id", user.id);
+      if ((count || 0) > 0) { toast({ title: "This coupon is only for first-time orders", variant: "destructive" }); return; }
+    }
+
     setAppliedCoupon(data);
     toast({ title: "Coupon applied!", description: data.description || `${data.discount_type === "percentage" ? `${data.discount_value}% off` : formatPrice(Number(data.discount_value)) + " off"}` });
   };
