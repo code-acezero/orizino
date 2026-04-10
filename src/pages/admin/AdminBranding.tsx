@@ -142,7 +142,26 @@ const AdminBranding = () => {
         </Button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      {/* Site Identity */}
+      <Card className="glass">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Site Identity</CardTitle>
+          <CardDescription className="text-xs">Name, description, and contact info</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div><Label className="text-xs">Site Name</Label><Input value={siteName} onChange={(e) => setSiteName(e.target.value)} placeholder="Your Brand Name" /></div>
+            <div><Label className="text-xs">Contact Email</Label><Input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="support@yoursite.com" /></div>
+          </div>
+          <div><Label className="text-xs">Site Description</Label><Textarea value={siteDescription} onChange={(e) => setSiteDescription(e.target.value)} rows={2} placeholder="Your premium online marketplace" /></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div><Label className="text-xs">Contact Phone</Label><Input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="+1 234 567 890" /></div>
+            <div><Label className="text-xs">Support URL</Label><Input value={supportUrl} onChange={(e) => setSupportUrl(e.target.value)} placeholder="https://support.yoursite.com" /></div>
+          </div>
+          <div><Label className="text-xs">Business Address</Label><Textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={2} placeholder="123 Main St, City, Country" /></div>
+        </CardContent>
+      </Card>
+
         {/* Left: Upload */}
         <div className="space-y-4">
           <Card className="glass">
