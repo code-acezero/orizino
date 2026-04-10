@@ -33,6 +33,11 @@ const LOGO_EFFECTS = [
   { id: "blur-bg", label: "Frosted", desc: "Blurred background" },
 ];
 
+const CUSTOM_FONTS = [
+  "Agraham", "Bilderberg", "Nevera", "OrangeAvenue", "PrimorStylish",
+  "ProdesStencil", "Rostex", "SingleGrinch", "Transcity", "Zaslia",
+];
+
 const AdminBranding = () => {
   const qc = useQueryClient();
   const [logoUrl, setLogoUrl] = useState("");
@@ -41,11 +46,12 @@ const AdminBranding = () => {
   const [logoEffect, setLogoEffect] = useState("none");
   const [siteName, setSiteName] = useState("");
   const [titleColors, setTitleColors] = useState<Record<number, string>>({});
+  const [titleFont, setTitleFont] = useState("");
 
   const { data: settings } = useQuery({
     queryKey: ["admin-branding"],
     queryFn: async () => {
-      const { data } = await supabase.from("site_settings").select("key, value").in("key", ["logo_url", "site_icon_url", "logo_display_style", "logo_effect", "site_name", "title_letter_colors"]);
+      const { data } = await supabase.from("site_settings").select("key, value").in("key", ["logo_url", "site_icon_url", "logo_display_style", "logo_effect", "site_name", "title_letter_colors", "title_font"]);
       const map: Record<string, any> = {};
       data?.forEach((s) => {
         const val = s.value;
@@ -66,6 +72,7 @@ const AdminBranding = () => {
       if (settings.title_letter_colors && typeof settings.title_letter_colors === "object") {
         setTitleColors(settings.title_letter_colors as Record<number, string>);
       }
+      setTitleFont((settings.title_font as string) || "");
     }
   }, [settings]);
 
@@ -77,6 +84,7 @@ const AdminBranding = () => {
         { key: "logo_display_style", value: logoStyle },
         { key: "logo_effect", value: logoEffect },
         { key: "title_letter_colors", value: titleColors },
+        { key: "title_font", value: titleFont },
       ];
       for (const item of items) {
         await supabase.from("site_settings").upsert({ key: item.key, value: item.value as any, updated_at: new Date().toISOString() }, { onConflict: "key" });
