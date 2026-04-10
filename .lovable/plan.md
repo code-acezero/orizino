@@ -1,125 +1,101 @@
 
-# Comprehensive Site Hardening, Moderator Roles, Custom Fonts, Source Protection & SEO Sitelinks
 
-## Summary
-Complete unfinished custom font integration, add moderator role-based access to admin sidebar, add source code protection, add Google Sitelinks SearchBox schema, and fix remaining issues.
+# Fly-to-Cart Animation + Immersive 3D Landing Page Rebuild
 
----
+## 1. Fly-to-Cart Animation
 
-## 1. Custom Fonts Integration (Unfinished from Previous Task)
+When a user clicks "Add to Cart" on a `ProductCard`, the product thumbnail clones itself, shrinks and arcs toward the cart icon in the navbar, then disappears with a pulse effect on the cart badge.
 
-Font files exist at `public/fonts/` (10 OTF files) but have zero integration.
+**Implementation:**
+- **New component `src/components/FlyToCartAnimation.tsx`**: A portal-rendered component that creates an absolutely positioned clone of the product image, animates it via `framer-motion` from the click position to the cart icon's position (queried via `document.getElementById("nav-cart-icon")`), then removes itself.
+- **`src/components/ProductCard.tsx`**: After successful `addToCart`, capture the thumbnail element's bounding rect and trigger the fly animation via a shared event emitter or state callback. Render `<FlyToCartAnimation>` conditionally.
+- **`src/components/Navbar.tsx`**: Add `id="nav-cart-icon"` to the cart `<Link>` element so the animation can target it. Add a brief scale-pulse on the cart badge when a fly animation completes (listen for a custom DOM event `cart-fly-landed`).
+- **`src/pages/ProductDetailPage.tsx`**: Wire the same fly animation for the "Add to Cart" button on the product detail page.
 
-**Changes:**
-- **`src/index.css`**: Add `@font-face` declarations for all 10 custom fonts (Agraham, Bilderberg, Nevera, OrangeAvenue, PrimorStylish, ProdesStencil, Rostex, SingleGrinch, Transcity, Zaslia)
-- **`src/components/admin/SiteCustomizer.tsx`**: Add custom fonts to the `fonts` array with a "Custom" separator so they appear in heading/body font selectors
-- **`src/pages/admin/AdminBranding.tsx`**: Add a "Title Font" selector allowing admins to pick a custom display font specifically for the site title/name, category titles, and product titles. Store as `title_font` in `site_settings`
-- **`src/components/SiteThemeProvider.tsx`**: Read `title_font` setting and apply as a CSS custom property `--font-title` on `<html>`
-- **`src/components/Navbar.tsx`**: Apply `font-family: var(--font-title)` to the site name text
-- **`src/components/Footer.tsx`**: Apply title font to brand name
-- **`src/pages/ShopPage.tsx`** / **`src/pages/CategoryPage.tsx`** / **`src/pages/ProductDetailPage.tsx`**: Apply `--font-title` to category and product title headings
-
-**Database**: Update `site_settings` public read RLS policy to include `title_font`.
+**Animation path**: Use `framer-motion` `animate` with keyframes — scale from 1→0.3, opacity 1→0.7→0, position from source rect to cart icon rect with a slight upward arc (bezier-like via intermediate keyframe).
 
 ---
 
-## 2. Moderator Role-Based Admin Access
+## 2. Immersive 3D Landing Page Rebuild
 
-Currently `AdminRoute` only checks for `admin` role. Moderators should see a subset of pages.
+Complete rebuild of `src/pages/LandingPage.tsx` with a fantasy/artistic design. The admin `landing_config` data contract stays the same so existing admin controls keep working.
 
-**Changes:**
-- **`src/components/AdminRoute.tsx`**: Check for both `admin` and `moderator` roles. Pass the role down via context or prop.
-- **`src/components/admin/AdminSidebar.tsx`**: Fetch user role. Moderators see only: Dashboard, Products, Categories, Orders, Coupons, Delivery Offers, Banners, Showcase, Reviews, Announcements, Live Support. Hide: Users, User Promos, Shipping, Landing Page, Home Page, Footer, CMS Pages, Requests, Call Settings, AI Agent, Branding, Mobile UI, API Keys, Settings.
-- **`src/components/admin/AdminLayout.tsx`**: Show "Moderator" instead of "Administrator" for moderator role.
-- **`src/App.tsx`**: No route changes needed since sidebar hides links; but add route-level guards for admin-only pages to prevent direct URL access by moderators.
+**Sections (top to bottom):**
 
----
+1. **Floating Glass Nav** (keep existing, minor style tweaks)
 
-## 3. Source Code Protection (DevTools Deterrent)
+2. **Hero — Full-viewport immersive scene**
+   - Large animated gradient mesh background with floating 3D geometric shapes (CSS `perspective` + `transform-style: preserve-3d` + framer-motion rotations)
+   - Glowing particle dots drifting upward (reuse `ParticleOverlay` concept)
+   - Hero text with staggered letter-by-letter animation, gradient text
+   - Scroll indicator arrow at bottom
 
-Add a lightweight script that detects DevTools opening and shows humorous messages in the console instead of useful debugging info.
+3. **Brand Story / About Us** (new section)
+   - Split layout: left side has animated text reveal on scroll, right side has a floating product image with parallax
+   - "More than a Brand, an Evolution" tagline with typewriter effect
+   - Subtle horizontal scroll-driven progress line
 
-**Changes:**
-- **`src/main.tsx`**: In production mode, add:
-  - `console.log` override that shows funny messages ("Nice try! The source code is on vacation.")
-  - Disable right-click context menu with a friendly toast
-  - Add console warning messages with styled ASCII art
-  - Note: This is a deterrent, not real security. The actual security is server-side RLS.
+4. **Mission & Vision** (new section)
+   - Two glass cards side by side with hover 3D tilt (like ProductCard's mouse tracking)
+   - Mission card with target icon, Vision card with eye icon
+   - Cards float in from left/right on scroll
 
----
+5. **Featured Products Preview** (new section)
+   - Horizontal scroll carousel of 4-6 featured products from Supabase
+   - Each card has hover parallax and "Shop Now" CTA
+   - Section header with animated underline
 
-## 4. Google Sitelinks SearchBox Schema
+6. **Stats Counter** (enhanced existing)
+   - Numbers animate counting up when scrolled into view using `useInView` + `animate`
+   - Glass card background with subtle glow
 
-Add structured data so Google can show sitelinks with a search box in search results.
+7. **Features Grid** (enhanced existing)
+   - 2x2 grid with staggered entrance, hover glow effect on cards
+   - Icons with animated gradient background
 
-**Changes:**
-- **`index.html`**: Already has SearchAction schema (line 47-52). Verify it matches Google's requirements.
-- **`src/hooks/use-seo-meta.ts`**: The existing hook handles per-page SEO. Add a `WebSite` schema with `SearchAction` to the home page SEO if not already present in structured_data.
-- **`public/robots.txt`**: Already correct. No changes needed.
+8. **Categories** (enhanced existing)
+   - Larger cards with image backgrounds and glass overlay text
+   - Hover zoom effect on images
 
----
+9. **Testimonials** (enhanced existing)
+   - Horizontal auto-scrolling marquee style
+   - Avatar circles with quote cards
 
-## 5. Fixes & Polish
+10. **CTA Section** (enhanced)
+    - Full-width gradient background with floating shapes
+    - Pulsing CTA button with glow
 
-### 5a. LandingPage Footer
-- **`src/pages/LandingPage.tsx`**: Still renders `<Footer />` directly (line 357). This is correct since LandingPage is outside MainLayout, but ensure it doesn't double-render.
+11. **Footer** (existing)
 
-### 5b. Console Warning Fix
-- **`src/components/ImageUpload.tsx`**: Add `React.forwardRef` to fix the "Function components cannot be given refs" warning from AdminBranding.
+**New data fields** added to `LandingConfig` interface (with defaults so existing configs don't break):
+- `about_title`, `about_text` (About Us content)
+- `mission_text`, `vision_text` (Mission/Vision)
+- `show_about`, `show_mission_vision`, `show_featured_products` (toggles)
 
-### 5c. Badge ref warning
-- **`src/components/ui/badge.tsx`**: Already using CVA; ensure it forwards refs properly.
-
-### 5d. Admin Panel Cleanup
-- Remove any duplicate sidebar entries (Footer appears in both Content group in sidebar and as a route - verify no duplication)
-- Ensure admin header says site name from settings instead of hardcoded "Zero Marketplace Admin"
-
-### 5e. Mobile Optimizations
-- Ensure `AIChatWidget` doesn't overlap with `BottomNav` on mobile
-- Check chat widget z-index layering
+**Admin page `src/pages/admin/AdminLanding.tsx`**: Add new tabs for About Us and Mission/Vision content editing.
 
 ---
 
 ## Technical Details
 
-### Migration SQL
-```sql
--- Update site_settings public read policy to include title_font
-DROP POLICY IF EXISTS "Public can view non-sensitive settings" ON public.site_settings;
-CREATE POLICY "Public can view non-sensitive settings"
-ON public.site_settings FOR SELECT TO public
-USING (key = ANY (ARRAY[
-  'site_name','site_description','logo_url','site_icon_url','favicon_url',
-  'theme','primary_color','accent_color','font_family',
-  'announcement_bar','social_links','contact_info',
-  'ai_agent_config','currency_config',
-  'homepage_layout','seo_title','seo_description','seo_keywords','og_image_url',
-  'site_theme','site_mode','site_customizer',
-  'mobile_ui_config','logo_display_style','logo_effect',
-  'title_letter_colors','showcase_config',
-  'home_category_sections','home_sales_config','home_new_arrivals',
-  'home_layout_config','home_section_order',
-  'product_page_layout','notification_order','popup_order',
-  'voice_call_config','seo_pages','seo_global',
-  'footer_config','title_font'
-]));
-```
+### Files to Create
+| File | Purpose |
+|------|---------|
+| `src/components/FlyToCartAnimation.tsx` | Animated clone that flies product image to cart icon |
 
-### Files Summary
-| File | Action |
+### Files to Edit
+| File | Change |
 |------|--------|
-| `src/index.css` | Edit - add @font-face declarations |
-| `src/components/admin/SiteCustomizer.tsx` | Edit - add custom fonts to selector |
-| `src/pages/admin/AdminBranding.tsx` | Edit - add title font picker |
-| `src/components/SiteThemeProvider.tsx` | Edit - apply title_font CSS var |
-| `src/components/Navbar.tsx` | Edit - use --font-title on site name |
-| `src/components/Footer.tsx` | Edit - use --font-title on brand |
-| `src/pages/ShopPage.tsx` | Edit - apply title font to category headers |
-| `src/pages/CategoryPage.tsx` | Edit - apply title font |
-| `src/pages/ProductDetailPage.tsx` | Edit - apply title font to product name |
-| `src/components/AdminRoute.tsx` | Edit - support moderator role |
-| `src/components/admin/AdminSidebar.tsx` | Edit - role-based menu filtering |
-| `src/components/admin/AdminLayout.tsx` | Edit - show role label |
-| `src/main.tsx` | Edit - add source protection in prod |
-| `src/components/ImageUpload.tsx` | Edit - add forwardRef |
-| Migration | Create - update RLS policy |
+| `src/components/ProductCard.tsx` | Trigger fly animation on add-to-cart success |
+| `src/components/Navbar.tsx` | Add `id="nav-cart-icon"`, pulse effect on land |
+| `src/pages/LandingPage.tsx` | Complete rebuild with 3D immersive sections |
+| `src/pages/admin/AdminLanding.tsx` | Add About/Mission/Vision config tabs |
+| `src/pages/ProductDetailPage.tsx` | Wire fly-to-cart on detail page |
+
+### Performance Considerations
+- All 3D transforms use `will-change: transform` and `transform-style: preserve-3d`
+- Particle effects use CSS animations (not JS RAF) for 60fps
+- `viewport={{ once: true }}` on all scroll animations to avoid re-triggers
+- Lazy load featured product images
+- Reduce motion: respect `prefers-reduced-motion` media query
+
