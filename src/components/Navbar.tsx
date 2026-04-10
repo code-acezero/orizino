@@ -36,7 +36,7 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
   const { data: siteSettings } = useQuery({
     queryKey: ["site-settings-nav"],
     queryFn: async () => {
-      const { data } = await supabase.from("site_settings").select("key, value").in("key", ["site_name", "logo_url", "site_icon_url", "logo_display_style"]);
+      const { data } = await supabase.from("site_settings").select("key, value").in("key", ["site_name", "logo_url", "site_icon_url", "logo_display_style", "logo_effect", "title_letter_colors"]);
       const map: Record<string, any> = {};
       data?.forEach((s) => {
         const val = s.value;
@@ -51,6 +51,21 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
   const logoUrl = (siteSettings?.logo_url as string) || "";
   const siteIconUrl = (siteSettings?.site_icon_url as string) || "";
   const logoStyle = (siteSettings?.logo_display_style as string) || "rounded";
+  const logoEffect = (siteSettings?.logo_effect as string) || "none";
+  const titleLetterColors = (siteSettings?.title_letter_colors && typeof siteSettings.title_letter_colors === "object") ? siteSettings.title_letter_colors as Record<number, string> : {};
+
+  const getLogoEffectClass = (effect: string) => {
+    switch (effect) {
+      case "glossy": return "after:absolute after:inset-0 after:bg-gradient-to-b after:from-white/20 after:to-transparent";
+      case "glow": return "ring-2 ring-primary/40 shadow-[0_0_16px_hsl(var(--primary)/0.3)]";
+      case "shadow": return "shadow-[0_4px_16px_hsl(0_0%_0%/0.4)]";
+      case "border": return "ring-2 ring-primary/60";
+      case "grayscale": return "grayscale";
+      case "negative": return "invert";
+      case "blur-bg": return "backdrop-blur-sm bg-background/30";
+      default: return "";
+    }
+  };
 
   const { data: userProfile } = useQuery({
     queryKey: ["user-profile-nav", user?.id],
@@ -131,16 +146,24 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
             <div className="flex items-center h-16 gap-4">
               {/* Logo */}
               <Link to="/home" className="flex items-center gap-2 shrink-0">
-                {logoUrl ? (
-                  <img src={logoUrl} alt={siteName} className={`w-8 h-8 ${logoShapeClass} object-cover`} />
+              {logoUrl ? (
+                  <img src={logoUrl} alt={siteName} className={`w-8 h-8 ${logoShapeClass} object-cover relative ${getLogoEffectClass(logoEffect)}`} />
                 ) : siteIconUrl ? (
-                  <img src={siteIconUrl} alt={siteName} className={`w-8 h-8 ${logoShapeClass} object-cover`} />
+                  <img src={siteIconUrl} alt={siteName} className={`w-8 h-8 ${logoShapeClass} object-cover relative ${getLogoEffectClass(logoEffect)}`} />
                 ) : siteName ? (
-                  <div className={`w-8 h-8 ${logoShapeClass} bg-gradient-primary flex items-center justify-center`}>
+                  <div className={`w-8 h-8 ${logoShapeClass} bg-gradient-primary flex items-center justify-center relative ${getLogoEffectClass(logoEffect)}`}>
                     <span className="text-primary-foreground font-bold text-sm">{siteName.charAt(0)}</span>
                   </div>
                 ) : null}
-                {siteName && <span className="font-bold text-xl text-foreground hidden sm:inline" style={{ fontFamily: 'var(--font-title, var(--font-display))' }}>{siteName}</span>}
+                {siteName && (
+                  <span className="font-bold text-xl text-foreground hidden sm:inline" style={{ fontFamily: 'var(--font-title, var(--font-display))' }}>
+                    {Object.keys(titleLetterColors).length > 0
+                      ? siteName.split("").map((char, i) => (
+                          <span key={i} style={titleLetterColors[i] ? { color: titleLetterColors[i] } : undefined}>{char}</span>
+                        ))
+                      : siteName}
+                  </span>
+                )}
               </Link>
 
               {/* Mobile: Search bar */}
