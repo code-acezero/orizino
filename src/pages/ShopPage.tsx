@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, ChevronDown, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +26,15 @@ const fallbackIcons: Record<string, string> = {
   "sports-outdoors": catSports,
 };
 
+const COLOR_HEX: Record<string, string> = {
+  black: "#000000", white: "#ffffff", red: "#ef4444", blue: "#3b82f6",
+  green: "#22c55e", yellow: "#eab308", orange: "#f97316", pink: "#ec4899",
+  purple: "#a855f7", gray: "#6b7280", grey: "#6b7280", navy: "#1e3a5f",
+  charcoal: "#36454f", beige: "#f5f5dc", brown: "#8b4513", olive: "#808000",
+  teal: "#14b8a6", maroon: "#800000", cream: "#fffdd0", khaki: "#c3b091",
+};
+const getColorHex = (name: string) => COLOR_HEX[name.toLowerCase()] || "#888888";
+
 const sortOptions = [
   { label: "Newest", value: "newest" },
   { label: "Price: Low to High", value: "price_asc" },
@@ -43,6 +52,8 @@ const ShopPage: React.FC = () => {
   const [expandedParent, setExpandedParent] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
 
   const { data: siteSettings } = useQuery({
     queryKey: ["site-settings-name"],
@@ -72,6 +83,44 @@ const ShopPage: React.FC = () => {
 
   const parentCategories = categories?.filter((c) => !c.parent_id) || [];
   const getChildren = (parentId: string) => categories?.filter((c) => c.parent_id === parentId) || [];
+
+  // Fetch all active variant options for filters
+  const { data: allVariants } = useQuery({
+    queryKey: ["shop-variant-filters"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("product_variants")
+        .select("product_id, size, color")
+        .eq("is_active", true);
+      return data || [];
+    },
+    staleTime: 60000,
+  });
+
+  // Derive unique sizes and colors across all products
+  const availableSizes = useMemo(() => {
+    if (!allVariants) return [];
+    return [...new Set(allVariants.map(v => v.size).filter(Boolean))] as string[];
+  }, [allVariants]);
+
+  const availableColors = useMemo(() => {
+    if (!allVariants) return [];
+    return [...new Set(allVariants.map(v => v.color).filter(Boolean))] as string[];
+  }, [allVariants]);
+
+  // Product IDs that match selected variant filters
+  const variantFilteredProductIds = useMemo(() => {
+    if (!allVariants || (selectedSizes.length === 0 && selectedColors.length === 0)) return null;
+    return new Set(
+      allVariants
+        .filter(v => {
+          const matchSize = selectedSizes.length === 0 || (v.size && selectedSizes.includes(v.size));
+          const matchColor = selectedColors.length === 0 || (v.color && selectedColors.includes(v.color));
+          return matchSize && matchColor;
+        })
+        .map(v => v.product_id)
+    );
+  }, [allVariants, selectedSizes, selectedColors]);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["products", selectedCategory, sort],
@@ -103,9 +152,10 @@ const ShopPage: React.FC = () => {
     return products.filter((p) => {
       const matchesSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesPrice = p.price >= priceRange[0] && p.price <= priceRange[1];
-      return matchesSearch && matchesPrice;
+      const matchesVariants = !variantFilteredProductIds || variantFilteredProductIds.has(p.id);
+      return matchesSearch && matchesPrice && matchesVariants;
     });
-  }, [products, searchQuery, priceRange]);
+  }, [products, searchQuery, priceRange, variantFilteredProductIds]);
 
   const getCategoryIcon = (cat: { icon_url: string | null; icon: string | null; slug: string }) => {
     if (cat.icon_url) return cat.icon_url;
@@ -113,17 +163,31 @@ const ShopPage: React.FC = () => {
   };
 
   const handleParentClick = (catId: string) => {
-    if (expandedParent === catId) {
-      setExpandedParent(null);
-    } else {
-      setExpandedParent(catId);
-    }
-    // Also select this parent category
+    setExpandedParent(expandedParent === catId ? null : catId);
     setSelectedCategory(catId);
   };
 
   const handleSubClick = (subId: string) => {
     setSelectedCategory(subId);
+  };
+
+  const toggleSize = (size: string) => {
+    setSelectedSizes(prev => prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size]);
+  };
+
+  const toggleColor = (color: string) => {
+    setSelectedColors(prev => prev.includes(color) ? prev.filter(c => c !== color) : [...prev, color]);
+  };
+
+  const hasActiveFilters = selectedSizes.length > 0 || selectedColors.length > 0 || selectedCategory || searchQuery || priceRange[0] > 0 || priceRange[1] < 10000;
+
+  const clearAllFilters = () => {
+    setSelectedSizes([]);
+    setSelectedColors([]);
+    setSelectedCategory("");
+    setExpandedParent(null);
+    setSearchQuery("");
+    setPriceRange([0, 10000]);
   };
 
   return (
@@ -163,11 +227,39 @@ const ShopPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Active filter chips */}
+        {hasActiveFilters && (
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            {selectedSizes.map(size => (
+              <button
+                key={`size-${size}`}
+                onClick={() => toggleSize(size)}
+                className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium"
+              >
+                Size: {size} <X className="w-3 h-3" />
+              </button>
+            ))}
+            {selectedColors.map(color => (
+              <button
+                key={`color-${color}`}
+                onClick={() => toggleColor(color)}
+                className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium"
+              >
+                <span className="w-2.5 h-2.5 rounded-full border border-border/50" style={{ backgroundColor: getColorHex(color) }} />
+                {color} <X className="w-3 h-3" />
+              </button>
+            ))}
+            <button onClick={clearAllFilters} className="text-xs text-muted-foreground hover:text-foreground underline ml-1">
+              Clear all
+            </button>
+          </div>
+        )}
+
         <div className="flex gap-8">
           {/* Sidebar Filters */}
           <aside className={`${showFilters ? "block" : "hidden"} md:block w-full md:w-64 shrink-0`}>
             <div className="glass-strong rounded-3xl p-6 space-y-6 sticky top-24">
-              {/* Categories — collapsible parent/child */}
+              {/* Categories */}
               <div>
                 <h3 className="font-display font-semibold text-foreground mb-3">Categories</h3>
                 <div className="space-y-0.5">
@@ -205,7 +297,6 @@ const ShopPage: React.FC = () => {
                           )}
                         </button>
 
-                        {/* Subcategories */}
                         <AnimatePresence>
                           {isExpanded && children.length > 0 && (
                             <motion.div
@@ -241,6 +332,50 @@ const ShopPage: React.FC = () => {
                   })}
                 </div>
               </div>
+
+              {/* Size Filter */}
+              {availableSizes.length > 0 && (
+                <div>
+                  <h3 className="font-display font-semibold text-foreground mb-3">Size</h3>
+                  <div className="flex flex-wrap gap-1.5">
+                    {availableSizes.map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => toggleSize(size)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
+                          selectedSizes.includes(size)
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Color Filter */}
+              {availableColors.length > 0 && (
+                <div>
+                  <h3 className="font-display font-semibold text-foreground mb-3">Color</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {availableColors.map((color) => (
+                      <button
+                        key={color}
+                        onClick={() => toggleColor(color)}
+                        title={color}
+                        className={`w-7 h-7 rounded-full border-2 transition-all ${
+                          selectedColors.includes(color)
+                            ? "border-primary ring-2 ring-primary/30 scale-110"
+                            : "border-border/50 hover:border-foreground/30"
+                        }`}
+                        style={{ backgroundColor: getColorHex(color) }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Price Range */}
               <div>
