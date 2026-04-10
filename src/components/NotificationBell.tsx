@@ -88,6 +88,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }
       const latest = notifications[0];
       if (latest && !latest.is_read && latest.id !== lastSeenId) {
         setLastSeenId(latest.id);
+        playNotificationSound();
         showIsland({
           id: latest.id,
           title: latest.title,
