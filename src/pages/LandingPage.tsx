@@ -1,12 +1,12 @@
 import React, { useRef, useEffect, useState } from "react";
-import Footer from "@/components/Footer";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring, animate } from "framer-motion";
-import { ArrowRight, ShoppingBag, Shield, Truck, Sparkles, Star, Zap, Globe, Package, Users, Heart, ChevronRight, ChevronDown, Target, Eye } from "lucide-react";
+import { ArrowRight, Sparkles, Star, Zap, Globe, Package, Users, Heart, ChevronRight, ChevronDown, Target, Eye, ShoppingBag, Shield, Truck } from "lucide-react";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const iconMap: Record<string, any> = { ShoppingBag, Shield, Truck, Sparkles, Star, Zap, Globe, Package, Users, Heart };
 
@@ -27,7 +27,7 @@ interface LandingConfig {
   show_cta: boolean;
   show_about: boolean;
   show_mission_vision: boolean;
-  show_featured_products: boolean;
+  show_brand_showcase: boolean;
   cta_title: string;
   cta_subtitle: string;
   cta_button: string;
@@ -36,6 +36,11 @@ interface LandingConfig {
   about_text: string;
   mission_text: string;
   vision_text: string;
+  showcase_image_url: string;
+  showcase_headline: string;
+  showcase_description: string;
+  showcase_cta_text: string;
+  showcase_cta_link: string;
 }
 
 const defaultLandingConfig: LandingConfig = {
@@ -43,14 +48,14 @@ const defaultLandingConfig: LandingConfig = {
   hero_cta_primary: "Start Shopping", hero_cta_secondary: "Explore Categories", hero_bg_url: "",
   features: [], stats: [], show_stats: true, show_features: true, show_categories: true,
   show_testimonials: false, show_cta: true, show_about: true, show_mission_vision: true,
-  show_featured_products: true,
+  show_brand_showcase: false,
   cta_title: "", cta_subtitle: "", cta_button: "Create Account", testimonials: [],
-  about_title: "Our Story", about_text: "We believe in curating only the finest products for our community.",
-  mission_text: "To make premium quality accessible to everyone, everywhere.",
-  vision_text: "A world where every purchase brings joy and lasting value.",
+  about_title: "", about_text: "",
+  mission_text: "", vision_text: "",
+  showcase_image_url: "", showcase_headline: "", showcase_description: "",
+  showcase_cta_text: "Shop Now", showcase_cta_link: "/home",
 };
 
-// Animated counter
 const AnimatedCounter: React.FC<{ value: string; inView: boolean }> = ({ value, inView }) => {
   const num = parseInt(value.replace(/[^0-9]/g, ""));
   const suffix = value.replace(/[0-9]/g, "");
@@ -64,17 +69,14 @@ const AnimatedCounter: React.FC<{ value: string; inView: boolean }> = ({ value, 
   return <span>{display}{suffix}</span>;
 };
 
-// 3D tilt card
 const TiltCard: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = "" }) => {
   const ref = useRef<HTMLDivElement>(null);
   const rotX = useMotionValue(0);
   const rotY = useMotionValue(0);
   const sRotX = useSpring(rotX, { stiffness: 200, damping: 20 });
   const sRotY = useSpring(rotY, { stiffness: 200, damping: 20 });
-
   return (
-    <motion.div
-      ref={ref}
+    <motion.div ref={ref}
       style={{ rotateX: sRotX, rotateY: sRotY, transformPerspective: 800, transformStyle: "preserve-3d" }}
       onMouseMove={(e) => {
         const rect = ref.current?.getBoundingClientRect();
@@ -84,15 +86,12 @@ const TiltCard: React.FC<{ children: React.ReactNode; className?: string }> = ({
       }}
       onMouseLeave={() => { rotX.set(0); rotY.set(0); }}
       className={className}
-    >
-      {children}
-    </motion.div>
+    >{children}</motion.div>
   );
 };
 
 const LandingPage: React.FC = () => {
   useSeoMeta("landing", "Welcome");
-  const { formatPrice } = useCurrency();
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 200]);
@@ -112,7 +111,6 @@ const LandingPage: React.FC = () => {
 
   const rawName = siteSettings?.site_name;
   const siteName = String(typeof rawName === "object" && rawName !== null ? (rawName as any).value ?? "" : rawName ?? "");
-  const logoUrl = (siteSettings?.logo_url as string) || "";
   const landingRaw = siteSettings?.landing_config;
   const cfg: LandingConfig = { ...defaultLandingConfig, ...(typeof landingRaw === "object" && landingRaw !== null ? landingRaw : {}) };
 
@@ -120,16 +118,6 @@ const LandingPage: React.FC = () => {
     queryKey: ["landing-categories"],
     queryFn: async () => {
       const { data } = await supabase.from("categories").select("name, slug, icon, icon_url, image_url").eq("is_active", true).is("parent_id", null).order("sort_order").limit(6);
-      return data || [];
-    },
-    staleTime: 10 * 60 * 1000,
-  });
-
-  const { data: featuredProducts = [] } = useQuery({
-    queryKey: ["landing-featured-products"],
-    queryFn: async () => {
-      const { data } = await supabase.from("products").select("id, name, slug, price, compare_at_price, thumbnail, avg_rating")
-        .eq("is_active", true).eq("is_featured", true).order("created_at", { ascending: false }).limit(6);
       return data || [];
     },
     staleTime: 10 * 60 * 1000,
@@ -144,13 +132,10 @@ const LandingPage: React.FC = () => {
     staleTime: 10 * 60 * 1000,
   });
 
-  // Refs for section in-view
   const statsRef = useRef(null);
   const statsInView = useInView(statsRef, { once: true, margin: "-100px" });
-
   const hasHeroContent = cfg.hero_title_line1 || cfg.hero_title_line2 || cfg.hero_subtitle;
 
-  // Staggered letter animation
   const letterVariants = {
     hidden: { opacity: 0, y: 40, rotateX: -60 },
     visible: (i: number) => ({
@@ -160,103 +145,88 @@ const LandingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
-      {/* Floating glass nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50">
-        <div className="mx-auto max-w-[1440px] px-4 lg:px-6 py-3">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex items-center justify-between px-5 py-2.5 rounded-2xl bg-card/40 backdrop-blur-2xl border border-border/20 shadow-[0_8px_32px_hsl(0_0%_0%/0.12)]"
-          >
-            <Link to="/" className="flex items-center gap-2">
-              {logoUrl ? (
-                <img src={logoUrl} alt={siteName} className="w-7 h-7 rounded-lg object-cover" />
-              ) : siteName ? (
-                <div className="w-7 h-7 rounded-lg bg-gradient-primary flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-xs">{siteName.charAt(0)}</span>
-                </div>
-              ) : null}
-              {siteName && <span className="font-display font-bold text-foreground">{siteName}</span>}
-            </Link>
-            <div className="flex items-center gap-2">
-              <Link to="/home" className="text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-full hover:bg-secondary/50">Shop</Link>
-              <Link to="/auth" className="text-xs font-medium bg-primary text-primary-foreground px-4 py-1.5 rounded-full hover:bg-primary/90 transition-colors shadow-[0_2px_12px_hsl(var(--primary)/0.3)]">
-                Sign In
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-background overflow-x-hidden flex flex-col">
+      {/* Use main Navbar */}
+      <Navbar />
 
       {/* ═══════════════ HERO ═══════════════ */}
-      <section ref={heroRef} className="relative min-h-screen flex items-center overflow-hidden" style={{ perspective: "1200px" }}>
+      <section ref={heroRef} className="relative min-h-[90vh] flex items-center justify-center overflow-hidden" style={{ perspective: "1200px" }}>
         <div className="absolute inset-0">
           {cfg.hero_bg_url ? (
             <>
               <img src={cfg.hero_bg_url} alt="" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/20" />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/60" />
+              <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
             </>
           ) : (
             <>
               <div className="absolute inset-0 bg-background" />
               <motion.div className="absolute inset-0" style={{ y: heroY }}>
-                {/* Mesh grid */}
                 <div className="absolute inset-0 opacity-[0.04]" style={{
                   backgroundImage: `linear-gradient(hsl(var(--primary)/0.4) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)/0.4) 1px, transparent 1px)`,
                   backgroundSize: '80px 80px',
                 }} />
+                {/* Radial pulse behind center */}
+                <motion.div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full"
+                  style={{ background: "radial-gradient(circle, hsl(var(--primary)/0.08), transparent 60%)" }}
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+                  transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+                />
                 {/* Glow orbs */}
-                <motion.div className="absolute top-[10%] right-[15%] w-[600px] h-[600px] rounded-full blur-[150px]"
-                  style={{ background: "radial-gradient(circle, hsl(var(--primary)/0.12), transparent 70%)" }}
-                  animate={{ scale: [1, 1.15, 1], opacity: [0.6, 0.9, 0.6] }}
+                <motion.div className="absolute top-[10%] right-[15%] w-[500px] h-[500px] rounded-full blur-[150px]"
+                  style={{ background: "radial-gradient(circle, hsl(var(--primary)/0.1), transparent 70%)" }}
+                  animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }}
                   transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
                 />
-                <motion.div className="absolute bottom-[15%] left-[5%] w-[500px] h-[500px] rounded-full blur-[120px]"
-                  style={{ background: "radial-gradient(circle, hsl(var(--accent)/0.1), transparent 70%)" }}
+                <motion.div className="absolute bottom-[15%] left-[5%] w-[400px] h-[400px] rounded-full blur-[120px]"
+                  style={{ background: "radial-gradient(circle, hsl(var(--accent)/0.08), transparent 70%)" }}
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ repeat: Infinity, duration: 10, ease: "easeInOut", delay: 2 }}
                 />
                 {/* 3D floating shapes */}
-                <motion.div
-                  className="absolute top-[25%] right-[12%] w-32 h-32 border border-primary/15 rounded-2xl"
+                <motion.div className="absolute top-[25%] right-[12%] w-28 h-28 border border-primary/10 rounded-2xl"
                   style={{ transformStyle: "preserve-3d" }}
                   animate={{ rotateX: [0, 360], rotateY: [0, 180], y: [0, -30, 0] }}
                   transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
                 />
-                <motion.div
-                  className="absolute top-[55%] right-[30%] w-16 h-16 border border-accent/20 rounded-full"
-                  animate={{ scale: [1, 1.4, 1], rotateZ: [0, 180, 360], opacity: [0.3, 0.7, 0.3] }}
+                <motion.div className="absolute top-[55%] left-[20%] w-14 h-14 border border-accent/15 rounded-full"
+                  animate={{ scale: [1, 1.4, 1], rotateZ: [0, 180, 360], opacity: [0.2, 0.5, 0.2] }}
                   transition={{ repeat: Infinity, duration: 12 }}
                 />
-                <motion.div
-                  className="absolute top-[40%] right-[22%] w-24 h-24"
+                <motion.div className="absolute top-[40%] left-[65%] w-20 h-20"
                   style={{ transformStyle: "preserve-3d" }}
                   animate={{ rotateY: [0, 360], rotateX: [0, 90, 0] }}
                   transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
                 >
-                  <div className="w-full h-full border border-primary/10 transform rotate-45" />
+                  <div className="w-full h-full border border-primary/8 transform rotate-45" />
                 </motion.div>
-                {/* Floating particles */}
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <motion.div key={i}
-                    className="absolute w-1 h-1 rounded-full bg-primary/40"
-                    style={{ left: `${15 + i * 10}%`, top: `${20 + (i % 3) * 25}%` }}
-                    animate={{ y: [0, -(20 + i * 5), 0], opacity: [0.2, 0.7, 0.2] }}
-                    transition={{ repeat: Infinity, duration: 3 + i * 0.5, delay: i * 0.3 }}
-                  />
-                ))}
+                {/* Enhanced particles — 20 with varied sizes and glow */}
+                {Array.from({ length: 20 }).map((_, i) => {
+                  const size = 2 + (i % 4);
+                  const left = 5 + ((i * 4.7) % 90);
+                  const top = 10 + ((i * 7.3) % 80);
+                  return (
+                    <motion.div key={i}
+                      className="absolute rounded-full"
+                      style={{
+                        left: `${left}%`, top: `${top}%`,
+                        width: size, height: size,
+                        background: i % 3 === 0 ? "hsl(var(--primary)/0.6)" : "hsl(var(--accent)/0.4)",
+                        boxShadow: i % 3 === 0 ? "0 0 8px hsl(var(--primary)/0.3)" : "none",
+                      }}
+                      animate={{ y: [0, -(15 + i * 3), 0], opacity: [0.15, 0.6, 0.15] }}
+                      transition={{ repeat: Infinity, duration: 3 + (i % 5) * 0.8, delay: i * 0.2 }}
+                    />
+                  );
+                })}
               </motion.div>
             </>
           )}
         </div>
 
-        <motion.div className="relative container mx-auto px-4 py-24 pt-32" style={{ scale: heroScale, opacity: heroOpacity }}>
-          <div className="max-w-3xl" style={{ transformStyle: "preserve-3d" }}>
+        <motion.div className="relative container mx-auto px-4 py-24 pt-32 text-center" style={{ scale: heroScale, opacity: heroOpacity }}>
+          <div className="max-w-4xl mx-auto" style={{ transformStyle: "preserve-3d" }}>
             {cfg.hero_badge && (
-              <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7 }}>
+              <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
                 <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-semibold uppercase tracking-[0.2em] border border-primary/30 text-primary bg-primary/5 mb-8 backdrop-blur-sm">
                   <Sparkles className="w-3 h-3" /> {cfg.hero_badge}
                 </span>
@@ -288,11 +258,11 @@ const LandingPage: React.FC = () => {
             )}
             {cfg.hero_subtitle && (
               <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.8 }}
-                className="text-base md:text-lg text-muted-foreground mb-10 max-w-lg leading-relaxed">
+                className="text-base md:text-lg text-muted-foreground mb-10 max-w-lg mx-auto leading-relaxed">
                 {cfg.hero_subtitle}
               </motion.p>
             )}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 1 }} className="flex flex-wrap gap-3">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 1 }} className="flex flex-wrap gap-3 justify-center">
               <Link to="/home">
                 <motion.span whileHover={{ scale: 1.04, boxShadow: "0 8px 40px hsl(var(--primary)/0.4)" }} whileTap={{ scale: 0.97 }}
                   className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-primary-foreground font-semibold text-sm shadow-[0_4px_20px_hsl(var(--primary)/0.3)] transition-shadow">
@@ -309,18 +279,13 @@ const LandingPage: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Scroll indicator */}
-        <motion.div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
-          animate={{ y: [0, 8, 0] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-        >
+        <motion.div className="absolute bottom-8 left-1/2 -translate-x-1/2" animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 2 }}>
           <ChevronDown className="w-5 h-5 text-muted-foreground/50" />
         </motion.div>
       </section>
 
       {/* ═══════════════ ABOUT US ═══════════════ */}
-      {cfg.show_about && (
+      {cfg.show_about && (cfg.about_title || cfg.about_text) && (
         <section className="py-20 md:py-28 relative overflow-hidden">
           <div className="absolute inset-0 opacity-[0.02]" style={{
             backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--primary)/0.5) 1px, transparent 0)`,
@@ -333,34 +298,25 @@ const LandingPage: React.FC = () => {
                 <h2 className="text-3xl md:text-4xl font-bold font-display text-foreground mb-6 leading-tight">
                   {cfg.about_title || "Our Story"}
                 </h2>
-                <p className="text-muted-foreground leading-relaxed mb-6">
-                  {cfg.about_text || "We believe in curating only the finest products for our community."}
-                </p>
+                <p className="text-muted-foreground leading-relaxed mb-6">{cfg.about_text}</p>
                 <div className="h-1 w-20 bg-gradient-to-r from-primary to-accent rounded-full" />
               </motion.div>
               <motion.div initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.2 }}
-                className="relative flex justify-center"
-              >
-                {/* Decorative 3D element */}
+                className="relative flex justify-center">
                 <div className="relative w-72 h-72">
-                  <motion.div
-                    className="absolute inset-0 rounded-3xl border border-primary/20 bg-primary/5 backdrop-blur-sm"
+                  <motion.div className="absolute inset-0 rounded-3xl border border-primary/20 bg-primary/5 backdrop-blur-sm"
                     animate={{ rotateY: [0, 10, 0, -10, 0], rotateX: [0, -5, 0, 5, 0] }}
                     transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
                     style={{ transformStyle: "preserve-3d", perspective: "800px" }}
                   />
-                  <motion.div
-                    className="absolute inset-4 rounded-2xl border border-accent/15 bg-accent/5"
+                  <motion.div className="absolute inset-4 rounded-2xl border border-accent/15 bg-accent/5"
                     animate={{ rotateY: [0, -8, 0, 8, 0], rotateX: [0, 6, 0, -6, 0] }}
                     transition={{ repeat: Infinity, duration: 10, ease: "easeInOut", delay: 1 }}
                     style={{ transformStyle: "preserve-3d" }}
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <motion.div
-                      animate={{ scale: [1, 1.08, 1] }}
-                      transition={{ repeat: Infinity, duration: 4 }}
-                      className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center backdrop-blur-sm"
-                    >
+                    <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ repeat: Infinity, duration: 4 }}
+                      className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center backdrop-blur-sm">
                       <Sparkles className="w-8 h-8 text-primary" />
                     </motion.div>
                   </div>
@@ -372,7 +328,7 @@ const LandingPage: React.FC = () => {
       )}
 
       {/* ═══════════════ MISSION & VISION ═══════════════ */}
-      {cfg.show_mission_vision && (
+      {cfg.show_mission_vision && (cfg.mission_text || cfg.vision_text) && (
         <section className="py-16 md:py-24">
           <div className="container mx-auto px-4">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
@@ -380,90 +336,70 @@ const LandingPage: React.FC = () => {
               <h2 className="text-3xl md:text-4xl font-bold font-display text-foreground">Mission & Vision</h2>
             </motion.div>
             <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}>
-                <TiltCard className="h-full">
-                  <div className="rounded-3xl border border-border/30 bg-card/40 backdrop-blur-xl p-8 h-full hover:border-primary/30 transition-colors relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="relative z-10">
-                      <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
-                        <Target className="w-7 h-7 text-primary" />
+              {cfg.mission_text && (
+                <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}>
+                  <TiltCard className="h-full">
+                    <div className="rounded-3xl border border-border/30 bg-card/40 backdrop-blur-xl p-8 h-full hover:border-primary/30 transition-colors relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="relative z-10">
+                        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
+                          <Target className="w-7 h-7 text-primary" />
+                        </div>
+                        <h3 className="font-display font-bold text-xl text-foreground mb-3">Our Mission</h3>
+                        <p className="text-muted-foreground leading-relaxed text-sm">{cfg.mission_text}</p>
                       </div>
-                      <h3 className="font-display font-bold text-xl text-foreground mb-3">Our Mission</h3>
-                      <p className="text-muted-foreground leading-relaxed text-sm">
-                        {cfg.mission_text || "To make premium quality accessible to everyone, everywhere."}
-                      </p>
                     </div>
-                  </div>
-                </TiltCard>
-              </motion.div>
-              <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }}>
-                <TiltCard className="h-full">
-                  <div className="rounded-3xl border border-border/30 bg-card/40 backdrop-blur-xl p-8 h-full hover:border-accent/30 transition-colors relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="relative z-10">
-                      <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mb-5">
-                        <Eye className="w-7 h-7 text-accent-foreground" />
+                  </TiltCard>
+                </motion.div>
+              )}
+              {cfg.vision_text && (
+                <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }}>
+                  <TiltCard className="h-full">
+                    <div className="rounded-3xl border border-border/30 bg-card/40 backdrop-blur-xl p-8 h-full hover:border-accent/30 transition-colors relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="relative z-10">
+                        <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mb-5">
+                          <Eye className="w-7 h-7 text-accent-foreground" />
+                        </div>
+                        <h3 className="font-display font-bold text-xl text-foreground mb-3">Our Vision</h3>
+                        <p className="text-muted-foreground leading-relaxed text-sm">{cfg.vision_text}</p>
                       </div>
-                      <h3 className="font-display font-bold text-xl text-foreground mb-3">Our Vision</h3>
-                      <p className="text-muted-foreground leading-relaxed text-sm">
-                        {cfg.vision_text || "A world where every purchase brings joy and lasting value."}
-                      </p>
                     </div>
-                  </div>
-                </TiltCard>
-              </motion.div>
+                  </TiltCard>
+                </motion.div>
+              )}
             </div>
           </div>
         </section>
       )}
 
-      {/* ═══════════════ FEATURED PRODUCTS ═══════════════ */}
-      {cfg.show_featured_products && featuredProducts.length > 0 && (
+      {/* ═══════════════ BRAND SHOWCASE ═══════════════ */}
+      {cfg.show_brand_showcase && (cfg.showcase_image_url || cfg.showcase_headline) && (
         <section className="py-16 md:py-24">
           <div className="container mx-auto px-4">
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mb-10">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-primary mb-2">Curated For You</p>
-              <div className="flex items-end justify-between">
-                <h2 className="text-2xl md:text-3xl font-bold font-display text-foreground">Featured Products</h2>
-                <Link to="/home" className="text-xs text-primary hover:underline flex items-center gap-1">
-                  View All <ArrowRight className="w-3 h-3" />
-                </Link>
-              </div>
-              <motion.div className="h-0.5 bg-gradient-to-r from-primary to-transparent mt-3 rounded-full"
-                initial={{ width: 0 }} whileInView={{ width: "120px" }} viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.3 }}
-              />
-            </motion.div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {featuredProducts.map((p, i) => (
-                <motion.div key={p.id} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
+            <div className="grid md:grid-cols-2 gap-10 items-center max-w-5xl mx-auto">
+              {cfg.showcase_image_url && (
+                <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
                   <TiltCard>
-                    <Link to={`/product/${p.slug}`} className="group block rounded-2xl border border-border/30 bg-card/30 backdrop-blur-sm overflow-hidden hover:border-primary/30 transition-all">
-                      <div className="aspect-square overflow-hidden relative">
-                        <img src={p.thumbnail || "/placeholder.svg"} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
-                        {p.compare_at_price && (
-                          <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-destructive text-destructive-foreground">
-                            -{Math.round(((p.compare_at_price - p.price) / p.compare_at_price) * 100)}%
-                          </span>
-                        )}
-                      </div>
-                      <div className="p-3">
-                        <p className="text-xs font-medium text-foreground line-clamp-1 group-hover:text-primary transition-colors">{p.name}</p>
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <span className="text-sm font-bold text-foreground">{formatPrice(p.price)}</span>
-                          {p.compare_at_price && <span className="text-[10px] text-muted-foreground line-through">{formatPrice(p.compare_at_price)}</span>}
-                        </div>
-                        {p.avg_rating && p.avg_rating > 0 && (
-                          <div className="flex items-center gap-0.5 mt-1">
-                            {Array.from({ length: 5 }).map((_, j) => (
-                              <Star key={j} className={`w-2.5 h-2.5 ${j < Math.round(p.avg_rating!) ? "text-primary fill-primary" : "text-muted-foreground/30"}`} />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </Link>
+                    <div className="rounded-3xl overflow-hidden border border-border/30 shadow-2xl">
+                      <img src={cfg.showcase_image_url} alt={cfg.showcase_headline || "Brand showcase"} className="w-full h-auto object-cover" loading="lazy" />
+                    </div>
                   </TiltCard>
                 </motion.div>
-              ))}
+              )}
+              <motion.div initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.2 }}>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-primary mb-4">Our Brand</p>
+                <h2 className="text-3xl md:text-4xl font-bold font-display text-foreground mb-6 leading-tight">
+                  {cfg.showcase_headline || "Premium Quality"}
+                </h2>
+                <p className="text-muted-foreground leading-relaxed mb-8">{cfg.showcase_description}</p>
+                <Link to={cfg.showcase_cta_link || "/home"}>
+                  <motion.span whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
+                    className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-primary-foreground font-semibold text-sm shadow-[0_4px_20px_hsl(var(--primary)/0.3)]">
+                    {cfg.showcase_cta_text || "Shop Now"} <ArrowRight className="w-4 h-4" />
+                  </motion.span>
+                </Link>
+              </motion.div>
             </div>
           </div>
         </section>
@@ -509,10 +445,8 @@ const LandingPage: React.FC = () => {
                       <div className="group rounded-2xl border border-border/30 bg-card/30 backdrop-blur-sm p-6 hover:border-primary/30 transition-all h-full relative overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                         <div className="relative z-10">
-                          <motion.div
-                            className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-4"
-                            whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
-                          >
+                          <motion.div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-4"
+                            whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}>
                             <Icon className="w-6 h-6 text-primary" />
                           </motion.div>
                           <h3 className="font-display font-semibold text-foreground text-sm mb-1.5">{f.title}</h3>
@@ -573,13 +507,10 @@ const LandingPage: React.FC = () => {
               <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-primary mb-2">Testimonials</p>
               <h2 className="text-2xl md:text-3xl font-bold font-display text-foreground">What Our Customers Say</h2>
             </motion.div>
-            {/* Marquee-style auto scroll */}
             <div className="relative">
-              <motion.div
-                className="flex gap-5"
+              <motion.div className="flex gap-5"
                 animate={{ x: [0, -(cfg.testimonials.length * 320)] }}
-                transition={{ repeat: Infinity, duration: cfg.testimonials.length * 8, ease: "linear" }}
-              >
+                transition={{ repeat: Infinity, duration: cfg.testimonials.length * 8, ease: "linear" }}>
                 {[...cfg.testimonials, ...cfg.testimonials].map((t, i) => (
                   <div key={i} className="shrink-0 w-[300px] rounded-2xl border border-border/30 bg-card/40 backdrop-blur-sm p-6">
                     <div className="flex gap-0.5 mb-3">
@@ -606,7 +537,6 @@ const LandingPage: React.FC = () => {
           <div className="container mx-auto px-4">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
               className="rounded-3xl border border-border/30 bg-card/30 backdrop-blur-xl p-10 md:p-16 text-center relative overflow-hidden">
-              {/* Floating shapes behind CTA */}
               <motion.div className="absolute top-10 left-10 w-20 h-20 border border-primary/10 rounded-full"
                 animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.5, 0.2] }}
                 transition={{ repeat: Infinity, duration: 5 }}

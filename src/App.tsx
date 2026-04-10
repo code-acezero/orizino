@@ -62,6 +62,8 @@ const AdminBranding = lazy(() => import("./pages/admin/AdminBranding"));
 const AdminMobileUI = lazy(() => import("./pages/admin/AdminMobileUI"));
 const AdminCallSettings = lazy(() => import("./pages/admin/AdminCallSettings"));
 const AdminFooter = lazy(() => import("./pages/admin/AdminFooter"));
+const AdminPaymentGateways = lazy(() => import("./pages/admin/AdminPaymentGateways"));
+const AdminReturns = lazy(() => import("./pages/admin/AdminReturns"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -153,6 +155,8 @@ const App = () => (
               <Route path="mobile-ui" element={<Suspense fallback={<PageFallback />}><AdminMobileUI /></Suspense>} />
               <Route path="call-settings" element={<Suspense fallback={<PageFallback />}><AdminCallSettings /></Suspense>} />
               <Route path="footer" element={<Suspense fallback={<PageFallback />}><AdminFooter /></Suspense>} />
+              <Route path="payment-gateways" element={<Suspense fallback={<PageFallback />}><AdminPaymentGateways /></Suspense>} />
+              <Route path="returns" element={<Suspense fallback={<PageFallback />}><AdminReturns /></Suspense>} />
             </Route>
 
             <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />

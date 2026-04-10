@@ -31,7 +31,7 @@ interface LandingConfig {
   show_cta: boolean;
   show_about: boolean;
   show_mission_vision: boolean;
-  show_featured_products: boolean;
+  show_brand_showcase: boolean;
   cta_title: string;
   cta_subtitle: string;
   cta_button: string;
@@ -40,28 +40,23 @@ interface LandingConfig {
   about_text: string;
   mission_text: string;
   vision_text: string;
+  showcase_image_url: string;
+  showcase_headline: string;
+  showcase_description: string;
+  showcase_cta_text: string;
+  showcase_cta_link: string;
 }
 
 const DEFAULT: LandingConfig = {
-  hero_title_line1: "Shop Smarter.",
-  hero_title_line2: "Live Better.",
-  hero_subtitle: "Discover a curated marketplace where quality meets affordability.",
-  hero_badge: "Welcome to the Future of Shopping",
+  hero_title_line1: "",
+  hero_title_line2: "",
+  hero_subtitle: "",
+  hero_badge: "",
   hero_cta_primary: "Start Shopping",
   hero_cta_secondary: "Explore Categories",
   hero_bg_url: "",
-  features: [
-    { icon: "Truck", title: "Free Shipping", desc: "On qualifying orders" },
-    { icon: "Shield", title: "Secure Payment", desc: "100% protected" },
-    { icon: "ShoppingBag", title: "Easy Returns", desc: "Hassle-free returns" },
-    { icon: "Sparkles", title: "Premium Quality", desc: "Curated products" },
-  ],
-  stats: [
-    { value: "10K+", label: "Products" },
-    { value: "50K+", label: "Happy Customers" },
-    { value: "99%", label: "Satisfaction" },
-    { value: "24/7", label: "Support" },
-  ],
+  features: [],
+  stats: [],
   show_stats: true,
   show_features: true,
   show_categories: true,
@@ -69,15 +64,20 @@ const DEFAULT: LandingConfig = {
   show_cta: true,
   show_about: true,
   show_mission_vision: true,
-  show_featured_products: true,
+  show_brand_showcase: false,
   cta_title: "",
-  cta_subtitle: "Join thousands of satisfied shoppers. Create your account today.",
+  cta_subtitle: "",
   cta_button: "Create Account",
   testimonials: [],
-  about_title: "Our Story",
-  about_text: "We believe in curating only the finest products for our community.",
-  mission_text: "To make premium quality accessible to everyone, everywhere.",
-  vision_text: "A world where every purchase brings joy and lasting value.",
+  about_title: "",
+  about_text: "",
+  mission_text: "",
+  vision_text: "",
+  showcase_image_url: "",
+  showcase_headline: "",
+  showcase_description: "",
+  showcase_cta_text: "Shop Now",
+  showcase_cta_link: "/home",
 };
 
 const AdminLanding = () => {
@@ -148,9 +148,10 @@ const AdminLanding = () => {
 
       <Tabs defaultValue="hero" className="space-y-4">
         <TabsList className="flex-wrap">
-          <TabsTrigger value="hero"><Rocket className="w-4 h-4 mr-1" /> Hero</TabsTrigger>
+         <TabsTrigger value="hero"><Rocket className="w-4 h-4 mr-1" /> Hero</TabsTrigger>
           <TabsTrigger value="about"><BookOpen className="w-4 h-4 mr-1" /> About</TabsTrigger>
           <TabsTrigger value="mission"><Target className="w-4 h-4 mr-1" /> Mission</TabsTrigger>
+          <TabsTrigger value="showcase"><ImageIcon className="w-4 h-4 mr-1" /> Showcase</TabsTrigger>
           <TabsTrigger value="features"><Sparkles className="w-4 h-4 mr-1" /> Features</TabsTrigger>
           <TabsTrigger value="stats"><BarChart3 className="w-4 h-4 mr-1" /> Stats</TabsTrigger>
           <TabsTrigger value="testimonials"><MessageCircle className="w-4 h-4 mr-1" /> Testimonials</TabsTrigger>
@@ -234,6 +235,39 @@ const AdminLanding = () => {
               <div className="space-y-2">
                 <Label>Vision Statement</Label>
                 <Textarea value={form.vision_text} onChange={(e) => setForm({ ...form, vision_text: e.target.value })} rows={3} placeholder="Our vision is..." />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="showcase">
+          <Card>
+            <CardHeader>
+              <CardTitle>Brand Showcase</CardTitle>
+              <CardDescription>Showcase your brand with a portfolio-style section</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Showcase Image</Label>
+                <ImageUpload bucket="banners" folder="showcase" value={form.showcase_image_url} onUploaded={(url) => setForm({ ...form, showcase_image_url: url })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Headline</Label>
+                <Input value={form.showcase_headline} onChange={(e) => setForm({ ...form, showcase_headline: e.target.value })} placeholder="Premium Quality" />
+              </div>
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Textarea value={form.showcase_description} onChange={(e) => setForm({ ...form, showcase_description: e.target.value })} rows={4} />
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>CTA Text</Label>
+                  <Input value={form.showcase_cta_text} onChange={(e) => setForm({ ...form, showcase_cta_text: e.target.value })} placeholder="Shop Now" />
+                </div>
+                <div className="space-y-2">
+                  <Label>CTA Link</Label>
+                  <Input value={form.showcase_cta_link} onChange={(e) => setForm({ ...form, showcase_cta_link: e.target.value })} placeholder="/home" />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -337,7 +371,7 @@ const AdminLanding = () => {
               {[
                 { key: "show_about", label: "About Us / Brand Story" },
                 { key: "show_mission_vision", label: "Mission & Vision" },
-                { key: "show_featured_products", label: "Featured Products" },
+                { key: "show_brand_showcase", label: "Brand Showcase" },
                 { key: "show_stats", label: "Stats Section" },
                 { key: "show_features", label: "Features Section" },
                 { key: "show_categories", label: "Categories Preview" },
