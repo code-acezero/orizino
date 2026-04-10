@@ -28,7 +28,7 @@ const paymentGateways = [
 const addressTypeIcons: Record<string, any> = { home: Home, office: Building2, other: MapPinned };
 
 const CheckoutPage: React.FC = () => {
-  useSeoMeta("checkout", "Checkout | Ace Marketplace");
+  useSeoMeta("checkout", "Checkout");
   const { user } = useAuth();
   const { formatPrice } = useCurrency();
   const navigate = useNavigate();

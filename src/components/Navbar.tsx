@@ -133,7 +133,15 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/shop?q=${encodeURIComponent(searchQuery.trim())}`);
+      const q = encodeURIComponent(searchQuery.trim());
+      if (location.pathname === "/shop") {
+        // Update search params without full navigation to avoid navbar remount
+        const params = new URLSearchParams(location.search);
+        params.set("q", searchQuery.trim());
+        navigate(`/shop?${params.toString()}`, { replace: true });
+      } else {
+        navigate(`/shop?q=${q}`);
+      }
       setSearchQuery("");
     }
   };
