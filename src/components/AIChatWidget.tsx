@@ -677,33 +677,57 @@ const AIChatWidget: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            className="fixed bottom-20 lg:bottom-6 right-4 z-50 w-[360px] max-w-[calc(100vw-2rem)] h-[500px] max-h-[calc(100vh-8rem)] rounded-3xl bg-card border border-border/60 shadow-[0_8px_40px_hsl(0_0%_0%/0.5)] flex flex-col overflow-hidden"
+            className="fixed bottom-20 lg:bottom-6 right-4 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-8rem)] rounded-3xl bg-card border border-border/60 shadow-[0_8px_40px_hsl(0_0%_0%/0.5)] flex flex-col overflow-hidden"
           >
-            {/* Header */}
-            <div className="flex items-center gap-3 p-4 border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent">
-              <AgentAvatar />
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-foreground">{agentName || "Support"}</p>
-                <div className="flex items-center gap-1.5">
-                  <div className={`w-1.5 h-1.5 rounded-full ${callActive ? "bg-green-400 animate-pulse" : liveMode ? "bg-emerald-400" : "bg-primary"}`} />
-                  <p className="text-[10px] text-muted-foreground">
-                    {callActive ? "Voice call active" : liveMode ? "Live agent" : "AI assistant"}
-                  </p>
+            {/* Header with gradient accent */}
+            <div className="relative">
+              <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-primary/8 via-primary/3 to-transparent">
+                <AgentAvatar />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">{agentName || "Support"}</p>
+                  <div className="flex items-center gap-1.5">
+                    <div className={`w-1.5 h-1.5 rounded-full ${callActive ? "bg-green-400 animate-pulse" : liveMode ? "bg-emerald-400" : "bg-primary"}`} />
+                    <p className="text-[10px] text-muted-foreground">
+                      {callActive ? "Voice call active" : liveMode ? "Live agent" : "AI assistant"}
+                    </p>
+                  </div>
                 </div>
+                {user && !liveMode && (
+                  <button onClick={requestLiveSupport} className="p-2 rounded-xl hover:bg-secondary/50 transition-colors" title="Request live support">
+                    <Headphones className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
+                  </button>
+                )}
+                {user && liveMode && !callActive && (
+                  <button onClick={requestCall} className="p-2 rounded-xl hover:bg-green-500/10 transition-colors" title="Request voice call">
+                    <Phone className="w-4 h-4 text-green-500 hover:text-green-600 transition-colors" />
+                  </button>
+                )}
+                <button onClick={() => setOpen(false)} className="p-2 rounded-xl hover:bg-secondary/50 transition-colors">
+                  <X className="w-4 h-4 text-muted-foreground" />
+                </button>
               </div>
-              {user && !liveMode && (
-                <button onClick={requestLiveSupport} className="p-2 rounded-xl hover:bg-secondary/50 transition-colors" title="Request live support">
-                  <Headphones className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
+            </div>
+
+            {/* Tab switcher */}
+            <div className="flex border-b border-border/30 px-2">
+              {[
+                { id: "chat" as const, label: "Chat", icon: MessageSquare },
+                { id: "complaint" as const, label: "Complaint", icon: AlertTriangle },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-all border-b-2 ${
+                    activeTab === tab.id
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <tab.icon className="w-3.5 h-3.5" />
+                  {tab.label}
                 </button>
-              )}
-              {user && liveMode && !callActive && (
-                <button onClick={requestCall} className="p-2 rounded-xl hover:bg-green-500/10 transition-colors" title="Request voice call">
-                  <Phone className="w-4 h-4 text-green-500 hover:text-green-600 transition-colors" />
-                </button>
-              )}
-              <button onClick={() => setOpen(false)} className="p-2 rounded-xl hover:bg-secondary/50 transition-colors">
-                <X className="w-4 h-4 text-muted-foreground" />
-              </button>
+              ))}
             </div>
 
             {/* Incoming call UI */}
