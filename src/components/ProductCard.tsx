@@ -92,7 +92,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     e.preventDefault();
     e.stopPropagation();
     // If product has variants, open quick view for variant selection
-    if (hasVariants) {
+    if (hasVariants !== false) {
       setQuickViewOpen(true);
       return;
     }

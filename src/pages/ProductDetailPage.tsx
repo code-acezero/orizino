@@ -210,9 +210,12 @@ const ProductDetailPage: React.FC = () => {
   const addToCart = async () => {
     if (!user) { toast({ title: "Please sign in", description: "You need to be logged in to add items to cart.", variant: "destructive" }); return; }
     if (!product) return;
-    if (hasVariants && (!selectedSize && !selectedColor)) {
-      toast({ title: "Please select a variant", description: "Choose size and/or color before adding to cart.", variant: "destructive" });
-      return;
+    if (hasVariants) {
+      const sizes = [...new Set(variants.filter(v => v.size).map(v => v.size))];
+      const colors = [...new Set(variants.filter(v => v.color).map(v => v.color))];
+      if (sizes.length > 0 && !selectedSize) { toast({ title: "Please select a size", variant: "destructive" }); return; }
+      if (colors.length > 0 && !selectedColor) { toast({ title: "Please select a color", variant: "destructive" }); return; }
+      if (!selectedVariant) { toast({ title: "This combination is unavailable", variant: "destructive" }); return; }
     }
     setAddingToCart(true);
     const variantId = selectedVariant?.id || null;
@@ -239,9 +242,12 @@ const ProductDetailPage: React.FC = () => {
   const buyNow = async () => {
     if (!user) { toast({ title: "Please sign in", variant: "destructive" }); return; }
     if (!product) return;
-    if (hasVariants && (!selectedSize && !selectedColor)) {
-      toast({ title: "Please select a variant", description: "Choose size and/or color before buying.", variant: "destructive" });
-      return;
+    if (hasVariants) {
+      const sizes = [...new Set(variants.filter(v => v.size).map(v => v.size))];
+      const colors = [...new Set(variants.filter(v => v.color).map(v => v.color))];
+      if (sizes.length > 0 && !selectedSize) { toast({ title: "Please select a size", variant: "destructive" }); return; }
+      if (colors.length > 0 && !selectedColor) { toast({ title: "Please select a color", variant: "destructive" }); return; }
+      if (!selectedVariant) { toast({ title: "This combination is unavailable", variant: "destructive" }); return; }
     }
     // Navigate to checkout with buy-now state (only this product)
     const variantLabel = [selectedSize, selectedColor].filter(Boolean).join(" / ");
