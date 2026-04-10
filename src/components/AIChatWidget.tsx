@@ -685,7 +685,9 @@ const AIChatWidget: React.FC = () => {
               <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-primary/8 via-primary/3 to-transparent">
                 <AgentAvatar />
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">{agentName || "Support"}</p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {agentName ? `Support (${agentName})` : "Support"}
+                  </p>
                   <div className="flex items-center gap-1.5">
                     <div className={`w-1.5 h-1.5 rounded-full ${callActive ? "bg-green-400 animate-pulse" : liveMode ? "bg-emerald-400" : "bg-primary"}`} />
                     <p className="text-[10px] text-muted-foreground">
