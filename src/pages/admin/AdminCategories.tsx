@@ -24,6 +24,240 @@ import { useDragReorder } from "@/hooks/use-drag-reorder";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, LineChart, Line } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+// Category edit tabs with filters management
+const CategoryEditTabs = ({ editing, updateField, parentCategories, saveMutation }: {
+  editing: Record<string, any>;
+  updateField: (field: string, value: any) => void;
+  parentCategories: any[];
+  saveMutation: any;
+}) => {
+  const qc = useQueryClient();
+  const categoryId = editing.id;
+  const [newFilterName, setNewFilterName] = useState("");
+  const [newFilterValues, setNewFilterValues] = useState("");
+
+  const { data: filters = [], refetch: refetchFilters } = useQuery({
+    queryKey: ["category-filters-admin", categoryId],
+    queryFn: async () => {
+      if (!categoryId) return [];
+      const { data } = await supabase
+        .from("category_filters")
+        .select("*")
+        .eq("category_id", categoryId)
+        .order("sort_order");
+      return data || [];
+    },
+    enabled: !!categoryId,
+  });
+
+  const addFilter = async () => {
+    if (!newFilterName.trim() || !categoryId) return;
+    const values = newFilterValues.split(",").map(v => v.trim()).filter(Boolean);
+    if (values.length === 0) { toast.error("Add at least one filter value"); return; }
+    const { error } = await supabase.from("category_filters").insert({
+      category_id: categoryId,
+      filter_name: newFilterName.trim(),
+      filter_values: values,
+      sort_order: filters.length,
+    });
+    if (error) { toast.error(error.message); return; }
+    setNewFilterName("");
+    setNewFilterValues("");
+    refetchFilters();
+    qc.invalidateQueries({ queryKey: ["category-filters"] });
+    toast.success("Filter added");
+  };
+
+  const deleteFilter = async (filterId: string) => {
+    await supabase.from("category_filters").delete().eq("id", filterId);
+    refetchFilters();
+    qc.invalidateQueries({ queryKey: ["category-filters"] });
+    toast.success("Filter deleted");
+  };
+
+  const toggleFilterActive = async (filterId: string, isActive: boolean) => {
+    await supabase.from("category_filters").update({ is_active: !isActive }).eq("id", filterId);
+    refetchFilters();
+    qc.invalidateQueries({ queryKey: ["category-filters"] });
+  };
+
+  return (
+    <Tabs defaultValue="general" className="w-full">
+      <TabsList className="w-full">
+        <TabsTrigger value="general" className="flex-1">General</TabsTrigger>
+        <TabsTrigger value="appearance" className="flex-1">Appearance</TabsTrigger>
+        {categoryId && <TabsTrigger value="filters" className="flex-1">Filters</TabsTrigger>}
+        <TabsTrigger value="seo" className="flex-1">SEO</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="general" className="space-y-4 mt-4">
+        <div>
+          <Label>Name</Label>
+          <Input value={editing.name ?? ""} onChange={(e) => updateField("name", e.target.value)} />
+        </div>
+        <div>
+          <Label>Slug</Label>
+          <Input value={editing.slug ?? ""} onChange={(e) => updateField("slug", e.target.value)} placeholder="auto-generated" />
+        </div>
+        <div>
+          <Label>Parent Category</Label>
+          <Select value={editing.parent_id ?? "none"} onValueChange={(v) => updateField("parent_id", v === "none" ? null : v)}>
+            <SelectTrigger><SelectValue placeholder="None (top-level)" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None (top-level)</SelectItem>
+              {parentCategories.filter((p) => p.id !== editing.id).map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>Description</Label>
+          <Textarea value={editing.description ?? ""} onChange={(e) => updateField("description", e.target.value)} rows={2} />
+        </div>
+        <div>
+          <Label>Sort Order</Label>
+          <Input type="number" value={editing.sort_order ?? 0} onChange={(e) => updateField("sort_order", +e.target.value)} />
+        </div>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <Switch checked={editing.is_active ?? true} onCheckedChange={(v) => updateField("is_active", v)} />
+            <Label>Active</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch checked={editing.is_featured ?? false} onCheckedChange={(v) => updateField("is_featured", v)} />
+            <Label>Featured</Label>
+          </div>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="appearance" className="space-y-4 mt-4">
+        <div>
+          <Label>Custom Icon (upload image)</Label>
+          <ImageUpload bucket="banners" folder="category-icons" value={editing.icon_url ?? ""} onUploaded={(url) => updateField("icon_url", url)} />
+          <p className="text-xs text-muted-foreground mt-1">Or use an emoji fallback:</p>
+          <Input value={editing.icon ?? ""} onChange={(e) => updateField("icon", e.target.value)} placeholder="🛍️" className="mt-1" />
+        </div>
+        <div>
+          <Label>Accent Color</Label>
+          <div className="flex items-center gap-3 mt-1">
+            <input type="color" value={editing.accent_color || "#6366f1"} onChange={(e) => updateField("accent_color", e.target.value)} className="w-10 h-10 rounded-lg border border-border cursor-pointer bg-transparent" />
+            <Input value={editing.accent_color || "#6366f1"} onChange={(e) => updateField("accent_color", e.target.value)} placeholder="#6366f1" className="flex-1" />
+          </div>
+        </div>
+        <div>
+          <Label>Category Image</Label>
+          <ImageUpload bucket="banners" folder="categories" value={editing.image_url ?? ""} onUploaded={(url) => updateField("image_url", url)} />
+        </div>
+        <div className="border-t border-border pt-4">
+          <Label className="text-base font-semibold">Category Banner</Label>
+          <p className="text-xs text-muted-foreground mb-3">Shows at the top of the category page</p>
+          <div className="space-y-3">
+            <div>
+              <Label>Banner Type</Label>
+              <Select value={editing.banner_type ?? "image"} onValueChange={(v) => updateField("banner_type", v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="image">Image / GIF</SelectItem>
+                  <SelectItem value="youtube">YouTube Video</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {(editing.banner_type ?? "image") === "image" ? (
+              <div>
+                <Label>Banner Image / GIF</Label>
+                <ImageUpload bucket="banners" folder="category-banners" value={editing.banner_url ?? ""} onUploaded={(url) => updateField("banner_url", url)} accept="image/*,.gif" />
+              </div>
+            ) : (
+              <div>
+                <Label>YouTube URL</Label>
+                <Input value={editing.youtube_url ?? ""} onChange={(e) => updateField("youtube_url", e.target.value)} placeholder="https://youtube.com/watch?v=..." />
+              </div>
+            )}
+          </div>
+        </div>
+      </TabsContent>
+
+      {categoryId && (
+        <TabsContent value="filters" className="space-y-4 mt-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Filter className="w-4 h-4 text-primary" />
+            <p className="text-sm font-semibold">Custom Filters</p>
+          </div>
+          <p className="text-xs text-muted-foreground">Add filter groups (e.g. "Material", "Style") that appear in the shop sidebar when this category is selected.</p>
+
+          {/* Existing filters */}
+          {filters.length > 0 && (
+            <div className="space-y-2">
+              {filters.map((f: any) => (
+                <div key={f.id} className="flex items-start gap-2 p-3 rounded-xl bg-secondary/30 border border-border/50">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm">{f.filter_name}</span>
+                      <Badge variant={f.is_active ? "default" : "secondary"} className="text-[10px]">
+                        {f.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                    </div>
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {(f.filter_values || []).map((v: string) => (
+                        <span key={v} className="px-2 py-0.5 rounded-lg bg-secondary text-muted-foreground text-[11px]">{v}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleFilterActive(f.id, f.is_active)}>
+                      {f.is_active ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteFilter(f.id)}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add new filter */}
+          <div className="border-t border-border pt-3 space-y-3">
+            <div>
+              <Label>Filter Name</Label>
+              <Input value={newFilterName} onChange={(e) => setNewFilterName(e.target.value)} placeholder="e.g. Material, Style, Fit" />
+            </div>
+            <div>
+              <Label>Values (comma-separated)</Label>
+              <Input value={newFilterValues} onChange={(e) => setNewFilterValues(e.target.value)} placeholder="e.g. Cotton, Polyester, Silk" />
+            </div>
+            <Button variant="outline" className="w-full gap-2" onClick={addFilter} disabled={!newFilterName.trim()}>
+              <Plus className="w-4 h-4" /> Add Filter
+            </Button>
+          </div>
+        </TabsContent>
+      )}
+
+      <TabsContent value="seo" className="space-y-4 mt-4">
+        <div>
+          <Label>Meta Title</Label>
+          <Input value={editing.meta_title ?? ""} onChange={(e) => updateField("meta_title", e.target.value)} placeholder="Category page title (max 60 chars)" maxLength={60} />
+          <p className="text-xs text-muted-foreground mt-1">{(editing.meta_title ?? "").length}/60</p>
+        </div>
+        <div>
+          <Label>Meta Description</Label>
+          <Textarea value={editing.meta_description ?? ""} onChange={(e) => updateField("meta_description", e.target.value)} placeholder="Category page description (max 160 chars)" rows={3} maxLength={160} />
+          <p className="text-xs text-muted-foreground mt-1">{(editing.meta_description ?? "").length}/160</p>
+        </div>
+        <div>
+          <Label>Meta Keywords</Label>
+          <Input value={editing.meta_keywords ?? ""} onChange={(e) => updateField("meta_keywords", e.target.value)} placeholder="keyword1, keyword2, keyword3" />
+        </div>
+      </TabsContent>
+
+      <Button className="w-full mt-4" onClick={() => saveMutation.mutate(editing)} disabled={saveMutation.isPending}>
+        {saveMutation.isPending ? "Saving..." : "Save Category"}
+      </Button>
+    </Tabs>
+  );
+};
+
 const AdminCategories = () => {
   const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
