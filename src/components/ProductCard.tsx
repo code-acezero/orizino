@@ -10,6 +10,15 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "@/lib/app-toast";
 import QuickViewModal from "@/components/QuickViewModal";
 
+const COLOR_HEX: Record<string, string> = {
+  black: "#000000", white: "#ffffff", red: "#ef4444", blue: "#3b82f6",
+  green: "#22c55e", yellow: "#eab308", orange: "#f97316", pink: "#ec4899",
+  purple: "#a855f7", gray: "#6b7280", grey: "#6b7280", navy: "#1e3a5f",
+  charcoal: "#36454f", beige: "#f5f5dc", brown: "#8b4513", olive: "#808000",
+  teal: "#14b8a6", maroon: "#800000", cream: "#fffdd0", khaki: "#c3b091",
+};
+const getColorHex = (name: string) => COLOR_HEX[name.toLowerCase()] || "#888888";
+
 export interface ProductCardProps {
   id: string;
   name: string;
@@ -42,19 +51,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const [inWishlist, setInWishlist] = useState(false);
   const [togglingWishlist, setTogglingWishlist] = useState(false);
 
-  // Check if product has variants
-  const { data: hasVariants } = useQuery({
-    queryKey: ["product-has-variants", id],
+  // Fetch variant info (colors for swatches + has variants flag)
+  const { data: variantInfo } = useQuery({
+    queryKey: ["product-variant-info", id],
     queryFn: async () => {
-      const { count } = await supabase
+      const { data } = await supabase
         .from("product_variants")
-        .select("id", { count: "exact", head: true })
+        .select("color")
         .eq("product_id", id)
         .eq("is_active", true);
-      return (count || 0) > 0;
+      const colors = [...new Set((data || []).map(v => v.color).filter(Boolean))] as string[];
+      return { hasVariants: (data?.length || 0) > 0, colors };
     },
     staleTime: 60000,
   });
+  const hasVariants = variantInfo?.hasVariants ?? undefined;
 
   // Check wishlist status on mount
   React.useEffect(() => {
@@ -258,6 +269,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
             ))}
             <span className="text-xs text-muted-foreground ml-1">({reviewCount})</span>
           </div>
+          {/* Color swatches */}
+          {variantInfo?.colors && variantInfo.colors.length > 0 && (
+            <div className="flex items-center gap-1.5 mb-2">
+              {variantInfo.colors.slice(0, 5).map((color) => (
+                <span
+                  key={color}
+                  title={color}
+                  className="w-3.5 h-3.5 rounded-full border border-border/50 shrink-0"
+                  style={{ backgroundColor: getColorHex(color) }}
+                />
+              ))}
+              {variantInfo.colors.length > 5 && (
+                <span className="text-[10px] text-muted-foreground">+{variantInfo.colors.length - 5}</span>
+              )}
+            </div>
+          )}
           <div className="flex items-center gap-2 mt-auto lg:flex-row lg:items-center flex-col items-center">
             <span className="font-bold text-foreground group-hover:animate-[priceGlow_1.5s_ease-in-out_infinite] transition-all duration-300 text-sm lg:text-base"
               style={{ textShadow: 'none' }}
