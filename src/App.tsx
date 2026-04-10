@@ -101,7 +101,6 @@ const App = () => (
             <AIChatWidget />
             <PromoPopup />
           </Suspense>
-          <Suspense fallback={<PageFallback />}>
           <Routes>
             {/* Landing page without persistent nav */}
             <Route path="/" element={<LandingPage />} />
@@ -110,55 +109,54 @@ const App = () => (
             <Route element={<MainLayout />}>
               <Route path="/home" element={<HomePage />} />
               <Route path="/auth" element={<AuthPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route path="/shop" element={<ShopPage />} />
-              <Route path="/categories/:slug" element={<CategoryPage />} />
-              <Route path="/product/:slug" element={<ProductDetailPage />} />
-              <Route path="/cart" element={<CartPage />} />
-              <Route path="/wishlist" element={<WishlistPage />} />
-              <Route path="/support" element={<SupportPage />} />
-              <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-              <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
-              <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
-              <Route path="/page/:slug" element={<CmsPage />} />
+              <Route path="/reset-password" element={<Suspense fallback={<PageFallback />}><ResetPasswordPage /></Suspense>} />
+              <Route path="/shop" element={<Suspense fallback={<PageFallback />}><ShopPage /></Suspense>} />
+              <Route path="/categories/:slug" element={<Suspense fallback={<PageFallback />}><CategoryPage /></Suspense>} />
+              <Route path="/product/:slug" element={<Suspense fallback={<PageFallback />}><ProductDetailPage /></Suspense>} />
+              <Route path="/cart" element={<Suspense fallback={<PageFallback />}><CartPage /></Suspense>} />
+              <Route path="/wishlist" element={<Suspense fallback={<PageFallback />}><WishlistPage /></Suspense>} />
+              <Route path="/support" element={<Suspense fallback={<PageFallback />}><SupportPage /></Suspense>} />
+              <Route path="/profile" element={<ProtectedRoute><Suspense fallback={<PageFallback />}><ProfilePage /></Suspense></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Suspense fallback={<PageFallback />}><SettingsPage /></Suspense></ProtectedRoute>} />
+              <Route path="/checkout" element={<ProtectedRoute><Suspense fallback={<PageFallback />}><CheckoutPage /></Suspense></ProtectedRoute>} />
+              <Route path="/orders" element={<ProtectedRoute><Suspense fallback={<PageFallback />}><OrdersPage /></Suspense></ProtectedRoute>} />
+              <Route path="/page/:slug" element={<Suspense fallback={<PageFallback />}><CmsPage /></Suspense>} />
             </Route>
 
-            {/* Admin routes */}
+            {/* Admin routes — layout is eagerly loaded, child pages lazy */}
             <Route
               path="/admin"
               element={<AdminRoute><AdminLayout /></AdminRoute>}
             >
-              <Route index element={<AdminDashboard />} />
-              <Route path="products" element={<AdminProducts />} />
-              <Route path="categories" element={<AdminCategories />} />
-              <Route path="orders" element={<AdminOrders />} />
-              <Route path="users" element={<AdminUsers />} />
-              <Route path="reviews" element={<AdminReviews />} />
-              <Route path="banners" element={<AdminBanners />} />
-              <Route path="requests" element={<AdminRequests />} />
-              <Route path="settings" element={<AdminSettings />} />
-              <Route path="showcase" element={<AdminShowcase />} />
-              <Route path="home" element={<AdminHome />} />
-              <Route path="announcements" element={<AdminAnnouncements />} />
-              <Route path="coupons" element={<AdminCoupons />} />
-              <Route path="shipping" element={<AdminShipping />} />
-              <Route path="support" element={<AdminSupport />} />
-              <Route path="api-keys" element={<AdminApiKeys />} />
-              <Route path="ai-settings" element={<AdminAISettings />} />
-              <Route path="user-promos" element={<AdminUserPromos />} />
-              <Route path="delivery-offers" element={<AdminDeliveryOffers />} />
-              <Route path="cms-pages" element={<AdminCmsPages />} />
-              <Route path="landing" element={<AdminLanding />} />
-              <Route path="branding" element={<AdminBranding />} />
-              <Route path="mobile-ui" element={<AdminMobileUI />} />
-              <Route path="call-settings" element={<AdminCallSettings />} />
-              <Route path="footer" element={<AdminFooter />} />
+              <Route index element={<Suspense fallback={<PageFallback />}><AdminDashboard /></Suspense>} />
+              <Route path="products" element={<Suspense fallback={<PageFallback />}><AdminProducts /></Suspense>} />
+              <Route path="categories" element={<Suspense fallback={<PageFallback />}><AdminCategories /></Suspense>} />
+              <Route path="orders" element={<Suspense fallback={<PageFallback />}><AdminOrders /></Suspense>} />
+              <Route path="users" element={<Suspense fallback={<PageFallback />}><AdminUsers /></Suspense>} />
+              <Route path="reviews" element={<Suspense fallback={<PageFallback />}><AdminReviews /></Suspense>} />
+              <Route path="banners" element={<Suspense fallback={<PageFallback />}><AdminBanners /></Suspense>} />
+              <Route path="requests" element={<Suspense fallback={<PageFallback />}><AdminRequests /></Suspense>} />
+              <Route path="settings" element={<Suspense fallback={<PageFallback />}><AdminSettings /></Suspense>} />
+              <Route path="showcase" element={<Suspense fallback={<PageFallback />}><AdminShowcase /></Suspense>} />
+              <Route path="home" element={<Suspense fallback={<PageFallback />}><AdminHome /></Suspense>} />
+              <Route path="announcements" element={<Suspense fallback={<PageFallback />}><AdminAnnouncements /></Suspense>} />
+              <Route path="coupons" element={<Suspense fallback={<PageFallback />}><AdminCoupons /></Suspense>} />
+              <Route path="shipping" element={<Suspense fallback={<PageFallback />}><AdminShipping /></Suspense>} />
+              <Route path="support" element={<Suspense fallback={<PageFallback />}><AdminSupport /></Suspense>} />
+              <Route path="api-keys" element={<Suspense fallback={<PageFallback />}><AdminApiKeys /></Suspense>} />
+              <Route path="ai-settings" element={<Suspense fallback={<PageFallback />}><AdminAISettings /></Suspense>} />
+              <Route path="user-promos" element={<Suspense fallback={<PageFallback />}><AdminUserPromos /></Suspense>} />
+              <Route path="delivery-offers" element={<Suspense fallback={<PageFallback />}><AdminDeliveryOffers /></Suspense>} />
+              <Route path="cms-pages" element={<Suspense fallback={<PageFallback />}><AdminCmsPages /></Suspense>} />
+              <Route path="landing" element={<Suspense fallback={<PageFallback />}><AdminLanding /></Suspense>} />
+              <Route path="branding" element={<Suspense fallback={<PageFallback />}><AdminBranding /></Suspense>} />
+              <Route path="mobile-ui" element={<Suspense fallback={<PageFallback />}><AdminMobileUI /></Suspense>} />
+              <Route path="call-settings" element={<Suspense fallback={<PageFallback />}><AdminCallSettings /></Suspense>} />
+              <Route path="footer" element={<Suspense fallback={<PageFallback />}><AdminFooter /></Suspense>} />
             </Route>
 
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />
           </Routes>
-          </Suspense>
           </LayoutProvider>
           </CurrencyProvider>
           </LanguageProvider>
