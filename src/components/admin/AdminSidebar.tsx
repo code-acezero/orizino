@@ -51,42 +51,42 @@ interface MenuItem {
 }
 
 const mainItems: MenuItem[] = [
-  { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
-  { title: "Products", url: "/admin/products", icon: Package },
-  { title: "Categories", url: "/admin/categories", icon: FolderTree },
-  { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
-  { title: "Users", url: "/admin/users", icon: Users, adminOnly: true },
+  { title: "Dashboard", url: "/origin", icon: LayoutDashboard },
+  { title: "Products", url: "/origin/products", icon: Package },
+  { title: "Categories", url: "/origin/categories", icon: FolderTree },
+  { title: "Orders", url: "/origin/orders", icon: ShoppingCart },
+  { title: "Users", url: "/origin/users", icon: Users, adminOnly: true },
 ];
 
 const commerceItems: MenuItem[] = [
-  { title: "Coupons", url: "/admin/coupons", icon: Tag },
-  { title: "User Promos", url: "/admin/user-promos", icon: Gift, adminOnly: true },
-  { title: "Shipping", url: "/admin/shipping", icon: Truck, adminOnly: true },
-  { title: "Delivery Offers", url: "/admin/delivery-offers", icon: Percent },
-  { title: "Payment Gateways", url: "/admin/payment-gateways", icon: Key, adminOnly: true },
-  { title: "Returns", url: "/admin/returns", icon: Package },
+  { title: "Coupons", url: "/origin/coupons", icon: Tag },
+  { title: "User Promos", url: "/origin/user-promos", icon: Gift, adminOnly: true },
+  { title: "Shipping", url: "/origin/shipping", icon: Truck, adminOnly: true },
+  { title: "Delivery Offers", url: "/origin/delivery-offers", icon: Percent },
+  { title: "Payment Gateways", url: "/origin/payment-gateways", icon: Key, adminOnly: true },
+  { title: "Returns", url: "/origin/returns", icon: Package },
 ];
 
 const contentItems: MenuItem[] = [
-  { title: "Landing Page", url: "/admin/landing", icon: Globe, adminOnly: true },
-  { title: "Home Page", url: "/admin/home", icon: Home, adminOnly: true },
-  { title: "Showcase", url: "/admin/showcase", icon: Layers },
-  { title: "Banners", url: "/admin/banners", icon: Image },
-  { title: "Footer", url: "/admin/footer", icon: Layers, adminOnly: true },
-  { title: "Reviews", url: "/admin/reviews", icon: Star },
-  { title: "Announcements", url: "/admin/announcements", icon: Megaphone },
-  { title: "CMS Pages", url: "/admin/cms-pages", icon: MessageSquare, adminOnly: true },
-  { title: "Requests", url: "/admin/requests", icon: MessageSquare, adminOnly: true },
+  { title: "Landing Page", url: "/origin/landing", icon: Globe, adminOnly: true },
+  { title: "Home Page", url: "/origin/home", icon: Home, adminOnly: true },
+  { title: "Showcase", url: "/origin/showcase", icon: Layers },
+  { title: "Banners", url: "/origin/banners", icon: Image },
+  { title: "Footer", url: "/origin/footer", icon: Layers, adminOnly: true },
+  { title: "Reviews", url: "/origin/reviews", icon: Star },
+  { title: "Announcements", url: "/origin/announcements", icon: Megaphone },
+  { title: "CMS Pages", url: "/origin/cms-pages", icon: MessageSquare, adminOnly: true },
+  { title: "Requests", url: "/origin/requests", icon: MessageSquare, adminOnly: true },
 ];
 
 const systemItems: MenuItem[] = [
-  { title: "Live Support", url: "/admin/support", icon: Headphones },
-  { title: "Call Settings", url: "/admin/call-settings", icon: Phone, adminOnly: true },
-  { title: "AI Agent", url: "/admin/ai-settings", icon: Bot, adminOnly: true },
-  { title: "Branding", url: "/admin/branding", icon: Palette, adminOnly: true },
-  { title: "Mobile UI", url: "/admin/mobile-ui", icon: Smartphone, adminOnly: true },
-  { title: "API Keys", url: "/admin/api-keys", icon: Key, adminOnly: true },
-  { title: "Settings", url: "/admin/settings", icon: Settings, adminOnly: true },
+  { title: "Live Support", url: "/origin/support", icon: Headphones },
+  { title: "Call Settings", url: "/origin/call-settings", icon: Phone, adminOnly: true },
+  { title: "AI Agent", url: "/origin/ai-settings", icon: Bot, adminOnly: true },
+  { title: "Branding", url: "/origin/branding", icon: Palette, adminOnly: true },
+  { title: "Mobile UI", url: "/origin/mobile-ui", icon: Smartphone, adminOnly: true },
+  { title: "API Keys", url: "/origin/api-keys", icon: Key, adminOnly: true },
+  { title: "Settings", url: "/origin/settings", icon: Settings, adminOnly: true },
 ];
 
 export function AdminSidebar() {
@@ -108,12 +108,12 @@ export function AdminSidebar() {
   });
 
   const isActive = (path: string) =>
-    path === "/admin"
-      ? location.pathname === "/admin"
+    path === "/origin"
+      ? location.pathname === "/origin"
       : location.pathname.startsWith(path);
 
   const getBadge = (url: string) => {
-    if (url === "/admin/support" && openSupportCount > 0) return openSupportCount;
+    if (url === "/origin/support" && openSupportCount > 0) return openSupportCount;
     return null;
   };
 
@@ -133,7 +133,7 @@ export function AdminSidebar() {
               return (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink to={item.url} end={item.url === "/admin"}>
+                    <NavLink to={item.url} end={item.url === "/origin"}>
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
                       {badge != null && (
