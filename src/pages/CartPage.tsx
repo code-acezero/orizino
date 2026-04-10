@@ -49,7 +49,19 @@ const CartPage: React.FC = () => {
     },
   });
 
-  const [selectedShipping, setSelectedShipping] = useState<string | null>(null);
+  // Fetch available coupons to show to user
+  const { data: availableCoupons } = useQuery({
+    queryKey: ["available-coupons"],
+    queryFn: async () => {
+      const { data } = await supabase.from("coupons").select("code, description, discount_type, discount_value, min_order_amount, max_discount_amount, first_order_only, target_categories, target_products")
+        .eq("is_active", true);
+      // Filter out expired and future ones client-side (RLS already filters is_active)
+      return (data || []).filter(c => !c.first_order_only); // Don't show first-order-only to avoid confusion
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const [showCoupons, setShowCoupons] = useState(false);
 
   const updateQty = useMutation({
     mutationFn: async ({ id, quantity }: { id: string; quantity: number }) => {
@@ -294,14 +306,37 @@ const CartPage: React.FC = () => {
                       <button onClick={removeCoupon} className="p-1 rounded-full hover:bg-secondary/50"><X className="w-4 h-4 text-muted-foreground" /></button>
                     </div>
                   ) : (
-                    <div className="flex gap-2">
+                     <div className="flex gap-2">
                       <Input value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} placeholder="Coupon code" className="rounded-xl text-sm" onKeyDown={(e) => e.key === "Enter" && applyCoupon()} />
                       <Button size="sm" onClick={applyCoupon} disabled={couponLoading} className="rounded-xl px-4 whitespace-nowrap">
                         {couponLoading ? <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> : "Apply"}
                       </Button>
                     </div>
                   )}
-                </div>
+                  {!appliedCoupon && availableCoupons && availableCoupons.length > 0 && (
+                    <div>
+                      <button onClick={() => setShowCoupons(!showCoupons)} className="text-xs text-primary hover:underline flex items-center gap-1">
+                        <Tag className="w-3 h-3" /> {showCoupons ? "Hide" : "View"} available vouchers ({availableCoupons.length})
+                      </button>
+                      {showCoupons && (
+                        <div className="mt-2 space-y-1.5 max-h-40 overflow-y-auto">
+                          {availableCoupons.map(c => (
+                            <button key={c.code} onClick={() => { setCouponCode(c.code); setShowCoupons(false); }}
+                              className="w-full text-left p-2.5 rounded-xl border border-dashed border-primary/30 hover:border-primary/60 hover:bg-primary/5 transition-all">
+                              <div className="flex items-center justify-between">
+                                <span className="font-mono text-xs font-bold text-primary">{c.code}</span>
+                                <Badge variant="secondary" className="text-[10px]">
+                                  {c.discount_type === "percentage" ? `${c.discount_value}% off` : `৳${Number(c.discount_value).toFixed(0)} off`}
+                                </Badge>
+                              </div>
+                              {c.description && <p className="text-[10px] text-muted-foreground mt-0.5">{c.description}</p>}
+                              {Number(c.min_order_amount) > 0 && <p className="text-[9px] text-muted-foreground/70">Min order: {formatPrice(Number(c.min_order_amount))}</p>}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between"><span className="text-muted-foreground">Subtotal ({itemCount} items)</span><span className="text-foreground">{formatPrice(subtotal)}</span></div>
