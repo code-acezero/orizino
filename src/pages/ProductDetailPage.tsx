@@ -3,7 +3,7 @@ import { useLayout } from "@/contexts/LayoutContext";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Shield, Truck, RotateCcw, Package, X, Sparkles, Zap } from "lucide-react";
+import { Star, Shield, Truck, RotateCcw, Package, X, Sparkles, Zap, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/lib/app-toast";
