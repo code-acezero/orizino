@@ -91,6 +91,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    // If product has variants, open quick view for variant selection
+    if (hasVariants) {
+      setQuickViewOpen(true);
+      return;
+    }
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { toast.error("Please sign in to add items to cart"); return; }
     setAddingToCart(true);
@@ -112,7 +117,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       toast.success(`${name} added to cart`);
     } catch { toast.error("Failed to add to cart"); }
     finally { setAddingToCart(false); }
-  }, [id, name, queryClient]);
+  }, [id, name, queryClient, hasVariants]);
 
   const discount = compareAtPrice
     ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
