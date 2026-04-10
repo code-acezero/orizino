@@ -9,6 +9,7 @@ import { useSeoMeta } from "@/hooks/use-seo-meta";
 import { Button } from "@/components/ui/button";
 import ReactMarkdown from "react-markdown";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { playRingtone, stopRingtone } from "@/lib/sounds";
 
 interface Msg {
   role: "user" | "assistant";
