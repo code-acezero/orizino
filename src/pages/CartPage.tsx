@@ -336,7 +336,8 @@ const CartPage: React.FC = () => {
                         </div>
                       )}
                     </div>
-                  )
+                  )}
+                </div>
 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between"><span className="text-muted-foreground">Subtotal ({itemCount} items)</span><span className="text-foreground">{formatPrice(subtotal)}</span></div>
