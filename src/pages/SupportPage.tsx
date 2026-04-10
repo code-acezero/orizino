@@ -9,6 +9,7 @@ import { useSeoMeta } from "@/hooks/use-seo-meta";
 import { Button } from "@/components/ui/button";
 import ReactMarkdown from "react-markdown";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { playRingtone, stopRingtone } from "@/lib/sounds";
 
 interface Msg {
   role: "user" | "assistant";
@@ -98,7 +99,7 @@ const ActiveCallBar: React.FC<{
 };
 
 const SupportPage: React.FC = () => {
-  useSeoMeta("support", "Support | Ace Marketplace");
+  useSeoMeta("support", "Support | Store");
   const { user } = useAuth();
   const { t } = useLanguage();
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -108,6 +109,12 @@ const SupportPage: React.FC = () => {
 
   // Call state
   const [incomingCall, setIncomingCall] = useState(false);
+
+  // Play/stop ringtone on incoming call
+  useEffect(() => {
+    if (incomingCall) { playRingtone(); } else { stopRingtone(); }
+    return () => stopRingtone();
+  }, [incomingCall]);
   const [callActive, setCallActive] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [callMuted, setCallMuted] = useState(false);
@@ -286,7 +293,7 @@ const SupportPage: React.FC = () => {
     }
   };
 
-  const agentName = aiConfig?.name || "Ace Assistant";
+  const agentName = aiConfig?.name || "AI Assistant";
   const welcomeMessage = aiConfig?.welcome_message || "Hi! How can I help you today?";
 
   useEffect(() => {
@@ -331,11 +338,17 @@ const SupportPage: React.FC = () => {
             <ArrowLeft className="w-5 h-5 text-muted-foreground" />
           </Link>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center">
-              <Bot className="w-6 h-6 text-primary" />
-            </div>
+            {aiConfig?.avatar_type === "image" && aiConfig?.avatar_url ? (
+              <img src={aiConfig.avatar_url} alt={agentName} className="w-12 h-12 rounded-2xl object-cover" />
+            ) : (
+              <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center">
+                {aiConfig?.avatar_emoji ? <span className="text-xl">{aiConfig.avatar_emoji}</span> : <Bot className="w-6 h-6 text-primary" />}
+              </div>
+            )}
             <div>
-              <h1 className="text-2xl font-bold font-display text-foreground">{agentName}</h1>
+              <h1 className="text-2xl font-bold font-display text-foreground">
+                {agentName ? `Support (${agentName})` : t("nav.support")}
+              </h1>
               <p className="text-sm text-muted-foreground">{t("nav.support")}</p>
             </div>
           </div>

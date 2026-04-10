@@ -10,7 +10,7 @@ import { useSeoMeta } from "@/hooks/use-seo-meta";
 import OrderTrackingTimeline from "@/components/OrderTrackingTimeline";
 
 const OrdersPage: React.FC = () => {
-  useSeoMeta("orders", "My Orders | Ace Marketplace");
+  useSeoMeta("orders", "My Orders | Store");
   const { user } = useAuth();
   const { formatPrice } = useCurrency();
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);

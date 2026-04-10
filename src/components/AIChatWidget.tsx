@@ -9,6 +9,7 @@ import { useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { toast } from "@/lib/app-toast";
 import { getIceServers } from "@/lib/ice-servers";
+import { playRingtone, stopRingtone } from "@/lib/sounds";
 
 interface Msg {
   role: "user" | "assistant" | "system";
@@ -169,6 +170,12 @@ const AIChatWidget: React.FC = () => {
 
   // Call state
   const [incomingCall, setIncomingCall] = useState(false);
+
+  // Play/stop ringtone on incoming call
+  useEffect(() => {
+    if (incomingCall) { playRingtone(); } else { stopRingtone(); }
+    return () => stopRingtone();
+  }, [incomingCall]);
   const [callActive, setCallActive] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [callMuted, setCallMuted] = useState(false);
@@ -203,7 +210,7 @@ const AIChatWidget: React.FC = () => {
     };
   }, []);
 
-  const isAdminPage = location.pathname.startsWith("/admin");
+  const isAdminPage = location.pathname.startsWith("/origin");
   const isLandingPage = location.pathname === "/";
 
   const { data: aiConfig } = useQuery({
@@ -541,7 +548,7 @@ const AIChatWidget: React.FC = () => {
       message: "A customer is requesting a voice call.",
       type: "support",
       priority: "high",
-      link_url: "/admin/support",
+      link_url: "/origin/support",
     });
     toast.success("Call request sent to support agent");
   };
@@ -685,7 +692,9 @@ const AIChatWidget: React.FC = () => {
               <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-primary/8 via-primary/3 to-transparent">
                 <AgentAvatar />
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">{agentName || "Support"}</p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {agentName ? `Support (${agentName})` : "Support"}
+                  </p>
                   <div className="flex items-center gap-1.5">
                     <div className={`w-1.5 h-1.5 rounded-full ${callActive ? "bg-green-400 animate-pulse" : liveMode ? "bg-emerald-400" : "bg-primary"}`} />
                     <p className="text-[10px] text-muted-foreground">

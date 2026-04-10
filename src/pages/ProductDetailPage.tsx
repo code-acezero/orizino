@@ -10,6 +10,7 @@ import { toast } from "@/lib/app-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useProductSeoMeta } from "@/hooks/use-product-seo-meta";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { addRecentlyViewed } from "@/hooks/use-recently-viewed";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ProductCard from "@/components/ProductCard";
 import ImageGallery from "@/components/product/ImageGallery";
@@ -150,6 +151,11 @@ const ProductDetailPage: React.FC = () => {
   });
 
   useProductSeoMeta(product);
+
+  // Track recently viewed
+  useEffect(() => {
+    if (product?.id) addRecentlyViewed(product.id);
+  }, [product?.id]);
 
   const productCat = product?.categories as any;
   const { data: parentCategory } = useQuery({

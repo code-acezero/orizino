@@ -11,17 +11,17 @@ export const useAdminRole = () => useContext(AdminRoleContext);
 
 // Pages moderators can access
 const MODERATOR_ALLOWED_PATHS = [
-  "/admin",
-  "/admin/products",
-  "/admin/categories",
-  "/admin/orders",
-  "/admin/coupons",
-  "/admin/delivery-offers",
-  "/admin/banners",
-  "/admin/showcase",
-  "/admin/reviews",
-  "/admin/announcements",
-  "/admin/support",
+  "/origin",
+  "/origin/products",
+  "/origin/categories",
+  "/origin/orders",
+  "/origin/coupons",
+  "/origin/delivery-offers",
+  "/origin/banners",
+  "/origin/showcase",
+  "/origin/reviews",
+  "/origin/announcements",
+  "/origin/support",
 ];
 
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -62,11 +62,11 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   // Moderator path guard
   if (role === "moderator") {
-    const currentPath = location.pathname.replace(/\/$/, "") || "/admin";
+    const currentPath = location.pathname.replace(/\/$/, "") || "/origin";
     const allowed = MODERATOR_ALLOWED_PATHS.some(
-      (p) => currentPath === p || (p === "/admin" && currentPath === "/admin")
+      (p) => currentPath === p || (p === "/origin" && currentPath === "/origin")
     );
-    if (!allowed) return <Navigate to="/admin" replace />;
+    if (!allowed) return <Navigate to="/origin" replace />;
   }
 
   return (

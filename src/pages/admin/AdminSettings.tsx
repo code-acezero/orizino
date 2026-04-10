@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { themePalettes } from "@/lib/theme-palettes";
 
 const defaultSettings: Record<string, any> = {
-  site_name: "Zero Marketplace",
+  site_name: "",
   site_description: "Your premium online marketplace",
   logo_url: "",
   site_icon_url: "",

@@ -127,7 +127,7 @@ const App = () => (
 
             {/* Admin routes — layout is eagerly loaded, child pages lazy */}
             <Route
-              path="/admin"
+              path="/origin"
               element={<AdminRoute><AdminLayout /></AdminRoute>}
             >
               <Route index element={<Suspense fallback={<PageFallback />}><AdminDashboard /></Suspense>} />

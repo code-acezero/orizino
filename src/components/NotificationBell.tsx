@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { subscribe as subscribeToasts, type AppToast, removeToast as removeAppToast } from "@/lib/app-toast";
+import { playNotificationSound } from "@/lib/sounds";
 
 interface Notification {
   id: string;
@@ -87,6 +88,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }
       const latest = notifications[0];
       if (latest && !latest.is_read && latest.id !== lastSeenId) {
         setLastSeenId(latest.id);
+        playNotificationSound();
         showIsland({
           id: latest.id,
           title: latest.title,

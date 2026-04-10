@@ -213,7 +213,7 @@ interface GlobalSEO {
 }
 
 const defaultGlobalSEO: GlobalSEO = {
-  site_title_suffix: " | Ace Marketplace",
+  site_title_suffix: " | Store",
   default_og_image: "",
   google_analytics_id: "",
   google_search_console: "",

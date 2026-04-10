@@ -278,10 +278,10 @@ const AdminDashboard = () => {
 
   /* ── Quick actions ── */
   const quickActions = [
-    { label: "Add Product", icon: Package, path: "/admin/products", color: "text-primary" },
-    { label: "View Orders", icon: ShoppingCart, path: "/admin/orders", color: "text-accent" },
-    { label: "Manage Users", icon: Users, path: "/admin/users", color: "text-primary" },
-    { label: "Homepage", icon: Layers, path: "/admin/home", color: "text-accent" },
+    { label: "Add Product", icon: Package, path: "/origin/products", color: "text-primary" },
+    { label: "View Orders", icon: ShoppingCart, path: "/origin/orders", color: "text-accent" },
+    { label: "Manage Users", icon: Users, path: "/origin/users", color: "text-primary" },
+    { label: "Homepage", icon: Layers, path: "/origin/home", color: "text-accent" },
   ];
 
   const containerVariants = {
@@ -628,7 +628,7 @@ const AdminDashboard = () => {
                 variant="ghost"
                 size="sm"
                 className="text-xs text-muted-foreground"
-                onClick={() => navigate("/admin/orders")}
+                onClick={() => navigate("/origin/orders")}
               >
                 View all <ArrowRight className="w-3 h-3 ml-1" />
               </Button>
@@ -645,7 +645,7 @@ const AdminDashboard = () => {
                     <div
                       key={order.id}
                       className="flex items-center justify-between px-5 py-3 hover:bg-secondary/20 transition-colors cursor-pointer"
-                      onClick={() => navigate("/admin/orders")}
+                      onClick={() => navigate("/origin/orders")}
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${sc.color}`}>
@@ -698,7 +698,7 @@ const AdminDashboard = () => {
                     <div
                       key={product.id}
                       className="flex items-center gap-3 px-5 py-2.5 hover:bg-secondary/20 transition-colors cursor-pointer"
-                      onClick={() => navigate("/admin/products")}
+                      onClick={() => navigate("/origin/products")}
                     >
                       <div className="w-8 h-8 rounded-lg bg-secondary/60 overflow-hidden shrink-0">
                         {product.thumbnail ? (
@@ -769,7 +769,7 @@ const AdminDashboard = () => {
                   variant="ghost"
                   size="sm"
                   className="text-xs text-muted-foreground"
-                  onClick={() => navigate("/admin/products")}
+                  onClick={() => navigate("/origin/products")}
                 >
                   View all <ArrowRight className="w-3 h-3 ml-1" />
                 </Button>
