@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "@/lib/app-toast";
 import QuickViewModal from "@/components/QuickViewModal";
+import FlyToCartAnimation from "@/components/FlyToCartAnimation";
 
 const COLOR_HEX: Record<string, string> = {
   black: "#000000", white: "#ffffff", red: "#ef4444", blue: "#3b82f6",
@@ -51,6 +52,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const [inWishlist, setInWishlist] = useState(false);
   const [togglingWishlist, setTogglingWishlist] = useState(false);
   const [notifyingRestock, setNotifyingRestock] = useState(false);
+  const [flyAnim, setFlyAnim] = useState<{ src: string; rect: DOMRect } | null>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   // Fetch variant info
   const { data: variantInfo } = useQuery({
@@ -130,6 +133,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       queryClient.invalidateQueries({ queryKey: ["cart-count"] });
       toast.success(`${name} added to cart`);
+      // Trigger fly animation
+      const imgEl = imgRef.current;
+      if (imgEl) {
+        const rect = imgEl.getBoundingClientRect();
+        setFlyAnim({ src: thumbnail || "/placeholder.svg", rect });
+      }
     } catch { toast.error("Failed to add to cart"); }
     finally { setAddingToCart(false); }
   }, [id, name, queryClient, hasVariants]);
@@ -239,6 +248,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuickViewOpen(true); }}
         >
           <motion.img
+            ref={imgRef}
             src={thumbnail || "/placeholder.svg"}
             alt={name}
             style={isMobile ? {} : { x: imgX, y: imgY, scale: 1.12 }}
@@ -387,6 +397,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </motion.div>
       </Link>
       <QuickViewModal productId={id} open={quickViewOpen} onOpenChange={setQuickViewOpen} />
+      {flyAnim && (
+        <FlyToCartAnimation
+          imageSrc={flyAnim.src}
+          startRect={flyAnim.rect}
+          onComplete={() => setFlyAnim(null)}
+        />
+      )}
     </motion.div>
   );
 };

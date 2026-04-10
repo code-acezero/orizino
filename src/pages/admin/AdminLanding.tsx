@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/lib/app-toast";
-import { Rocket, Sparkles, Type, BarChart3, MessageCircle, Image as ImageIcon, Plus, Trash2 } from "lucide-react";
+import { Rocket, Sparkles, Type, BarChart3, MessageCircle, Image as ImageIcon, Plus, Trash2, Target, BookOpen } from "lucide-react";
 import ImageUpload from "@/components/ImageUpload";
 
 const iconOptions = ["ShoppingBag", "Shield", "Truck", "Sparkles", "Star", "Zap", "Globe", "Package", "Users", "Heart"];
@@ -29,10 +29,17 @@ interface LandingConfig {
   show_categories: boolean;
   show_testimonials: boolean;
   show_cta: boolean;
+  show_about: boolean;
+  show_mission_vision: boolean;
+  show_featured_products: boolean;
   cta_title: string;
   cta_subtitle: string;
   cta_button: string;
   testimonials: { name: string; text: string; rating: number }[];
+  about_title: string;
+  about_text: string;
+  mission_text: string;
+  vision_text: string;
 }
 
 const DEFAULT: LandingConfig = {
@@ -60,10 +67,17 @@ const DEFAULT: LandingConfig = {
   show_categories: true,
   show_testimonials: false,
   show_cta: true,
+  show_about: true,
+  show_mission_vision: true,
+  show_featured_products: true,
   cta_title: "",
   cta_subtitle: "Join thousands of satisfied shoppers. Create your account today.",
   cta_button: "Create Account",
   testimonials: [],
+  about_title: "Our Story",
+  about_text: "We believe in curating only the finest products for our community.",
+  mission_text: "To make premium quality accessible to everyone, everywhere.",
+  vision_text: "A world where every purchase brings joy and lasting value.",
 };
 
 const AdminLanding = () => {
@@ -104,7 +118,6 @@ const AdminLanding = () => {
     features[idx] = { ...features[idx], [field]: value };
     setForm({ ...form, features });
   };
-
   const addFeature = () => setForm({ ...form, features: [...form.features, { icon: "Sparkles", title: "", desc: "" }] });
   const removeFeature = (idx: number) => setForm({ ...form, features: form.features.filter((_, i) => i !== idx) });
 
@@ -113,7 +126,6 @@ const AdminLanding = () => {
     stats[idx] = { ...stats[idx], [field]: value };
     setForm({ ...form, stats });
   };
-
   const addStat = () => setForm({ ...form, stats: [...form.stats, { value: "", label: "" }] });
   const removeStat = (idx: number) => setForm({ ...form, stats: form.stats.filter((_, i) => i !== idx) });
 
@@ -122,7 +134,6 @@ const AdminLanding = () => {
     testimonials[idx] = { ...testimonials[idx], [field]: value };
     setForm({ ...form, testimonials });
   };
-
   const addTestimonial = () => setForm({ ...form, testimonials: [...form.testimonials, { name: "", text: "", rating: 5 }] });
   const removeTestimonial = (idx: number) => setForm({ ...form, testimonials: form.testimonials.filter((_, i) => i !== idx) });
 
@@ -136,8 +147,10 @@ const AdminLanding = () => {
       </div>
 
       <Tabs defaultValue="hero" className="space-y-4">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="hero"><Rocket className="w-4 h-4 mr-1" /> Hero</TabsTrigger>
+          <TabsTrigger value="about"><BookOpen className="w-4 h-4 mr-1" /> About</TabsTrigger>
+          <TabsTrigger value="mission"><Target className="w-4 h-4 mr-1" /> Mission</TabsTrigger>
           <TabsTrigger value="features"><Sparkles className="w-4 h-4 mr-1" /> Features</TabsTrigger>
           <TabsTrigger value="stats"><BarChart3 className="w-4 h-4 mr-1" /> Stats</TabsTrigger>
           <TabsTrigger value="testimonials"><MessageCircle className="w-4 h-4 mr-1" /> Testimonials</TabsTrigger>
@@ -183,6 +196,44 @@ const AdminLanding = () => {
               <div className="space-y-2">
                 <Label>Hero Background Image</Label>
                 <ImageUpload bucket="banners" folder="landing" value={form.hero_bg_url} onUploaded={(url) => setForm({ ...form, hero_bg_url: url })} />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="about">
+          <Card>
+            <CardHeader>
+              <CardTitle>About Us / Brand Story</CardTitle>
+              <CardDescription>Tell visitors about your brand</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Section Title</Label>
+                <Input value={form.about_title} onChange={(e) => setForm({ ...form, about_title: e.target.value })} placeholder="Our Story" />
+              </div>
+              <div className="space-y-2">
+                <Label>About Text</Label>
+                <Textarea value={form.about_text} onChange={(e) => setForm({ ...form, about_text: e.target.value })} rows={4} placeholder="Tell your brand story..." />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="mission">
+          <Card>
+            <CardHeader>
+              <CardTitle>Mission & Vision</CardTitle>
+              <CardDescription>Define your mission and vision statements</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Mission Statement</Label>
+                <Textarea value={form.mission_text} onChange={(e) => setForm({ ...form, mission_text: e.target.value })} rows={3} placeholder="Our mission is..." />
+              </div>
+              <div className="space-y-2">
+                <Label>Vision Statement</Label>
+                <Textarea value={form.vision_text} onChange={(e) => setForm({ ...form, vision_text: e.target.value })} rows={3} placeholder="Our vision is..." />
               </div>
             </CardContent>
           </Card>
@@ -284,6 +335,9 @@ const AdminLanding = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               {[
+                { key: "show_about", label: "About Us / Brand Story" },
+                { key: "show_mission_vision", label: "Mission & Vision" },
+                { key: "show_featured_products", label: "Featured Products" },
                 { key: "show_stats", label: "Stats Section" },
                 { key: "show_features", label: "Features Section" },
                 { key: "show_categories", label: "Categories Preview" },

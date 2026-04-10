@@ -348,7 +348,7 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
                 <Link to="/wishlist" className="hidden lg:flex p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all">
                   <Heart className="w-5 h-5" />
                 </Link>
-                <Link to="/cart" className="hidden lg:flex p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all relative">
+                <Link to="/cart" id="nav-cart-icon" className="hidden lg:flex p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all relative">
                   <ShoppingCart className="w-5 h-5" />
                   {(cartCount ?? 0) > 0 && (
                     <motion.span
