@@ -155,7 +155,7 @@ const LandingPage: React.FC = () => {
     hidden: { opacity: 0, y: 40, rotateX: -60 },
     visible: (i: number) => ({
       opacity: 1, y: 0, rotateX: 0,
-      transition: { delay: 0.4 + i * 0.03, duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+      transition: { delay: 0.4 + i * 0.03, duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
     }),
   };
 
