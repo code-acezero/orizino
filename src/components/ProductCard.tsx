@@ -1,6 +1,6 @@
 import React, { useRef, useCallback, useState } from "react";
 import { Link } from "react-router-dom";
-import { Heart, ShoppingCart, Star, Loader2 } from "lucide-react";
+import { Heart, ShoppingCart, Star, Loader2, Bell } from "lucide-react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { trackClick } from "@/hooks/use-analytics";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -50,8 +50,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [inWishlist, setInWishlist] = useState(false);
   const [togglingWishlist, setTogglingWishlist] = useState(false);
+  const [notifyingRestock, setNotifyingRestock] = useState(false);
 
-  // Fetch variant info (colors for swatches + has variants flag)
+  // Fetch variant info
   const { data: variantInfo } = useQuery({
     queryKey: ["product-variant-info", id],
     queryFn: async () => {
@@ -106,7 +107,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // If product has variants, open quick view for variant selection
     if (hasVariants !== false) {
       setQuickViewOpen(true);
       return;
@@ -134,6 +134,34 @@ const ProductCard: React.FC<ProductCardProps> = ({
     finally { setAddingToCart(false); }
   }, [id, name, queryClient, hasVariants]);
 
+  const handleNotifyRestock = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast.error("Please sign in to get restock alerts"); return; }
+    setNotifyingRestock(true);
+    try {
+      const { data: existing } = await supabase
+        .from("stock_notifications")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("product_id", id)
+        .is("variant_id", null)
+        .maybeSingle();
+      if (existing) {
+        toast.info("You're already subscribed to restock alerts for this product");
+      } else {
+        await supabase.from("stock_notifications").insert({
+          user_id: user.id,
+          product_id: id,
+          email: user.email || null,
+        });
+        toast.success("You'll be notified when this is back in stock!");
+      }
+    } catch { toast.error("Failed to subscribe for restock alerts"); }
+    finally { setNotifyingRestock(false); }
+  }, [id]);
+
   const discount = compareAtPrice
     ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
     : 0;
@@ -158,11 +186,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const innerBottom = useSpring(useTransform(mouseY, [-0.5, 0.5], [0, 0.35]), springCfg);
   const innerLeft = useSpring(useTransform(mouseX, [-0.5, 0.5], [0.35, 0]), springCfg);
   const innerRight = useSpring(useTransform(mouseX, [-0.5, 0.5], [0, 0.35]), springCfg);
-  // Text parallax
   const textX = useSpring(useTransform(mouseX, [-0.5, 0.5], [-4, 4]), { stiffness: 200, damping: 24 });
   const textY = useSpring(useTransform(mouseY, [-0.5, 0.5], [-3, 3]), { stiffness: 200, damping: 24 });
 
-  // Pre-compute motion values outside conditional JSX to avoid hooks-in-conditionals error
   const glareBackground = useTransform(
     [glareX, glareY],
     ([gx, gy]) => `radial-gradient(circle at ${gx}% ${gy}%, hsl(var(--primary) / 0.15) 0%, transparent 60%)`
@@ -206,7 +232,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       className={`group glass rounded-3xl overflow-hidden flex flex-col h-full ${className}`}
     >
       <Link to={`/product/${slug}`} className="flex flex-col flex-1" onClick={() => trackClick("product_card", slug, window.location.pathname, { product_name: name })}>
-        {/* Image with parallax offset + 3D box effect */}
+        {/* Image */}
         <div
           className="relative aspect-square overflow-hidden bg-secondary/20 cursor-zoom-in"
           style={isMobile ? {} : { transformStyle: "preserve-3d" }}
@@ -221,12 +247,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
           />
           {!isMobile && (
             <>
-              {/* Glare overlay */}
               <motion.div
                 className="pointer-events-none absolute inset-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                 style={{ background: glareBackground }}
               />
-              {/* 3D box inner edge shadows */}
               <motion.div
                 className="pointer-events-none absolute inset-0 z-[11] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                 style={{ boxShadow: innerBoxShadow }}
@@ -240,14 +264,23 @@ const ProductCard: React.FC<ProductCardProps> = ({
           )}
           {/* Sold out overlay */}
           {isSoldOut && (
-            <div className="absolute inset-0 z-[15] bg-background/60 flex items-center justify-center">
+            <div className="absolute inset-0 z-[15] bg-background/60 flex flex-col items-center justify-center gap-2">
               <span className="text-sm font-bold text-muted-foreground tracking-wider uppercase">Sold Out</span>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleNotifyRestock}
+                disabled={notifyingRestock}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold hover:brightness-110 disabled:opacity-70"
+              >
+                {notifyingRestock ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bell className="w-3 h-3" />}
+                Notify me
+              </motion.button>
             </div>
           )}
           {/* Stock badge */}
           {(() => {
-            if (totalStock === undefined) return null;
-            if (totalStock <= 0) return null; // handled by overlay
+            if (totalStock === undefined || totalStock <= 0) return null;
             if (totalStock < 5) return (
               <span className="absolute bottom-3 left-3 bg-destructive/90 text-destructive-foreground text-[10px] font-semibold py-0.5 px-2 rounded-full z-20 group/stock cursor-default">
                 Low stock
@@ -275,7 +308,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         </div>
 
-        {/* Info with parallax depth */}
+        {/* Info */}
         <motion.div
           className="p-4 flex flex-col flex-1"
           style={isMobile ? {} : { x: textX, y: textY, translateZ: 30 }}
@@ -302,50 +335,31 @@ const ProductCard: React.FC<ProductCardProps> = ({
               {variantInfo?.sizes && variantInfo.sizes.length > 0 && (
                 <div className="flex items-center gap-1">
                   {variantInfo.sizes.slice(0, 4).map((size) => (
-                    <span
-                      key={size}
-                      title={size}
-                      className="text-[10px] font-medium text-muted-foreground bg-secondary/60 rounded px-1.5 py-0.5 leading-none"
-                    >
-                      {size}
-                    </span>
+                    <span key={size} title={size} className="text-[10px] font-medium text-muted-foreground bg-secondary/60 rounded px-1.5 py-0.5 leading-none">{size}</span>
                   ))}
-                  {variantInfo.sizes.length > 4 && (
-                    <span className="text-[10px] text-muted-foreground">+{variantInfo.sizes.length - 4}</span>
-                  )}
+                  {variantInfo.sizes.length > 4 && <span className="text-[10px] text-muted-foreground">+{variantInfo.sizes.length - 4}</span>}
                 </div>
               )}
               {variantInfo?.colors && variantInfo.colors.length > 0 && (
                 <div className="flex items-center gap-1">
                   {variantInfo.colors.slice(0, 5).map((color) => (
-                    <span
-                      key={color}
-                      title={color}
-                      className="w-3.5 h-3.5 rounded-full border border-border/50 shrink-0"
-                      style={{ backgroundColor: getColorHex(color) }}
-                    />
+                    <span key={color} title={color} className="w-3.5 h-3.5 rounded-full border border-border/50 shrink-0" style={{ backgroundColor: getColorHex(color) }} />
                   ))}
-                  {variantInfo.colors.length > 5 && (
-                    <span className="text-[10px] text-muted-foreground">+{variantInfo.colors.length - 5}</span>
-                  )}
+                  {variantInfo.colors.length > 5 && <span className="text-[10px] text-muted-foreground">+{variantInfo.colors.length - 5}</span>}
                 </div>
               )}
             </div>
           )}
           <div className="flex items-center gap-2 mt-auto lg:flex-row lg:items-center flex-col items-center">
-            <span className="font-bold text-foreground group-hover:animate-[priceGlow_1.5s_ease-in-out_infinite] transition-all duration-300 text-sm lg:text-base"
-              style={{ textShadow: 'none' }}
-            >
+            <span className="font-bold text-foreground group-hover:animate-[priceGlow_1.5s_ease-in-out_infinite] transition-all duration-300 text-sm lg:text-base" style={{ textShadow: 'none' }}>
               {formatPrice(price)}
             </span>
             {compareAtPrice && (
-              <span className="text-xs lg:text-sm text-muted-foreground line-through">
-                {formatPrice(compareAtPrice)}
-              </span>
+              <span className="text-xs lg:text-sm text-muted-foreground line-through">{formatPrice(compareAtPrice)}</span>
             )}
           </div>
-          {/* Floating Add to Cart */}
-          {!isSoldOut && (
+          {/* Add to Cart or Notify */}
+          {!isSoldOut ? (
             <motion.button
               onClick={handleAddToCart}
               disabled={addingToCart}
@@ -356,6 +370,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
             >
               {addingToCart ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShoppingCart className="w-3.5 h-3.5" />}
               {addingToCart ? "Adding..." : "Add to Cart"}
+            </motion.button>
+          ) : (
+            <motion.button
+              onClick={handleNotifyRestock}
+              disabled={notifyingRestock}
+              className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl bg-muted text-muted-foreground py-2.5 text-xs font-semibold
+                translate-y-5 opacity-0 group-hover:translate-y-0 group-hover:opacity-100
+                transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]
+                hover:bg-muted/80 active:scale-95 disabled:opacity-70"
+            >
+              {notifyingRestock ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Bell className="w-3.5 h-3.5" />}
+              {notifyingRestock ? "Subscribing..." : "Notify When Available"}
             </motion.button>
           )}
         </motion.div>

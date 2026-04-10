@@ -225,6 +225,44 @@ export type Database = {
           },
         ]
       }
+      category_filters: {
+        Row: {
+          category_id: string
+          created_at: string
+          filter_name: string
+          filter_values: string[]
+          id: string
+          is_active: boolean
+          sort_order: number
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          filter_name: string
+          filter_values?: string[]
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          filter_name?: string
+          filter_values?: string[]
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_filters_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cms_pages: {
         Row: {
           content: string

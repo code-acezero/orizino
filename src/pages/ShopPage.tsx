@@ -2,13 +2,15 @@ import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, ChevronDown, ChevronRight } from "lucide-react";
+import { Search, X, ChevronDown, ChevronRight, SlidersHorizontal, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import catElectronics from "@/assets/icons/cat-electronics.png";
 import catFashion from "@/assets/icons/cat-fashion.png";
@@ -46,14 +48,17 @@ const sortOptions = [
 const ShopPage: React.FC = () => {
   useSeoMeta("shop", "Shop | Ace Marketplace");
   const [searchParams] = useSearchParams();
+  const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [sort, setSort] = useState(searchParams.get("sort") || "newest");
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("cat") || "");
   const [expandedParent, setExpandedParent] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
-  const [showFilters, setShowFilters] = useState(false);
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedCustomFilters, setSelectedCustomFilters] = useState<Record<string, string[]>>({});
 
   const { data: siteSettings } = useQuery({
     queryKey: ["site-settings-name"],
@@ -84,20 +89,62 @@ const ShopPage: React.FC = () => {
   const parentCategories = categories?.filter((c) => !c.parent_id) || [];
   const getChildren = (parentId: string) => categories?.filter((c) => c.parent_id === parentId) || [];
 
-  // Fetch all active variant options for filters
+  // Resolve which category IDs to use for variant/filter queries
+  const activeCategoryIds = useMemo(() => {
+    if (!selectedCategory) return null;
+    const children = getChildren(selectedCategory);
+    return [selectedCategory, ...children.map(c => c.id)];
+  }, [selectedCategory, categories]);
+
+  // Fetch variants scoped to selected category (or all if none selected)
   const { data: allVariants } = useQuery({
-    queryKey: ["shop-variant-filters"],
+    queryKey: ["shop-variant-filters", activeCategoryIds],
     queryFn: async () => {
-      const { data } = await supabase
+      let query = supabase
         .from("product_variants")
         .select("product_id, size, color")
         .eq("is_active", true);
+      
+      if (activeCategoryIds) {
+        // Need to get product IDs in category first
+        const { data: catProducts } = await supabase
+          .from("products")
+          .select("id")
+          .eq("is_active", true)
+          .in("category_id", activeCategoryIds);
+        const productIds = (catProducts || []).map(p => p.id);
+        if (productIds.length === 0) return [];
+        query = query.in("product_id", productIds);
+      }
+      
+      const { data } = await query;
       return data || [];
     },
     staleTime: 60000,
   });
 
-  // Derive unique sizes and colors across all products
+  // Fetch category-specific custom filters
+  const { data: categoryFilters } = useQuery({
+    queryKey: ["category-filters", selectedCategory],
+    queryFn: async () => {
+      if (!selectedCategory) return [];
+      // Get filters for the selected category and its parent
+      const cat = categories?.find(c => c.id === selectedCategory);
+      const categoryIds = [selectedCategory];
+      if (cat?.parent_id) categoryIds.push(cat.parent_id);
+      
+      const { data } = await supabase
+        .from("category_filters")
+        .select("*")
+        .in("category_id", categoryIds)
+        .eq("is_active", true)
+        .order("sort_order");
+      return data || [];
+    },
+    staleTime: 60000,
+    enabled: !!selectedCategory,
+  });
+
   const availableSizes = useMemo(() => {
     if (!allVariants) return [];
     return [...new Set(allVariants.map(v => v.size).filter(Boolean))] as string[];
@@ -108,7 +155,20 @@ const ShopPage: React.FC = () => {
     return [...new Set(allVariants.map(v => v.color).filter(Boolean))] as string[];
   }, [allVariants]);
 
-  // Product IDs that match selected variant filters
+  // Fetch unique tags from products
+  const { data: availableTags } = useQuery({
+    queryKey: ["shop-product-tags", activeCategoryIds],
+    queryFn: async () => {
+      let query = supabase.from("products").select("tags").eq("is_active", true);
+      if (activeCategoryIds) query = query.in("category_id", activeCategoryIds);
+      const { data } = await query;
+      const tagSet = new Set<string>();
+      (data || []).forEach(p => (p.tags || []).forEach((t: string) => tagSet.add(t)));
+      return [...tagSet].sort();
+    },
+    staleTime: 60000,
+  });
+
   const variantFilteredProductIds = useMemo(() => {
     if (!allVariants || (selectedSizes.length === 0 && selectedColors.length === 0)) return null;
     return new Set(
@@ -125,15 +185,8 @@ const ShopPage: React.FC = () => {
   const { data: products, isLoading } = useQuery({
     queryKey: ["products", selectedCategory, sort],
     queryFn: async () => {
-      let query = supabase
-        .from("products")
-        .select("*")
-        .eq("is_active", true);
-
-      if (selectedCategory) {
-        query = query.eq("category_id", selectedCategory);
-      }
-
+      let query = supabase.from("products").select("*").eq("is_active", true);
+      if (selectedCategory) query = query.eq("category_id", selectedCategory);
       switch (sort) {
         case "price_asc": query = query.order("price", { ascending: true }); break;
         case "price_desc": query = query.order("price", { ascending: false }); break;
@@ -141,7 +194,6 @@ const ShopPage: React.FC = () => {
         case "popular": query = query.order("review_count", { ascending: false }); break;
         default: query = query.order("created_at", { ascending: false });
       }
-
       const { data } = await query;
       return data || [];
     },
@@ -153,9 +205,10 @@ const ShopPage: React.FC = () => {
       const matchesSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesPrice = p.price >= priceRange[0] && p.price <= priceRange[1];
       const matchesVariants = !variantFilteredProductIds || variantFilteredProductIds.has(p.id);
-      return matchesSearch && matchesPrice && matchesVariants;
+      const matchesTags = selectedTags.length === 0 || selectedTags.some(t => (p.tags || []).includes(t));
+      return matchesSearch && matchesPrice && matchesVariants && matchesTags;
     });
-  }, [products, searchQuery, priceRange, variantFilteredProductIds]);
+  }, [products, searchQuery, priceRange, variantFilteredProductIds, selectedTags]);
 
   const getCategoryIcon = (cat: { icon_url: string | null; icon: string | null; slug: string }) => {
     if (cat.icon_url) return cat.icon_url;
@@ -165,30 +218,171 @@ const ShopPage: React.FC = () => {
   const handleParentClick = (catId: string) => {
     setExpandedParent(expandedParent === catId ? null : catId);
     setSelectedCategory(catId);
+    // Reset filters when category changes
+    setSelectedCustomFilters({});
   };
 
   const handleSubClick = (subId: string) => {
     setSelectedCategory(subId);
+    setSelectedCustomFilters({});
   };
 
-  const toggleSize = (size: string) => {
-    setSelectedSizes(prev => prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size]);
+  const toggleSize = (size: string) => setSelectedSizes(prev => prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size]);
+  const toggleColor = (color: string) => setSelectedColors(prev => prev.includes(color) ? prev.filter(c => c !== color) : [...prev, color]);
+  const toggleTag = (tag: string) => setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+  const toggleCustomFilter = (filterName: string, value: string) => {
+    setSelectedCustomFilters(prev => {
+      const current = prev[filterName] || [];
+      const updated = current.includes(value) ? current.filter(v => v !== value) : [...current, value];
+      return { ...prev, [filterName]: updated };
+    });
   };
 
-  const toggleColor = (color: string) => {
-    setSelectedColors(prev => prev.includes(color) ? prev.filter(c => c !== color) : [...prev, color]);
-  };
-
-  const hasActiveFilters = selectedSizes.length > 0 || selectedColors.length > 0 || selectedCategory || searchQuery || priceRange[0] > 0 || priceRange[1] < 10000;
+  const activeFilterCount = selectedSizes.length + selectedColors.length + selectedTags.length +
+    Object.values(selectedCustomFilters).reduce((sum, arr) => sum + arr.length, 0) +
+    (selectedCategory ? 1 : 0) + (priceRange[0] > 0 || priceRange[1] < 10000 ? 1 : 0);
 
   const clearAllFilters = () => {
     setSelectedSizes([]);
     setSelectedColors([]);
+    setSelectedTags([]);
+    setSelectedCustomFilters({});
     setSelectedCategory("");
     setExpandedParent(null);
     setSearchQuery("");
     setPriceRange([0, 10000]);
   };
+
+  // Shared filter sidebar content
+  const FilterContent = () => (
+    <div className="space-y-6">
+      {/* Categories */}
+      <div>
+        <h3 className="font-display font-semibold text-foreground mb-3">Categories</h3>
+        <div className="space-y-0.5">
+          <button
+            onClick={() => { setSelectedCategory(""); setExpandedParent(null); setSelectedCustomFilters({}); }}
+            className={`flex items-center gap-2 w-full text-left px-3 py-2.5 rounded-xl text-sm transition-colors ${!selectedCategory ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"}`}
+          >
+            All Categories
+          </button>
+          {parentCategories.map((cat) => {
+            const children = getChildren(cat.id);
+            const isExpanded = expandedParent === cat.id;
+            const isSelected = selectedCategory === cat.id;
+            const iconSrc = getCategoryIcon(cat);
+            return (
+              <div key={cat.id}>
+                <button
+                  onClick={() => handleParentClick(cat.id)}
+                  className={`flex items-center gap-2.5 w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all group ${isSelected ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"}`}
+                >
+                  {iconSrc ? <img src={iconSrc} alt="" className="w-6 h-6 rounded-lg object-contain" /> : cat.icon ? <span className="text-base">{cat.icon}</span> : <span className="w-6 h-6 rounded-lg bg-secondary/50" />}
+                  <span className="flex-1">{cat.name}</span>
+                  {children.length > 0 && <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-90" : ""}`} />}
+                </button>
+                <AnimatePresence>
+                  {isExpanded && children.length > 0 && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+                      <div className="pl-4 mt-0.5 space-y-0.5 border-l-2 border-border/50 ml-5">
+                        {children.map((sub) => (
+                          <button key={sub.id} onClick={() => handleSubClick(sub.id)} className={`flex items-center gap-2 w-full text-left px-3 py-2 rounded-xl text-xs transition-colors ${selectedCategory === sub.id ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"}`}>
+                            {sub.icon_url ? <img src={sub.icon_url} alt="" className="w-4 h-4 rounded object-contain" /> : sub.icon ? <span className="text-xs">{sub.icon}</span> : null}
+                            {sub.name}
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Size Filter */}
+      {availableSizes.length > 0 && (
+        <div>
+          <h3 className="font-display font-semibold text-foreground mb-3">Size</h3>
+          <div className="flex flex-wrap gap-1.5">
+            {availableSizes.map((size) => (
+              <button key={size} onClick={() => toggleSize(size)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${selectedSizes.includes(size) ? "bg-primary text-primary-foreground" : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
+                {size}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Color Filter */}
+      {availableColors.length > 0 && (
+        <div>
+          <h3 className="font-display font-semibold text-foreground mb-3">Color</h3>
+          <div className="flex flex-wrap gap-2">
+            {availableColors.map((color) => (
+              <button key={color} onClick={() => toggleColor(color)} title={color} className={`w-7 h-7 rounded-full border-2 transition-all ${selectedColors.includes(color) ? "border-primary ring-2 ring-primary/30 scale-110" : "border-border/50 hover:border-foreground/30"}`} style={{ backgroundColor: getColorHex(color) }} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Dynamic Category Filters */}
+      {categoryFilters && categoryFilters.length > 0 && categoryFilters.map((filter: any) => (
+        <div key={filter.id}>
+          <h3 className="font-display font-semibold text-foreground mb-3">{filter.filter_name}</h3>
+          <div className="flex flex-wrap gap-1.5">
+            {(filter.filter_values || []).map((val: string) => {
+              const isActive = (selectedCustomFilters[filter.filter_name] || []).includes(val);
+              return (
+                <button key={val} onClick={() => toggleCustomFilter(filter.filter_name, val)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${isActive ? "bg-primary text-primary-foreground" : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
+                  {val}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+
+      {/* Tags Filter */}
+      {availableTags && availableTags.length > 0 && (
+        <div>
+          <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-1.5">
+            <Tag className="w-3.5 h-3.5" /> Tags
+          </h3>
+          <div className="flex flex-wrap gap-1.5">
+            {availableTags.map((tag) => (
+              <button key={tag} onClick={() => toggleTag(tag)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${selectedTags.includes(tag) ? "bg-primary text-primary-foreground" : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
+                {tag}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Price Range */}
+      <div>
+        <h3 className="font-display font-semibold text-foreground mb-3">Price Range</h3>
+        <div className="flex gap-2">
+          <input type="number" placeholder="Min" value={priceRange[0] || ""} onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])} className="w-full px-3 py-2 rounded-xl bg-secondary/50 border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+          <span className="text-muted-foreground self-center">—</span>
+          <input type="number" placeholder="Max" value={priceRange[1] === 10000 ? "" : priceRange[1]} onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value) || 10000])} className="w-full px-3 py-2 rounded-xl bg-secondary/50 border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+        </div>
+      </div>
+
+      {/* Sort */}
+      <div>
+        <h3 className="font-display font-semibold text-foreground mb-3">Sort By</h3>
+        <div className="space-y-1">
+          {sortOptions.map((opt) => (
+            <button key={opt.value} onClick={() => setSort(opt.value)} className={`block w-full text-left px-3 py-2 rounded-xl text-sm transition-colors ${sort === opt.value ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"}`}>
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen pb-20 lg:pb-0">
@@ -221,199 +415,65 @@ const ShopPage: React.FC = () => {
                 </button>
               )}
             </div>
-            <button onClick={() => setShowFilters(!showFilters)} className="p-3 rounded-2xl glass text-muted-foreground hover:text-foreground md:hidden">
-              <ChevronDown className="w-5 h-5" />
-            </button>
+            {/* Mobile filter button */}
+            <Sheet open={mobileFilterOpen} onOpenChange={setMobileFilterOpen}>
+              <SheetTrigger asChild>
+                <button className="p-3 rounded-2xl glass text-muted-foreground hover:text-foreground md:hidden relative">
+                  <SlidersHorizontal className="w-5 h-5" />
+                  {activeFilterCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-80 overflow-y-auto p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="font-display font-bold text-lg">Filters</h2>
+                  {activeFilterCount > 0 && (
+                    <button onClick={clearAllFilters} className="text-xs text-muted-foreground hover:text-foreground underline">Clear all</button>
+                  )}
+                </div>
+                <FilterContent />
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
 
         {/* Active filter chips */}
-        {hasActiveFilters && (
+        {activeFilterCount > 0 && (
           <div className="flex flex-wrap items-center gap-2 mb-4">
             {selectedSizes.map(size => (
-              <button
-                key={`size-${size}`}
-                onClick={() => toggleSize(size)}
-                className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium"
-              >
+              <button key={`size-${size}`} onClick={() => toggleSize(size)} className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
                 Size: {size} <X className="w-3 h-3" />
               </button>
             ))}
             {selectedColors.map(color => (
-              <button
-                key={`color-${color}`}
-                onClick={() => toggleColor(color)}
-                className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium"
-              >
-                <span className="w-2.5 h-2.5 rounded-full border border-border/50" style={{ backgroundColor: getColorHex(color) }} />
-                {color} <X className="w-3 h-3" />
+              <button key={`color-${color}`} onClick={() => toggleColor(color)} className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                <span className="w-2.5 h-2.5 rounded-full border border-border/50" style={{ backgroundColor: getColorHex(color) }} /> {color} <X className="w-3 h-3" />
               </button>
             ))}
-            <button onClick={clearAllFilters} className="text-xs text-muted-foreground hover:text-foreground underline ml-1">
-              Clear all
-            </button>
+            {selectedTags.map(tag => (
+              <button key={`tag-${tag}`} onClick={() => toggleTag(tag)} className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                <Tag className="w-2.5 h-2.5" /> {tag} <X className="w-3 h-3" />
+              </button>
+            ))}
+            {Object.entries(selectedCustomFilters).flatMap(([name, values]) =>
+              values.map(val => (
+                <button key={`${name}-${val}`} onClick={() => toggleCustomFilter(name, val)} className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                  {name}: {val} <X className="w-3 h-3" />
+                </button>
+              ))
+            )}
+            <button onClick={clearAllFilters} className="text-xs text-muted-foreground hover:text-foreground underline ml-1">Clear all</button>
           </div>
         )}
 
         <div className="flex gap-8">
-          {/* Sidebar Filters */}
-          <aside className={`${showFilters ? "block" : "hidden"} md:block w-full md:w-64 shrink-0`}>
-            <div className="glass-strong rounded-3xl p-6 space-y-6 sticky top-24">
-              {/* Categories */}
-              <div>
-                <h3 className="font-display font-semibold text-foreground mb-3">Categories</h3>
-                <div className="space-y-0.5">
-                  <button
-                    onClick={() => { setSelectedCategory(""); setExpandedParent(null); }}
-                    className={`flex items-center gap-2 w-full text-left px-3 py-2.5 rounded-xl text-sm transition-colors ${!selectedCategory ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"}`}
-                  >
-                    All Categories
-                  </button>
-
-                  {parentCategories.map((cat) => {
-                    const children = getChildren(cat.id);
-                    const isExpanded = expandedParent === cat.id;
-                    const isSelected = selectedCategory === cat.id;
-                    const iconSrc = getCategoryIcon(cat);
-
-                    return (
-                      <div key={cat.id}>
-                        <button
-                          onClick={() => handleParentClick(cat.id)}
-                          className={`flex items-center gap-2.5 w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all group ${
-                            isSelected ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                          }`}
-                        >
-                          {iconSrc ? (
-                            <img src={iconSrc} alt="" className="w-6 h-6 rounded-lg object-contain" />
-                          ) : cat.icon ? (
-                            <span className="text-base">{cat.icon}</span>
-                          ) : (
-                            <span className="w-6 h-6 rounded-lg bg-secondary/50" />
-                          )}
-                          <span className="flex-1">{cat.name}</span>
-                          {children.length > 0 && (
-                            <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
-                          )}
-                        </button>
-
-                        <AnimatePresence>
-                          {isExpanded && children.length > 0 && (
-                            <motion.div
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: "auto" }}
-                              exit={{ opacity: 0, height: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="overflow-hidden"
-                            >
-                              <div className="pl-4 mt-0.5 space-y-0.5 border-l-2 border-border/50 ml-5">
-                                {children.map((sub) => (
-                                  <button
-                                    key={sub.id}
-                                    onClick={() => handleSubClick(sub.id)}
-                                    className={`flex items-center gap-2 w-full text-left px-3 py-2 rounded-xl text-xs transition-colors ${
-                                      selectedCategory === sub.id ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                                    }`}
-                                  >
-                                    {sub.icon_url ? (
-                                      <img src={sub.icon_url} alt="" className="w-4 h-4 rounded object-contain" />
-                                    ) : sub.icon ? (
-                                      <span className="text-xs">{sub.icon}</span>
-                                    ) : null}
-                                    {sub.name}
-                                  </button>
-                                ))}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Size Filter */}
-              {availableSizes.length > 0 && (
-                <div>
-                  <h3 className="font-display font-semibold text-foreground mb-3">Size</h3>
-                  <div className="flex flex-wrap gap-1.5">
-                    {availableSizes.map((size) => (
-                      <button
-                        key={size}
-                        onClick={() => toggleSize(size)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
-                          selectedSizes.includes(size)
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Color Filter */}
-              {availableColors.length > 0 && (
-                <div>
-                  <h3 className="font-display font-semibold text-foreground mb-3">Color</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {availableColors.map((color) => (
-                      <button
-                        key={color}
-                        onClick={() => toggleColor(color)}
-                        title={color}
-                        className={`w-7 h-7 rounded-full border-2 transition-all ${
-                          selectedColors.includes(color)
-                            ? "border-primary ring-2 ring-primary/30 scale-110"
-                            : "border-border/50 hover:border-foreground/30"
-                        }`}
-                        style={{ backgroundColor: getColorHex(color) }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Price Range */}
-              <div>
-                <h3 className="font-display font-semibold text-foreground mb-3">Price Range</h3>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    placeholder="Min"
-                    value={priceRange[0] || ""}
-                    onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
-                    className="w-full px-3 py-2 rounded-xl bg-secondary/50 border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  />
-                  <span className="text-muted-foreground self-center">—</span>
-                  <input
-                    type="number"
-                    placeholder="Max"
-                    value={priceRange[1] === 10000 ? "" : priceRange[1]}
-                    onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value) || 10000])}
-                    className="w-full px-3 py-2 rounded-xl bg-secondary/50 border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  />
-                </div>
-              </div>
-
-              {/* Sort */}
-              <div>
-                <h3 className="font-display font-semibold text-foreground mb-3">Sort By</h3>
-                <div className="space-y-1">
-                  {sortOptions.map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => setSort(opt.value)}
-                      className={`block w-full text-left px-3 py-2 rounded-xl text-sm transition-colors ${sort === opt.value ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"}`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+          {/* Desktop Sidebar */}
+          <aside className="hidden md:block w-64 shrink-0">
+            <div className="glass-strong rounded-3xl p-6 sticky top-24">
+              <FilterContent />
             </div>
           </aside>
 
@@ -422,11 +482,7 @@ const ShopPage: React.FC = () => {
             {/* Desktop sort bar */}
             <div className="hidden md:flex items-center justify-end gap-2 mb-6">
               <span className="text-sm text-muted-foreground">Sort:</span>
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-                className="px-4 py-2 rounded-xl bg-secondary/50 border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer"
-              >
+              <select value={sort} onChange={(e) => setSort(e.target.value)} className="px-4 py-2 rounded-xl bg-secondary/50 border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer">
                 {sortOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
@@ -454,12 +510,7 @@ const ShopPage: React.FC = () => {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {filteredProducts.map((product, i) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.03 }}
-                  >
+                  <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
                     <ProductCard
                       id={product.id}
                       name={product.name}
