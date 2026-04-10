@@ -10,6 +10,15 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "@/lib/app-toast";
 import QuickViewModal from "@/components/QuickViewModal";
 
+const COLOR_HEX: Record<string, string> = {
+  black: "#000000", white: "#ffffff", red: "#ef4444", blue: "#3b82f6",
+  green: "#22c55e", yellow: "#eab308", orange: "#f97316", pink: "#ec4899",
+  purple: "#a855f7", gray: "#6b7280", grey: "#6b7280", navy: "#1e3a5f",
+  charcoal: "#36454f", beige: "#f5f5dc", brown: "#8b4513", olive: "#808000",
+  teal: "#14b8a6", maroon: "#800000", cream: "#fffdd0", khaki: "#c3b091",
+};
+const getColorHex = (name: string) => COLOR_HEX[name.toLowerCase()] || "#888888";
+
 export interface ProductCardProps {
   id: string;
   name: string;
