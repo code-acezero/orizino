@@ -546,6 +546,37 @@ const AIChatWidget: React.FC = () => {
     toast.success("Call request sent to support agent");
   };
 
+  const submitComplaint = async () => {
+    if (!user) { toast.error("Please sign in to submit a complaint"); return; }
+    if (!complaintSubject.trim() || !complaintDescription.trim()) { toast.error("Please fill in all fields"); return; }
+    setSubmittingComplaint(true);
+    try {
+      const { data: conv } = await supabase.from("support_conversations").insert({
+        user_id: user.id,
+        subject: `[${complaintCategory}] ${complaintSubject}`,
+        status: "open",
+        is_ai: false,
+        type: "complaint",
+      } as any).select("id").single();
+      if (conv) {
+        await supabase.from("support_messages").insert({
+          conversation_id: conv.id,
+          content: `**Category:** ${complaintCategory}\n\n${complaintDescription}`,
+          sender_id: user.id,
+          sender_type: "user",
+        });
+      }
+      toast.success("Complaint submitted successfully!");
+      setComplaintSubject("");
+      setComplaintDescription("");
+      setComplaintCategory("Order Issue");
+      setActiveTab("chat");
+    } catch {
+      toast.error("Failed to submit complaint");
+    }
+    setSubmittingComplaint(false);
+  };
+
   if (isAdminPage || isLandingPage || !isEnabled) return null;
 
   const showMascot = !open && scrollVisible;
