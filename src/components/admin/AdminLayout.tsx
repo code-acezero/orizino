@@ -40,7 +40,7 @@ const AdminLayout: React.FC = () => {
           <header className="h-14 flex items-center border-b border-border px-4 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
             <SidebarTrigger className="mr-4" />
             <span className="font-display text-sm text-muted-foreground">
-              Zero Marketplace Admin
+              {profile?.full_name ? `${profile.full_name} — Admin` : "Admin Panel"}
             </span>
 
             {/* Right side: notifications + profile */}
