@@ -6,7 +6,7 @@ import { trackClick } from "@/hooks/use-analytics";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "@/lib/app-toast";
 import QuickViewModal from "@/components/QuickViewModal";
 
@@ -41,6 +41,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [inWishlist, setInWishlist] = useState(false);
   const [togglingWishlist, setTogglingWishlist] = useState(false);
+
+  // Check if product has variants
+  const { data: hasVariants } = useQuery({
+    queryKey: ["product-has-variants", id],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("product_variants")
+        .select("id", { count: "exact", head: true })
+        .eq("product_id", id)
+        .eq("is_active", true);
+      return (count || 0) > 0;
+    },
+    staleTime: 60000,
+  });
 
   // Check wishlist status on mount
   React.useEffect(() => {
@@ -77,6 +91,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    // If product has variants, open quick view for variant selection
+    if (hasVariants) {
+      setQuickViewOpen(true);
+      return;
+    }
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { toast.error("Please sign in to add items to cart"); return; }
     setAddingToCart(true);
@@ -98,7 +117,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       toast.success(`${name} added to cart`);
     } catch { toast.error("Failed to add to cart"); }
     finally { setAddingToCart(false); }
-  }, [id, name, queryClient]);
+  }, [id, name, queryClient, hasVariants]);
 
   const discount = compareAtPrice
     ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)

@@ -94,9 +94,9 @@ const detectCountry = async (): Promise<string | null> => {
   const cached = sessionStorage.getItem("user_country");
   if (cached) return cached;
   try {
-    const res = await fetch("http://ip-api.com/json/?fields=countryCode", { signal: AbortSignal.timeout(3000) });
+    const res = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(3000) });
     const data = await res.json();
-    const code = data.countryCode || null;
+    const code = data.country_code || data.country || null;
     if (code) sessionStorage.setItem("user_country", code);
     return code;
   } catch {
