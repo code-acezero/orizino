@@ -1,112 +1,82 @@
 
-
-# Redesign Plan: Footer, Persistent Layout, Navbar Tweaks, Support Chat
+# Comprehensive Site Hardening, Moderator Roles, Custom Fonts, Source Protection & SEO Sitelinks
 
 ## Summary
-Five interconnected changes: compact artistic footer with admin customization, persistent shell layout for Navbar/BottomNav/Footer, navbar visual tweaks, redesigned support chat with complaint submission, and improved data caching.
+Complete unfinished custom font integration, add moderator role-based access to admin sidebar, add source code protection, add Google Sitelinks SearchBox schema, and fix remaining issues.
 
 ---
 
-## 1. Persistent Layout Shell (Navbar + BottomNav + Footer)
+## 1. Custom Fonts Integration (Unfinished from Previous Task)
 
-**Problem**: Every page imports and renders `<Navbar />` and `<Footer />` independently, causing re-mount and data refetch on navigation.
+Font files exist at `public/fonts/` (10 OTF files) but have zero integration.
 
-**Solution**: Create a `MainLayout` wrapper component rendered once at the route level in `App.tsx`, similar to how `AdminLayout` works.
+**Changes:**
+- **`src/index.css`**: Add `@font-face` declarations for all 10 custom fonts (Agraham, Bilderberg, Nevera, OrangeAvenue, PrimorStylish, ProdesStencil, Rostex, SingleGrinch, Transcity, Zaslia)
+- **`src/components/admin/SiteCustomizer.tsx`**: Add custom fonts to the `fonts` array with a "Custom" separator so they appear in heading/body font selectors
+- **`src/pages/admin/AdminBranding.tsx`**: Add a "Title Font" selector allowing admins to pick a custom display font specifically for the site title/name, category titles, and product titles. Store as `title_font` in `site_settings`
+- **`src/components/SiteThemeProvider.tsx`**: Read `title_font` setting and apply as a CSS custom property `--font-title` on `<html>`
+- **`src/components/Navbar.tsx`**: Apply `font-family: var(--font-title)` to the site name text
+- **`src/components/Footer.tsx`**: Apply title font to brand name
+- **`src/pages/ShopPage.tsx`** / **`src/pages/CategoryPage.tsx`** / **`src/pages/ProductDetailPage.tsx`**: Apply `--font-title` to category and product title headings
 
-**Files**:
-- **New**: `src/components/MainLayout.tsx` — renders `<Navbar />`, `<Outlet />`, `<Footer />` in a stable shell
-- **Edit**: `src/App.tsx` — wrap all public routes inside a `<Route element={<MainLayout />}>` parent, using nested `<Route>` children
-- **Edit**: All 12 page files (`HomePage`, `ShopPage`, `CartPage`, etc.) — remove `<Navbar />` and `<Footer />` imports/renders, keep only page content
-
-The Navbar, BottomNav, and Footer will mount once and persist across all page navigations. React Query caching already prevents data refetch; this change prevents component remounting.
-
----
-
-## 2. Footer Redesign — Compact & Artistic
-
-**Problem**: Current footer is functional but takes vertical space and lacks visual flair.
-
-**Solution**: Redesign to a single-row or two-row compact footer with artistic glass styling.
-
-**File**: `src/components/Footer.tsx`
-
-Design direction:
-- Single compact bar (~60-80px total) with inline columns
-- Horizontal layout: brand/logo left, inline link pills center, social icons + newsletter right
-- Subtle animated gradient border on top, glass card styling
-- Animated decorative accent orbs (small, subtle)
-- "Powered by" / copyright as a thin bottom strip
-- Trust badges shown as small inline icons with tooltips instead of stacked rows
+**Database**: Update `site_settings` public read RLS policy to include `title_font`.
 
 ---
 
-## 3. Admin Footer Customization
+## 2. Moderator Role-Based Admin Access
 
-**New admin page**: `src/pages/admin/AdminFooter.tsx`
+Currently `AdminRoute` only checks for `admin` role. Moderators should see a subset of pages.
 
-Customization options stored in `site_settings` key `footer_config`:
-- Toggle sections: newsletter, social links, categories, quick links, trust badges
-- Custom copyright text
-- Footer style: "minimal" | "compact" | "expanded"  
-- Background style: transparent, glass, solid
-- Social media URLs (Facebook, Instagram, Twitter, TikTok, YouTube)
-
-**Files**:
-- **New**: `src/pages/admin/AdminFooter.tsx`
-- **Edit**: `src/components/admin/AdminSidebar.tsx` — add "Footer" nav item
-- **Edit**: `src/App.tsx` — add admin route
-- **Edit**: `src/components/Footer.tsx` — read `footer_config` from site_settings and conditionally render sections
-
-**Database**: Update the `site_settings` public read RLS policy to include `footer_config`.
+**Changes:**
+- **`src/components/AdminRoute.tsx`**: Check for both `admin` and `moderator` roles. Pass the role down via context or prop.
+- **`src/components/admin/AdminSidebar.tsx`**: Fetch user role. Moderators see only: Dashboard, Products, Categories, Orders, Coupons, Delivery Offers, Banners, Showcase, Reviews, Announcements, Live Support. Hide: Users, User Promos, Shipping, Landing Page, Home Page, Footer, CMS Pages, Requests, Call Settings, AI Agent, Branding, Mobile UI, API Keys, Settings.
+- **`src/components/admin/AdminLayout.tsx`**: Show "Moderator" instead of "Administrator" for moderator role.
+- **`src/App.tsx`**: No route changes needed since sidebar hides links; but add route-level guards for admin-only pages to prevent direct URL access by moderators.
 
 ---
 
-## 4. Navbar Visual Tweaks
+## 3. Source Code Protection (DevTools Deterrent)
 
-**File**: `src/components/Navbar.tsx`
+Add a lightweight script that detects DevTools opening and shows humorous messages in the console instead of useful debugging info.
 
-Changes:
-- Add a subtle bottom border glow effect (gradient line like footer top border)
-- Improve search bar styling with a frosted-glass look and subtle icon animation on focus
-- Add micro-animation to cart badge count changes (scale bounce)
-- Refine category dropdown with subtle backdrop blur and smoother animations
-- Polish user avatar menu with better spacing and hover effects
-
----
-
-## 5. Support Chat Redesign + Complaint Feature
-
-**File**: `src/components/AIChatWidget.tsx`
-
-Visual redesign:
-- Tabbed interface inside the chat panel: "Chat" | "Complaint"
-- Chat tab: keep existing AI + live support flow with polished message bubbles
-- Rounded header with gradient accent and agent status pill
-- Quick-action chips below the header (e.g., "Track Order", "Live Agent", "Submit Complaint")
-- Smoother message animations
-
-Complaint tab:
-- Simple form: subject, category dropdown (Order Issue, Product Quality, Delivery, Other), description textarea, optional image upload
-- Submit inserts into `support_conversations` with `subject` set to complaint title and a flag
-
-**Database migration**: Add a `type` column to `support_conversations` to distinguish complaints from regular support chats.
-
-```sql
-ALTER TABLE public.support_conversations 
-ADD COLUMN IF NOT EXISTS type text NOT NULL DEFAULT 'support';
-```
-
-Also update `site_settings` RLS policy to include `footer_config`.
+**Changes:**
+- **`src/main.tsx`**: In production mode, add:
+  - `console.log` override that shows funny messages ("Nice try! The source code is on vacation.")
+  - Disable right-click context menu with a friendly toast
+  - Add console warning messages with styled ASCII art
+  - Note: This is a deterrent, not real security. The actual security is server-side RLS.
 
 ---
 
-## 6. Data Persistence / Caching Improvements
+## 4. Google Sitelinks SearchBox Schema
 
-**File**: `src/App.tsx` — already has good defaults (5min staleTime, 30min gcTime). No major changes needed since the persistent layout shell (step 1) solves the main re-fetching problem.
+Add structured data so Google can show sitelinks with a search box in search results.
 
-Minor tweaks:
-- Increase `staleTime` for site-settings queries to 15 minutes across components
-- Ensure Navbar/Footer queries use consistent query keys to share cache
+**Changes:**
+- **`index.html`**: Already has SearchAction schema (line 47-52). Verify it matches Google's requirements.
+- **`src/hooks/use-seo-meta.ts`**: The existing hook handles per-page SEO. Add a `WebSite` schema with `SearchAction` to the home page SEO if not already present in structured_data.
+- **`public/robots.txt`**: Already correct. No changes needed.
+
+---
+
+## 5. Fixes & Polish
+
+### 5a. LandingPage Footer
+- **`src/pages/LandingPage.tsx`**: Still renders `<Footer />` directly (line 357). This is correct since LandingPage is outside MainLayout, but ensure it doesn't double-render.
+
+### 5b. Console Warning Fix
+- **`src/components/ImageUpload.tsx`**: Add `React.forwardRef` to fix the "Function components cannot be given refs" warning from AdminBranding.
+
+### 5c. Badge ref warning
+- **`src/components/ui/badge.tsx`**: Already using CVA; ensure it forwards refs properly.
+
+### 5d. Admin Panel Cleanup
+- Remove any duplicate sidebar entries (Footer appears in both Content group in sidebar and as a route - verify no duplication)
+- Ensure admin header says site name from settings instead of hardcoded "Zero Marketplace Admin"
+
+### 5e. Mobile Optimizations
+- Ensure `AIChatWidget` doesn't overlap with `BottomNav` on mobile
+- Check chat widget z-index layering
 
 ---
 
@@ -114,11 +84,7 @@ Minor tweaks:
 
 ### Migration SQL
 ```sql
--- Add complaint type to support conversations
-ALTER TABLE public.support_conversations 
-ADD COLUMN IF NOT EXISTS type text NOT NULL DEFAULT 'support';
-
--- Update site_settings public read policy to include footer_config
+-- Update site_settings public read policy to include title_font
 DROP POLICY IF EXISTS "Public can view non-sensitive settings" ON public.site_settings;
 CREATE POLICY "Public can view non-sensitive settings"
 ON public.site_settings FOR SELECT TO public
@@ -135,20 +101,25 @@ USING (key = ANY (ARRAY[
   'home_layout_config','home_section_order',
   'product_page_layout','notification_order','popup_order',
   'voice_call_config','seo_pages','seo_global',
-  'footer_config'
+  'footer_config','title_font'
 ]));
 ```
 
-### Files Created/Edited Summary
+### Files Summary
 | File | Action |
 |------|--------|
-| `src/components/MainLayout.tsx` | Create — persistent shell |
-| `src/App.tsx` | Edit — nested route structure |
-| 12 page files | Edit — remove Navbar/Footer |
-| `src/components/Footer.tsx` | Edit — full redesign |
-| `src/pages/admin/AdminFooter.tsx` | Create — footer admin |
-| `src/components/admin/AdminSidebar.tsx` | Edit — add footer link |
-| `src/components/Navbar.tsx` | Edit — visual tweaks |
-| `src/components/AIChatWidget.tsx` | Edit — redesign + complaint |
-| Migration | Create — type column + RLS update |
-
+| `src/index.css` | Edit - add @font-face declarations |
+| `src/components/admin/SiteCustomizer.tsx` | Edit - add custom fonts to selector |
+| `src/pages/admin/AdminBranding.tsx` | Edit - add title font picker |
+| `src/components/SiteThemeProvider.tsx` | Edit - apply title_font CSS var |
+| `src/components/Navbar.tsx` | Edit - use --font-title on site name |
+| `src/components/Footer.tsx` | Edit - use --font-title on brand |
+| `src/pages/ShopPage.tsx` | Edit - apply title font to category headers |
+| `src/pages/CategoryPage.tsx` | Edit - apply title font |
+| `src/pages/ProductDetailPage.tsx` | Edit - apply title font to product name |
+| `src/components/AdminRoute.tsx` | Edit - support moderator role |
+| `src/components/admin/AdminSidebar.tsx` | Edit - role-based menu filtering |
+| `src/components/admin/AdminLayout.tsx` | Edit - show role label |
+| `src/main.tsx` | Edit - add source protection in prod |
+| `src/components/ImageUpload.tsx` | Edit - add forwardRef |
+| Migration | Create - update RLS policy |
