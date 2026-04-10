@@ -301,63 +301,68 @@ const ShopPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Size Filter */}
-      {availableSizes.length > 0 && (
-        <div>
-          <h3 className="font-display font-semibold text-foreground mb-3">Size</h3>
-          <div className="flex flex-wrap gap-1.5">
-            {availableSizes.map((size) => (
-              <button key={size} onClick={() => toggleSize(size)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${selectedSizes.includes(size) ? "bg-primary text-primary-foreground" : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
-                {size}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Category-scoped filters: only show when a category is selected */}
+      {selectedCategory && (
+        <>
+          {/* Size Filter */}
+          {availableSizes.length > 0 && (
+            <div>
+              <h3 className="font-display font-semibold text-foreground mb-3">Size</h3>
+              <div className="flex flex-wrap gap-1.5">
+                {availableSizes.map((size) => (
+                  <button key={size} onClick={() => toggleSize(size)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${selectedSizes.includes(size) ? "bg-primary text-primary-foreground" : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
-      {/* Color Filter */}
-      {availableColors.length > 0 && (
-        <div>
-          <h3 className="font-display font-semibold text-foreground mb-3">Color</h3>
-          <div className="flex flex-wrap gap-2">
-            {availableColors.map((color) => (
-              <button key={color} onClick={() => toggleColor(color)} title={color} className={`w-7 h-7 rounded-full border-2 transition-all ${selectedColors.includes(color) ? "border-primary ring-2 ring-primary/30 scale-110" : "border-border/50 hover:border-foreground/30"}`} style={{ backgroundColor: getColorHex(color) }} />
-            ))}
-          </div>
-        </div>
-      )}
+          {/* Color Filter */}
+          {availableColors.length > 0 && (
+            <div>
+              <h3 className="font-display font-semibold text-foreground mb-3">Color</h3>
+              <div className="flex flex-wrap gap-2">
+                {availableColors.map((color) => (
+                  <button key={color} onClick={() => toggleColor(color)} title={color} className={`w-7 h-7 rounded-full border-2 transition-all ${selectedColors.includes(color) ? "border-primary ring-2 ring-primary/30 scale-110" : "border-border/50 hover:border-foreground/30"}`} style={{ backgroundColor: getColorHex(color) }} />
+                ))}
+              </div>
+            </div>
+          )}
 
-      {/* Dynamic Category Filters */}
-      {categoryFilters && categoryFilters.length > 0 && categoryFilters.map((filter: any) => (
-        <div key={filter.id}>
-          <h3 className="font-display font-semibold text-foreground mb-3">{filter.filter_name}</h3>
-          <div className="flex flex-wrap gap-1.5">
-            {(filter.filter_values || []).map((val: string) => {
-              const isActive = (selectedCustomFilters[filter.filter_name] || []).includes(val);
-              return (
-                <button key={val} onClick={() => toggleCustomFilter(filter.filter_name, val)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${isActive ? "bg-primary text-primary-foreground" : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
-                  {val}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ))}
+          {/* Dynamic Category Filters */}
+          {categoryFilters && categoryFilters.length > 0 && categoryFilters.map((filter: any) => (
+            <div key={filter.id}>
+              <h3 className="font-display font-semibold text-foreground mb-3">{filter.filter_name}</h3>
+              <div className="flex flex-wrap gap-1.5">
+                {(filter.filter_values || []).map((val: string) => {
+                  const isActive = (selectedCustomFilters[filter.filter_name] || []).includes(val);
+                  return (
+                    <button key={val} onClick={() => toggleCustomFilter(filter.filter_name, val)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${isActive ? "bg-primary text-primary-foreground" : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
+                      {val}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
 
-      {/* Tags Filter */}
-      {availableTags && availableTags.length > 0 && (
-        <div>
-          <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-1.5">
-            <Tag className="w-3.5 h-3.5" /> Tags
-          </h3>
-          <div className="flex flex-wrap gap-1.5">
-            {availableTags.map((tag) => (
-              <button key={tag} onClick={() => toggleTag(tag)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${selectedTags.includes(tag) ? "bg-primary text-primary-foreground" : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
-                {tag}
-              </button>
-            ))}
-          </div>
-        </div>
+          {/* Tags Filter */}
+          {availableTags && availableTags.length > 0 && (
+            <div>
+              <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5" /> Tags
+              </h3>
+              <div className="flex flex-wrap gap-1.5">
+                {availableTags.map((tag) => (
+                  <button key={tag} onClick={() => toggleTag(tag)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${selectedTags.includes(tag) ? "bg-primary text-primary-foreground" : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Price Range */}
