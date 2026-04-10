@@ -62,6 +62,7 @@ const CartPage: React.FC = () => {
   });
 
   const [showCoupons, setShowCoupons] = useState(false);
+  const [selectedShipping, setSelectedShipping] = useState<string | null>(null);
 
   const updateQty = useMutation({
     mutationFn: async ({ id, quantity }: { id: string; quantity: number }) => {
