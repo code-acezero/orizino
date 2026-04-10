@@ -1,4 +1,5 @@
 import React, { useRef } from "react";
+import Footer from "@/components/Footer";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, ShoppingBag, Shield, Truck, Sparkles, Star, Zap, Globe, Package, Users, Heart, ChevronRight } from "lucide-react";
@@ -353,6 +354,7 @@ const LandingPage: React.FC = () => {
         </section>
       )}
 
+      <Footer />
     </div>
   );
 };
