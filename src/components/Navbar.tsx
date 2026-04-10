@@ -126,7 +126,7 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
   return (
     <>
       <nav className="sticky top-0 z-50 w-full">
-        <div className="glass-strong">
+        <div className="glass-strong backdrop-blur-xl">
           <div className="w-full max-w-[1440px] mx-auto px-4 lg:px-6">
             <div className="flex items-center h-16 gap-4">
               {/* Logo */}
@@ -263,7 +263,7 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
                 <form onSubmit={handleSearchSubmit} className="relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={t("nav.search")}
-                    className="w-full pl-11 pr-10 py-2.5 rounded-full bg-secondary/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 transition-all" />
+                    className="w-full pl-11 pr-10 py-2.5 rounded-full bg-secondary/30 backdrop-blur-sm border border-border/50 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 focus:bg-secondary/50 transition-all" />
                   <AnimatePresence>
                     {searchQuery.trim() && (
                       <motion.button
@@ -328,9 +328,13 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
                 <Link to="/cart" className="hidden lg:flex p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all relative">
                   <ShoppingCart className="w-5 h-5" />
                   {(cartCount ?? 0) > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none px-1">
+                    <motion.span
+                      key={cartCount}
+                      initial={{ scale: 0.5 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none px-1">
                       {cartCount}
-                    </span>
+                    </motion.span>
                   )}
                 </Link>
 
@@ -396,6 +400,8 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
             </div>
           </div>
         </div>
+        {/* Bottom glow line */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
       </nav>
 
       <BottomNav onSearchClick={() => {}} onAuthClick={() => navigate("/auth", { state: { from: location.pathname } })} productTray={bottomNavProductTray} />

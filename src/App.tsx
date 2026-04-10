@@ -5,9 +5,11 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { LayoutProvider } from "@/contexts/LayoutContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/AdminRoute";
 import SiteThemeProvider from "./components/SiteThemeProvider";
+import MainLayout from "./components/MainLayout";
 
 import { useDynamicFavicon } from "./hooks/use-dynamic-favicon";
 
@@ -59,6 +61,7 @@ const AdminLanding = lazy(() => import("./pages/admin/AdminLanding"));
 const AdminBranding = lazy(() => import("./pages/admin/AdminBranding"));
 const AdminMobileUI = lazy(() => import("./pages/admin/AdminMobileUI"));
 const AdminCallSettings = lazy(() => import("./pages/admin/AdminCallSettings"));
+const AdminFooter = lazy(() => import("./pages/admin/AdminFooter"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -87,11 +90,11 @@ const AppContent = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      {/* Toasts now only show in NotificationBell dynamic island */}
       <BrowserRouter>
         <AuthProvider>
           <LanguageProvider>
           <CurrencyProvider>
+          <LayoutProvider>
           <SiteThemeProvider />
           <AppContent />
           <Suspense fallback={null}>
@@ -100,32 +103,28 @@ const App = () => (
           </Suspense>
           <Suspense fallback={<PageFallback />}>
           <Routes>
+            {/* Landing page without persistent nav */}
             <Route path="/" element={<LandingPage />} />
-            <Route path="/home" element={<HomePage />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/shop" element={<ShopPage />} />
-            <Route path="/categories/:slug" element={<CategoryPage />} />
-            <Route path="/product/:slug" element={<ProductDetailPage />} />
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/wishlist" element={<WishlistPage />} />
-            <Route path="/support" element={<SupportPage />} />
-            <Route
-              path="/profile"
-              element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}
-            />
-            <Route
-              path="/settings"
-              element={<ProtectedRoute><SettingsPage /></ProtectedRoute>}
-            />
-            <Route
-              path="/checkout"
-              element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>}
-            />
-            <Route
-              path="/orders"
-              element={<ProtectedRoute><OrdersPage /></ProtectedRoute>}
-            />
+
+            {/* All pages with persistent Navbar + Footer */}
+            <Route element={<MainLayout />}>
+              <Route path="/home" element={<HomePage />} />
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/shop" element={<ShopPage />} />
+              <Route path="/categories/:slug" element={<CategoryPage />} />
+              <Route path="/product/:slug" element={<ProductDetailPage />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/wishlist" element={<WishlistPage />} />
+              <Route path="/support" element={<SupportPage />} />
+              <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+              <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+              <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+              <Route path="/page/:slug" element={<CmsPage />} />
+            </Route>
+
+            {/* Admin routes */}
             <Route
               path="/admin"
               element={<AdminRoute><AdminLayout /></AdminRoute>}
@@ -154,11 +153,13 @@ const App = () => (
               <Route path="branding" element={<AdminBranding />} />
               <Route path="mobile-ui" element={<AdminMobileUI />} />
               <Route path="call-settings" element={<AdminCallSettings />} />
+              <Route path="footer" element={<AdminFooter />} />
             </Route>
-            <Route path="/page/:slug" element={<CmsPage />} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>
+          </LayoutProvider>
           </CurrencyProvider>
           </LanguageProvider>
         </AuthProvider>

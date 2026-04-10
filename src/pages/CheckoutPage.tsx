@@ -10,8 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/lib/app-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -241,7 +239,6 @@ const CheckoutPage: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-20 lg:pb-0">
-      <Navbar />
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <h1 className="text-3xl font-bold font-display text-foreground mb-6">Checkout</h1>
 
@@ -479,7 +476,6 @@ const CheckoutPage: React.FC = () => {
           </div>
         </form>
       </main>
-      <Footer />
     </div>
   );
 };

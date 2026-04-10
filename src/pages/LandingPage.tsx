@@ -1,11 +1,11 @@
 import React, { useRef } from "react";
+import Footer from "@/components/Footer";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, ShoppingBag, Shield, Truck, Sparkles, Star, Zap, Globe, Package, Users, Heart, ChevronRight } from "lucide-react";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import Footer from "@/components/Footer";
 
 const iconMap: Record<string, any> = { ShoppingBag, Shield, Truck, Sparkles, Star, Zap, Globe, Package, Users, Heart };
 

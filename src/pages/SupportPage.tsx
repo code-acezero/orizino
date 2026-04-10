@@ -5,8 +5,6 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import { Button } from "@/components/ui/button";
 import ReactMarkdown from "react-markdown";
@@ -324,7 +322,6 @@ const SupportPage: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-20 lg:pb-0">
-      <Navbar />
       <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
       <IncomingCallOverlay visible={incomingCall} onAccept={acceptCall} onReject={rejectCall} />
 
@@ -417,7 +414,6 @@ const SupportPage: React.FC = () => {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

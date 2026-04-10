@@ -5,8 +5,6 @@ import { motion } from "framer-motion";
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCategorySeoMeta } from "@/hooks/use-category-seo-meta";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import Breadcrumbs from "@/components/Breadcrumbs";
 
@@ -115,8 +113,7 @@ const CategoryPage: React.FC = () => {
   if (catLoading) {
     return (
       <div className="min-h-screen pb-20 lg:pb-0">
-        <Navbar />
-        <div className="container mx-auto px-4 py-20 text-center">
+          <div className="container mx-auto px-4 py-20 text-center">
           <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin mx-auto" />
         </div>
       </div>
@@ -126,8 +123,7 @@ const CategoryPage: React.FC = () => {
   if (!category) {
     return (
       <div className="min-h-screen pb-20 lg:pb-0">
-        <Navbar />
-        <div className="container mx-auto px-4 py-20 text-center">
+          <div className="container mx-auto px-4 py-20 text-center">
           <h1 className="text-2xl font-bold text-foreground">Category not found</h1>
           <Link to="/home" className="text-primary mt-4 inline-block hover:underline">Back to Home</Link>
         </div>
@@ -137,7 +133,6 @@ const CategoryPage: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-20 lg:pb-0">
-      <Navbar />
       <div className="container mx-auto px-4 pt-4">
         <Breadcrumbs items={[
           { label: "Home", href: "/home" },
@@ -291,7 +286,6 @@ const CategoryPage: React.FC = () => {
         )}
       </main>
 
-      <Footer />
     </div>
   );
 };

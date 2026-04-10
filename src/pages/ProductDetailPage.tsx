@@ -1,4 +1,5 @@
-import React, { useState, lazy, Suspense } from "react";
+import React, { useState, lazy, Suspense, useEffect } from "react";
+import { useLayout } from "@/contexts/LayoutContext";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,8 +10,6 @@ import { toast } from "@/lib/app-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useProductSeoMeta } from "@/hooks/use-product-seo-meta";
 import { useIsMobile } from "@/hooks/use-mobile";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ProductCard from "@/components/ProductCard";
 import ImageGallery from "@/components/product/ImageGallery";
@@ -28,6 +27,29 @@ const CoverflowGallery = lazy(() => import("@/components/product/CoverflowGaller
 const FilmstripGallery = lazy(() => import("@/components/product/FilmstripGallery"));
 const GridMosaicGallery = lazy(() => import("@/components/product/GridMosaicGallery"));
 const ParallaxStackGallery = lazy(() => import("@/components/product/ParallaxStackGallery"));
+
+// Helper component to set product tray in layout context
+const ProductTrayEffect: React.FC<{
+  product: any; effectivePrice: number; selectedVariant: any;
+  effectiveStock: number; addToCart: () => void; buyNow: () => void; addingToCart: boolean;
+}> = ({ product, effectivePrice, selectedVariant, effectiveStock, addToCart, buyNow, addingToCart }) => {
+  const { setProductTray } = useLayout();
+  useEffect(() => {
+    setProductTray({
+      product: {
+        name: product.name,
+        price: effectivePrice,
+        thumbnail: selectedVariant?.image_url ?? product.thumbnail,
+        stockQuantity: effectiveStock,
+      },
+      onAddToCart: addToCart,
+      onBuyNow: buyNow,
+      addingToCart,
+    });
+    return () => setProductTray(undefined);
+  }, [product.name, effectivePrice, selectedVariant?.image_url, product.thumbnail, effectiveStock, addToCart, buyNow, addingToCart, setProductTray]);
+  return null;
+};
 
 export type LayoutStyle = "dark-luxury" | "glass" | "neon" | "minimal" | "magazine";
 export type GalleryStyle = "default" | "infinity" | "coverflow" | "filmstrip" | "mosaic" | "parallax-stack";
@@ -292,8 +314,7 @@ const ProductDetailPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen">
-        <Navbar />
-        <div className="container mx-auto px-3 sm:px-4 py-6 md:py-8">
+          <div className="container mx-auto px-3 sm:px-4 py-6 md:py-8">
           <div className="grid md:grid-cols-2 gap-4 md:gap-8">
             <div className="aspect-square rounded-2xl md:rounded-3xl bg-secondary/10 animate-pulse" />
             <div className="space-y-3 md:space-y-4 py-2 md:py-4">
@@ -311,7 +332,7 @@ const ProductDetailPage: React.FC = () => {
 
   if (!product) {
     return (
-      <div className="min-h-screen"><Navbar />
+      <div className="min-h-screen">
         <div className="container mx-auto px-3 sm:px-4 py-16 md:py-20 text-center">
           <h1 className="text-xl md:text-2xl font-bold text-foreground">Product not found</h1>
         </div>
@@ -458,19 +479,7 @@ const ProductDetailPage: React.FC = () => {
 
   return (
     <div className={`min-h-screen ${layout === "dark-luxury" ? "bg-black/20" : ""}`}>
-      <Navbar
-        bottomNavProductTray={{
-          product: {
-            name: product.name,
-            price: effectivePrice,
-            thumbnail: selectedVariant?.image_url ?? product.thumbnail,
-            stockQuantity: effectiveStock,
-          },
-          onAddToCart: addToCart,
-          onBuyNow: buyNow,
-          addingToCart,
-        }}
-      />
+      <ProductTrayEffect product={product} effectivePrice={effectivePrice} selectedVariant={selectedVariant} effectiveStock={effectiveStock} addToCart={addToCart} buyNow={buyNow} addingToCart={addingToCart} />
       <main className={`container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8 ${isMagazine ? "max-w-6xl" : ""}`}>
         <Breadcrumbs
           items={[
@@ -545,7 +554,6 @@ const ProductDetailPage: React.FC = () => {
         )}
       </main>
 
-      <Footer />
     </div>
   );
 };

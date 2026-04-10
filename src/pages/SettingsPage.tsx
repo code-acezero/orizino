@@ -12,8 +12,6 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage, ALL_LANGUAGES } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/app-toast";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -126,7 +124,6 @@ const SettingsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-20 lg:pb-0">
-      <Navbar />
       <main className="container mx-auto px-4 py-8 max-w-2xl">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-3xl font-bold font-display text-foreground mb-2">{t("nav.settings")}</h1>
@@ -358,7 +355,6 @@ const SettingsPage: React.FC = () => {
           </Tabs>
         </motion.div>
       </main>
-      <Footer />
 
       {/* Change Password Dialog */}
       <Dialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen}>

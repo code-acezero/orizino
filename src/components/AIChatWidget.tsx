@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Bot, User, Headphones, Phone, PhoneOff, Mic, MicOff } from "lucide-react";
+import { X, Send, Bot, User, Headphones, Phone, PhoneOff, Mic, MicOff, AlertTriangle, MessageSquare, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import wolfMascot from "@/assets/wolf-mascot.png";
 import { useAuth } from "@/contexts/AuthContext";
@@ -152,9 +152,16 @@ const AIChatWidget: React.FC = () => {
   const qc = useQueryClient();
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"chat" | "complaint">("chat");
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Complaint state
+  const [complaintSubject, setComplaintSubject] = useState("");
+  const [complaintCategory, setComplaintCategory] = useState("Order Issue");
+  const [complaintDescription, setComplaintDescription] = useState("");
+  const [submittingComplaint, setSubmittingComplaint] = useState(false);
   const [liveMode, setLiveMode] = useState(false);
   const [liveConvId, setLiveConvId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -539,6 +546,37 @@ const AIChatWidget: React.FC = () => {
     toast.success("Call request sent to support agent");
   };
 
+  const submitComplaint = async () => {
+    if (!user) { toast.error("Please sign in to submit a complaint"); return; }
+    if (!complaintSubject.trim() || !complaintDescription.trim()) { toast.error("Please fill in all fields"); return; }
+    setSubmittingComplaint(true);
+    try {
+      const { data: conv } = await supabase.from("support_conversations").insert({
+        user_id: user.id,
+        subject: `[${complaintCategory}] ${complaintSubject}`,
+        status: "open",
+        is_ai: false,
+        type: "complaint",
+      } as any).select("id").single();
+      if (conv) {
+        await supabase.from("support_messages").insert({
+          conversation_id: conv.id,
+          content: `**Category:** ${complaintCategory}\n\n${complaintDescription}`,
+          sender_id: user.id,
+          sender_type: "user",
+        });
+      }
+      toast.success("Complaint submitted successfully!");
+      setComplaintSubject("");
+      setComplaintDescription("");
+      setComplaintCategory("Order Issue");
+      setActiveTab("chat");
+    } catch {
+      toast.error("Failed to submit complaint");
+    }
+    setSubmittingComplaint(false);
+  };
+
   if (isAdminPage || isLandingPage || !isEnabled) return null;
 
   const showMascot = !open && scrollVisible;
@@ -639,33 +677,57 @@ const AIChatWidget: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            className="fixed bottom-20 lg:bottom-6 right-4 z-50 w-[360px] max-w-[calc(100vw-2rem)] h-[500px] max-h-[calc(100vh-8rem)] rounded-3xl bg-card border border-border/60 shadow-[0_8px_40px_hsl(0_0%_0%/0.5)] flex flex-col overflow-hidden"
+            className="fixed bottom-20 lg:bottom-6 right-4 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-8rem)] rounded-3xl bg-card border border-border/60 shadow-[0_8px_40px_hsl(0_0%_0%/0.5)] flex flex-col overflow-hidden"
           >
-            {/* Header */}
-            <div className="flex items-center gap-3 p-4 border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent">
-              <AgentAvatar />
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-foreground">{agentName || "Support"}</p>
-                <div className="flex items-center gap-1.5">
-                  <div className={`w-1.5 h-1.5 rounded-full ${callActive ? "bg-green-400 animate-pulse" : liveMode ? "bg-emerald-400" : "bg-primary"}`} />
-                  <p className="text-[10px] text-muted-foreground">
-                    {callActive ? "Voice call active" : liveMode ? "Live agent" : "AI assistant"}
-                  </p>
+            {/* Header with gradient accent */}
+            <div className="relative">
+              <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-primary/8 via-primary/3 to-transparent">
+                <AgentAvatar />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">{agentName || "Support"}</p>
+                  <div className="flex items-center gap-1.5">
+                    <div className={`w-1.5 h-1.5 rounded-full ${callActive ? "bg-green-400 animate-pulse" : liveMode ? "bg-emerald-400" : "bg-primary"}`} />
+                    <p className="text-[10px] text-muted-foreground">
+                      {callActive ? "Voice call active" : liveMode ? "Live agent" : "AI assistant"}
+                    </p>
+                  </div>
                 </div>
+                {user && !liveMode && (
+                  <button onClick={requestLiveSupport} className="p-2 rounded-xl hover:bg-secondary/50 transition-colors" title="Request live support">
+                    <Headphones className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
+                  </button>
+                )}
+                {user && liveMode && !callActive && (
+                  <button onClick={requestCall} className="p-2 rounded-xl hover:bg-green-500/10 transition-colors" title="Request voice call">
+                    <Phone className="w-4 h-4 text-green-500 hover:text-green-600 transition-colors" />
+                  </button>
+                )}
+                <button onClick={() => setOpen(false)} className="p-2 rounded-xl hover:bg-secondary/50 transition-colors">
+                  <X className="w-4 h-4 text-muted-foreground" />
+                </button>
               </div>
-              {user && !liveMode && (
-                <button onClick={requestLiveSupport} className="p-2 rounded-xl hover:bg-secondary/50 transition-colors" title="Request live support">
-                  <Headphones className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
+            </div>
+
+            {/* Tab switcher */}
+            <div className="flex border-b border-border/30 px-2">
+              {[
+                { id: "chat" as const, label: "Chat", icon: MessageSquare },
+                { id: "complaint" as const, label: "Complaint", icon: AlertTriangle },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-all border-b-2 ${
+                    activeTab === tab.id
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <tab.icon className="w-3.5 h-3.5" />
+                  {tab.label}
                 </button>
-              )}
-              {user && liveMode && !callActive && (
-                <button onClick={requestCall} className="p-2 rounded-xl hover:bg-green-500/10 transition-colors" title="Request voice call">
-                  <Phone className="w-4 h-4 text-green-500 hover:text-green-600 transition-colors" />
-                </button>
-              )}
-              <button onClick={() => setOpen(false)} className="p-2 rounded-xl hover:bg-secondary/50 transition-colors">
-                <X className="w-4 h-4 text-muted-foreground" />
-              </button>
+              ))}
             </div>
 
             {/* Incoming call UI */}
@@ -683,69 +745,125 @@ const AIChatWidget: React.FC = () => {
               )}
             </AnimatePresence>
 
-            {/* Messages */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-              {messages.map((msg, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
-                  className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                  {msg.role === "assistant" && <AgentAvatar size="w-6 h-6" iconSize="w-3 h-3" />}
-                  <div className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm ${
-                    msg.role === "user"
-                      ? "bg-primary text-primary-foreground rounded-br-sm"
-                      : "bg-secondary/80 text-foreground rounded-bl-sm"
-                  }`}>
-                    {msg.role === "assistant" ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:mb-1 [&_p]:mt-0">
-                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+            {activeTab === "chat" ? (
+              <>
+                {/* Messages */}
+                <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
+                  {messages.map((msg, i) => (
+                    <motion.div key={i} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
+                      className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                      {msg.role === "assistant" && <AgentAvatar size="w-6 h-6" iconSize="w-3 h-3" />}
+                      <div className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm ${
+                        msg.role === "user"
+                          ? "bg-primary text-primary-foreground rounded-br-sm"
+                          : "bg-secondary/80 text-foreground rounded-bl-sm"
+                      }`}>
+                        {msg.role === "assistant" ? (
+                          <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:mb-1 [&_p]:mt-0">
+                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+                          </div>
+                        ) : msg.content}
                       </div>
-                    ) : msg.content}
-                  </div>
-                  {msg.role === "user" && (
-                    <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-1">
-                      <User className="w-3 h-3 text-muted-foreground" />
+                      {msg.role === "user" && (
+                        <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-1">
+                          <User className="w-3 h-3 text-muted-foreground" />
+                        </div>
+                      )}
+                    </motion.div>
+                  ))}
+                  {loading && (
+                    <div className="flex gap-2 items-center">
+                      <AgentAvatar size="w-6 h-6" iconSize="w-3 h-3" />
+                      <div className="bg-secondary/80 rounded-2xl px-4 py-3 flex gap-1">
+                        {[0, 1, 2].map(i => (
+                          <motion.span key={i} className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full"
+                            animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.15 }} />
+                        ))}
+                      </div>
                     </div>
                   )}
-                </motion.div>
-              ))}
-              {loading && (
-                <div className="flex gap-2 items-center">
-                  <AgentAvatar size="w-6 h-6" iconSize="w-3 h-3" />
-                  <div className="bg-secondary/80 rounded-2xl px-4 py-3 flex gap-1">
-                    {[0, 1, 2].map(i => (
-                      <motion.span key={i} className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full"
-                        animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.15 }} />
+
+                  {/* Past conversations */}
+                  {!liveMode && !callActive && pastConversations.length > 0 && messages.length <= 1 && (
+                    <div className="mt-4 pt-3 border-t border-border/30">
+                      <p className="text-[11px] text-muted-foreground mb-2">Previous chats</p>
+                      {pastConversations.slice(0, 5).map((conv: any) => (
+                        <div key={conv.id} className="py-1.5 px-2 rounded-lg hover:bg-secondary/30">
+                          <p className="text-xs text-foreground truncate">{conv.subject}</p>
+                          <p className="text-[10px] text-muted-foreground">{conv.status} · {new Date(conv.created_at).toLocaleDateString()}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Chat Input */}
+                <div className="p-3 border-t border-border/50">
+                  <div className="flex gap-2">
+                    <input value={input} onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+                      placeholder={liveMode ? "Message agent..." : "Ask anything..."}
+                      className="flex-1 bg-secondary/40 backdrop-blur-sm rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                    <button onClick={sendMessage} disabled={!input.trim() || loading}
+                      className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 hover:bg-primary/90 transition-colors">
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              /* Complaint Form */
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <div>
+                  <p className="text-xs font-medium text-foreground mb-1">Subject</p>
+                  <input
+                    value={complaintSubject}
+                    onChange={(e) => setComplaintSubject(e.target.value)}
+                    placeholder="Brief description of your issue"
+                    className="w-full bg-secondary/40 rounded-xl px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+                  />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-foreground mb-1">Category</p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {["Order Issue", "Product Quality", "Delivery", "Other"].map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => setComplaintCategory(cat)}
+                        className={`py-2 px-3 rounded-xl text-xs font-medium border transition-all ${
+                          complaintCategory === cat
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border/50 text-muted-foreground hover:border-primary/30"
+                        }`}
+                      >
+                        {cat}
+                      </button>
                     ))}
                   </div>
                 </div>
-              )}
-
-              {/* Past conversations (read-only for users) */}
-              {!liveMode && !callActive && pastConversations.length > 0 && messages.length <= 1 && (
-                <div className="mt-4 pt-3 border-t border-border/30">
-                  <p className="text-[11px] text-muted-foreground mb-2">Previous chats</p>
-                  {pastConversations.slice(0, 5).map((conv: any) => (
-                    <div key={conv.id} className="py-1.5 px-2 rounded-lg hover:bg-secondary/30">
-                      <p className="text-xs text-foreground truncate">{conv.subject}</p>
-                      <p className="text-[10px] text-muted-foreground">{conv.status} · {new Date(conv.created_at).toLocaleDateString()}</p>
-                    </div>
-                  ))}
+                <div>
+                  <p className="text-xs font-medium text-foreground mb-1">Description</p>
+                  <textarea
+                    value={complaintDescription}
+                    onChange={(e) => setComplaintDescription(e.target.value)}
+                    placeholder="Please describe your issue in detail..."
+                    rows={5}
+                    className="w-full bg-secondary/40 rounded-xl px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 resize-none"
+                  />
                 </div>
-              )}
-            </div>
-
-            {/* Input */}
-            <div className="p-3 border-t border-border/50">
-              <div className="flex gap-2">
-                <input value={input} onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
-                  placeholder={liveMode ? "Message agent..." : "Ask anything..."}
-                  className="flex-1 bg-secondary/60 rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50" />
-                <button onClick={sendMessage} disabled={!input.trim() || loading}
-                  className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 hover:bg-primary/90 transition-colors">
-                  <Send className="w-4 h-4" />
+                <button
+                  onClick={submitComplaint}
+                  disabled={submittingComplaint || !complaintSubject.trim() || !complaintDescription.trim()}
+                  className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium disabled:opacity-40 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                >
+                  <AlertTriangle className="w-4 h-4" />
+                  {submittingComplaint ? "Submitting..." : "Submit Complaint"}
                 </button>
+                {!user && (
+                  <p className="text-[11px] text-muted-foreground text-center">Please sign in to submit a complaint</p>
+                )}
               </div>
-            </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

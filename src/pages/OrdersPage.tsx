@@ -6,8 +6,6 @@ import { Package, ChevronRight, Clock, ChevronDown, ChevronUp } from "lucide-rea
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import OrderTrackingTimeline from "@/components/OrderTrackingTimeline";
 
@@ -36,7 +34,6 @@ const OrdersPage: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-20 lg:pb-0">
-      <Navbar />
       <main className="container mx-auto px-4 py-8 max-w-3xl">
         <h1 className="text-3xl font-bold font-display text-foreground mb-8">My Orders</h1>
 
@@ -112,7 +109,6 @@ const OrdersPage: React.FC = () => {
           </div>
         )}
       </main>
-      <Footer />
     </div>
   );
 };
