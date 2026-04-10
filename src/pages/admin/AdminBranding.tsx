@@ -162,7 +162,7 @@ const AdminBranding = () => {
         </CardContent>
       </Card>
 
-        {/* Left: Upload */}
+        <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-4">
           <Card className="glass">
             <CardHeader className="pb-3">
