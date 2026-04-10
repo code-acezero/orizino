@@ -205,6 +205,33 @@ const ProductDetailPage: React.FC = () => {
     enabled: !!product?.id,
   });
 
+  // Fetch applicable coupons and delivery offers for this product
+  const { data: applicableCoupons } = useQuery({
+    queryKey: ["product-coupons", product?.id, product?.category_id],
+    queryFn: async () => {
+      const { data } = await supabase.from("coupons").select("code, description, discount_type, discount_value, min_order_amount, target_categories, target_products")
+        .eq("is_active", true);
+      return (data || []).filter(c => {
+        const cats = (c as any).target_categories as string[] || [];
+        const prods = (c as any).target_products as string[] || [];
+        if (cats.length > 0 && product?.category_id && !cats.includes(product.category_id)) return false;
+        if (prods.length > 0 && product?.id && !prods.includes(product.id)) return false;
+        return true;
+      });
+    },
+    enabled: !!product?.id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: deliveryOffers } = useQuery({
+    queryKey: ["active-delivery-offers"],
+    queryFn: async () => {
+      const { data } = await supabase.from("delivery_offers").select("*").eq("is_active", true);
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const hasVariants = variants.length > 0;
   const effectiveStock = hasVariants
     ? (() => {
