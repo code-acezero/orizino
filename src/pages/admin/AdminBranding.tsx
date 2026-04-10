@@ -218,8 +218,37 @@ const AdminBranding = () => {
           </Card>
         </div>
 
-        {/* Right: Live previews */}
+        {/* Right: Title Font + Live previews */}
         <div className="space-y-4">
+          {/* Title Font Picker */}
+          <Card className="glass">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Title Display Font</CardTitle>
+              <CardDescription className="text-xs">Used for site name, category & product titles</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-1.5 max-h-[200px] overflow-y-auto pr-1">
+                <button onClick={() => setTitleFont("")}
+                  className={`text-left px-2.5 py-2 rounded-lg text-xs transition-all ${!titleFont ? "border-primary bg-primary/10 border" : "border border-border/50 hover:border-primary/30"}`}>
+                  <span className="font-medium">Default</span>
+                </button>
+                {CUSTOM_FONTS.map((f) => (
+                  <button key={f} onClick={() => setTitleFont(f)}
+                    className={`text-left px-2.5 py-2 rounded-lg text-xs transition-all ${titleFont === f ? "border-primary bg-primary/10 border" : "border border-border/50 hover:border-primary/30"}`}>
+                    <span style={{ fontFamily: `'${f}', sans-serif` }} className="text-sm">{f}</span>
+                  </button>
+                ))}
+              </div>
+              {titleFont && (
+                <div className="mt-3 p-3 rounded-xl bg-secondary/30 border border-border/30">
+                  <p className="text-[10px] text-muted-foreground mb-1">Preview</p>
+                  <p className="text-2xl font-bold" style={{ fontFamily: `'${titleFont}', sans-serif` }}>
+                    {siteName || "Your Brand"}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
           <Card className="glass">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2"><Monitor className="w-4 h-4" /> Live Preview</CardTitle>
