@@ -126,7 +126,9 @@ export const defaultCustomizerConfig: SiteCustomizerConfig = {
 const fonts = [
   "Space Grotesk", "Inter", "Poppins", "Roboto", "Montserrat",
   "Playfair Display", "DM Sans", "Outfit", "Sora", "Manrope",
-  "Plus Jakarta Sans", "Urbanist", "Satoshi", "Cabinet Grotesk",
+  "Plus Jakarta Sans", "Urbanist", "Lexend", "Nunito Sans",
+  "Quicksand", "Raleway", "Crimson Pro", "Libre Baskerville",
+  "Josefin Sans", "Bebas Neue", "Archivo", "Work Sans",
 ];
 
 const fontWeights = [

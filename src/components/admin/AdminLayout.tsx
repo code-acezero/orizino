@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import NotificationBell from "@/components/NotificationBell";
-import AppToastOverlay from "@/components/AppToastOverlay";
+
 import { LogOut, User } from "lucide-react";
 
 const AdminLayout: React.FC = () => {
@@ -77,8 +77,6 @@ const AdminLayout: React.FC = () => {
           </main>
         </div>
       </div>
-      {/* Admin-specific toast overlay */}
-      <AppToastOverlay />
     </SidebarProvider>
   );
 };
