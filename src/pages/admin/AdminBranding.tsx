@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Palette, Monitor, Smartphone, Globe } from "lucide-react";
 import ImageUpload from "@/components/ImageUpload";
 import ColorPicker from "@/components/ui/color-picker";
+import { Textarea } from "@/components/ui/textarea";
+import ColorPicker from "@/components/ui/color-picker";
 
 const LOGO_STYLES = [
   { id: "rounded", label: "Rounded", desc: "Soft rounded corners", cls: "rounded-lg" },
