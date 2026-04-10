@@ -126,7 +126,7 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
   return (
     <>
       <nav className="sticky top-0 z-50 w-full">
-        <div className="glass-strong">
+        <div className="glass-strong backdrop-blur-xl">
           <div className="w-full max-w-[1440px] mx-auto px-4 lg:px-6">
             <div className="flex items-center h-16 gap-4">
               {/* Logo */}
@@ -396,6 +396,8 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
             </div>
           </div>
         </div>
+        {/* Bottom glow line */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
       </nav>
 
       <BottomNav onSearchClick={() => {}} onAuthClick={() => navigate("/auth", { state: { from: location.pathname } })} productTray={bottomNavProductTray} />
