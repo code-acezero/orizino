@@ -19,7 +19,7 @@ import LandingPage from "./pages/LandingPage";
 import AuthPage from "./pages/AuthPage";
 
 // Lazy load everything else
-const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
+import AdminLayout from "./components/admin/AdminLayout";
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
