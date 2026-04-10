@@ -210,6 +210,10 @@ const ProductDetailPage: React.FC = () => {
   const addToCart = async () => {
     if (!user) { toast({ title: "Please sign in", description: "You need to be logged in to add items to cart.", variant: "destructive" }); return; }
     if (!product) return;
+    if (hasVariants && (!selectedSize && !selectedColor)) {
+      toast({ title: "Please select a variant", description: "Choose size and/or color before adding to cart.", variant: "destructive" });
+      return;
+    }
     setAddingToCart(true);
     const variantId = selectedVariant?.id || null;
     let query = supabase.from("cart_items").select("id, quantity").eq("user_id", user.id).eq("product_id", product.id);
@@ -235,15 +239,26 @@ const ProductDetailPage: React.FC = () => {
   const buyNow = async () => {
     if (!user) { toast({ title: "Please sign in", variant: "destructive" }); return; }
     if (!product) return;
-    setAddingToCart(true);
-    const variantId = selectedVariant?.id || null;
-    let query = supabase.from("cart_items").select("id, quantity").eq("user_id", user.id).eq("product_id", product.id);
-    if (variantId) query = query.eq("variant_id", variantId); else query = query.is("variant_id", null);
-    const { data: existing } = await query.maybeSingle();
-    if (existing) await supabase.from("cart_items").update({ quantity }).eq("id", existing.id);
-    else await supabase.from("cart_items").insert({ user_id: user.id, product_id: product.id, quantity, variant_id: variantId } as any);
-    setAddingToCart(false);
-    navigate("/checkout");
+    if (hasVariants && (!selectedSize && !selectedColor)) {
+      toast({ title: "Please select a variant", description: "Choose size and/or color before buying.", variant: "destructive" });
+      return;
+    }
+    // Navigate to checkout with buy-now state (only this product)
+    const variantLabel = [selectedSize, selectedColor].filter(Boolean).join(" / ");
+    navigate("/checkout", {
+      state: {
+        buyNow: true,
+        buyNowItem: {
+          productId: product.id,
+          variantId: selectedVariant?.id || null,
+          quantity,
+          name: product.name,
+          price: effectivePrice,
+          thumbnail: selectedVariant?.image_url ?? product.thumbnail,
+          variantLabel,
+        },
+      },
+    });
   };
 
   const toggleWishlist = async () => {
