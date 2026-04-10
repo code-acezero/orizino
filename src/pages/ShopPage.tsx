@@ -55,7 +55,8 @@ const ShopPage: React.FC = () => {
     staleTime: 10 * 60 * 1000,
   });
 
-  const siteName = (siteSettings?.site_name as string) || "Zero";
+  const rawName = siteSettings?.site_name;
+  const siteName = (typeof rawName === "object" && rawName !== null && "value" in rawName ? (rawName as any).value : rawName) as string || "Zero";
 
   const { data: categories } = useQuery({
     queryKey: ["categories"],
