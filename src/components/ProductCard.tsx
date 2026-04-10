@@ -57,11 +57,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
     queryFn: async () => {
       const { data } = await supabase
         .from("product_variants")
-        .select("color")
+        .select("color, size")
         .eq("product_id", id)
         .eq("is_active", true);
       const colors = [...new Set((data || []).map(v => v.color).filter(Boolean))] as string[];
-      return { hasVariants: (data?.length || 0) > 0, colors };
+      const sizes = [...new Set((data || []).map(v => v.size).filter(Boolean))] as string[];
+      return { hasVariants: (data?.length || 0) > 0, colors, sizes };
     },
     staleTime: 60000,
   });
@@ -269,19 +270,39 @@ const ProductCard: React.FC<ProductCardProps> = ({
             ))}
             <span className="text-xs text-muted-foreground ml-1">({reviewCount})</span>
           </div>
-          {/* Color swatches */}
-          {variantInfo?.colors && variantInfo.colors.length > 0 && (
-            <div className="flex items-center gap-1.5 mb-2">
-              {variantInfo.colors.slice(0, 5).map((color) => (
-                <span
-                  key={color}
-                  title={color}
-                  className="w-3.5 h-3.5 rounded-full border border-border/50 shrink-0"
-                  style={{ backgroundColor: getColorHex(color) }}
-                />
-              ))}
-              {variantInfo.colors.length > 5 && (
-                <span className="text-[10px] text-muted-foreground">+{variantInfo.colors.length - 5}</span>
+          {/* Size & Color swatches */}
+          {((variantInfo?.sizes && variantInfo.sizes.length > 0) || (variantInfo?.colors && variantInfo.colors.length > 0)) && (
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              {variantInfo?.sizes && variantInfo.sizes.length > 0 && (
+                <div className="flex items-center gap-1">
+                  {variantInfo.sizes.slice(0, 4).map((size) => (
+                    <span
+                      key={size}
+                      title={size}
+                      className="text-[10px] font-medium text-muted-foreground bg-secondary/60 rounded px-1.5 py-0.5 leading-none"
+                    >
+                      {size}
+                    </span>
+                  ))}
+                  {variantInfo.sizes.length > 4 && (
+                    <span className="text-[10px] text-muted-foreground">+{variantInfo.sizes.length - 4}</span>
+                  )}
+                </div>
+              )}
+              {variantInfo?.colors && variantInfo.colors.length > 0 && (
+                <div className="flex items-center gap-1">
+                  {variantInfo.colors.slice(0, 5).map((color) => (
+                    <span
+                      key={color}
+                      title={color}
+                      className="w-3.5 h-3.5 rounded-full border border-border/50 shrink-0"
+                      style={{ backgroundColor: getColorHex(color) }}
+                    />
+                  ))}
+                  {variantInfo.colors.length > 5 && (
+                    <span className="text-[10px] text-muted-foreground">+{variantInfo.colors.length - 5}</span>
+                  )}
+                </div>
               )}
             </div>
           )}
