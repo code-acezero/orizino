@@ -87,6 +87,24 @@ const ShopPage: React.FC = () => {
   const parentCategories = categories?.filter((c) => !c.parent_id) || [];
   const getChildren = (parentId: string) => categories?.filter((c) => c.parent_id === parentId) || [];
 
+  // Product counts per category (including subcategories)
+  const { data: productCounts } = useQuery({
+    queryKey: ["product-counts-by-category"],
+    queryFn: async () => {
+      const { data } = await supabase.from("products").select("category_id").eq("is_active", true);
+      const counts: Record<string, number> = {};
+      (data || []).forEach((p) => { if (p.category_id) counts[p.category_id] = (counts[p.category_id] || 0) + 1; });
+      return counts;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const getCategoryCount = (catId: string): number => {
+    const direct = productCounts?.[catId] || 0;
+    const children = getChildren(catId);
+    return direct + children.reduce((sum, c) => sum + (productCounts?.[c.id] || 0), 0);
+  };
+
   // Resolve which category IDs to use for variant/filter queries
   const activeCategoryIds = useMemo(() => {
     if (!selectedCategory) return null;
@@ -277,6 +295,7 @@ const ShopPage: React.FC = () => {
                 >
                   {iconSrc ? <img src={iconSrc} alt="" className="w-6 h-6 rounded-lg object-contain" /> : cat.icon ? <span className="text-base">{cat.icon}</span> : <span className="w-6 h-6 rounded-lg bg-secondary/50" />}
                   <span className="flex-1">{cat.name}</span>
+                  {productCounts && <span className="text-[10px] font-medium text-muted-foreground bg-secondary/60 px-1.5 py-0.5 rounded-full min-w-[20px] text-center">{getCategoryCount(cat.id)}</span>}
                   {children.length > 0 && <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-90" : ""}`} />}
                 </button>
                 <AnimatePresence>
@@ -286,7 +305,8 @@ const ShopPage: React.FC = () => {
                         {children.map((sub) => (
                           <button key={sub.id} onClick={() => handleSubClick(sub.id)} className={`flex items-center gap-2 w-full text-left px-3 py-2 rounded-xl text-xs transition-colors ${selectedCategory === sub.id ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"}`}>
                             {sub.icon_url ? <img src={sub.icon_url} alt="" className="w-4 h-4 rounded object-contain" /> : sub.icon ? <span className="text-xs">{sub.icon}</span> : null}
-                            {sub.name}
+                            <span className="flex-1">{sub.name}</span>
+                            {productCounts && <span className="text-[9px] font-medium text-muted-foreground bg-secondary/40 px-1.5 py-0.5 rounded-full min-w-[18px] text-center">{productCounts[sub.id] || 0}</span>}
                           </button>
                         ))}
                       </div>
