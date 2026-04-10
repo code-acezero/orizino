@@ -177,7 +177,7 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
 
     // Timeout after 30s
     setTimeout(() => {
-      if (callState === "requesting") {
+      if (callStateRef.current === "requesting") {
         setCallState("idle");
         // Update log as missed
         if (callLogIdRef.current) {
