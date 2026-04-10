@@ -148,9 +148,10 @@ const AdminLanding = () => {
 
       <Tabs defaultValue="hero" className="space-y-4">
         <TabsList className="flex-wrap">
-          <TabsTrigger value="hero"><Rocket className="w-4 h-4 mr-1" /> Hero</TabsTrigger>
+         <TabsTrigger value="hero"><Rocket className="w-4 h-4 mr-1" /> Hero</TabsTrigger>
           <TabsTrigger value="about"><BookOpen className="w-4 h-4 mr-1" /> About</TabsTrigger>
           <TabsTrigger value="mission"><Target className="w-4 h-4 mr-1" /> Mission</TabsTrigger>
+          <TabsTrigger value="showcase"><ImageIcon className="w-4 h-4 mr-1" /> Showcase</TabsTrigger>
           <TabsTrigger value="features"><Sparkles className="w-4 h-4 mr-1" /> Features</TabsTrigger>
           <TabsTrigger value="stats"><BarChart3 className="w-4 h-4 mr-1" /> Stats</TabsTrigger>
           <TabsTrigger value="testimonials"><MessageCircle className="w-4 h-4 mr-1" /> Testimonials</TabsTrigger>
@@ -337,7 +338,7 @@ const AdminLanding = () => {
               {[
                 { key: "show_about", label: "About Us / Brand Story" },
                 { key: "show_mission_vision", label: "Mission & Vision" },
-                { key: "show_featured_products", label: "Featured Products" },
+                { key: "show_brand_showcase", label: "Brand Showcase" },
                 { key: "show_stats", label: "Stats Section" },
                 { key: "show_features", label: "Features Section" },
                 { key: "show_categories", label: "Categories Preview" },
