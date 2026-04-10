@@ -31,7 +31,7 @@ interface LandingConfig {
   show_cta: boolean;
   show_about: boolean;
   show_mission_vision: boolean;
-  show_featured_products: boolean;
+  show_brand_showcase: boolean;
   cta_title: string;
   cta_subtitle: string;
   cta_button: string;
@@ -40,28 +40,23 @@ interface LandingConfig {
   about_text: string;
   mission_text: string;
   vision_text: string;
+  showcase_image_url: string;
+  showcase_headline: string;
+  showcase_description: string;
+  showcase_cta_text: string;
+  showcase_cta_link: string;
 }
 
 const DEFAULT: LandingConfig = {
-  hero_title_line1: "Shop Smarter.",
-  hero_title_line2: "Live Better.",
-  hero_subtitle: "Discover a curated marketplace where quality meets affordability.",
-  hero_badge: "Welcome to the Future of Shopping",
+  hero_title_line1: "",
+  hero_title_line2: "",
+  hero_subtitle: "",
+  hero_badge: "",
   hero_cta_primary: "Start Shopping",
   hero_cta_secondary: "Explore Categories",
   hero_bg_url: "",
-  features: [
-    { icon: "Truck", title: "Free Shipping", desc: "On qualifying orders" },
-    { icon: "Shield", title: "Secure Payment", desc: "100% protected" },
-    { icon: "ShoppingBag", title: "Easy Returns", desc: "Hassle-free returns" },
-    { icon: "Sparkles", title: "Premium Quality", desc: "Curated products" },
-  ],
-  stats: [
-    { value: "10K+", label: "Products" },
-    { value: "50K+", label: "Happy Customers" },
-    { value: "99%", label: "Satisfaction" },
-    { value: "24/7", label: "Support" },
-  ],
+  features: [],
+  stats: [],
   show_stats: true,
   show_features: true,
   show_categories: true,
@@ -69,15 +64,20 @@ const DEFAULT: LandingConfig = {
   show_cta: true,
   show_about: true,
   show_mission_vision: true,
-  show_featured_products: true,
+  show_brand_showcase: false,
   cta_title: "",
-  cta_subtitle: "Join thousands of satisfied shoppers. Create your account today.",
+  cta_subtitle: "",
   cta_button: "Create Account",
   testimonials: [],
-  about_title: "Our Story",
-  about_text: "We believe in curating only the finest products for our community.",
-  mission_text: "To make premium quality accessible to everyone, everywhere.",
-  vision_text: "A world where every purchase brings joy and lasting value.",
+  about_title: "",
+  about_text: "",
+  mission_text: "",
+  vision_text: "",
+  showcase_image_url: "",
+  showcase_headline: "",
+  showcase_description: "",
+  showcase_cta_text: "Shop Now",
+  showcase_cta_link: "/home",
 };
 
 const AdminLanding = () => {
