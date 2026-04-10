@@ -99,7 +99,7 @@ const ActiveCallBar: React.FC<{
 };
 
 const SupportPage: React.FC = () => {
-  useSeoMeta("support", "Support | Ace Marketplace");
+  useSeoMeta("support", "Support | Store");
   const { user } = useAuth();
   const { t } = useLanguage();
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -293,7 +293,7 @@ const SupportPage: React.FC = () => {
     }
   };
 
-  const agentName = aiConfig?.name || "Ace Assistant";
+  const agentName = aiConfig?.name || "AI Assistant";
   const welcomeMessage = aiConfig?.welcome_message || "Hi! How can I help you today?";
 
   useEffect(() => {

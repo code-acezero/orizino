@@ -58,13 +58,13 @@ const setJsonLd = (json: string) => {
 export const useProductSeoMeta = (product: Product | undefined) => {
   useEffect(() => {
     if (!product) {
-      document.title = "Product | Ace Marketplace";
+      document.title = "Product | Store";
       return;
     }
 
     // Title
     const title = product.meta_title || product.name;
-    document.title = `${title} | Ace Marketplace`;
+    document.title = `${title} | Store`;
 
     // Meta description
     const description = product.meta_description || product.short_description || "";

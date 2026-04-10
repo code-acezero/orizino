@@ -33,7 +33,7 @@ const runawayMessages = [
 ];
 
 const AuthPage: React.FC = () => {
-  useSeoMeta("auth", "Sign In | Ace Marketplace");
+  useSeoMeta("auth", "Sign In | Store");
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();

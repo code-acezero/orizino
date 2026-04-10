@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
 const CartPage: React.FC = () => {
-  useSeoMeta("cart", "Cart | Ace Marketplace");
+  useSeoMeta("cart", "Cart | Store");
   const { user } = useAuth();
   const { formatPrice, currency, setCurrency, enabledCurrencies, config } = useCurrency();
   const queryClient = useQueryClient();

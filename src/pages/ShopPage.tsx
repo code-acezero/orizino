@@ -44,7 +44,7 @@ const sortOptions = [
 ];
 
 const ShopPage: React.FC = () => {
-  useSeoMeta("shop", "Shop | Ace Marketplace");
+  useSeoMeta("shop", "Shop | Store");
   const [searchParams] = useSearchParams();
   const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");

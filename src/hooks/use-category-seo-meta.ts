@@ -55,13 +55,13 @@ const setJsonLd = (json: string) => {
 export const useCategorySeoMeta = (category: Category | undefined) => {
   useEffect(() => {
     if (!category) {
-      document.title = "Category | Ace Marketplace";
+      document.title = "Category | Store";
       return;
     }
 
     // Title
     const title = category.meta_title || category.name;
-    document.title = `${title} | Ace Marketplace`;
+    document.title = `${title} | Store`;
 
     // Meta description
     const description = category.meta_description || category.description || "";

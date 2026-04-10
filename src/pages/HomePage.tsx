@@ -160,7 +160,7 @@ const TrackedSection: React.FC<{ sectionId: string; children: React.ReactNode }>
 };
 
 const HomePage: React.FC = () => {
-  useSeoMeta("home", "Home | Ace Marketplace");
+  useSeoMeta("home", "Home | Store");
   usePageViewTracker("/home");
   const queryClient = useQueryClient();
 

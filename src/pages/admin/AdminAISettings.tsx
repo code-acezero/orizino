@@ -11,7 +11,7 @@ import { toast } from "@/lib/app-toast";
 import { Bot, Sparkles, MessageCircle, Upload, X, Image as ImageIcon } from "lucide-react";
 
 const DEFAULT_CONFIG = {
-  name: "Ace Assistant",
+  name: "AI Assistant",
   welcome_message: "Hi! I'm here to help you find products, track orders, and more. How can I assist you?",
   personality: "friendly, helpful, and knowledgeable about products",
   custom_instructions: "",
@@ -105,7 +105,7 @@ const AdminAISettings = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Agent Name</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ace Assistant" />
+              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="AI Assistant" />
             </div>
 
             {/* Avatar Type Selector */}
