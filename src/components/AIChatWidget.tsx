@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Bot, User, Headphones, Phone, PhoneOff, Mic, MicOff } from "lucide-react";
+import { X, Send, Bot, User, Headphones, Phone, PhoneOff, Mic, MicOff, AlertTriangle, MessageSquare, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import wolfMascot from "@/assets/wolf-mascot.png";
 import { useAuth } from "@/contexts/AuthContext";
