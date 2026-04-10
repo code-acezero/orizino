@@ -42,19 +42,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const [inWishlist, setInWishlist] = useState(false);
   const [togglingWishlist, setTogglingWishlist] = useState(false);
 
-  // Check if product has variants
-  const { data: hasVariants } = useQuery({
-    queryKey: ["product-has-variants", id],
+  // Fetch variant info (colors for swatches + has variants flag)
+  const { data: variantInfo } = useQuery({
+    queryKey: ["product-variant-info", id],
     queryFn: async () => {
-      const { count } = await supabase
+      const { data } = await supabase
         .from("product_variants")
-        .select("id", { count: "exact", head: true })
+        .select("color")
         .eq("product_id", id)
         .eq("is_active", true);
-      return (count || 0) > 0;
+      const colors = [...new Set((data || []).map(v => v.color).filter(Boolean))] as string[];
+      return { hasVariants: (data?.length || 0) > 0, colors };
     },
     staleTime: 60000,
   });
+  const hasVariants = variantInfo?.hasVariants ?? undefined;
 
   // Check wishlist status on mount
   React.useEffect(() => {
