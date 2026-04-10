@@ -28,6 +28,29 @@ const FilmstripGallery = lazy(() => import("@/components/product/FilmstripGaller
 const GridMosaicGallery = lazy(() => import("@/components/product/GridMosaicGallery"));
 const ParallaxStackGallery = lazy(() => import("@/components/product/ParallaxStackGallery"));
 
+// Helper component to set product tray in layout context
+const ProductTrayEffect: React.FC<{
+  product: any; effectivePrice: number; selectedVariant: any;
+  effectiveStock: number; addToCart: () => void; buyNow: () => void; addingToCart: boolean;
+}> = ({ product, effectivePrice, selectedVariant, effectiveStock, addToCart, buyNow, addingToCart }) => {
+  const { setProductTray } = useLayout();
+  useEffect(() => {
+    setProductTray({
+      product: {
+        name: product.name,
+        price: effectivePrice,
+        thumbnail: selectedVariant?.image_url ?? product.thumbnail,
+        stockQuantity: effectiveStock,
+      },
+      onAddToCart: addToCart,
+      onBuyNow: buyNow,
+      addingToCart,
+    });
+    return () => setProductTray(undefined);
+  }, [product.name, effectivePrice, selectedVariant?.image_url, product.thumbnail, effectiveStock, addToCart, buyNow, addingToCart, setProductTray]);
+  return null;
+};
+
 export type LayoutStyle = "dark-luxury" | "glass" | "neon" | "minimal" | "magazine";
 export type GalleryStyle = "default" | "infinity" | "coverflow" | "filmstrip" | "mosaic" | "parallax-stack";
 
