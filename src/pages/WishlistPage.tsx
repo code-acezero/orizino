@@ -11,8 +11,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { toast } from "@/lib/app-toast";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -182,8 +180,7 @@ const WishlistPage: React.FC = () => {
   if (!user) {
     return (
       <div className="min-h-screen pb-20 lg:pb-0">
-        <Navbar />
-        <div className="container mx-auto px-4 py-20 text-center">
+          <div className="container mx-auto px-4 py-20 text-center">
           <Heart className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
           <h1 className="text-2xl font-bold font-display text-foreground mb-2">Wishlist</h1>
           <p className="text-muted-foreground mb-6">Sign in to view your wishlist</p>
@@ -195,7 +192,6 @@ const WishlistPage: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-20 lg:pb-0">
-      <Navbar />
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <Tabs defaultValue="wishlist" className="space-y-6">
           <div className="flex items-center justify-between mb-2">
@@ -418,7 +414,6 @@ const WishlistPage: React.FC = () => {
           </TabsContent>
         </Tabs>
       </main>
-      <Footer />
 
       {/* Import Request Dialog */}
       <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>

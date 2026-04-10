@@ -2,12 +2,10 @@ import React, { useCallback } from "react";
 import { motion } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import Navbar from "@/components/Navbar";
 import ParallaxSlider from "@/components/ParallaxSlider";
 import CategoryGrid from "@/components/CategoryGrid";
 import ProductCard from "@/components/ProductCard";
 import ProductCardSkeleton from "@/components/ProductCardSkeleton";
-import Footer from "@/components/Footer";
 import HomePopup from "@/components/HomePopup";
 import SaleCountdown from "@/components/SaleCountdown";
 import SalePopup from "@/components/SalePopup";
@@ -534,7 +532,6 @@ const HomePage: React.FC = () => {
           </div>
         </div>
       )}
-      <Navbar />
       <HomePopup />
       {popupSales.map((sale: SaleConfig) => <SalePopup key={sale.id} sale={sale} />)}
 
@@ -559,7 +556,6 @@ const HomePage: React.FC = () => {
       </main>
 
       <LiveVisitorCounter page="/home" />
-      <Footer />
     </div>
   );
 };

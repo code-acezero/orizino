@@ -2,8 +2,6 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,7 +36,6 @@ const CmsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-20 lg:pb-0">
-      <Navbar />
       <main className={`container mx-auto px-4 py-10 ${isBlockPage ? "max-w-5xl" : "max-w-3xl"}`}>
         {isLoading ? (
           <div className="space-y-4">
@@ -63,7 +60,6 @@ const CmsPage: React.FC = () => {
           </motion.div>
         )}
       </main>
-      <Footer />
     </div>
   );
 };

@@ -9,8 +9,6 @@ import { toast } from "@/lib/app-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useProductSeoMeta } from "@/hooks/use-product-seo-meta";
 import { useIsMobile } from "@/hooks/use-mobile";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ProductCard from "@/components/ProductCard";
 import ImageGallery from "@/components/product/ImageGallery";
@@ -292,8 +290,7 @@ const ProductDetailPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen">
-        <Navbar />
-        <div className="container mx-auto px-3 sm:px-4 py-6 md:py-8">
+          <div className="container mx-auto px-3 sm:px-4 py-6 md:py-8">
           <div className="grid md:grid-cols-2 gap-4 md:gap-8">
             <div className="aspect-square rounded-2xl md:rounded-3xl bg-secondary/10 animate-pulse" />
             <div className="space-y-3 md:space-y-4 py-2 md:py-4">
@@ -545,7 +542,6 @@ const ProductDetailPage: React.FC = () => {
         )}
       </main>
 
-      <Footer />
     </div>
   );
 };

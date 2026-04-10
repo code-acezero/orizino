@@ -10,8 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { toast } from "@/lib/app-toast";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -113,8 +111,7 @@ const CartPage: React.FC = () => {
   if (!user) {
     return (
       <div className="min-h-screen pb-20 lg:pb-0">
-        <Navbar />
-        <div className="container mx-auto px-4 py-20 text-center">
+          <div className="container mx-auto px-4 py-20 text-center">
           <ShoppingBag className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
           <h1 className="text-2xl font-bold font-display text-foreground mb-2">Your Cart</h1>
           <p className="text-muted-foreground mb-6">Please sign in to view your cart</p>
@@ -146,7 +143,6 @@ const CartPage: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-20 lg:pb-0">
-      <Navbar />
       <main className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -354,7 +350,6 @@ const CartPage: React.FC = () => {
           </div>
         )}
       </main>
-      <Footer />
     </div>
   );
 };

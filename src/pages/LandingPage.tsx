@@ -5,7 +5,6 @@ import { ArrowRight, ShoppingBag, Shield, Truck, Sparkles, Star, Zap, Globe, Pac
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import Footer from "@/components/Footer";
 
 const iconMap: Record<string, any> = { ShoppingBag, Shield, Truck, Sparkles, Star, Zap, Globe, Package, Users, Heart };
 
@@ -354,7 +353,6 @@ const LandingPage: React.FC = () => {
         </section>
       )}
 
-      <Footer />
     </div>
   );
 };

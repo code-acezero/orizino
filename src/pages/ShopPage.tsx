@@ -4,8 +4,6 @@ import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, ChevronDown, ChevronRight, SlidersHorizontal, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -391,7 +389,6 @@ const ShopPage: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-20 lg:pb-0">
-      <Navbar />
       <main className="container mx-auto px-4 py-8">
         <Breadcrumbs items={[{ label: "Home", href: "/home" }, { label: "Shop" }]} className="mb-4" />
         {/* Header */}
@@ -533,7 +530,6 @@ const ShopPage: React.FC = () => {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };
