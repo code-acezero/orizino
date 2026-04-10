@@ -152,9 +152,16 @@ const AIChatWidget: React.FC = () => {
   const qc = useQueryClient();
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"chat" | "complaint">("chat");
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Complaint state
+  const [complaintSubject, setComplaintSubject] = useState("");
+  const [complaintCategory, setComplaintCategory] = useState("Order Issue");
+  const [complaintDescription, setComplaintDescription] = useState("");
+  const [submittingComplaint, setSubmittingComplaint] = useState(false);
   const [liveMode, setLiveMode] = useState(false);
   const [liveConvId, setLiveConvId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
