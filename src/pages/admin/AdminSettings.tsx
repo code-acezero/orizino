@@ -210,23 +210,6 @@ const AdminSettings = () => {
         <TabsContent value="general">
           <div className="space-y-6 max-w-3xl">
             <Card className="glass">
-              <CardHeader><CardTitle>Site Identity</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                <div><Label>Site Name</Label><Input value={form.site_name} onChange={(e) => setForm({ ...form, site_name: e.target.value })} /></div>
-                <div>
-                  <Label>Site Description</Label>
-                  <Textarea value={form.site_description} onChange={(e) => setForm({ ...form, site_description: e.target.value })} rows={2} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div><Label>Contact Email</Label><Input type="email" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} placeholder="support@yoursite.com" /></div>
-                  <div><Label>Contact Phone</Label><Input value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} placeholder="+1 234 567 890" /></div>
-                </div>
-                <div><Label>Support URL</Label><Input value={form.support_url} onChange={(e) => setForm({ ...form, support_url: e.target.value })} placeholder="https://support.yoursite.com" /></div>
-                <div><Label>Business Address</Label><Textarea value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} rows={2} placeholder="123 Main St, City, Country" /></div>
-              </CardContent>
-            </Card>
-
-            <Card className="glass">
               <CardHeader><CardTitle>Site Behavior</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between p-3 rounded-xl border border-border/30">
@@ -263,27 +246,13 @@ const AdminSettings = () => {
           <div className="space-y-6 max-w-3xl">
             <Card className="glass">
               <CardHeader>
-                <CardTitle>Shipping & Tax</CardTitle>
-                <CardDescription>Configure shipping fees and tax rates</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div><Label>Default Shipping Fee</Label><Input type="number" value={form.shipping_fee} onChange={(e) => setForm({ ...form, shipping_fee: e.target.value })} /></div>
-                  <div><Label>Free Shipping Threshold</Label><Input type="number" value={form.free_shipping_threshold} onChange={(e) => setForm({ ...form, free_shipping_threshold: e.target.value })} placeholder="Orders above this get free shipping" /></div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div><Label>Tax Rate (%)</Label><Input type="number" value={form.tax_rate} onChange={(e) => setForm({ ...form, tax_rate: e.target.value })} step="0.1" /></div>
-                  <div><Label>Order Number Prefix</Label><Input value={form.order_prefix} onChange={(e) => setForm({ ...form, order_prefix: e.target.value })} /></div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="glass">
-              <CardHeader>
                 <CardTitle>Store Behavior</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div><Label>Products Per Page</Label><Input type="number" value={form.items_per_page} onChange={(e) => setForm({ ...form, items_per_page: e.target.value })} /></div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><Label>Order Number Prefix</Label><Input value={form.order_prefix} onChange={(e) => setForm({ ...form, order_prefix: e.target.value })} /></div>
+                  <div><Label>Products Per Page</Label><Input type="number" value={form.items_per_page} onChange={(e) => setForm({ ...form, items_per_page: e.target.value })} /></div>
+                </div>
                 <div className="flex items-center justify-between p-3 rounded-xl border border-border/30">
                   <div>
                     <Label>Allow Guest Checkout</Label>

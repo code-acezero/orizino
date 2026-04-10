@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2, Edit3, Truck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -18,12 +19,61 @@ const AdminShipping: React.FC = () => {
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState(emptyMethod);
 
+  // Shipping & Tax settings from site_settings
+  const [shippingFee, setShippingFee] = useState("5.00");
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState("");
+  const [taxRate, setTaxRate] = useState("0");
+
   const { data: methods, isLoading } = useQuery({
     queryKey: ["admin-shipping"],
     queryFn: async () => {
       const { data } = await supabase.from("shipping_methods").select("*").order("sort_order");
       return data || [];
     },
+  });
+
+  const { data: siteSettings } = useQuery({
+    queryKey: ["admin-shipping-settings"],
+    queryFn: async () => {
+      const { data } = await supabase.from("site_settings").select("key, value").in("key", ["shipping_fee", "free_shipping_threshold", "tax_rate"]);
+      const map: Record<string, any> = {};
+      data?.forEach((s) => {
+        const val = s.value;
+        map[s.key] = typeof val === "object" && val !== null ? (val as any).value ?? val : val;
+      });
+      return map;
+    },
+  });
+
+  useEffect(() => {
+    if (siteSettings) {
+      setShippingFee(String(siteSettings.shipping_fee ?? "5.00"));
+      setFreeShippingThreshold(String(siteSettings.free_shipping_threshold ?? ""));
+      setTaxRate(String(siteSettings.tax_rate ?? "0"));
+    }
+  }, [siteSettings]);
+
+  const saveSettingsMutation = useMutation({
+    mutationFn: async () => {
+      const items = [
+        { key: "shipping_fee", value: shippingFee },
+        { key: "free_shipping_threshold", value: freeShippingThreshold },
+        { key: "tax_rate", value: taxRate },
+      ];
+      for (const item of items) {
+        await supabase.from("site_settings").upsert(
+          { key: item.key, value: item.value as any, updated_at: new Date().toISOString() },
+          { onConflict: "key" }
+        );
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-shipping-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["site-settings"] });
+      toast.success("Shipping & Tax settings saved");
+    },
+    onError: (e: any) => toast.error(e.message),
   });
 
   const saveMutation = useMutation({
@@ -64,12 +114,40 @@ const AdminShipping: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold font-display text-foreground">Shipping Methods</h1>
-          <p className="text-sm text-muted-foreground">{methods?.length || 0} methods configured</p>
+          <h1 className="text-2xl font-bold font-display text-foreground">Shipping & Tax</h1>
+          <p className="text-sm text-muted-foreground">Manage shipping methods, fees, and tax rates</p>
         </div>
         <Button onClick={openAdd} className="gap-1.5"><Plus className="w-4 h-4" /> Add Method</Button>
       </div>
 
+      {/* Shipping & Tax Settings Card */}
+      <Card className="glass">
+        <CardHeader>
+          <CardTitle className="text-sm">Default Shipping & Tax</CardTitle>
+          <CardDescription className="text-xs">Global shipping fee and tax rate applied at checkout</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label className="text-xs">Default Shipping Fee</Label>
+              <Input type="number" value={shippingFee} onChange={(e) => setShippingFee(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs">Free Shipping Threshold</Label>
+              <Input type="number" value={freeShippingThreshold} onChange={(e) => setFreeShippingThreshold(e.target.value)} placeholder="Orders above this get free shipping" />
+            </div>
+            <div>
+              <Label className="text-xs">Tax Rate (%)</Label>
+              <Input type="number" value={taxRate} onChange={(e) => setTaxRate(e.target.value)} step="0.1" />
+            </div>
+          </div>
+          <Button size="sm" onClick={() => saveSettingsMutation.mutate()} disabled={saveSettingsMutation.isPending}>
+            {saveSettingsMutation.isPending ? "Saving..." : "Save Settings"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Shipping Methods Table */}
       <div className="border rounded-xl overflow-hidden">
         <Table>
           <TableHeader>
