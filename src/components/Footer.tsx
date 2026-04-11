@@ -246,61 +246,65 @@ const Footer: React.FC = () => {
       />
 
       <div className="relative max-w-[1440px] mx-auto px-4 lg:px-6">
-        {/* Main row */}
-        <div className="py-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          {/* Brand */}
-          <Link to="/home" className="inline-flex items-center gap-2 group shrink-0">
-            {logoUrl ? <img src={logoUrl} alt={siteName} className="w-6 h-6 rounded-full object-cover" />
-              : siteIconUrl ? <img src={siteIconUrl} alt={siteName} className="w-6 h-6 rounded-full object-cover" />
-              : siteName ? <div className="w-6 h-6 rounded-full bg-gradient-primary flex items-center justify-center"><span className="text-primary-foreground font-bold text-[10px]">{siteName.charAt(0)}</span></div>
-              : null}
-            {siteName && <span className="font-semibold text-sm text-foreground" style={{ fontFamily: 'var(--font-title, var(--font-display))' }}>{siteName}</span>}
-          </Link>
+        <div className="py-5 flex flex-col gap-4">
+          {/* Top row: Brand + Links + Actions */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            {/* Brand */}
+            <Link to="/home" className="inline-flex items-center gap-2 group shrink-0">
+              {logoUrl ? <img src={logoUrl} alt={siteName} className="w-6 h-6 rounded-full object-cover" />
+                : siteIconUrl ? <img src={siteIconUrl} alt={siteName} className="w-6 h-6 rounded-full object-cover" />
+                : siteName ? <div className="w-6 h-6 rounded-full bg-gradient-primary flex items-center justify-center"><span className="text-primary-foreground font-bold text-[10px]">{siteName.charAt(0)}</span></div>
+                : null}
+              {siteName && <span className="font-semibold text-sm text-foreground" style={{ fontFamily: 'var(--font-title, var(--font-display))' }}>{siteName}</span>}
+            </Link>
 
-          {/* Link pills */}
-          {cfg.show_quick_links && (
-            <div className="flex flex-wrap items-center gap-1">
-              {quickLinks.map(({ label, to }) => (
-                <Link key={label} to={to}
-                  className="px-3 py-1 rounded-full text-[11px] text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all">
-                  {label}
-                </Link>
-              ))}
-              {cfg.show_categories && footerCategories.slice(0, 3).map((cat) => (
-                <Link key={cat.slug} to={`/categories/${cat.slug}`}
-                  className="px-3 py-1 rounded-full text-[11px] text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all">
-                  {cat.name}
-                </Link>
-              ))}
-            </div>
-          )}
-
-          {/* Right side: social + newsletter */}
-          <div className="flex items-center gap-3 shrink-0">
-            {cfg.show_trust_badges && trustItems.map(({ icon: Icon, label }) => (
-              <Tooltip key={label}>
-                <TooltipTrigger asChild>
-                  <div className="w-6 h-6 rounded-full border border-border/30 flex items-center justify-center text-muted-foreground/60 hover:text-primary hover:border-primary/40 transition-all cursor-help">
-                    <Icon className="w-3 h-3" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="top"><p className="text-xs">{label}</p></TooltipContent>
-              </Tooltip>
-            ))}
-
-            {cfg.show_social && (
-              <div className="flex items-center gap-1 ml-1">
-                {socials.slice(0, 4).map(({ icon: Icon, href, label }) => (
-                  <a key={label} href={href} aria-label={label}
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-muted-foreground/60 hover:text-primary transition-all">
-                    <Icon className="w-3 h-3" />
-                  </a>
+            {/* Link pills — wrap on tablet */}
+            {cfg.show_quick_links && (
+              <div className="flex flex-wrap items-center gap-1">
+                {quickLinks.map(({ label, to }) => (
+                  <Link key={label} to={to}
+                    className="px-3 py-1 rounded-full text-[11px] text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all">
+                    {label}
+                  </Link>
+                ))}
+                {cfg.show_categories && footerCategories.slice(0, 3).map((cat) => (
+                  <Link key={cat.slug} to={`/categories/${cat.slug}`}
+                    className="px-3 py-1 rounded-full text-[11px] text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all">
+                    {cat.name}
+                  </Link>
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Second row: trust + social + newsletter (wraps properly on tablet) */}
+          <div className="flex flex-wrap items-center gap-3 justify-between">
+            <div className="flex items-center gap-2 flex-wrap">
+              {cfg.show_trust_badges && trustItems.map(({ icon: Icon, label }) => (
+                <Tooltip key={label}>
+                  <TooltipTrigger asChild>
+                    <div className="w-6 h-6 rounded-full border border-border/30 flex items-center justify-center text-muted-foreground/60 hover:text-primary hover:border-primary/40 transition-all cursor-help">
+                      <Icon className="w-3 h-3" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top"><p className="text-xs">{label}</p></TooltipContent>
+                </Tooltip>
+              ))}
+
+              {cfg.show_social && (
+                <div className="flex items-center gap-1 ml-1">
+                  {socials.slice(0, 4).map(({ icon: Icon, href, label }) => (
+                    <a key={label} href={href} aria-label={label}
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-muted-foreground/60 hover:text-primary transition-all">
+                      <Icon className="w-3 h-3" />
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {cfg.show_newsletter && (
-              <div className="flex gap-1.5 ml-1">
+              <div className="flex gap-1.5">
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSubscribe()}
                   placeholder="your@email.com"

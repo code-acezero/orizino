@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring, animate } from "framer-motion";
 import { ArrowRight, Sparkles, Star, Zap, Globe, Package, Users, Heart, ChevronRight, ChevronDown, Target, Eye, ShoppingBag, Shield, Truck, RotateCcw, Headphones, Lock, Menu, X } from "lucide-react";
@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const iconMap: Record<string, any> = { ShoppingBag, Shield, Truck, Sparkles, Star, Zap, Globe, Package, Users, Heart };
 
@@ -120,11 +121,10 @@ const LandingNav: React.FC<{ siteName: string; logoUrl: string }> = ({ siteName,
       <div className="container mx-auto px-4 flex items-center justify-between h-16">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          {logoUrl ? (
+          {logoUrl && (
             <img src={logoUrl} alt={siteName} className="h-8 w-auto" />
-          ) : (
-            <span className="text-lg font-display font-bold text-gradient">{siteName || "Store"}</span>
           )}
+          <span className="text-lg font-display font-bold text-gradient">{siteName || "Store"}</span>
         </Link>
 
         {/* Desktop links */}
@@ -192,8 +192,9 @@ const LandingFooter: React.FC<{ siteName: string }> = ({ siteName }) => (
 const LandingPage: React.FC = () => {
   useSeoMeta("landing", "Welcome");
   const heroRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 200]);
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, isMobile ? 80 : 200]);
   const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.85]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
@@ -309,38 +310,42 @@ const LandingPage: React.FC = () => {
                   transition={{ repeat: Infinity, duration: 10, ease: "easeInOut", delay: 2 }}
                 />
 
-                {/* Floating 3D shapes */}
-                <motion.div className="absolute top-[25%] right-[12%] w-28 h-28 border border-primary/10 rounded-2xl"
-                  style={{ transformStyle: "preserve-3d" }}
-                  animate={{ rotateX: [0, 360], rotateY: [0, 180], y: [0, -30, 0] }}
-                  transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
-                />
-                <motion.div className="absolute top-[55%] left-[20%] w-14 h-14 border border-accent/15 rounded-full"
-                  animate={{ scale: [1, 1.4, 1], rotateZ: [0, 180, 360], opacity: [0.2, 0.5, 0.2] }}
-                  transition={{ repeat: Infinity, duration: 12 }}
-                />
-                <motion.div className="absolute top-[40%] left-[65%] w-20 h-20"
-                  style={{ transformStyle: "preserve-3d" }}
-                  animate={{ rotateY: [0, 360], rotateX: [0, 90, 0] }}
-                  transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-                >
-                  <div className="w-full h-full border border-primary/8 transform rotate-45" />
-                </motion.div>
+                {/* Floating 3D shapes — desktop only */}
+                {!isMobile && (
+                  <>
+                    <motion.div className="absolute top-[25%] right-[12%] w-28 h-28 border border-primary/10 rounded-2xl"
+                      style={{ transformStyle: "preserve-3d" }}
+                      animate={{ rotateX: [0, 360], rotateY: [0, 180], y: [0, -30, 0] }}
+                      transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
+                    />
+                    <motion.div className="absolute top-[55%] left-[20%] w-14 h-14 border border-accent/15 rounded-full"
+                      animate={{ scale: [1, 1.4, 1], rotateZ: [0, 180, 360], opacity: [0.2, 0.5, 0.2] }}
+                      transition={{ repeat: Infinity, duration: 12 }}
+                    />
+                    <motion.div className="absolute top-[40%] left-[65%] w-20 h-20"
+                      style={{ transformStyle: "preserve-3d" }}
+                      animate={{ rotateY: [0, 360], rotateX: [0, 90, 0] }}
+                      transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+                    >
+                      <div className="w-full h-full border border-primary/8 transform rotate-45" />
+                    </motion.div>
 
-                {/* Lens flare streaks */}
-                <motion.div className="absolute top-[30%] left-0 w-[60%] h-[1px]"
-                  style={{ background: "linear-gradient(90deg, transparent, hsl(var(--primary)/0.15), transparent)" }}
-                  animate={{ x: ["-100%", "200%"], opacity: [0, 0.6, 0] }}
-                  transition={{ repeat: Infinity, duration: 8, ease: "easeInOut", delay: 3 }}
-                />
-                <motion.div className="absolute top-[60%] right-0 w-[40%] h-[1px]"
-                  style={{ background: "linear-gradient(90deg, transparent, hsl(var(--accent)/0.1), transparent)" }}
-                  animate={{ x: ["200%", "-100%"], opacity: [0, 0.4, 0] }}
-                  transition={{ repeat: Infinity, duration: 10, ease: "easeInOut", delay: 5 }}
-                />
+                    {/* Lens flare streaks */}
+                    <motion.div className="absolute top-[30%] left-0 w-[60%] h-[1px]"
+                      style={{ background: "linear-gradient(90deg, transparent, hsl(var(--primary)/0.15), transparent)" }}
+                      animate={{ x: ["-100%", "200%"], opacity: [0, 0.6, 0] }}
+                      transition={{ repeat: Infinity, duration: 8, ease: "easeInOut", delay: 3 }}
+                    />
+                    <motion.div className="absolute top-[60%] right-0 w-[40%] h-[1px]"
+                      style={{ background: "linear-gradient(90deg, transparent, hsl(var(--accent)/0.1), transparent)" }}
+                      animate={{ x: ["200%", "-100%"], opacity: [0, 0.4, 0] }}
+                      transition={{ repeat: Infinity, duration: 10, ease: "easeInOut", delay: 5 }}
+                    />
+                  </>
+                )}
 
-                {/* 30+ Particles with varied sizes, colors, glow */}
-                {Array.from({ length: 32 }).map((_, i) => {
+                {/* Particles — reduced on mobile for performance */}
+                {Array.from({ length: isMobile ? 12 : 32 }).map((_, i) => {
                   const size = 1 + (i % 7);
                   const left = 3 + ((i * 3.1) % 94);
                   const top = 5 + ((i * 5.7) % 90);
