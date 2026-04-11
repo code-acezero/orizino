@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import BottomNav, { type BottomNavProductTray } from "@/components/BottomNav";
 import NotificationBell from "@/components/NotificationBell";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface NavbarProps {
   bottomNavProductTray?: BottomNavProductTray;
@@ -23,8 +24,9 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
   const [hoveredCat, setHoveredCat] = useState<string | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [mobileSearchFocused, setMobileSearchFocused] = useState(false);
   
-  
+  const isMobile = useIsMobile();
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -135,7 +137,6 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
     if (searchQuery.trim()) {
       const q = encodeURIComponent(searchQuery.trim());
       if (location.pathname === "/shop") {
-        // Update search params without full navigation to avoid navbar remount
         const params = new URLSearchParams(location.search);
         params.set("q", searchQuery.trim());
         navigate(`/shop?${params.toString()}`, { replace: true });
@@ -143,7 +144,21 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
         navigate(`/shop?q=${q}`);
       }
       setSearchQuery("");
+      setMobileSearchFocused(false);
     }
+  };
+
+  const renderSiteTitle = () => {
+    if (!siteName) return null;
+    return (
+      <span className="font-bold text-xl text-foreground" style={{ fontFamily: 'var(--font-title, var(--font-display))' }}>
+        {Object.keys(titleLetterColors).length > 0
+          ? siteName.split("").map((char, i) => (
+              <span key={i} style={titleLetterColors[i] ? { color: titleLetterColors[i] } : undefined}>{char}</span>
+            ))
+          : siteName}
+      </span>
+    );
   };
 
   return (
@@ -151,7 +166,7 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
       <nav className="sticky top-0 z-50 w-full">
         <div className="glass-strong backdrop-blur-xl">
           <div className="w-full max-w-[1440px] mx-auto px-4 lg:px-6">
-            <div className="flex items-center h-16 gap-4">
+            <div className="flex items-center h-16 gap-3">
               {/* Logo */}
               <Link to="/home" className="flex items-center gap-2 shrink-0">
               {logoUrl ? (
@@ -163,23 +178,38 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
                     <span className="text-primary-foreground font-bold text-sm">{siteName.charAt(0)}</span>
                   </div>
                 ) : null}
-                {siteName && (
-                  <span className="font-bold text-xl text-foreground hidden sm:inline" style={{ fontFamily: 'var(--font-title, var(--font-display))' }}>
-                    {Object.keys(titleLetterColors).length > 0
-                      ? siteName.split("").map((char, i) => (
-                          <span key={i} style={titleLetterColors[i] ? { color: titleLetterColors[i] } : undefined}>{char}</span>
-                        ))
-                      : siteName}
-                  </span>
-                )}
+                {/* Desktop: always show title */}
+                <span className="hidden lg:inline">
+                  {renderSiteTitle()}
+                </span>
               </Link>
 
-              {/* Mobile: Search bar */}
-              <div className="flex-1 lg:hidden">
+              {/* Mobile: Site title (shrinks when search focused) */}
+              <AnimatePresence>
+                {!mobileSearchFocused && isMobile && siteName && (
+                  <motion.span
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: "auto" }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="lg:hidden truncate max-w-[100px] font-bold text-sm text-foreground shrink-0"
+                    style={{ fontFamily: 'var(--font-title, var(--font-display))' }}
+                  >
+                    {siteName}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+
+              {/* Mobile: Search bar — expands on focus */}
+              <div className="flex-1 lg:hidden min-w-0">
                 <form onSubmit={handleSearchSubmit} className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={t("nav.search")}
-                    className="w-full pl-9 pr-10 py-2 rounded-full bg-secondary/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 transition-all" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+                  <input type="text" value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setMobileSearchFocused(true)}
+                    onBlur={() => { if (!searchQuery) setMobileSearchFocused(false); }}
+                    placeholder={t("nav.search")}
+                    className="w-full pl-9 pr-9 py-2 rounded-full bg-secondary/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 transition-all" />
                   <AnimatePresence>
                     {searchQuery.trim() && (
                       <motion.button
@@ -187,7 +217,7 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
                         initial={{ opacity: 0, scale: 0.5 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.5 }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center"
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center z-10"
                       >
                         <ArrowRight className="w-3.5 h-3.5" />
                       </motion.button>
@@ -289,7 +319,7 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
                 </div>
               </div>
 
-              {/* Center: Search */}
+              {/* Center: Desktop Search */}
               <div className="hidden lg:block flex-1 max-w-md mx-auto">
                 <form onSubmit={handleSearchSubmit} className="relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -302,7 +332,7 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
                         initial={{ opacity: 0, scale: 0.5 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.5 }}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors"
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors"
                       >
                         <ArrowRight className="w-4 h-4" />
                       </motion.button>
@@ -311,7 +341,7 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
                 </form>
               </div>
 
-              {/* Right: Actions — order: notification > currency > wishlist > cart > user */}
+              {/* Right: Actions */}
               <div className="flex items-center gap-1 shrink-0 ml-auto lg:ml-0">
                 {/* Currency selector */}
                 {enabledCurrencies.length > 1 && (
@@ -350,14 +380,19 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
                   </div>
                 )}
 
-                {/* Notification bell (dynamic island) */}
+                {/* Notification bell */}
                 {user && <NotificationBell />}
 
                 <Link to="/wishlist" className="hidden lg:flex p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all">
                   <Heart className="w-5 h-5" />
                 </Link>
-                <Link to="/cart" id="nav-cart-icon" className="hidden lg:flex p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all relative">
-                  <ShoppingCart className="w-5 h-5" />
+                <Link to="/cart" id="nav-cart-icon" className="hidden lg:flex p-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all relative group">
+                  <motion.div
+                    whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <ShoppingCart className="w-5 h-5 group-hover:text-primary transition-colors" />
+                  </motion.div>
                   {(cartCount ?? 0) > 0 && (
                     <motion.span
                       key={cartCount}

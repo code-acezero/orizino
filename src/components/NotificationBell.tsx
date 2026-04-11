@@ -46,6 +46,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }
   const [open, setOpen] = useState(false);
   const [islandItem, setIslandItem] = useState<IslandItem | null>(null);
   const [lastSeenId, setLastSeenId] = useState<string | null>(null);
+  const [bellRing, setBellRing] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const islandTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -73,6 +74,8 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }
   const showIsland = (item: IslandItem) => {
     if (islandTimerRef.current) clearTimeout(islandTimerRef.current);
     setIslandItem(item);
+    setBellRing(true);
+    setTimeout(() => setBellRing(false), 600);
     islandTimerRef.current = setTimeout(() => setIslandItem(null), 4000);
   };
 
@@ -157,12 +160,17 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }
 
   return (
     <div className="relative" ref={panelRef}>
-      {/* Bell icon — always a fixed-size button, never expands inline on mobile */}
+      {/* Bell icon with ring animation */}
       <button
         className="flex items-center justify-center shrink-0 w-10 h-10 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all relative"
         onClick={() => setOpen(!open)}
       >
-        <Bell className="w-5 h-5" />
+        <motion.div
+          animate={bellRing ? { rotate: [0, 15, -15, 10, -10, 5, 0] } : {}}
+          transition={{ duration: 0.6 }}
+        >
+          <Bell className="w-5 h-5" />
+        </motion.div>
         {unreadCount > 0 && (
           <motion.span
             initial={{ scale: 0 }}
@@ -174,7 +182,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }
         )}
       </button>
 
-      {/* Dynamic island — drops below the bell on mobile, positioned absolutely */}
+      {/* Dynamic island — mobile: drops below menu bar; desktop: inline dropdown */}
       <AnimatePresence>
         {isExpanded && islandItem && (
           <motion.div
@@ -184,8 +192,8 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
             className={`absolute z-[100] ${
               isMobile
-                ? "top-full right-0 mt-2 w-72"
-                : "top-full right-0 mt-2 w-64"
+                ? "top-full right-0 mt-1 w-[calc(100vw-2rem)] max-w-xs"
+                : "top-full right-0 mt-2 w-72"
             }`}
             style={{ transformOrigin: "top right" }}
             onClick={() => {
