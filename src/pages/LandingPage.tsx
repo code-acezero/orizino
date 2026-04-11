@@ -340,8 +340,8 @@ const LandingPage: React.FC = () => {
                   transition={{ repeat: Infinity, duration: 10, ease: "easeInOut", delay: 5 }}
                 />
 
-                {/* 30+ Particles with varied sizes, colors, glow */}
-                {Array.from({ length: 32 }).map((_, i) => {
+                {/* Particles — reduced on mobile for performance */}
+                {Array.from({ length: isMobile ? 12 : 32 }).map((_, i) => {
                   const size = 1 + (i % 7);
                   const left = 3 + ((i * 3.1) % 94);
                   const top = 5 + ((i * 5.7) % 90);
