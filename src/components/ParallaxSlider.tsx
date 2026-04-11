@@ -339,14 +339,14 @@ const ParallaxSlider: React.FC = () => {
         {/* Vignette */}
         {cfg.show_vignette && <div className="absolute inset-0 z-[12] pointer-events-none" style={{ boxShadow: "inset 0 0 80px 25px rgba(0,0,0,0.35)" }} />}
 
-        {/* Particles — skip on mobile */}
-        {!isMobile && cfg.show_particles && containerSize.w > 0 && containerSize.h > 0 && (
+        {/* Particles — reduced count on mobile for performance */}
+        {cfg.show_particles && containerSize.w > 0 && containerSize.h > 0 && (
           <ParticleOverlay
             width={containerSize.w}
             height={containerSize.h}
-            count={Math.min(cfg.particle_count, 25)}
+            count={isMobile ? Math.min(Math.round(cfg.particle_count * 0.4), 12) : Math.min(cfg.particle_count, 25)}
             speed={cfg.particle_speed}
-            size={cfg.particle_size}
+            size={isMobile ? cfg.particle_size * 0.8 : cfg.particle_size}
           />
         )}
 

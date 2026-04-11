@@ -120,11 +120,10 @@ const LandingNav: React.FC<{ siteName: string; logoUrl: string }> = ({ siteName,
       <div className="container mx-auto px-4 flex items-center justify-between h-16">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          {logoUrl ? (
+          {logoUrl && (
             <img src={logoUrl} alt={siteName} className="h-8 w-auto" />
-          ) : (
-            <span className="text-lg font-display font-bold text-gradient">{siteName || "Store"}</span>
           )}
+          <span className="text-lg font-display font-bold text-gradient">{siteName || "Store"}</span>
         </Link>
 
         {/* Desktop links */}
