@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring, animate } from "framer-motion";
 import { ArrowRight, Sparkles, Star, Zap, Globe, Package, Users, Heart, ChevronRight, ChevronDown, Target, Eye, ShoppingBag, Shield, Truck, RotateCcw, Headphones, Lock, Menu, X } from "lucide-react";
@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const iconMap: Record<string, any> = { ShoppingBag, Shield, Truck, Sparkles, Star, Zap, Globe, Package, Users, Heart };
 
