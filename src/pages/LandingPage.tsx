@@ -310,35 +310,39 @@ const LandingPage: React.FC = () => {
                   transition={{ repeat: Infinity, duration: 10, ease: "easeInOut", delay: 2 }}
                 />
 
-                {/* Floating 3D shapes */}
-                <motion.div className="absolute top-[25%] right-[12%] w-28 h-28 border border-primary/10 rounded-2xl"
-                  style={{ transformStyle: "preserve-3d" }}
-                  animate={{ rotateX: [0, 360], rotateY: [0, 180], y: [0, -30, 0] }}
-                  transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
-                />
-                <motion.div className="absolute top-[55%] left-[20%] w-14 h-14 border border-accent/15 rounded-full"
-                  animate={{ scale: [1, 1.4, 1], rotateZ: [0, 180, 360], opacity: [0.2, 0.5, 0.2] }}
-                  transition={{ repeat: Infinity, duration: 12 }}
-                />
-                <motion.div className="absolute top-[40%] left-[65%] w-20 h-20"
-                  style={{ transformStyle: "preserve-3d" }}
-                  animate={{ rotateY: [0, 360], rotateX: [0, 90, 0] }}
-                  transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-                >
-                  <div className="w-full h-full border border-primary/8 transform rotate-45" />
-                </motion.div>
+                {/* Floating 3D shapes — desktop only */}
+                {!isMobile && (
+                  <>
+                    <motion.div className="absolute top-[25%] right-[12%] w-28 h-28 border border-primary/10 rounded-2xl"
+                      style={{ transformStyle: "preserve-3d" }}
+                      animate={{ rotateX: [0, 360], rotateY: [0, 180], y: [0, -30, 0] }}
+                      transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
+                    />
+                    <motion.div className="absolute top-[55%] left-[20%] w-14 h-14 border border-accent/15 rounded-full"
+                      animate={{ scale: [1, 1.4, 1], rotateZ: [0, 180, 360], opacity: [0.2, 0.5, 0.2] }}
+                      transition={{ repeat: Infinity, duration: 12 }}
+                    />
+                    <motion.div className="absolute top-[40%] left-[65%] w-20 h-20"
+                      style={{ transformStyle: "preserve-3d" }}
+                      animate={{ rotateY: [0, 360], rotateX: [0, 90, 0] }}
+                      transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+                    >
+                      <div className="w-full h-full border border-primary/8 transform rotate-45" />
+                    </motion.div>
 
-                {/* Lens flare streaks */}
-                <motion.div className="absolute top-[30%] left-0 w-[60%] h-[1px]"
-                  style={{ background: "linear-gradient(90deg, transparent, hsl(var(--primary)/0.15), transparent)" }}
-                  animate={{ x: ["-100%", "200%"], opacity: [0, 0.6, 0] }}
-                  transition={{ repeat: Infinity, duration: 8, ease: "easeInOut", delay: 3 }}
-                />
-                <motion.div className="absolute top-[60%] right-0 w-[40%] h-[1px]"
-                  style={{ background: "linear-gradient(90deg, transparent, hsl(var(--accent)/0.1), transparent)" }}
-                  animate={{ x: ["200%", "-100%"], opacity: [0, 0.4, 0] }}
-                  transition={{ repeat: Infinity, duration: 10, ease: "easeInOut", delay: 5 }}
-                />
+                    {/* Lens flare streaks */}
+                    <motion.div className="absolute top-[30%] left-0 w-[60%] h-[1px]"
+                      style={{ background: "linear-gradient(90deg, transparent, hsl(var(--primary)/0.15), transparent)" }}
+                      animate={{ x: ["-100%", "200%"], opacity: [0, 0.6, 0] }}
+                      transition={{ repeat: Infinity, duration: 8, ease: "easeInOut", delay: 3 }}
+                    />
+                    <motion.div className="absolute top-[60%] right-0 w-[40%] h-[1px]"
+                      style={{ background: "linear-gradient(90deg, transparent, hsl(var(--accent)/0.1), transparent)" }}
+                      animate={{ x: ["200%", "-100%"], opacity: [0, 0.4, 0] }}
+                      transition={{ repeat: Infinity, duration: 10, ease: "easeInOut", delay: 5 }}
+                    />
+                  </>
+                )}
 
                 {/* Particles — reduced on mobile for performance */}
                 {Array.from({ length: isMobile ? 12 : 32 }).map((_, i) => {
