@@ -217,9 +217,9 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
                         initial={{ opacity: 0, scale: 0.5 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.5 }}
-                        className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center z-10"
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center z-10 text-primary"
                       >
-                        <ArrowRight className="w-3.5 h-3.5" />
+                        <ArrowRight className="w-4 h-4" />
                       </motion.button>
                     )}
                   </AnimatePresence>
@@ -332,9 +332,9 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
                         initial={{ opacity: 0, scale: 0.5 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.5 }}
-                        className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-primary hover:text-primary/80 transition-colors"
                       >
-                        <ArrowRight className="w-4 h-4" />
+                        <ArrowRight className="w-4.5 h-4.5" />
                       </motion.button>
                     )}
                   </AnimatePresence>
