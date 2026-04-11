@@ -192,8 +192,9 @@ const LandingFooter: React.FC<{ siteName: string }> = ({ siteName }) => (
 const LandingPage: React.FC = () => {
   useSeoMeta("landing", "Welcome");
   const heroRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 200]);
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, isMobile ? 80 : 200]);
   const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.85]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
