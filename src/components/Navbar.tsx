@@ -202,22 +202,22 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
 
               {/* Mobile: Search bar — expands on focus */}
               <div className="flex-1 lg:hidden min-w-0">
-                <form onSubmit={handleSearchSubmit} className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+                <form onSubmit={handleSearchSubmit} className="flex items-center rounded-full bg-secondary/50 border border-border h-9 overflow-hidden focus-within:ring-2 focus-within:ring-primary/50 focus-within:border-primary/30 transition-all">
+                  <Search className="w-4 h-4 text-muted-foreground ml-3 shrink-0" />
                   <input type="text" value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={() => setMobileSearchFocused(true)}
                     onBlur={() => { if (!searchQuery) setMobileSearchFocused(false); }}
                     placeholder={t("nav.search")}
-                    className="w-full pl-9 pr-9 py-2 rounded-full bg-secondary/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 transition-all" />
+                    className="flex-1 min-w-0 bg-transparent pl-2 pr-1 py-0 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none" />
                   <AnimatePresence>
                     {searchQuery.trim() && (
                       <motion.button
                         type="submit"
-                        initial={{ opacity: 0, scale: 0.5 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.5 }}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center z-10 text-primary"
+                        initial={{ opacity: 0, scale: 0.5, width: 0 }}
+                        animate={{ opacity: 1, scale: 1, width: 32 }}
+                        exit={{ opacity: 0, scale: 0.5, width: 0 }}
+                        className="flex items-center justify-center h-full w-8 shrink-0 text-primary hover:text-primary/70 transition-colors"
                       >
                         <ArrowRight className="w-4 h-4" />
                       </motion.button>
@@ -321,20 +321,21 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
 
               {/* Center: Desktop Search */}
               <div className="hidden lg:block flex-1 max-w-md mx-auto">
-                <form onSubmit={handleSearchSubmit} className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <form onSubmit={handleSearchSubmit} className="flex items-center rounded-full bg-secondary/30 backdrop-blur-sm border border-border/50 h-10 overflow-hidden focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-primary/30 focus-within:bg-secondary/50 transition-all">
+                  <Search className="w-4 h-4 text-muted-foreground ml-4 shrink-0" />
                   <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={t("nav.search")}
-                    className="w-full pl-11 pr-10 py-2.5 rounded-full bg-secondary/30 backdrop-blur-sm border border-border/50 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 focus:bg-secondary/50 transition-all" />
+                    className="flex-1 min-w-0 bg-transparent pl-3 pr-1 py-0 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none" />
                   <AnimatePresence>
                     {searchQuery.trim() && (
                       <motion.button
                         type="submit"
-                        initial={{ opacity: 0, scale: 0.5 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.5 }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center leading-none text-primary hover:text-primary/80 transition-colors"
+                        initial={{ opacity: 0, scale: 0.5, width: 0 }}
+                        animate={{ opacity: 1, scale: 1, width: 36 }}
+                        exit={{ opacity: 0, scale: 0.5, width: 0 }}
+                        whileHover={{ x: 3 }}
+                        className="flex items-center justify-center h-full w-9 shrink-0 text-primary hover:text-primary/70 transition-colors"
                       >
-                        <ArrowRight className="block w-[18px] h-[18px]" />
+                        <ArrowRight className="w-[18px] h-[18px]" />
                       </motion.button>
                     )}
                   </AnimatePresence>
