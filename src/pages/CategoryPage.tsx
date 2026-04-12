@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
+import LogoLoader from "@/components/LogoLoader";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
@@ -113,8 +114,8 @@ const CategoryPage: React.FC = () => {
   if (catLoading) {
     return (
       <div className="min-h-screen pb-20 lg:pb-0">
-          <div className="container mx-auto px-4 py-20 text-center">
-          <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin mx-auto" />
+          <div className="container mx-auto px-4 py-20 flex items-center justify-center">
+          <LogoLoader size={56} />
         </div>
       </div>
     );
