@@ -243,7 +243,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       <Link to={`/product/${slug}`} className="flex flex-col flex-1" onClick={() => trackClick("product_card", slug, window.location.pathname, { product_name: name })}>
         {/* Image */}
         <div
-          className="relative aspect-square overflow-hidden bg-secondary/20 cursor-zoom-in"
+          className="relative aspect-[4/5] overflow-hidden bg-secondary/20 cursor-zoom-in"
           style={isMobile ? {} : { transformStyle: "preserve-3d" }}
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuickViewOpen(true); }}
         >
@@ -255,6 +255,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none"
             loading="lazy"
           />
+          {/* Bottom shadow on image */}
+          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background/40 to-transparent z-[5] pointer-events-none" />
           {!isMobile && (
             <>
               <motion.div
@@ -320,10 +322,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Info */}
         <motion.div
-          className="p-4 flex flex-col flex-1"
+          className="p-3 flex flex-col flex-1"
           style={isMobile ? {} : { x: textX, y: textY, translateZ: 30 }}
         >
-          <h3 className="font-medium text-foreground text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+          <h3 className="font-medium text-foreground text-sm line-clamp-2 mb-1.5 transition-all duration-300 group-hover:text-primary group-hover:drop-shadow-[0_0_8px_hsl(var(--primary)/0.5)]">
             {name}
           </h3>
           <div className="flex items-center gap-1 mb-2">
@@ -339,27 +341,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
             ))}
             <span className="text-xs text-muted-foreground ml-1">({reviewCount})</span>
           </div>
-          {/* Size & Color swatches */}
-          {((variantInfo?.sizes && variantInfo.sizes.length > 0) || (variantInfo?.colors && variantInfo.colors.length > 0)) && (
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-              {variantInfo?.sizes && variantInfo.sizes.length > 0 && (
-                <div className="flex items-center gap-1">
-                  {variantInfo.sizes.slice(0, 4).map((size) => (
-                    <span key={size} title={size} className="text-[10px] font-medium text-muted-foreground bg-secondary/60 rounded px-1.5 py-0.5 leading-none">{size}</span>
-                  ))}
-                  {variantInfo.sizes.length > 4 && <span className="text-[10px] text-muted-foreground">+{variantInfo.sizes.length - 4}</span>}
-                </div>
-              )}
-              {variantInfo?.colors && variantInfo.colors.length > 0 && (
-                <div className="flex items-center gap-1">
-                  {variantInfo.colors.slice(0, 5).map((color) => (
-                    <span key={color} title={color} className="w-3.5 h-3.5 rounded-full border border-border/50 shrink-0" style={{ backgroundColor: getColorHex(color) }} />
-                  ))}
-                  {variantInfo.colors.length > 5 && <span className="text-[10px] text-muted-foreground">+{variantInfo.colors.length - 5}</span>}
-                </div>
-              )}
-            </div>
-          )}
           <div className="flex items-center gap-2 mt-auto lg:flex-row lg:items-center flex-col items-center">
             <span className="font-bold text-foreground group-hover:animate-[priceGlow_1.5s_ease-in-out_infinite] transition-all duration-300 text-sm lg:text-base" style={{ textShadow: 'none' }}>
               {formatPrice(price)}
