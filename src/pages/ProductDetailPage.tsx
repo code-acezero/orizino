@@ -22,6 +22,7 @@ import VariantSelector from "@/components/product/VariantSelector";
 import VariantComparison from "@/components/product/VariantComparison";
 import NotifyWhenAvailable from "@/components/product/NotifyWhenAvailable";
 import { Badge } from "@/components/ui/badge";
+import LogoLoader from "@/components/LogoLoader";
 
 // Lazy load gallery variants
 const CoverflowGallery = lazy(() => import("@/components/product/CoverflowGallery"));
@@ -99,8 +100,8 @@ const LAYOUT_CONFIGS: Record<LayoutStyle, { containerClass: string; textClass: s
 };
 
 const GalleryLoader = () => (
-  <div className="w-full aspect-square rounded-3xl bg-secondary/10 animate-pulse flex items-center justify-center">
-    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  <div className="w-full aspect-square rounded-3xl bg-secondary/10 flex items-center justify-center">
+    <LogoLoader size={48} />
   </div>
 );
 
