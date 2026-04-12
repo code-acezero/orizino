@@ -22,6 +22,7 @@ import VariantSelector from "@/components/product/VariantSelector";
 import VariantComparison from "@/components/product/VariantComparison";
 import NotifyWhenAvailable from "@/components/product/NotifyWhenAvailable";
 import { Badge } from "@/components/ui/badge";
+import LogoLoader from "@/components/LogoLoader";
 
 // Lazy load gallery variants
 const CoverflowGallery = lazy(() => import("@/components/product/CoverflowGallery"));
