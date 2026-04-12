@@ -332,9 +332,9 @@ const Navbar: React.FC<NavbarProps> = ({ bottomNavProductTray }) => {
                         initial={{ opacity: 0, scale: 0.5 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.5 }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-primary hover:text-primary/80 transition-colors"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-primary hover:text-primary/80 transition-colors"
                       >
-                        <ArrowRight className="w-4.5 h-4.5" />
+                        <ArrowRight className="w-[18px] h-[18px]" />
                       </motion.button>
                     )}
                   </AnimatePresence>
