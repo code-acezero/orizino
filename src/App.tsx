@@ -104,7 +104,9 @@ const useSplash = () => {
   return show;
 };
 
-const App = () => (
+const App = () => {
+  const splash = useSplash();
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <BrowserRouter>
@@ -112,6 +114,9 @@ const App = () => (
           <LanguageProvider>
           <CurrencyProvider>
           <LayoutProvider>
+          <Suspense fallback={null}>
+            <SplashScreen visible={splash} />
+          </Suspense>
           <SiteThemeProvider />
           <AppContent />
           <Suspense fallback={null}>
