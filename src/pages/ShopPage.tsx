@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import LogoLoader from "@/components/LogoLoader";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -512,17 +513,8 @@ const ShopPage: React.FC = () => {
             </div>
 
             {isLoading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="glass rounded-3xl overflow-hidden animate-pulse">
-                    <div className="aspect-square bg-secondary/30" />
-                    <div className="p-4 space-y-2">
-                      <div className="h-4 bg-secondary/30 rounded-full w-3/4" />
-                      <div className="h-3 bg-secondary/30 rounded-full w-1/2" />
-                      <div className="h-4 bg-secondary/30 rounded-full w-1/3" />
-                    </div>
-                  </div>
-                ))}
+              <div className="flex items-center justify-center py-20">
+                <LogoLoader size={56} />
               </div>
             ) : filteredProducts.length === 0 ? (
               <div className="text-center py-20">

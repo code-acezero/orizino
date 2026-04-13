@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useState, useEffect } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -78,18 +78,35 @@ const queryClient = new QueryClient({
   },
 });
 
+const LogoLoader = lazy(() => import("./components/LogoLoader"));
+
 const PageFallback = () => (
   <div className="flex-1 flex items-center justify-center py-20">
-    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+    <Suspense fallback={null}>
+      <LogoLoader size={48} />
+    </Suspense>
   </div>
 );
+
+const SplashScreen = lazy(() => import("./components/SplashScreen"));
 
 const AppContent = () => {
   useDynamicFavicon();
   return null;
 };
 
-const App = () => (
+const useSplash = () => {
+  const [show, setShow] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setShow(false), 1800);
+    return () => clearTimeout(t);
+  }, []);
+  return show;
+};
+
+const App = () => {
+  const splash = useSplash();
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <BrowserRouter>
@@ -97,6 +114,9 @@ const App = () => (
           <LanguageProvider>
           <CurrencyProvider>
           <LayoutProvider>
+          <Suspense fallback={null}>
+            <SplashScreen visible={splash} />
+          </Suspense>
           <SiteThemeProvider />
           <AppContent />
           <Suspense fallback={null}>
@@ -168,6 +188,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;

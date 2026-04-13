@@ -49,6 +49,8 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }
   const [bellRing, setBellRing] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const islandTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Track if island is actively dismissing to prevent flicker
+  const [islandDismissing, setIslandDismissing] = useState(false);
 
   const { data: notifications = [] } = useQuery({
     queryKey: ["bell-notifications", user?.id, adminMode ? "admin" : "user"],
@@ -71,12 +73,23 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
+  const dismissIsland = () => {
+    if (islandTimerRef.current) clearTimeout(islandTimerRef.current);
+    setIslandDismissing(true);
+    // Let exit animation play before clearing item
+    setTimeout(() => {
+      setIslandItem(null);
+      setIslandDismissing(false);
+    }, 300);
+  };
+
   const showIsland = (item: IslandItem) => {
     if (islandTimerRef.current) clearTimeout(islandTimerRef.current);
+    setIslandDismissing(false);
     setIslandItem(item);
     setBellRing(true);
     setTimeout(() => setBellRing(false), 600);
-    islandTimerRef.current = setTimeout(() => setIslandItem(null), 4000);
+    islandTimerRef.current = setTimeout(() => dismissIsland(), 4000);
   };
 
   useEffect(() => {
@@ -156,93 +169,120 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }
 
   if (!user) return null;
 
-  const isExpanded = !!islandItem && !open;
-
-  // Desktop: inline expanding island from bell; Mobile: dropdown below navbar
+  const isExpanded = !!islandItem && !islandDismissing && !open;
   const desktopIsland = !isMobile && isExpanded && islandItem;
   const mobileIsland = isMobile && isExpanded && islandItem;
 
   return (
     <div className="relative" ref={panelRef}>
-      {/* Bell + Desktop inline island */}
-      <motion.button
-        className="flex items-center justify-center shrink-0 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all relative overflow-hidden"
-        onClick={() => { if (desktopIsland) { setIslandItem(null); setOpen(true); } else setOpen(!open); }}
-        animate={{
-          width: desktopIsland ? 280 : 40,
-          height: 40,
-          borderRadius: 20,
-        }}
-        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-        style={{ cursor: "pointer" }}
-      >
-        {/* Bell icon */}
+      {/* Bell + Desktop inline expanding island */}
+      <div className="relative flex items-center">
         <motion.div
-          className="absolute left-2.5 top-1/2"
-          animate={{
-            y: "-50%",
-            rotate: bellRing ? [0, 15, -15, 10, -10, 5, 0] : 0,
+          className="flex items-center rounded-full bg-secondary/30 backdrop-blur-sm overflow-hidden cursor-pointer"
+          onClick={() => {
+            if (desktopIsland) {
+              dismissIsland();
+              setOpen(true);
+            } else {
+              setOpen(!open);
+            }
           }}
-          transition={bellRing ? { duration: 0.6 } : { duration: 0.2 }}
+          animate={{
+            width: desktopIsland ? 280 : 40,
+            height: 40,
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 500,
+            damping: 35,
+            mass: 0.8,
+          }}
         >
-          <Bell className="w-5 h-5" />
-        </motion.div>
+          {/* Bell icon – always visible, pinned left */}
+          <motion.div
+            className="flex items-center justify-center shrink-0"
+            style={{ width: 40, height: 40 }}
+            animate={{
+              rotate: bellRing ? [0, 15, -15, 10, -10, 5, 0] : 0,
+            }}
+            transition={bellRing ? { duration: 0.6 } : { duration: 0.2 }}
+          >
+            <Bell className="w-5 h-5 text-muted-foreground" />
+          </motion.div>
 
-        {/* Desktop inline island content */}
-        <AnimatePresence>
-          {desktopIsland && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center gap-2 pl-9 pr-8 w-full"
-            >
-              {React.createElement(getConfig(islandItem!.type).icon, {
-                className: `w-3.5 h-3.5 shrink-0 ${getConfig(islandItem!.type).color}`,
-              })}
-              <div className="min-w-0 flex-1 text-left">
-                <p className="text-xs font-medium text-foreground truncate leading-tight">
-                  {islandItem!.title}
-                </p>
-                {islandItem!.message && (
-                  <p className="text-[10px] text-muted-foreground truncate leading-tight">
-                    {islandItem!.message}
+          {/* Inline island content (desktop only) */}
+          <AnimatePresence mode="wait">
+            {desktopIsland && (
+              <motion.div
+                key={islandItem!.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center gap-2 pr-8 min-w-0 flex-1"
+              >
+                {React.createElement(getConfig(islandItem!.type).icon, {
+                  className: `w-3.5 h-3.5 shrink-0 ${getConfig(islandItem!.type).color}`,
+                })}
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-medium text-foreground truncate leading-tight">
+                    {islandItem!.title}
                   </p>
-                )}
-              </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); setIslandItem(null); }}
-                className="shrink-0 p-0.5 rounded-full hover:bg-secondary/50 absolute right-2 top-1/2 -translate-y-1/2"
+                  {islandItem!.message && (
+                    <p className="text-[10px] text-muted-foreground truncate leading-tight">
+                      {islandItem!.message}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Close button for desktop island */}
+          <AnimatePresence>
+            {desktopIsland && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  dismissIsland();
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-secondary/50"
               >
                 <X className="w-3 h-3 text-muted-foreground" />
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </motion.button>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
         {/* Unread badge */}
         {unreadCount > 0 && !desktopIsland && (
           <motion.span
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute top-1 right-1 w-4 h-4 rounded-full bg-destructive text-[10px] text-destructive-foreground flex items-center justify-center font-bold"
+            className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-destructive text-[10px] text-destructive-foreground flex items-center justify-center font-bold pointer-events-none"
           >
             {unreadCount > 9 ? "9+" : unreadCount}
           </motion.span>
         )}
-      </motion.button>
+      </div>
 
       {/* Mobile dropdown island */}
       <AnimatePresence>
         {mobileIsland && (
           <motion.div
-            initial={{ opacity: 0, y: -8, scaleY: 0.8 }}
-            animate={{ opacity: 1, y: 0, scaleY: 1 }}
-            exit={{ opacity: 0, y: -8, scaleY: 0.8 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="absolute top-full right-0 mt-1 w-[calc(100vw-2rem)] max-w-xs z-[100]"
+            initial={{ opacity: 0, y: -8, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            className="absolute top-full right-0 mt-1.5 w-[calc(100vw-2rem)] max-w-xs z-[100]"
             style={{ transformOrigin: "top right" }}
-            onClick={() => { setIslandItem(null); setOpen(true); }}
+            onClick={() => {
+              dismissIsland();
+              setOpen(true);
+            }}
           >
             <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-secondary/90 backdrop-blur-xl border border-border/50 shadow-lg cursor-pointer">
               {React.createElement(getConfig(islandItem!.type).icon, {
@@ -259,7 +299,10 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ adminMode = false }
                 )}
               </div>
               <button
-                onClick={(e) => { e.stopPropagation(); setIslandItem(null); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  dismissIsland();
+                }}
                 className="shrink-0 p-0.5 rounded-full hover:bg-secondary/50"
               >
                 <X className="w-3 h-3 text-muted-foreground" />
