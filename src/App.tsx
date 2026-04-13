@@ -97,15 +97,17 @@ const AppContent = () => {
 
 const useSplash = () => {
   const [show, setShow] = useState(true);
+  const [contentReady, setContentReady] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setShow(false), 1800);
-    return () => clearTimeout(t);
+    const t = setTimeout(() => setShow(false), 2200);
+    const t2 = setTimeout(() => setContentReady(true), 600);
+    return () => { clearTimeout(t); clearTimeout(t2); };
   }, []);
-  return show;
+  return { show, contentReady };
 };
 
 const App = () => {
-  const splash = useSplash();
+  const { show: splash, contentReady } = useSplash();
   return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
