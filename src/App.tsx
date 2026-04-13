@@ -78,9 +78,13 @@ const queryClient = new QueryClient({
   },
 });
 
+const LogoLoader = lazy(() => import("./components/LogoLoader"));
+
 const PageFallback = () => (
   <div className="flex-1 flex items-center justify-center py-20">
-    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+    <Suspense fallback={null}>
+      <LogoLoader size={48} />
+    </Suspense>
   </div>
 );
 
