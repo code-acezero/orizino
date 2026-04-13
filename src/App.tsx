@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useState, useEffect } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -88,9 +88,20 @@ const PageFallback = () => (
   </div>
 );
 
+const SplashScreen = lazy(() => import("./components/SplashScreen"));
+
 const AppContent = () => {
   useDynamicFavicon();
   return null;
+};
+
+const useSplash = () => {
+  const [show, setShow] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setShow(false), 1800);
+    return () => clearTimeout(t);
+  }, []);
+  return show;
 };
 
 const App = () => (
