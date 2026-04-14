@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Package, ChevronRight, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import LogoLoader from "@/components/LogoLoader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -38,7 +39,24 @@ const OrdersPage: React.FC = () => {
         <h1 className="text-3xl font-bold font-display text-foreground mb-8">My Orders</h1>
 
         {isLoading ? (
-          <div className="space-y-4">{[1, 2].map((i) => <div key={i} className="glass rounded-3xl p-6 h-32 animate-pulse" />)}</div>
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="glass-strong rounded-3xl p-6 animate-pulse">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <div className="h-4 bg-secondary/40 rounded-full w-28 mb-2" />
+                    <div className="h-3 bg-secondary/30 rounded-full w-20" />
+                  </div>
+                  <div className="h-5 bg-secondary/40 rounded-full w-16" />
+                </div>
+                <div className="flex items-center gap-2">
+                  {[1, 2, 3, 4].map((s) => (
+                    <div key={s} className="flex-1 h-1.5 rounded-full bg-secondary/30" />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         ) : !orders || orders.length === 0 ? (
           <div className="text-center py-20">
             <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />

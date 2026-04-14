@@ -10,6 +10,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "@/lib/app-toast";
 import QuickViewModal from "@/components/QuickViewModal";
 import FlyToCartAnimation from "@/components/FlyToCartAnimation";
+import ShareButton from "@/components/ShareButton";
 
 const COLOR_HEX: Record<string, string> = {
   black: "#000000", white: "#ffffff", red: "#ef4444", blue: "#3b82f6",
@@ -317,6 +318,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             >
               <Heart className={`w-4 h-4 ${inWishlist ? "fill-destructive" : ""}`} />
             </motion.button>
+            <ShareButton url={`${window.location.origin}/product/${slug}`} title={name} size="sm" />
           </div>
         </div>
 

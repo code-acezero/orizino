@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { ShoppingCart, Heart, Minus, Plus, Zap, Share2, Check } from "lucide-react";
-import { toast } from "@/lib/app-toast";
+import { ShoppingCart, Heart, Minus, Plus, Zap, Check } from "lucide-react";
+import ShareButton from "@/components/ShareButton";
 
 interface ProductActionsProps {
   quantity: number;
@@ -19,15 +19,6 @@ const ProductActions: React.FC<ProductActionsProps> = ({
   quantity, setQuantity, maxQuantity, onAddToCart, onBuyNow, onToggleWishlist, addingToCart, inStock, layout = "premium",
 }) => {
   const isMinimal = layout === "minimal";
-
-  const handleShare = async () => {
-    try {
-      await navigator.share({ url: window.location.href, title: document.title });
-    } catch {
-      await navigator.clipboard.writeText(window.location.href);
-      toast({ title: "Link copied!" });
-    }
-  };
 
   return (
     <div className="space-y-3 sm:space-y-4">
@@ -68,10 +59,7 @@ const ProductActions: React.FC<ProductActionsProps> = ({
             className={`p-2 sm:p-2.5 shrink-0 text-foreground hover:text-primary ${isMinimal ? "border border-border rounded-lg" : "glass rounded-full"}`}>
             <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </motion.button>
-          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={handleShare}
-            className={`p-2 sm:p-2.5 shrink-0 text-foreground hover:text-primary ${isMinimal ? "border border-border rounded-lg" : "glass rounded-full"}`}>
-            <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          </motion.button>
+          <ShareButton size="sm" />
         </div>
         {/* Row 2: Add to Cart + Buy Now */}
         <div className="flex items-center gap-1.5 sm:gap-2">
@@ -125,10 +113,7 @@ const ProductActions: React.FC<ProductActionsProps> = ({
           className={`p-2.5 shrink-0 text-foreground hover:text-primary ${isMinimal ? "border border-border rounded-lg" : "glass rounded-full"}`}>
           <Heart className="w-4 h-4" />
         </motion.button>
-        <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={handleShare}
-          className={`p-2.5 shrink-0 text-foreground hover:text-primary ${isMinimal ? "border border-border rounded-lg" : "glass rounded-full"}`}>
-          <Share2 className="w-4 h-4" />
-        </motion.button>
+        <ShareButton size="md" />
       </div>
     </div>
   );
