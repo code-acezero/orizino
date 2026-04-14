@@ -83,6 +83,7 @@ const systemItems: MenuItem[] = [
   { title: "Live Support", url: "/origin/support", icon: Headphones },
   { title: "Call Settings", url: "/origin/call-settings", icon: Phone, adminOnly: true },
   { title: "AI Agent", url: "/origin/ai-settings", icon: Bot, adminOnly: true },
+  { title: "Tracking & Ads", url: "/origin/tracking", icon: Globe, adminOnly: true },
   { title: "Branding", url: "/origin/branding", icon: Palette, adminOnly: true },
   { title: "Mobile UI", url: "/origin/mobile-ui", icon: Smartphone, adminOnly: true },
   { title: "API Keys", url: "/origin/api-keys", icon: Key, adminOnly: true },
