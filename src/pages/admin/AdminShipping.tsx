@@ -156,6 +156,7 @@ const AdminShipping: React.FC = () => {
               <TableHead>Price</TableHead>
               <TableHead>Est. Days</TableHead>
               <TableHead>Free Above</TableHead>
+              <TableHead>COD</TableHead>
               <TableHead>Active</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
