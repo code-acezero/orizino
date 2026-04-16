@@ -11,12 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, Trash2, FileText, Printer, CheckCircle2, XCircle, Mail } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Eye, Trash2, FileText, Printer, CheckCircle2, XCircle, Mail, Smartphone, ShoppingBag } from "lucide-react";
 import { toast } from "@/lib/app-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Tables } from "@/integrations/supabase/types";
+import AdminPaymentProofs from "@/components/admin/AdminPaymentProofs";
 
 type Order = Tables<"orders">;
 
