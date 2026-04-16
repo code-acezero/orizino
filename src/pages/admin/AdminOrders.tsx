@@ -502,6 +502,8 @@ const AdminOrders = () => {
           )}
         </DialogContent>
       </Dialog>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
