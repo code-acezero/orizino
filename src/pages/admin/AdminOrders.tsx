@@ -136,6 +136,18 @@ const AdminOrders = () => {
         <h1 className="text-3xl font-display font-bold">Orders</h1>
       </div>
 
+      <Tabs defaultValue="orders" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="orders"><ShoppingBag className="w-4 h-4 mr-1" /> All Orders</TabsTrigger>
+          <TabsTrigger value="payments"><Smartphone className="w-4 h-4 mr-1" /> Payment Verifications</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="payments">
+          <AdminPaymentProofs />
+        </TabsContent>
+
+        <TabsContent value="orders" className="space-y-4">
+
       <FilterChips options={filterOptions} value={filterStatus} onChange={(v) => { setFilterStatus(v); setSelected(new Set()); }} />
 
       {/* Bulk action bar */}
