@@ -11,16 +11,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, Trash2, FileText, Printer, CheckCircle2, XCircle, Mail } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Eye, Trash2, FileText, Printer, CheckCircle2, XCircle, Mail, Smartphone, ShoppingBag } from "lucide-react";
 import { toast } from "@/lib/app-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Tables } from "@/integrations/supabase/types";
+import AdminPaymentProofs from "@/components/admin/AdminPaymentProofs";
 
 type Order = Tables<"orders">;
 
-const ORDER_STATUSES = ["pending", "processing", "shipped", "delivered", "cancelled"];
+const ORDER_STATUSES = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"];
 
 const statusColors: Record<string, string> = {
   pending: "secondary",
@@ -133,6 +135,18 @@ const AdminOrders = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-display font-bold">Orders</h1>
       </div>
+
+      <Tabs defaultValue="orders" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="orders"><ShoppingBag className="w-4 h-4 mr-1" /> All Orders</TabsTrigger>
+          <TabsTrigger value="payments"><Smartphone className="w-4 h-4 mr-1" /> Payment Verifications</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="payments">
+          <AdminPaymentProofs />
+        </TabsContent>
+
+        <TabsContent value="orders" className="space-y-4">
 
       <FilterChips options={filterOptions} value={filterStatus} onChange={(v) => { setFilterStatus(v); setSelected(new Set()); }} />
 
@@ -488,6 +502,8 @@ const AdminOrders = () => {
           )}
         </DialogContent>
       </Dialog>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
