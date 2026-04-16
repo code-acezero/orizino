@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   MapPin, CreditCard, Truck, Check, ArrowRight, Gift, Tag, Shield,
-  Smartphone, Building2, Wallet, ChevronDown, ChevronUp, Home, MapPinned
+  Smartphone, Building2, Wallet, ChevronDown, ChevronUp, Home, MapPinned, Camera
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,15 +15,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import MFSPaymentProof from "@/components/checkout/MFSPaymentProof";
 
-const paymentGateways = [
-  { id: "cod", name: "Cash on Delivery", desc: "Pay when you receive", icon: Truck, color: "text-green-500" },
-  { id: "bkash", name: "bKash", desc: "Mobile payment", icon: Smartphone, color: "text-pink-500" },
-  { id: "nagad", name: "Nagad", desc: "Mobile payment", icon: Smartphone, color: "text-orange-500" },
-  { id: "upay", name: "Upay", desc: "Mobile payment", icon: Smartphone, color: "text-blue-500" },
-  { id: "card", name: "Credit/Debit Card", desc: "Visa, Mastercard, AMEX", icon: CreditCard, color: "text-purple-500" },
-  { id: "bank", name: "Bank Transfer", desc: "BD bank accounts", icon: Building2, color: "text-teal-500" },
-];
+const MFS_METHODS = ["bkash", "nagad", "upay", "rocket"];
 
 const addressTypeIcons: Record<string, any> = { home: Home, office: Building2, other: MapPinned };
 
@@ -46,6 +40,59 @@ const CheckoutPage: React.FC = () => {
   const [selectedSavedAddress, setSelectedSavedAddress] = useState<string | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(true);
   const [step, setStep] = useState(1);
+  const [mfsProofData, setMfsProofData] = useState<{ screenshotUrl: string; transactionId: string } | null>(null);
+  const [orderSuccess, setOrderSuccess] = useState<string | null>(null);
+
+  // Fetch payment gateway config
+  const { data: paymentConfig } = useQuery({
+    queryKey: ["payment-gateways-config"],
+    queryFn: async () => {
+      const { data } = await supabase.from("site_settings").select("value").eq("key", "payment_gateways_config").maybeSingle();
+      return (data?.value as any) || {};
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Build available payment methods dynamically
+  const availableGateways = React.useMemo(() => {
+    const gateways: { id: string; name: string; desc: string; icon: any; color: string }[] = [];
+
+    // COD is always available unless system is off
+    if (!paymentConfig?.mfs_system_enabled || paymentConfig?.cod_enabled !== false) {
+      gateways.push({ id: "cod", name: "Cash on Delivery", desc: "Pay when you receive", icon: Truck, color: "text-green-500" });
+    }
+
+    // MFS personal accounts
+    if (paymentConfig?.personal_bkash?.enabled) {
+      gateways.push({ id: "bkash", name: "bKash", desc: "Send money & upload proof", icon: Smartphone, color: "text-pink-500" });
+    }
+    if (paymentConfig?.personal_nagad?.enabled) {
+      gateways.push({ id: "nagad", name: "Nagad", desc: "Send money & upload proof", icon: Smartphone, color: "text-orange-500" });
+    }
+    if (paymentConfig?.personal_upay?.enabled) {
+      gateways.push({ id: "upay", name: "Upay", desc: "Send money & upload proof", icon: Smartphone, color: "text-blue-500" });
+    }
+    if (paymentConfig?.personal_rocket?.enabled) {
+      gateways.push({ id: "rocket", name: "Rocket", desc: "Send money & upload proof", icon: Smartphone, color: "text-purple-500" });
+    }
+
+    // Stripe
+    if (paymentConfig?.stripe?.enabled) {
+      gateways.push({ id: "card", name: "Credit/Debit Card", desc: "Visa, Mastercard, AMEX", icon: CreditCard, color: "text-purple-500" });
+    }
+
+    return gateways;
+  }, [paymentConfig]);
+
+  // Auto-select first available method
+  useEffect(() => {
+    if (availableGateways.length > 0 && !availableGateways.find(g => g.id === paymentMethod)) {
+      setPaymentMethod(availableGateways[0].id);
+    }
+  }, [availableGateways, paymentMethod]);
+
+  const isMFSMethod = MFS_METHODS.includes(paymentMethod);
+  const mfsAccountInfo = paymentConfig?.[`personal_${paymentMethod}`] as any;
 
   // Load saved addresses and profile
   useEffect(() => {
@@ -99,7 +146,6 @@ const CheckoutPage: React.FC = () => {
     setShowAddressForm(false);
   };
 
-  // For buy-now mode, create a synthetic cart item
   const buyNowItems = isBuyNow && cartState.buyNowItem ? [{
     id: "buy-now",
     product_id: cartState.buyNowItem.productId,
@@ -142,7 +188,6 @@ const CheckoutPage: React.FC = () => {
     },
   });
 
-  // Fetch active delivery offers
   const { data: deliveryOffers } = useQuery({
     queryKey: ["delivery-offers"],
     queryFn: async () => {
@@ -157,7 +202,6 @@ const CheckoutPage: React.FC = () => {
     return sum + price * item.quantity;
   }, 0) || 0;
 
-  // Coupon from cart
   const appliedCoupon = cartState.coupon;
   let couponDiscount = 0;
   if (appliedCoupon) {
@@ -171,7 +215,6 @@ const CheckoutPage: React.FC = () => {
   const selectedShipping = shippingMethods?.find((m) => m.id === shippingMethodId) || shippingMethods?.[0];
   let baseShippingFee = selectedShipping ? (selectedShipping.min_order_free && subtotal >= Number(selectedShipping.min_order_free) ? 0 : Number(selectedShipping.price)) : 0;
 
-  // Apply best delivery offer
   let deliveryDiscount = 0;
   let appliedDeliveryOffer: any = null;
   if (deliveryOffers && baseShippingFee > 0) {
@@ -193,6 +236,11 @@ const CheckoutPage: React.FC = () => {
   const shippingFee = Math.max(0, baseShippingFee - deliveryDiscount);
   const giftWrapFee = giftWrap ? 50 : 0;
   const total = Math.max(0, subtotal - couponDiscount + shippingFee + giftWrapFee);
+
+  const canProceedToReview = () => {
+    if (isMFSMethod && !mfsProofData) return false;
+    return true;
+  };
 
   const handleOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -216,20 +264,78 @@ const CheckoutPage: React.FC = () => {
         gift_message: giftMessage,
         shipping_method_id: selectedShipping?.id,
         buy_now_item: isBuyNow ? cartState.buyNowItem : null,
+        transaction_id: mfsProofData?.transactionId || null,
       },
     });
-    setLoading(false);
 
     if (error || !data?.success) {
+      setLoading(false);
       toast({ title: "Order failed", description: data?.error || "Something went wrong", variant: "destructive" });
       return;
     }
 
-    toast({ title: "🎉 Order placed!", description: `Order ${data.order_number} confirmed.` });
-    navigate("/orders");
+    // If MFS, create payment proof record and sync to sheets
+    if (isMFSMethod && mfsProofData) {
+      // Find the order id by order number
+      const { data: orderRow } = await supabase.from("orders").select("id").eq("order_number", data.order_number).single();
+
+      if (orderRow) {
+        const { data: proofRow } = await supabase.from("payment_proofs").insert({
+          order_id: orderRow.id,
+          user_id: user.id,
+          payment_method: paymentMethod,
+          screenshot_url: mfsProofData.screenshotUrl,
+          transaction_id: mfsProofData.transactionId || null,
+          amount: total,
+          customer_name: address.full_name,
+          customer_phone: address.phone,
+        }).select("id").single();
+
+        // Sync to Google Sheets in background
+        if (proofRow) {
+          supabase.functions.invoke("sync-payment-proof", {
+            body: { proof_id: proofRow.id },
+          }).catch(console.error);
+        }
+      }
+    }
+
+    setLoading(false);
+
+    if (isMFSMethod) {
+      setOrderSuccess(data.order_number);
+    } else {
+      toast({ title: "🎉 Order placed!", description: `Order ${data.order_number} confirmed.` });
+      navigate("/orders");
+    }
   };
 
   if (!user) { navigate("/auth"); return null; }
+
+  // Success screen for MFS orders
+  if (orderSuccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center pb-20 lg:pb-0">
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center max-w-md mx-auto px-6 space-y-6">
+          <div className="w-20 h-20 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center mx-auto">
+            <Check className="w-10 h-10 text-green-500" />
+          </div>
+          <h1 className="text-2xl font-display font-bold text-foreground">Order Placed!</h1>
+          <p className="text-muted-foreground">
+            Your order <span className="font-mono font-bold text-foreground">{orderSuccess}</span> has been placed successfully.
+          </p>
+          <div className="glass-strong rounded-2xl p-4 text-sm text-muted-foreground space-y-2">
+            <p className="font-medium text-foreground">📞 What happens next?</p>
+            <p>You'll receive a confirmation call within <strong className="text-foreground">24 hours</strong> to verify your order and payment.</p>
+            <p>Your order will be confirmed once our team reviews the payment proof.</p>
+          </div>
+          <Button onClick={() => navigate("/orders")} className="rounded-xl h-11 w-full">
+            View My Orders <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
 
   const steps = [
     { num: 1, label: "Address", icon: MapPin },
@@ -262,7 +368,6 @@ const CheckoutPage: React.FC = () => {
             {/* Step 1: Address */}
             {step === 1 && (
               <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-                {/* Saved Addresses */}
                 {savedAddresses.length > 0 && (
                   <div className="glass-strong rounded-3xl p-5 space-y-3">
                     <h3 className="font-display font-semibold text-foreground flex items-center gap-2"><MapPin className="w-5 h-5 text-primary" /> Saved Addresses</h3>
@@ -288,7 +393,6 @@ const CheckoutPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Address Form */}
                 {(showAddressForm || savedAddresses.length === 0) && (
                   <div className="glass-strong rounded-3xl p-5 space-y-4">
                     <h3 className="font-display font-semibold text-foreground flex items-center gap-2"><MapPin className="w-5 h-5 text-primary" /> Shipping Address</h3>
@@ -335,8 +439,8 @@ const CheckoutPage: React.FC = () => {
                 <div className="glass-strong rounded-3xl p-5 space-y-3">
                   <h3 className="font-display font-semibold text-foreground flex items-center gap-2"><CreditCard className="w-5 h-5 text-primary" /> Payment Method</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {paymentGateways.map((gw) => (
-                      <button key={gw.id} type="button" onClick={() => setPaymentMethod(gw.id)}
+                    {availableGateways.map((gw) => (
+                      <button key={gw.id} type="button" onClick={() => { setPaymentMethod(gw.id); setMfsProofData(null); }}
                         className={`flex items-center gap-3 p-4 rounded-2xl border transition-all ${paymentMethod === gw.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}>
                         <div className={`w-10 h-10 rounded-xl bg-secondary/50 flex items-center justify-center`}>
                           <gw.icon className={`w-5 h-5 ${gw.color}`} />
@@ -350,15 +454,22 @@ const CheckoutPage: React.FC = () => {
                     ))}
                   </div>
 
-                  {paymentMethod !== "cod" && (
+                  {/* MFS Payment Proof Section */}
+                  {isMFSMethod && mfsAccountInfo && (
+                    <MFSPaymentProof
+                      method={paymentMethod}
+                      accountInfo={mfsAccountInfo}
+                      amount={total}
+                      formatPrice={formatPrice}
+                      onProofSubmitted={(screenshotUrl, transactionId) => {
+                        setMfsProofData({ screenshotUrl, transactionId });
+                      }}
+                    />
+                  )}
+
+                  {paymentMethod === "cod" && (
                     <div className="p-4 rounded-2xl bg-secondary/30 border border-border">
-                      <p className="text-sm text-muted-foreground text-center">
-                        {paymentMethod === "bkash" && "You'll receive a bKash payment prompt after placing your order."}
-                        {paymentMethod === "nagad" && "You'll receive a Nagad payment prompt after placing your order."}
-                        {paymentMethod === "upay" && "You'll receive a Upay payment prompt after placing your order."}
-                        {paymentMethod === "card" && "You'll be redirected to SSLCommerz for secure card payment."}
-                        {paymentMethod === "bank" && "Bank transfer details will be provided after placing your order."}
-                      </p>
+                      <p className="text-sm text-muted-foreground text-center">Pay with cash when your order is delivered.</p>
                     </div>
                   )}
                 </div>
@@ -372,7 +483,14 @@ const CheckoutPage: React.FC = () => {
 
                 <div className="flex gap-3">
                   <Button type="button" variant="outline" onClick={() => setStep(1)} className="flex-1 rounded-xl h-12">Back</Button>
-                  <Button type="button" onClick={() => setStep(3)} className="flex-1 rounded-xl h-12">Review Order <ArrowRight className="w-4 h-4 ml-2" /></Button>
+                  <Button type="button" onClick={() => setStep(3)} disabled={!canProceedToReview()}
+                    className="flex-1 rounded-xl h-12">
+                    {isMFSMethod && !mfsProofData ? (
+                      <><Camera className="w-4 h-4 mr-2" /> Upload proof first</>
+                    ) : (
+                      <>Review Order <ArrowRight className="w-4 h-4 ml-2" /></>
+                    )}
+                  </Button>
                 </div>
               </motion.div>
             )}
@@ -383,20 +501,20 @@ const CheckoutPage: React.FC = () => {
                 <div className="glass-strong rounded-3xl p-5 space-y-4">
                   <h3 className="font-display font-semibold text-foreground">Order Review</h3>
 
-                  {/* Address Summary */}
                   <div className="p-3 rounded-2xl bg-secondary/30 space-y-1">
                     <p className="text-xs font-medium text-muted-foreground flex items-center gap-1"><MapPin className="w-3 h-3" /> Shipping to:</p>
                     <p className="text-sm text-foreground font-medium">{address.full_name} — {address.phone}</p>
                     <p className="text-sm text-muted-foreground">{address.street}, {address.city}, {address.state} {address.zip}</p>
                   </div>
 
-                  {/* Payment Summary */}
                   <div className="p-3 rounded-2xl bg-secondary/30">
                     <p className="text-xs font-medium text-muted-foreground flex items-center gap-1"><CreditCard className="w-3 h-3" /> Payment:</p>
-                    <p className="text-sm text-foreground font-medium">{paymentGateways.find((g) => g.id === paymentMethod)?.name}</p>
+                    <p className="text-sm text-foreground font-medium">{availableGateways.find((g) => g.id === paymentMethod)?.name}</p>
+                    {isMFSMethod && mfsProofData && (
+                      <p className="text-xs text-green-500 mt-1 flex items-center gap-1"><Check className="w-3 h-3" /> Payment proof submitted</p>
+                    )}
                   </div>
 
-                  {/* Shipping Summary */}
                   {selectedShipping && (
                     <div className="p-3 rounded-2xl bg-secondary/30">
                       <p className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Truck className="w-3 h-3" /> Shipping:</p>
