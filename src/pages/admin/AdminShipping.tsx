@@ -162,7 +162,7 @@ const AdminShipping: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading && <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>}
+            {isLoading && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>}
             {methods?.map((m) => (
               <TableRow key={m.id}>
                 <TableCell>
