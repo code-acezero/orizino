@@ -177,6 +177,12 @@ const AdminShipping: React.FC = () => {
                 <TableCell>৳{Number(m.price).toFixed(0)}</TableCell>
                 <TableCell className="text-sm">{m.estimated_days || "—"}</TableCell>
                 <TableCell className="text-sm">{m.min_order_free ? `৳${Number(m.min_order_free).toFixed(0)}` : "—"}</TableCell>
+                <TableCell>
+                  <Switch checked={(m as any).cod_enabled !== false} onCheckedChange={async (v) => {
+                    await supabase.from("shipping_methods").update({ cod_enabled: v } as any).eq("id", m.id);
+                    queryClient.invalidateQueries({ queryKey: ["admin-shipping"] });
+                  }} />
+                </TableCell>
                 <TableCell><Switch checked={m.is_active} onCheckedChange={() => toggleActive(m.id, m.is_active)} /></TableCell>
                 <TableCell className="text-right">
                   <div className="flex gap-1 justify-end">
