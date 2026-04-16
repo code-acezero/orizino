@@ -625,6 +625,65 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_proofs: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          created_at: string
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          order_id: string
+          payment_method: string
+          screenshot_url: string
+          sheet_synced: boolean
+          status: string
+          transaction_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount?: number
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          order_id: string
+          payment_method: string
+          screenshot_url: string
+          sheet_synced?: boolean
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          order_id?: string
+          payment_method?: string
+          screenshot_url?: string
+          sheet_synced?: boolean
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_proofs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       popups: {
         Row: {
           animation_style: string
@@ -1033,6 +1092,7 @@ export type Database = {
       }
       shipping_methods: {
         Row: {
+          cod_enabled: boolean
           created_at: string
           description: string | null
           estimated_days: string | null
@@ -1044,6 +1104,7 @@ export type Database = {
           sort_order: number | null
         }
         Insert: {
+          cod_enabled?: boolean
           created_at?: string
           description?: string | null
           estimated_days?: string | null
@@ -1055,6 +1116,7 @@ export type Database = {
           sort_order?: number | null
         }
         Update: {
+          cod_enabled?: boolean
           created_at?: string
           description?: string | null
           estimated_days?: string | null
