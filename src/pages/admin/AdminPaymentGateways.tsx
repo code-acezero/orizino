@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/lib/app-toast";
-import { CreditCard, Smartphone, Building2, QrCode } from "lucide-react";
+import { CreditCard, Smartphone, Building2, QrCode, Power, Loader2 } from "lucide-react";
 import ImageUpload from "@/components/ImageUpload";
 
 interface PersonalAccount {
@@ -21,6 +21,8 @@ interface PersonalAccount {
 }
 
 interface PaymentConfig {
+  mfs_system_enabled: boolean;
+  cod_enabled: boolean;
   gateways_enabled: string[];
   stripe: { enabled: boolean; publishable_key: string };
   sslcommerz: { enabled: boolean; store_id: string; sandbox: boolean };
@@ -33,6 +35,8 @@ interface PaymentConfig {
 }
 
 const DEFAULT: PaymentConfig = {
+  mfs_system_enabled: true,
+  cod_enabled: true,
   gateways_enabled: ["cod"],
   stripe: { enabled: false, publishable_key: "" },
   sslcommerz: { enabled: false, store_id: "", sandbox: true },
@@ -44,46 +48,105 @@ const DEFAULT: PaymentConfig = {
   personal_rocket: { enabled: false, account_number: "", account_holder: "", qr_code_url: "", instructions: "Send money to the number below. After sending, enter your Transaction ID." },
 };
 
+const methodThemes: Record<string, { bg: string; fg: string; accent: string }> = {
+  bKash: { bg: "#E2136E", fg: "#FFFFFF", accent: "#D1145B" },
+  Nagad: { bg: "#F26522", fg: "#FFFFFF", accent: "#E85A1D" },
+  Upay: { bg: "#0066CC", fg: "#FFFFFF", accent: "#0055AA" },
+  Rocket: { bg: "#8E24AA", fg: "#FFFFFF", accent: "#7B1FA2" },
+};
+
+const generateQRCodeUrl = (accountNumber: string, label: string): string => {
+  const data = encodeURIComponent(accountNumber);
+  const bgColor = methodThemes[label]?.bg?.replace("#", "") || "E2136E";
+  const fgColor = methodThemes[label]?.fg?.replace("#", "") || "FFFFFF";
+  // Use a QR code API with branding colors
+  return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${data}&bgcolor=${bgColor}&color=${fgColor}&margin=20`;
+};
+
 const PersonalAccountForm: React.FC<{
   label: string;
   icon: React.ReactNode;
   value: PersonalAccount;
   onChange: (v: PersonalAccount) => void;
-}> = ({ label, icon, value, onChange }) => (
-  <Card>
-    <CardHeader>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {icon}
-          <CardTitle className="text-base">{label} Personal Account</CardTitle>
+}> = ({ label, icon, value, onChange }) => {
+  const [generatingQR, setGeneratingQR] = useState(false);
+
+  const handleGenerateQR = async () => {
+    if (!value.account_number) {
+      toast.error("Enter an account number first");
+      return;
+    }
+    setGeneratingQR(true);
+
+    try {
+      const qrUrl = generateQRCodeUrl(value.account_number, label);
+
+      // Fetch the QR code image and upload to Supabase storage
+      const response = await fetch(qrUrl);
+      const blob = await response.blob();
+      const fileName = `qr-${label.toLowerCase()}-${Date.now()}.png`;
+      const path = `payment-qr/${fileName}`;
+
+      const { data, error } = await supabase.storage.from("banners").upload(path, blob, {
+        cacheControl: "3600",
+        contentType: "image/png",
+        upsert: true,
+      });
+
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("banners").getPublicUrl(data.path);
+      onChange({ ...value, qr_code_url: urlData.publicUrl });
+      toast.success(`${label} QR code generated!`);
+    } catch (err: any) {
+      toast.error("Failed to generate QR: " + err.message);
+    } finally {
+      setGeneratingQR(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {icon}
+            <CardTitle className="text-base">{label} Personal Account</CardTitle>
+          </div>
+          <Switch checked={value.enabled} onCheckedChange={(v) => onChange({ ...value, enabled: v })} />
         </div>
-        <Switch checked={value.enabled} onCheckedChange={(v) => onChange({ ...value, enabled: v })} />
-      </div>
-    </CardHeader>
-    {value.enabled && (
-      <CardContent className="space-y-4">
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Account Number</Label>
-            <Input value={value.account_number} onChange={(e) => onChange({ ...value, account_number: e.target.value })} placeholder="01XXXXXXXXX" />
+      </CardHeader>
+      {value.enabled && (
+        <CardContent className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Account Number</Label>
+              <Input value={value.account_number} onChange={(e) => onChange({ ...value, account_number: e.target.value })} placeholder="01XXXXXXXXX" />
+            </div>
+            <div className="space-y-2">
+              <Label>Account Holder Name</Label>
+              <Input value={value.account_holder} onChange={(e) => onChange({ ...value, account_holder: e.target.value })} />
+            </div>
           </div>
           <div className="space-y-2">
-            <Label>Account Holder Name</Label>
-            <Input value={value.account_holder} onChange={(e) => onChange({ ...value, account_holder: e.target.value })} />
+            <div className="flex items-center justify-between">
+              <Label>QR Code Image</Label>
+              <Button type="button" size="sm" variant="outline" onClick={handleGenerateQR}
+                disabled={generatingQR || !value.account_number} className="rounded-xl text-xs">
+                {generatingQR ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <QrCode className="w-3 h-3 mr-1" />}
+                Auto-Generate QR
+              </Button>
+            </div>
+            <ImageUpload bucket="banners" folder="payment-qr" value={value.qr_code_url} onUploaded={(url) => onChange({ ...value, qr_code_url: url })} />
           </div>
-        </div>
-        <div className="space-y-2">
-          <Label>QR Code Image</Label>
-          <ImageUpload bucket="banners" folder="payment-qr" value={value.qr_code_url} onUploaded={(url) => onChange({ ...value, qr_code_url: url })} />
-        </div>
-        <div className="space-y-2">
-          <Label>Payment Instructions</Label>
-          <Textarea value={value.instructions} onChange={(e) => onChange({ ...value, instructions: e.target.value })} rows={3} />
-        </div>
-      </CardContent>
-    )}
-  </Card>
-);
+          <div className="space-y-2">
+            <Label>Payment Instructions</Label>
+            <Textarea value={value.instructions} onChange={(e) => onChange({ ...value, instructions: e.target.value })} rows={3} />
+          </div>
+        </CardContent>
+      )}
+    </Card>
+  );
+};
 
 const AdminPaymentGateways = () => {
   const qc = useQueryClient();
@@ -112,6 +175,7 @@ const AdminPaymentGateways = () => {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-payment-config"] });
+      qc.invalidateQueries({ queryKey: ["payment-gateways-config"] });
       toast.success("Payment settings saved");
     },
     onError: (e: any) => toast.error(e.message),
@@ -126,6 +190,30 @@ const AdminPaymentGateways = () => {
         </Button>
       </div>
 
+      {/* System Controls */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Power className="w-5 h-5" /> System Controls</CardTitle>
+          <CardDescription>Global payment system settings</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-foreground">MFS Payment System</p>
+              <p className="text-xs text-muted-foreground">Enable/disable the entire MFS screenshot-based payment verification system</p>
+            </div>
+            <Switch checked={form.mfs_system_enabled} onCheckedChange={(v) => setForm({ ...form, mfs_system_enabled: v })} />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-foreground">Cash on Delivery</p>
+              <p className="text-xs text-muted-foreground">Allow customers to pay on delivery</p>
+            </div>
+            <Switch checked={form.cod_enabled} onCheckedChange={(v) => setForm({ ...form, cod_enabled: v })} />
+          </div>
+        </CardContent>
+      </Card>
+
       <Tabs defaultValue="personal" className="space-y-4">
         <TabsList className="flex-wrap">
           <TabsTrigger value="personal"><Smartphone className="w-4 h-4 mr-1" /> Personal Accounts</TabsTrigger>
@@ -137,7 +225,7 @@ const AdminPaymentGateways = () => {
           <Card>
             <CardHeader>
               <CardTitle>Personal Payment Accounts</CardTitle>
-              <CardDescription>Accept payments to your personal mobile banking accounts. Users will see account details and enter transaction IDs after sending money.</CardDescription>
+              <CardDescription>Accept payments to your personal mobile banking accounts. Users will send money, upload a screenshot, and your team verifies the payment before confirming the order.</CardDescription>
             </CardHeader>
           </Card>
           <PersonalAccountForm label="bKash" icon={<Smartphone className="w-5 h-5 text-pink-500" />}
