@@ -22,7 +22,7 @@ import AdminPaymentProofs from "@/components/admin/AdminPaymentProofs";
 
 type Order = Tables<"orders">;
 
-const ORDER_STATUSES = ["pending", "processing", "shipped", "delivered", "cancelled"];
+const ORDER_STATUSES = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"];
 
 const statusColors: Record<string, string> = {
   pending: "secondary",
