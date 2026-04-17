@@ -625,6 +625,110 @@ export type Database = {
         }
         Relationships: []
       }
+      pathao_shipments: {
+        Row: {
+          cod_amount: number | null
+          consignment_id: string
+          created_at: string
+          delivery_fee: number | null
+          environment: string
+          id: string
+          invoice_id: string | null
+          last_synced_at: string | null
+          merchant_order_id: string | null
+          order_id: string
+          order_status: string | null
+          order_status_slug: string | null
+          raw_response: Json | null
+          recipient_area: number | null
+          recipient_city: number | null
+          recipient_city_name: string | null
+          recipient_zone: number | null
+          recipient_zone_name: string | null
+          shipment_type: string
+          updated_at: string
+        }
+        Insert: {
+          cod_amount?: number | null
+          consignment_id: string
+          created_at?: string
+          delivery_fee?: number | null
+          environment?: string
+          id?: string
+          invoice_id?: string | null
+          last_synced_at?: string | null
+          merchant_order_id?: string | null
+          order_id: string
+          order_status?: string | null
+          order_status_slug?: string | null
+          raw_response?: Json | null
+          recipient_area?: number | null
+          recipient_city?: number | null
+          recipient_city_name?: string | null
+          recipient_zone?: number | null
+          recipient_zone_name?: string | null
+          shipment_type?: string
+          updated_at?: string
+        }
+        Update: {
+          cod_amount?: number | null
+          consignment_id?: string
+          created_at?: string
+          delivery_fee?: number | null
+          environment?: string
+          id?: string
+          invoice_id?: string | null
+          last_synced_at?: string | null
+          merchant_order_id?: string | null
+          order_id?: string
+          order_status?: string | null
+          order_status_slug?: string | null
+          raw_response?: Json | null
+          recipient_area?: number | null
+          recipient_city?: number | null
+          recipient_city_name?: string | null
+          recipient_zone?: number | null
+          recipient_zone_name?: string | null
+          shipment_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathao_shipments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathao_tokens: {
+        Row: {
+          access_token: string
+          environment: string
+          expires_at: string
+          id: string
+          refresh_token: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          environment: string
+          expires_at: string
+          id?: string
+          refresh_token?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          environment?: string
+          expires_at?: string
+          id?: string
+          refresh_token?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payment_proofs: {
         Row: {
           admin_notes: string | null
