@@ -21,7 +21,7 @@ const OrdersPage: React.FC = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("orders")
-        .select("*, order_items(id, product_name, product_image, quantity, unit_price, total_price)")
+        .select("*, order_items(id, product_name, product_image, quantity, unit_price, total_price), pathao_shipments(consignment_id, order_status, order_status_slug, recipient_city_name, recipient_zone_name, last_synced_at)")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false });
       return data || [];
@@ -91,6 +91,20 @@ const OrdersPage: React.FC = () => {
                     trackingNumber={order.tracking_number}
                     updatedAt={order.updated_at}
                   />
+
+                  {/* Pathao live status */}
+                  {(order as any).pathao_shipments?.[0] && (
+                    <div className="mt-3 flex items-center gap-2 text-xs bg-primary/10 border border-primary/20 rounded-xl px-3 py-2">
+                      <Package className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-primary font-medium">Pathao:</span>
+                      <span className="text-foreground capitalize">
+                        {((order as any).pathao_shipments[0].order_status || "").toString().replace(/_/g, " ") || "Pending"}
+                      </span>
+                      <span className="text-muted-foreground ml-auto font-mono">
+                        {(order as any).pathao_shipments[0].consignment_id}
+                      </span>
+                    </div>
+                  )}
                 </button>
 
                 {/* Expanded details */}
