@@ -15,15 +15,18 @@ const BASE_URL = "https://portal.packzy.com/api/v1";
 
 const adminClient = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
-function creds() {
+async function creds() {
+  const { data: ovRow } = await adminClient
+    .from("site_settings").select("value").eq("key", "courier_secrets_override").maybeSingle();
+  const ov = (ovRow?.value as any) || {};
   return {
-    api_key: Deno.env.get("STEADFAST_API_KEY") || "",
-    secret_key: Deno.env.get("STEADFAST_SECRET_KEY") || "",
+    api_key: ov.STEADFAST_API_KEY || Deno.env.get("STEADFAST_API_KEY") || "",
+    secret_key: ov.STEADFAST_SECRET_KEY || Deno.env.get("STEADFAST_SECRET_KEY") || "",
   };
 }
 
 async function sfFetch(path: string, init: RequestInit = {}) {
-  const c = creds();
+  const c = await creds();
   if (!c.api_key || !c.secret_key) throw new Error("Steadfast credentials not configured");
   const res = await fetch(`${BASE_URL}${path}`, {
     ...init,

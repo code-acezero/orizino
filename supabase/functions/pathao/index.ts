@@ -22,13 +22,17 @@ const BASE = {
   live: "https://api-hermes.pathao.com",
 };
 
-function envCreds(env: "sandbox" | "live") {
+async function envCreds(env: "sandbox" | "live") {
   const prefix = env === "sandbox" ? "PATHAO_SANDBOX" : "PATHAO_LIVE";
+  const { data: ovRow } = await adminClient
+    .from("site_settings").select("value").eq("key", "courier_secrets_override").maybeSingle();
+  const ov = (ovRow?.value as any) || {};
+  const get = (k: string) => ov[k] || Deno.env.get(k) || "";
   return {
-    client_id: Deno.env.get(`${prefix}_CLIENT_ID`) || "",
-    client_secret: Deno.env.get(`${prefix}_CLIENT_SECRET`) || "",
-    username: Deno.env.get(`${prefix}_USERNAME`) || "",
-    password: Deno.env.get(`${prefix}_PASSWORD`) || "",
+    client_id: get(`${prefix}_CLIENT_ID`),
+    client_secret: get(`${prefix}_CLIENT_SECRET`),
+    username: get(`${prefix}_USERNAME`),
+    password: get(`${prefix}_PASSWORD`),
   };
 }
 
@@ -44,7 +48,7 @@ async function getAccessToken(env: "sandbox" | "live"): Promise<string> {
     return cached.access_token;
   }
 
-  const creds = envCreds(env);
+  const creds = await envCreds(env);
   if (!creds.client_id || !creds.username) {
     throw new Error(`Pathao ${env} credentials not configured`);
   }
