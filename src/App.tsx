@@ -65,6 +65,7 @@ const AdminFooter = lazy(() => import("./pages/admin/AdminFooter"));
 const AdminPaymentGateways = lazy(() => import("./pages/admin/AdminPaymentGateways"));
 const AdminReturns = lazy(() => import("./pages/admin/AdminReturns"));
 const AdminTracking = lazy(() => import("./pages/admin/AdminTracking"));
+const AdminPathao = lazy(() => import("./pages/admin/AdminPathao"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -181,6 +182,7 @@ const App = () => {
               <Route path="payment-gateways" element={<Suspense fallback={<PageFallback />}><AdminPaymentGateways /></Suspense>} />
               <Route path="returns" element={<Suspense fallback={<PageFallback />}><AdminReturns /></Suspense>} />
               <Route path="tracking" element={<Suspense fallback={<PageFallback />}><AdminTracking /></Suspense>} />
+              <Route path="pathao" element={<Suspense fallback={<PageFallback />}><AdminPathao /></Suspense>} />
             </Route>
 
             <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />
