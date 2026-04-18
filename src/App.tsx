@@ -52,7 +52,7 @@ const AdminAnnouncements = lazy(() => import("./pages/admin/AdminAnnouncements")
 const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
 const AdminShipping = lazy(() => import("./pages/admin/AdminShipping"));
 const AdminSupport = lazy(() => import("./pages/admin/AdminSupport"));
-const AdminApiKeys = lazy(() => import("./pages/admin/AdminApiKeys"));
+const AdminCouriers = lazy(() => import("./pages/admin/AdminCouriers"));
 const AdminAISettings = lazy(() => import("./pages/admin/AdminAISettings"));
 const AdminUserPromos = lazy(() => import("./pages/admin/AdminUserPromos"));
 const AdminDeliveryOffers = lazy(() => import("./pages/admin/AdminDeliveryOffers"));
@@ -65,7 +65,7 @@ const AdminFooter = lazy(() => import("./pages/admin/AdminFooter"));
 const AdminPaymentGateways = lazy(() => import("./pages/admin/AdminPaymentGateways"));
 const AdminReturns = lazy(() => import("./pages/admin/AdminReturns"));
 const AdminTracking = lazy(() => import("./pages/admin/AdminTracking"));
-const AdminPathao = lazy(() => import("./pages/admin/AdminPathao"));
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -169,7 +169,7 @@ const App = () => {
               <Route path="coupons" element={<Suspense fallback={<PageFallback />}><AdminCoupons /></Suspense>} />
               <Route path="shipping" element={<Suspense fallback={<PageFallback />}><AdminShipping /></Suspense>} />
               <Route path="support" element={<Suspense fallback={<PageFallback />}><AdminSupport /></Suspense>} />
-              <Route path="api-keys" element={<Suspense fallback={<PageFallback />}><AdminApiKeys /></Suspense>} />
+              <Route path="couriers" element={<Suspense fallback={<PageFallback />}><AdminCouriers /></Suspense>} />
               <Route path="ai-settings" element={<Suspense fallback={<PageFallback />}><AdminAISettings /></Suspense>} />
               <Route path="user-promos" element={<Suspense fallback={<PageFallback />}><AdminUserPromos /></Suspense>} />
               <Route path="delivery-offers" element={<Suspense fallback={<PageFallback />}><AdminDeliveryOffers /></Suspense>} />
@@ -182,7 +182,7 @@ const App = () => {
               <Route path="payment-gateways" element={<Suspense fallback={<PageFallback />}><AdminPaymentGateways /></Suspense>} />
               <Route path="returns" element={<Suspense fallback={<PageFallback />}><AdminReturns /></Suspense>} />
               <Route path="tracking" element={<Suspense fallback={<PageFallback />}><AdminTracking /></Suspense>} />
-              <Route path="pathao" element={<Suspense fallback={<PageFallback />}><AdminPathao /></Suspense>} />
+              <Route path="pathao" element={<Suspense fallback={<PageFallback />}><AdminCouriers /></Suspense>} />
             </Route>
 
             <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />

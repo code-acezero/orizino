@@ -19,7 +19,7 @@ import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Tables } from "@/integrations/supabase/types";
 import AdminPaymentProofs from "@/components/admin/AdminPaymentProofs";
-import PathaoPushDialog from "@/components/admin/PathaoPushDialog";
+import CourierPushDialog from "@/components/admin/CourierPushDialog";
 
 type Order = Tables<"orders">;
 
@@ -41,7 +41,7 @@ const AdminOrders = () => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState<string | null>(null);
   const [invoiceLoading, setInvoiceLoading] = useState(false);
-  const [pathaoOpen, setPathaoOpen] = useState(false);
+  const [courierOpen, setCourierOpen] = useState(false);
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["admin-orders"],
@@ -502,9 +502,9 @@ const AdminOrders = () => {
                 <Button
                   variant="outline"
                   className="gap-1.5"
-                  onClick={() => setPathaoOpen(true)}
+                  onClick={() => setCourierOpen(true)}
                 >
-                  <Truck className="w-4 h-4" /> Pathao
+                  <Truck className="w-4 h-4" /> Push to Courier
                 </Button>
               </div>
             </div>
@@ -512,9 +512,9 @@ const AdminOrders = () => {
         </DialogContent>
       </Dialog>
       {selectedOrder && (
-        <PathaoPushDialog
-          open={pathaoOpen}
-          onOpenChange={setPathaoOpen}
+        <CourierPushDialog
+          open={courierOpen}
+          onOpenChange={setCourierOpen}
           orderId={selectedOrder.id}
           orderNumber={selectedOrder.order_number}
         />

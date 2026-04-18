@@ -62,7 +62,7 @@ const commerceItems: MenuItem[] = [
   { title: "Coupons", url: "/origin/coupons", icon: Tag },
   { title: "User Promos", url: "/origin/user-promos", icon: Gift, adminOnly: true },
   { title: "Shipping", url: "/origin/shipping", icon: Truck, adminOnly: true },
-  { title: "Pathao", url: "/origin/pathao", icon: Truck, adminOnly: true },
+  { title: "Couriers", url: "/origin/couriers", icon: Truck, adminOnly: true },
   { title: "Delivery Offers", url: "/origin/delivery-offers", icon: Percent },
   { title: "Payment Gateways", url: "/origin/payment-gateways", icon: Key, adminOnly: true },
   { title: "Returns", url: "/origin/returns", icon: Package },
@@ -87,7 +87,7 @@ const systemItems: MenuItem[] = [
   { title: "Tracking & Ads", url: "/origin/tracking", icon: Globe, adminOnly: true },
   { title: "Branding", url: "/origin/branding", icon: Palette, adminOnly: true },
   { title: "Mobile UI", url: "/origin/mobile-ui", icon: Smartphone, adminOnly: true },
-  { title: "API Keys", url: "/origin/api-keys", icon: Key, adminOnly: true },
+  
   { title: "Settings", url: "/origin/settings", icon: Settings, adminOnly: true },
 ];
 
