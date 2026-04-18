@@ -1313,6 +1313,66 @@ export type Database = {
         }
         Relationships: []
       }
+      steadfast_shipments: {
+        Row: {
+          cod_amount: number | null
+          consignment_id: string
+          created_at: string
+          delivery_charge: number | null
+          id: string
+          invoice: string | null
+          last_synced_at: string | null
+          note: string | null
+          order_id: string
+          raw_response: Json | null
+          recipient_address: string | null
+          recipient_name: string | null
+          recipient_phone: string | null
+          status: string | null
+          tracking_code: string | null
+          tracking_message: string | null
+          updated_at: string
+        }
+        Insert: {
+          cod_amount?: number | null
+          consignment_id: string
+          created_at?: string
+          delivery_charge?: number | null
+          id?: string
+          invoice?: string | null
+          last_synced_at?: string | null
+          note?: string | null
+          order_id: string
+          raw_response?: Json | null
+          recipient_address?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          status?: string | null
+          tracking_code?: string | null
+          tracking_message?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cod_amount?: number | null
+          consignment_id?: string
+          created_at?: string
+          delivery_charge?: number | null
+          id?: string
+          invoice?: string | null
+          last_synced_at?: string | null
+          note?: string | null
+          order_id?: string
+          raw_response?: Json | null
+          recipient_address?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          status?: string | null
+          tracking_code?: string | null
+          tracking_message?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       stock_notifications: {
         Row: {
           created_at: string
