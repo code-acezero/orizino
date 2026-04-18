@@ -87,7 +87,7 @@ const systemItems: MenuItem[] = [
   { title: "Tracking & Ads", url: "/origin/tracking", icon: Globe, adminOnly: true },
   { title: "Branding", url: "/origin/branding", icon: Palette, adminOnly: true },
   { title: "Mobile UI", url: "/origin/mobile-ui", icon: Smartphone, adminOnly: true },
-  { title: "API Keys", url: "/origin/api-keys", icon: Key, adminOnly: true },
+  
   { title: "Settings", url: "/origin/settings", icon: Settings, adminOnly: true },
 ];
 
