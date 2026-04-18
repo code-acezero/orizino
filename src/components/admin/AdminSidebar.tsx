@@ -62,6 +62,7 @@ const commerceItems: MenuItem[] = [
   { title: "Coupons", url: "/origin/coupons", icon: Tag },
   { title: "User Promos", url: "/origin/user-promos", icon: Gift, adminOnly: true },
   { title: "Shipping", url: "/origin/shipping", icon: Truck, adminOnly: true },
+  { title: "Pathao", url: "/origin/pathao", icon: Truck, adminOnly: true },
   { title: "Delivery Offers", url: "/origin/delivery-offers", icon: Percent },
   { title: "Payment Gateways", url: "/origin/payment-gateways", icon: Key, adminOnly: true },
   { title: "Returns", url: "/origin/returns", icon: Package },
