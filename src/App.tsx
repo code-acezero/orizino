@@ -146,6 +146,7 @@ const App = () => {
               <Route path="/settings" element={<ProtectedRoute><Suspense fallback={<PageFallback />}><SettingsPage /></Suspense></ProtectedRoute>} />
               <Route path="/checkout" element={<ProtectedRoute><Suspense fallback={<PageFallback />}><CheckoutPage /></Suspense></ProtectedRoute>} />
               <Route path="/orders" element={<ProtectedRoute><Suspense fallback={<PageFallback />}><OrdersPage /></Suspense></ProtectedRoute>} />
+              <Route path="/orders/:id/track" element={<ProtectedRoute><Suspense fallback={<PageFallback />}><LiveTrackingPage /></Suspense></ProtectedRoute>} />
               <Route path="/page/:slug" element={<Suspense fallback={<PageFallback />}><CmsPage /></Suspense>} />
             </Route>
 

@@ -57,11 +57,12 @@ const LiveTrackingPage: React.FC = () => {
   if (isLoading) return <div className="min-h-[60vh] flex items-center justify-center"><LogoLoader /></div>;
   if (!order) return <div className="container mx-auto px-4 py-12 text-center">Order not found.</div>;
 
-  const pathao = order.pathao_shipments?.[0];
-  const steadfast = order.steadfast_shipments?.[0];
+  const o = order as any;
+  const pathao = o.pathao_shipments?.[0];
+  const steadfast = o.steadfast_shipments?.[0];
   const shipment = pathao || steadfast;
   const provider = pathao ? "Pathao" : steadfast ? "Steadfast" : null;
-  const status = pathao?.order_status || steadfast?.status || order.status;
+  const status: string = pathao?.order_status || steadfast?.status || o.status;
 
   const stages = [
     { key: "pending", label: "Order Placed", icon: Package },
