@@ -228,6 +228,7 @@ const ProfilePage: React.FC = () => {
 
   const tabs = [
     { id: "profile", icon: User, label: "Profile" },
+    { id: "rewards", icon: Award, label: "Rewards" },
     { id: "addresses", icon: MapPin, label: "Addresses" },
     { id: "payments", icon: CreditCard, label: "Payments" },
     { id: "orders", icon: Package, label: "Orders" },
