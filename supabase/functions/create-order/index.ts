@@ -318,6 +318,24 @@ Deno.serve(async (req) => {
       await supabase.from("cart_items").delete().eq("user_id", user.id);
     }
 
+    // Award loyalty points (1 point per BDT spent on subtotal). Best-effort.
+    try {
+      const points = Math.floor(Number(subtotal) || 0);
+      if (points > 0) {
+        await supabase.rpc("award_loyalty_points", {
+          _user_id: user.id,
+          _points: points,
+          _source: "order",
+          _reference_id: order.id,
+          _description: `Order ${order.order_number}`,
+          _spend_amount: Number(subtotal) || 0,
+        });
+      }
+      await supabase.rpc("set_loyalty_orders" as any, { _user_id: user.id }).catch(() => {});
+    } catch (e) {
+      console.error("loyalty award failed (non-fatal)", e);
+    }
+
     return new Response(JSON.stringify({ success: true, order_number: order.order_number }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
