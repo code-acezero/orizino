@@ -329,6 +329,12 @@ const ProfilePage: React.FC = () => {
           </div>
 
           <AnimatePresence mode="wait">
+            {activeTab === "rewards" && (
+              <motion.div key="rewards" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <RewardsTab />
+              </motion.div>
+            )}
+
             {/* Profile Tab */}
             {activeTab === "profile" && (
               <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
