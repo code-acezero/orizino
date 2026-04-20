@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Package, ChevronRight, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { Package, ChevronRight, Clock, ChevronDown, ChevronUp, Truck } from "lucide-react";
 import LogoLoader from "@/components/LogoLoader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -132,6 +132,14 @@ const OrdersPage: React.FC = () => {
                           <span className="text-sm text-muted-foreground">Payment: <span className="text-foreground capitalize">{order.payment_method}</span></span>
                           <span className="font-bold text-foreground">Total: {formatPrice(order.total)}</span>
                         </div>
+
+                        <Link
+                          to={`/orders/${order.id}/track`}
+                          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-primary/10 hover:bg-primary/20 text-primary font-semibold text-sm transition-all"
+                        >
+                          <Truck className="w-4 h-4" /> Live Tracking
+                          <ChevronRight className="w-4 h-4 ml-auto" />
+                        </Link>
                       </div>
                     </motion.div>
                   )}

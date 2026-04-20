@@ -29,6 +29,7 @@ const ProductDetailPage = lazy(() => import("./pages/ProductDetailPage"));
 const CartPage = lazy(() => import("./pages/CartPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const OrdersPage = lazy(() => import("./pages/OrdersPage"));
+const LiveTrackingPage = lazy(() => import("./pages/LiveTrackingPage"));
 const WishlistPage = lazy(() => import("./pages/WishlistPage"));
 const SupportPage = lazy(() => import("./pages/SupportPage"));
 const CmsPage = lazy(() => import("./pages/CmsPage"));
@@ -146,6 +147,7 @@ const App = () => {
               <Route path="/settings" element={<ProtectedRoute><Suspense fallback={<PageFallback />}><SettingsPage /></Suspense></ProtectedRoute>} />
               <Route path="/checkout" element={<ProtectedRoute><Suspense fallback={<PageFallback />}><CheckoutPage /></Suspense></ProtectedRoute>} />
               <Route path="/orders" element={<ProtectedRoute><Suspense fallback={<PageFallback />}><OrdersPage /></Suspense></ProtectedRoute>} />
+              <Route path="/orders/:id/track" element={<ProtectedRoute><Suspense fallback={<PageFallback />}><LiveTrackingPage /></Suspense></ProtectedRoute>} />
               <Route path="/page/:slug" element={<Suspense fallback={<PageFallback />}><CmsPage /></Suspense>} />
             </Route>
 

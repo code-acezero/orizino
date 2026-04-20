@@ -362,6 +362,132 @@ export type Database = {
         }
         Relationships: []
       }
+      courier_hubs: {
+        Row: {
+          address: string
+          area: string | null
+          city: string
+          contact_phone: string | null
+          created_at: string
+          hub_name: string
+          id: string
+          is_active: boolean
+          is_pickup_point: boolean
+          latitude: number | null
+          longitude: number | null
+          provider: string
+        }
+        Insert: {
+          address: string
+          area?: string | null
+          city: string
+          contact_phone?: string | null
+          created_at?: string
+          hub_name: string
+          id?: string
+          is_active?: boolean
+          is_pickup_point?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          provider: string
+        }
+        Update: {
+          address?: string
+          area?: string | null
+          city?: string
+          contact_phone?: string | null
+          created_at?: string
+          hub_name?: string
+          id?: string
+          is_active?: boolean
+          is_pickup_point?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          provider?: string
+        }
+        Relationships: []
+      }
+      courier_pricing_rules: {
+        Row: {
+          base_fee: number
+          created_at: string
+          hub_pickup_discount: number
+          id: string
+          is_active: boolean
+          per_kg_fee: number
+          provider: string
+          sort_order: number
+          weight_max: number
+          zone_type: string
+        }
+        Insert: {
+          base_fee?: number
+          created_at?: string
+          hub_pickup_discount?: number
+          id?: string
+          is_active?: boolean
+          per_kg_fee?: number
+          provider: string
+          sort_order?: number
+          weight_max?: number
+          zone_type: string
+        }
+        Update: {
+          base_fee?: number
+          created_at?: string
+          hub_pickup_discount?: number
+          id?: string
+          is_active?: boolean
+          per_kg_fee?: number
+          provider?: string
+          sort_order?: number
+          weight_max?: number
+          zone_type?: string
+        }
+        Relationships: []
+      }
+      courier_zones: {
+        Row: {
+          area_id: number | null
+          area_name: string | null
+          city_id: number | null
+          city_name: string
+          created_at: string
+          id: string
+          is_active: boolean
+          last_synced_at: string | null
+          provider: string
+          zone_id: number | null
+          zone_name: string | null
+        }
+        Insert: {
+          area_id?: number | null
+          area_name?: string | null
+          city_id?: number | null
+          city_name: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_synced_at?: string | null
+          provider: string
+          zone_id?: number | null
+          zone_name?: string | null
+        }
+        Update: {
+          area_id?: number | null
+          area_name?: string | null
+          city_id?: number | null
+          city_name?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_synced_at?: string | null
+          provider?: string
+          zone_id?: number | null
+          zone_name?: string | null
+        }
+        Relationships: []
+      }
       delivery_offers: {
         Row: {
           created_at: string
@@ -422,6 +548,81 @@ export type Database = {
           email?: string
           id?: string
           is_active?: boolean
+        }
+        Relationships: []
+      }
+      loyalty_tiers: {
+        Row: {
+          badge_color: string | null
+          badge_icon: string | null
+          created_at: string
+          discount_percentage: number
+          id: string
+          is_active: boolean
+          min_lifetime_spend: number
+          name: string
+          perks: Json | null
+          points_multiplier: number
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          badge_color?: string | null
+          badge_icon?: string | null
+          created_at?: string
+          discount_percentage?: number
+          id?: string
+          is_active?: boolean
+          min_lifetime_spend?: number
+          name: string
+          perks?: Json | null
+          points_multiplier?: number
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          badge_color?: string | null
+          badge_icon?: string | null
+          created_at?: string
+          discount_percentage?: number
+          id?: string
+          is_active?: boolean
+          min_lifetime_spend?: number
+          name?: string
+          perks?: Json | null
+          points_multiplier?: number
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      loyalty_transactions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          points_change: number
+          reference_id: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          points_change: number
+          reference_id?: string | null
+          source: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          points_change?: number
+          reference_id?: string | null
+          source?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -525,10 +726,15 @@ export type Database = {
           created_at: string
           gift_message: string | null
           gift_wrap: boolean | null
+          hub_pickup: boolean | null
           id: string
+          loyalty_discount: number | null
+          loyalty_points_used: number | null
           notes: string | null
           order_number: string
           payment_method: string
+          pickup_hub_id: string | null
+          preferred_courier: string | null
           shipping_address: Json
           shipping_fee: number
           shipping_method_id: string | null
@@ -546,10 +752,15 @@ export type Database = {
           created_at?: string
           gift_message?: string | null
           gift_wrap?: boolean | null
+          hub_pickup?: boolean | null
           id?: string
+          loyalty_discount?: number | null
+          loyalty_points_used?: number | null
           notes?: string | null
           order_number: string
           payment_method?: string
+          pickup_hub_id?: string | null
+          preferred_courier?: string | null
           shipping_address?: Json
           shipping_fee?: number
           shipping_method_id?: string | null
@@ -567,10 +778,15 @@ export type Database = {
           created_at?: string
           gift_message?: string | null
           gift_wrap?: boolean | null
+          hub_pickup?: boolean | null
           id?: string
+          loyalty_discount?: number | null
+          loyalty_points_used?: number | null
           notes?: string | null
           order_number?: string
           payment_method?: string
+          pickup_hub_id?: string | null
+          preferred_courier?: string | null
           shipping_address?: Json
           shipping_fee?: number
           shipping_method_id?: string | null
@@ -583,6 +799,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_pickup_hub_id_fkey"
+            columns: ["pickup_hub_id"]
+            isOneToOne: false
+            referencedRelation: "courier_hubs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_shipping_method_id_fkey"
             columns: ["shipping_method_id"]
@@ -1489,6 +1712,152 @@ export type Database = {
           },
         ]
       }
+      user_addresses: {
+        Row: {
+          address_line1: string
+          address_line2: string | null
+          address_type: string
+          area: string | null
+          city: string
+          country: string
+          created_at: string
+          full_name: string
+          id: string
+          is_default: boolean
+          label: string
+          latitude: number | null
+          longitude: number | null
+          pathao_area_id: number | null
+          pathao_city_id: number | null
+          pathao_zone_id: number | null
+          phone: string
+          postal_code: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_line1: string
+          address_line2?: string | null
+          address_type?: string
+          area?: string | null
+          city: string
+          country?: string
+          created_at?: string
+          full_name: string
+          id?: string
+          is_default?: boolean
+          label?: string
+          latitude?: number | null
+          longitude?: number | null
+          pathao_area_id?: number | null
+          pathao_city_id?: number | null
+          pathao_zone_id?: number | null
+          phone: string
+          postal_code?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_line1?: string
+          address_line2?: string | null
+          address_type?: string
+          area?: string | null
+          city?: string
+          country?: string
+          created_at?: string
+          full_name?: string
+          id?: string
+          is_default?: boolean
+          label?: string
+          latitude?: number | null
+          longitude?: number | null
+          pathao_area_id?: number | null
+          pathao_city_id?: number | null
+          pathao_zone_id?: number | null
+          phone?: string
+          postal_code?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_loyalty: {
+        Row: {
+          created_at: string
+          current_tier_id: string | null
+          lifetime_points: number
+          lifetime_spend: number
+          points_balance: number
+          referral_code: string | null
+          total_orders: number
+          total_reviews: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_tier_id?: string | null
+          lifetime_points?: number
+          lifetime_spend?: number
+          points_balance?: number
+          referral_code?: string | null
+          total_orders?: number
+          total_reviews?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_tier_id?: string | null
+          lifetime_points?: number
+          lifetime_spend?: number
+          points_balance?: number
+          referral_code?: string | null
+          total_orders?: number
+          total_reviews?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_loyalty_current_tier_id_fkey"
+            columns: ["current_tier_id"]
+            isOneToOne: false
+            referencedRelation: "loyalty_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_payment_methods: {
+        Row: {
+          account_label: string
+          account_number_masked: string | null
+          created_at: string
+          id: string
+          is_default: boolean
+          provider: string
+          user_id: string
+        }
+        Insert: {
+          account_label: string
+          account_number_masked?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          provider: string
+          user_id: string
+        }
+        Update: {
+          account_label?: string
+          account_number_masked?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          provider?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_promo_claims: {
         Row: {
           claimed_at: string
@@ -1727,6 +2096,17 @@ export type Database = {
       }
     }
     Functions: {
+      award_loyalty_points: {
+        Args: {
+          _description?: string
+          _points: number
+          _reference_id?: string
+          _source: string
+          _spend_amount?: number
+          _user_id: string
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

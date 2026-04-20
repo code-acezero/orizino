@@ -19,6 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import RewardsTab from "@/components/profile/RewardsTab";
 
 interface Address {
   id: string;
@@ -228,6 +229,7 @@ const ProfilePage: React.FC = () => {
 
   const tabs = [
     { id: "profile", icon: User, label: "Profile" },
+    { id: "rewards", icon: Award, label: "Rewards" },
     { id: "addresses", icon: MapPin, label: "Addresses" },
     { id: "payments", icon: CreditCard, label: "Payments" },
     { id: "orders", icon: Package, label: "Orders" },
@@ -327,6 +329,12 @@ const ProfilePage: React.FC = () => {
           </div>
 
           <AnimatePresence mode="wait">
+            {activeTab === "rewards" && (
+              <motion.div key="rewards" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <RewardsTab />
+              </motion.div>
+            )}
+
             {/* Profile Tab */}
             {activeTab === "profile" && (
               <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
