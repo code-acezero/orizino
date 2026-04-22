@@ -259,7 +259,9 @@ Deno.serve(async (req) => {
     }
 
     let shippingFee = 0;
-    if (shipping_method_id) {
+    if (typeof shipping_fee_override === "number" && shipping_fee_override >= 0) {
+      shippingFee = shipping_fee_override;
+    } else if (shipping_method_id) {
       const { data: method } = await supabase
         .from("shipping_methods")
         .select("*")
@@ -304,6 +306,9 @@ Deno.serve(async (req) => {
         shipping_method_id: shipping_method_id || null,
         gift_wrap: gift_wrap || false,
         gift_message: gift_message || null,
+        preferred_courier: preferred_courier || null,
+        hub_pickup: hub_pickup || false,
+        pickup_hub_id: pickup_hub_id || null,
       })
       .select("id, order_number")
       .single();
