@@ -219,7 +219,10 @@ const CheckoutPage: React.FC = () => {
 
   const shippingMethodId = cartState.shippingMethodId;
   const selectedShipping = shippingMethods?.find((m) => m.id === shippingMethodId) || shippingMethods?.[0];
-  let baseShippingFee = selectedShipping ? (selectedShipping.min_order_free && subtotal >= Number(selectedShipping.min_order_free) ? 0 : Number(selectedShipping.price)) : 0;
+  // If user picked a courier, use that fee instead of shipping_methods price
+  let baseShippingFee = courierFee !== null
+    ? courierFee
+    : (selectedShipping ? (selectedShipping.min_order_free && subtotal >= Number(selectedShipping.min_order_free) ? 0 : Number(selectedShipping.price)) : 0);
 
   let deliveryDiscount = 0;
   let appliedDeliveryOffer: any = null;
