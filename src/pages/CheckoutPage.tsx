@@ -16,6 +16,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import MFSPaymentProof from "@/components/checkout/MFSPaymentProof";
+import CourierSelector from "@/components/checkout/CourierSelector";
+import type { CourierProvider } from "@/hooks/use-courier-pricing";
 
 const MFS_METHODS = ["bkash", "nagad", "upay", "rocket"];
 
@@ -42,6 +44,10 @@ const CheckoutPage: React.FC = () => {
   const [step, setStep] = useState(1);
   const [mfsProofData, setMfsProofData] = useState<{ screenshotUrl: string; transactionId: string } | null>(null);
   const [orderSuccess, setOrderSuccess] = useState<string | null>(null);
+  const [courierProvider, setCourierProvider] = useState<CourierProvider>("pathao");
+  const [hubPickup, setHubPickup] = useState(false);
+  const [selectedHubId, setSelectedHubId] = useState<string | null>(null);
+  const [courierFee, setCourierFee] = useState<number | null>(null);
 
   // Fetch payment gateway config
   const { data: paymentConfig } = useQuery({
@@ -213,7 +219,10 @@ const CheckoutPage: React.FC = () => {
 
   const shippingMethodId = cartState.shippingMethodId;
   const selectedShipping = shippingMethods?.find((m) => m.id === shippingMethodId) || shippingMethods?.[0];
-  let baseShippingFee = selectedShipping ? (selectedShipping.min_order_free && subtotal >= Number(selectedShipping.min_order_free) ? 0 : Number(selectedShipping.price)) : 0;
+  // If user picked a courier, use that fee instead of shipping_methods price
+  let baseShippingFee = courierFee !== null
+    ? courierFee
+    : (selectedShipping ? (selectedShipping.min_order_free && subtotal >= Number(selectedShipping.min_order_free) ? 0 : Number(selectedShipping.price)) : 0);
 
   let deliveryDiscount = 0;
   let appliedDeliveryOffer: any = null;
@@ -265,6 +274,10 @@ const CheckoutPage: React.FC = () => {
         shipping_method_id: selectedShipping?.id,
         buy_now_item: isBuyNow ? cartState.buyNowItem : null,
         transaction_id: mfsProofData?.transactionId || null,
+        preferred_courier: courierProvider,
+        hub_pickup: hubPickup,
+        pickup_hub_id: hubPickup ? selectedHubId : null,
+        shipping_fee_override: courierFee,
       },
     });
 
@@ -474,7 +487,20 @@ const CheckoutPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* Order Notes */}
+                {/* Courier selection */}
+                <div className="glass-strong rounded-3xl p-5">
+                  <CourierSelector
+                    city={address.city}
+                    weight={1}
+                    selectedProvider={courierProvider}
+                    onProviderChange={setCourierProvider}
+                    hubPickup={hubPickup}
+                    onHubPickupChange={setHubPickup}
+                    selectedHubId={selectedHubId}
+                    onHubChange={setSelectedHubId}
+                    onFeeChange={setCourierFee}
+                  />
+                </div>
                 <div className="glass-strong rounded-3xl p-5 space-y-3">
                   <h3 className="text-sm font-medium text-foreground">Order Notes (optional)</h3>
                   <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Special instructions..." rows={2}

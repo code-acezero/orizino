@@ -56,6 +56,10 @@ Deno.serve(async (req) => {
       gift_message,
       shipping_method_id,
       buy_now_item,
+      preferred_courier,
+      hub_pickup,
+      pickup_hub_id,
+      shipping_fee_override,
     } = body as {
       shipping_address: Record<string, string>;
       notes?: string;
@@ -66,6 +70,10 @@ Deno.serve(async (req) => {
       gift_message?: string;
       shipping_method_id?: string;
       buy_now_item?: BuyNowItem | null;
+      preferred_courier?: string | null;
+      hub_pickup?: boolean;
+      pickup_hub_id?: string | null;
+      shipping_fee_override?: number | null;
     };
 
     if (!shipping_address?.full_name || !shipping_address?.phone || !shipping_address?.street || !shipping_address?.city) {
@@ -251,7 +259,9 @@ Deno.serve(async (req) => {
     }
 
     let shippingFee = 0;
-    if (shipping_method_id) {
+    if (typeof shipping_fee_override === "number" && shipping_fee_override >= 0) {
+      shippingFee = shipping_fee_override;
+    } else if (shipping_method_id) {
       const { data: method } = await supabase
         .from("shipping_methods")
         .select("*")
@@ -296,6 +306,9 @@ Deno.serve(async (req) => {
         shipping_method_id: shipping_method_id || null,
         gift_wrap: gift_wrap || false,
         gift_message: gift_message || null,
+        preferred_courier: preferred_courier || null,
+        hub_pickup: hub_pickup || false,
+        pickup_hub_id: pickup_hub_id || null,
       })
       .select("id, order_number")
       .single();
