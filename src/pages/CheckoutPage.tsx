@@ -274,6 +274,10 @@ const CheckoutPage: React.FC = () => {
         shipping_method_id: selectedShipping?.id,
         buy_now_item: isBuyNow ? cartState.buyNowItem : null,
         transaction_id: mfsProofData?.transactionId || null,
+        preferred_courier: courierProvider,
+        hub_pickup: hubPickup,
+        pickup_hub_id: hubPickup ? selectedHubId : null,
+        shipping_fee_override: courierFee,
       },
     });
 
