@@ -23,6 +23,7 @@ import {
   Globe,
   Smartphone,
   Phone,
+  Building2,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -63,6 +64,7 @@ const commerceItems: MenuItem[] = [
   { title: "User Promos", url: "/origin/user-promos", icon: Gift, adminOnly: true },
   { title: "Shipping", url: "/origin/shipping", icon: Truck, adminOnly: true },
   { title: "Couriers", url: "/origin/couriers", icon: Truck, adminOnly: true },
+  { title: "Hubs & Pricing", url: "/origin/courier-management", icon: Building2, adminOnly: true },
   { title: "Delivery Offers", url: "/origin/delivery-offers", icon: Percent },
   { title: "Payment Gateways", url: "/origin/payment-gateways", icon: Key, adminOnly: true },
   { title: "Returns", url: "/origin/returns", icon: Package },
