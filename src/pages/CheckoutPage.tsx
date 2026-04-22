@@ -44,6 +44,10 @@ const CheckoutPage: React.FC = () => {
   const [step, setStep] = useState(1);
   const [mfsProofData, setMfsProofData] = useState<{ screenshotUrl: string; transactionId: string } | null>(null);
   const [orderSuccess, setOrderSuccess] = useState<string | null>(null);
+  const [courierProvider, setCourierProvider] = useState<CourierProvider>("pathao");
+  const [hubPickup, setHubPickup] = useState(false);
+  const [selectedHubId, setSelectedHubId] = useState<string | null>(null);
+  const [courierFee, setCourierFee] = useState<number | null>(null);
 
   // Fetch payment gateway config
   const { data: paymentConfig } = useQuery({
