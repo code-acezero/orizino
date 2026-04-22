@@ -487,7 +487,20 @@ const CheckoutPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* Order Notes */}
+                {/* Courier selection */}
+                <div className="glass-strong rounded-3xl p-5">
+                  <CourierSelector
+                    city={address.city}
+                    weight={1}
+                    selectedProvider={courierProvider}
+                    onProviderChange={setCourierProvider}
+                    hubPickup={hubPickup}
+                    onHubPickupChange={setHubPickup}
+                    selectedHubId={selectedHubId}
+                    onHubChange={setSelectedHubId}
+                    onFeeChange={setCourierFee}
+                  />
+                </div>
                 <div className="glass-strong rounded-3xl p-5 space-y-3">
                   <h3 className="text-sm font-medium text-foreground">Order Notes (optional)</h3>
                   <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Special instructions..." rows={2}
