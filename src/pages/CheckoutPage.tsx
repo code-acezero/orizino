@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import MFSPaymentProof from "@/components/checkout/MFSPaymentProof";
 import CourierSelector from "@/components/checkout/CourierSelector";
 import type { CourierProvider } from "@/hooks/use-courier-pricing";
+import { useUserAddresses } from "@/hooks/use-user-addresses";
 
 const MFS_METHODS = ["bkash", "nagad", "upay", "rocket"];
 
