@@ -101,43 +101,54 @@ const CheckoutPage: React.FC = () => {
   const isMFSMethod = MFS_METHODS.includes(paymentMethod);
   const mfsAccountInfo = paymentConfig?.[`personal_${paymentMethod}`] as any;
 
-  // Load saved addresses and profile
+  // Load saved addresses from relational table
+  const { data: userAddresses = [] } = useUserAddresses();
+
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("full_name, phone, address, preferences").eq("id", user.id).single().then(({ data }) => {
+    supabase.from("profiles").select("full_name, phone, address").eq("id", user.id).single().then(({ data }) => {
       if (data) {
-        const prefs = (data.preferences as Record<string, any>) || {};
-        if (prefs.addresses && prefs.addresses.length > 0) {
-          setSavedAddresses(prefs.addresses);
-          const defaultAddr = prefs.addresses.find((a: any) => a.isDefault) || prefs.addresses[0];
-          if (defaultAddr) {
-            setSelectedSavedAddress(defaultAddr.id);
-            setAddress({
-              full_name: defaultAddr.name || data.full_name || "",
-              phone: defaultAddr.phone || data.phone || "",
-              street: defaultAddr.street || "",
-              city: defaultAddr.city || "",
-              state: defaultAddr.state || "",
-              zip: defaultAddr.zip || "",
-              country: defaultAddr.country || "Bangladesh",
-            });
-            setShowAddressForm(false);
-          }
-        } else {
-          const addr = (data.address as Record<string, string>) || {};
-          setAddress({
-            full_name: data.full_name || "",
-            phone: data.phone || "",
-            street: addr.street || "",
-            city: addr.city || "",
-            state: addr.state || "",
-            zip: addr.zip || "",
-            country: addr.country || "Bangladesh",
-          });
-        }
+        setAddress((prev) => ({
+          ...prev,
+          full_name: prev.full_name || data.full_name || "",
+          phone: prev.phone || data.phone || "",
+        }));
       }
     });
   }, [user]);
+
+  // When saved addresses load, auto-select default
+  useEffect(() => {
+    if (userAddresses.length === 0 || selectedSavedAddress) return;
+    const mapped = userAddresses.map((a) => ({
+      id: a.id,
+      label: a.label,
+      type: a.address_type,
+      name: a.full_name,
+      phone: a.phone,
+      street: [a.address_line1, a.address_line2].filter(Boolean).join(", "),
+      city: a.city,
+      state: a.area || "",
+      zip: a.postal_code || "",
+      country: a.country,
+      isDefault: a.is_default,
+    }));
+    setSavedAddresses(mapped);
+    const def = mapped.find((a) => a.isDefault) || mapped[0];
+    if (def) {
+      setSelectedSavedAddress(def.id);
+      setAddress({
+        full_name: def.name,
+        phone: def.phone,
+        street: def.street,
+        city: def.city,
+        state: def.state,
+        zip: def.zip,
+        country: def.country,
+      });
+      setShowAddressForm(false);
+    }
+  }, [userAddresses, selectedSavedAddress]);
 
   const selectSavedAddress = (addr: any) => {
     setSelectedSavedAddress(addr.id);
