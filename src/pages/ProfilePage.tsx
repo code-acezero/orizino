@@ -371,48 +371,7 @@ const ProfilePage: React.FC = () => {
             )}
 
             {/* Addresses Tab */}
-            {activeTab === "addresses" && (
-              <motion.div key="addresses" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold font-display text-foreground">My Addresses</h2>
-                  <Button size="sm" onClick={openAddAddress} className="rounded-xl gap-1.5"><Plus className="w-4 h-4" /> Add Address</Button>
-                </div>
-                {addresses.length === 0 && (
-                  <div className="glass-strong rounded-3xl p-10 text-center">
-                    <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-muted-foreground mb-3">No addresses saved yet</p>
-                    <Button onClick={openAddAddress} variant="outline" className="rounded-xl gap-1.5"><Plus className="w-4 h-4" /> Add Your First Address</Button>
-                  </div>
-                )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {addresses.map((addr) => {
-                    const TypeIcon = addressTypeIcons[addr.type];
-                    return (
-                      <div key={addr.id} className={`glass rounded-2xl p-5 relative transition-all ${addr.isDefault ? "border-primary/50 ring-1 ring-primary/20" : "hover:border-primary/20"}`}>
-                        {addr.isDefault && <Badge className="absolute top-3 right-3 text-[10px]">Default</Badge>}
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-                            <TypeIcon className="w-4 h-4 text-primary" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold text-foreground">{addr.label || addr.type.charAt(0).toUpperCase() + addr.type.slice(1)}</p>
-                            <p className="text-xs text-muted-foreground">{addr.name}</p>
-                          </div>
-                        </div>
-                        <p className="text-sm text-muted-foreground leading-relaxed">{addr.street}, {addr.city}, {addr.state} {addr.zip}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{addr.country}</p>
-                        {addr.phone && <p className="text-xs text-muted-foreground mt-1">📞 {addr.phone}</p>}
-                        <div className="flex gap-2 mt-4 pt-3 border-t border-border">
-                          <Button size="sm" variant="ghost" onClick={() => openEditAddress(addr)} className="rounded-lg text-xs h-8 gap-1"><Edit3 className="w-3 h-3" /> Edit</Button>
-                          {!addr.isDefault && <Button size="sm" variant="ghost" onClick={() => setDefaultAddress(addr.id)} className="rounded-lg text-xs h-8 gap-1"><CheckCircle2 className="w-3 h-3" /> Set Default</Button>}
-                          <Button size="sm" variant="ghost" onClick={() => deleteAddress(addr.id)} className="rounded-lg text-xs h-8 gap-1 text-destructive hover:text-destructive"><Trash2 className="w-3 h-3" /> Delete</Button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            )}
+            {activeTab === "addresses" && <AddressBookTab key="addresses" />}
 
             {/* Payments Tab */}
             {activeTab === "payments" && (
