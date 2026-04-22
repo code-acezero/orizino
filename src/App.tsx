@@ -54,6 +54,7 @@ const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
 const AdminShipping = lazy(() => import("./pages/admin/AdminShipping"));
 const AdminSupport = lazy(() => import("./pages/admin/AdminSupport"));
 const AdminCouriers = lazy(() => import("./pages/admin/AdminCouriers"));
+const AdminCourierManagement = lazy(() => import("./pages/admin/AdminCourierManagement"));
 const AdminAISettings = lazy(() => import("./pages/admin/AdminAISettings"));
 const AdminUserPromos = lazy(() => import("./pages/admin/AdminUserPromos"));
 const AdminDeliveryOffers = lazy(() => import("./pages/admin/AdminDeliveryOffers"));
@@ -172,6 +173,7 @@ const App = () => {
               <Route path="shipping" element={<Suspense fallback={<PageFallback />}><AdminShipping /></Suspense>} />
               <Route path="support" element={<Suspense fallback={<PageFallback />}><AdminSupport /></Suspense>} />
               <Route path="couriers" element={<Suspense fallback={<PageFallback />}><AdminCouriers /></Suspense>} />
+              <Route path="courier-management" element={<Suspense fallback={<PageFallback />}><AdminCourierManagement /></Suspense>} />
               <Route path="ai-settings" element={<Suspense fallback={<PageFallback />}><AdminAISettings /></Suspense>} />
               <Route path="user-promos" element={<Suspense fallback={<PageFallback />}><AdminUserPromos /></Suspense>} />
               <Route path="delivery-offers" element={<Suspense fallback={<PageFallback />}><AdminDeliveryOffers /></Suspense>} />
