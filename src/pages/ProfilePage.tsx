@@ -21,7 +21,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import RewardsTab from "@/components/profile/RewardsTab";
 import AddressBookTab from "@/components/profile/AddressBookTab";
+import PaymentMethodsTab from "@/components/profile/PaymentMethodsTab";
 import { useUserLoyalty, useLoyaltyTiers, computeTierProgress } from "@/hooks/use-loyalty";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Address {
   id: string;
