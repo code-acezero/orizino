@@ -547,58 +547,6 @@ const ProfilePage: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Payment Dialog */}
-      <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{editingPayment ? "Edit Payment Method" : "Add Payment Method"}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Type</Label>
-                <Select value={paymentForm.type} onValueChange={(v) => setPaymentForm({ ...paymentForm, type: v as PaymentMethod["type"] })}>
-                  <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="card">💳 Credit/Debit Card</SelectItem>
-                    <SelectItem value="bank">🏦 Bank Account</SelectItem>
-                    <SelectItem value="wallet">👛 Digital Wallet</SelectItem>
-                    <SelectItem value="cod">📦 Cash on Delivery</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Label</Label>
-                <Input value={paymentForm.label} onChange={(e) => setPaymentForm({ ...paymentForm, label: e.target.value })} placeholder="e.g. Visa Personal" className="rounded-xl" />
-              </div>
-            </div>
-            {paymentForm.type === "card" && (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label>Last 4 Digits</Label>
-                  <Input value={paymentForm.lastFour} onChange={(e) => setPaymentForm({ ...paymentForm, lastFour: e.target.value.replace(/\D/g, "").slice(0, 4) })} placeholder="1234" maxLength={4} className="rounded-xl" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Expiry Date</Label>
-                  <Input value={paymentForm.expiryDate} onChange={(e) => setPaymentForm({ ...paymentForm, expiryDate: e.target.value })} placeholder="MM/YY" className="rounded-xl" />
-                </div>
-              </div>
-            )}
-            <div className="space-y-1.5">
-              <Label>Additional Details</Label>
-              <Input value={paymentForm.details} onChange={(e) => setPaymentForm({ ...paymentForm, details: e.target.value })} placeholder="Any notes about this payment method" className="rounded-xl" />
-            </div>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={paymentForm.isDefault} onChange={(e) => setPaymentForm({ ...paymentForm, isDefault: e.target.checked })} className="rounded" />
-              <span className="text-sm text-foreground">Set as default payment method</span>
-            </label>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPaymentDialogOpen(false)} className="rounded-xl">Cancel</Button>
-            <Button onClick={savePayment} className="rounded-xl">{editingPayment ? "Save Changes" : "Add Method"}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
