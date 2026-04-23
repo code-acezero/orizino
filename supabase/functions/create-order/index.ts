@@ -339,6 +339,22 @@ Deno.serve(async (req) => {
       await supabase.from("cart_items").delete().eq("user_id", user.id);
     }
 
+    // Deduct redeemed points first (negative entry)
+    if (safePointsUsed > 0) {
+      try {
+        await supabase.rpc("award_loyalty_points", {
+          _user_id: user.id,
+          _points: -safePointsUsed,
+          _source: "redemption",
+          _reference_id: order.id,
+          _description: `Redeemed ${safePointsUsed} points on order ${order.order_number}`,
+          _spend_amount: 0,
+        });
+      } catch (e) {
+        console.error("loyalty redemption deduction failed (non-fatal)", e);
+      }
+    }
+
     // Award loyalty points (1 point per BDT spent on subtotal). Best-effort.
     try {
       const points = Math.floor(Number(subtotal) || 0);
