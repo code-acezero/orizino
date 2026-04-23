@@ -61,6 +61,7 @@ Deno.serve(async (req) => {
       pickup_hub_id,
       shipping_fee_override,
       loyalty_discount,
+      loyalty_points_used,
     } = body as {
       shipping_address: Record<string, string>;
       notes?: string;
@@ -76,6 +77,7 @@ Deno.serve(async (req) => {
       pickup_hub_id?: string | null;
       shipping_fee_override?: number | null;
       loyalty_discount?: number;
+      loyalty_points_used?: number;
     };
 
     if (!shipping_address?.full_name || !shipping_address?.phone || !shipping_address?.street || !shipping_address?.city) {
@@ -289,6 +291,7 @@ Deno.serve(async (req) => {
 
     const giftWrapFee = gift_wrap ? 50 : 0;
     const safeLoyaltyDiscount = Math.max(0, Number(loyalty_discount) || 0);
+    const safePointsUsed = Math.max(0, Math.floor(Number(loyalty_points_used) || 0));
     const total = Math.max(0, subtotal - validatedCouponDiscount - safeLoyaltyDiscount + shippingFee + giftWrapFee);
     const orderNumber = `ZM-${Date.now().toString(36).toUpperCase()}`;
 
@@ -313,6 +316,7 @@ Deno.serve(async (req) => {
         hub_pickup: hub_pickup || false,
         pickup_hub_id: pickup_hub_id || null,
         loyalty_discount: safeLoyaltyDiscount,
+        loyalty_points_used: safePointsUsed,
       })
       .select("id, order_number")
       .single();
@@ -333,6 +337,22 @@ Deno.serve(async (req) => {
 
     if (clearCartAfterOrder) {
       await supabase.from("cart_items").delete().eq("user_id", user.id);
+    }
+
+    // Deduct redeemed points first (negative entry)
+    if (safePointsUsed > 0) {
+      try {
+        await supabase.rpc("award_loyalty_points", {
+          _user_id: user.id,
+          _points: -safePointsUsed,
+          _source: "redemption",
+          _reference_id: order.id,
+          _description: `Redeemed ${safePointsUsed} points on order ${order.order_number}`,
+          _spend_amount: 0,
+        });
+      } catch (e) {
+        console.error("loyalty redemption deduction failed (non-fatal)", e);
+      }
     }
 
     // Award loyalty points (1 point per BDT spent on subtotal). Best-effort.

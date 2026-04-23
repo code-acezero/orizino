@@ -21,7 +21,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import RewardsTab from "@/components/profile/RewardsTab";
 import AddressBookTab from "@/components/profile/AddressBookTab";
+import PaymentMethodsTab from "@/components/profile/PaymentMethodsTab";
 import { useUserLoyalty, useLoyaltyTiers, computeTierProgress } from "@/hooks/use-loyalty";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Address {
   id: string;
@@ -229,13 +231,14 @@ const ProfilePage: React.FC = () => {
     cancelled: "bg-red-500/20 text-red-400",
   };
 
+  const { t } = useLanguage();
   const tabs = [
-    { id: "profile", icon: User, label: "Profile" },
+    { id: "profile", icon: User, label: t("profile.personalInfo") },
     { id: "rewards", icon: Award, label: "Rewards" },
-    { id: "addresses", icon: MapPin, label: "Addresses" },
-    { id: "payments", icon: CreditCard, label: "Payments" },
-    { id: "orders", icon: Package, label: "Orders" },
-    { id: "reviews", icon: Star, label: "Reviews" },
+    { id: "addresses", icon: MapPin, label: t("profile.addresses") },
+    { id: "payments", icon: CreditCard, label: t("profile.payments") },
+    { id: "orders", icon: Package, label: t("profile.myOrders") },
+    { id: "reviews", icon: Star, label: t("profile.reviews") },
     { id: "notifications", icon: Bell, label: "Alerts" },
   ];
 
@@ -391,47 +394,7 @@ const ProfilePage: React.FC = () => {
             {activeTab === "addresses" && <AddressBookTab key="addresses" />}
 
             {/* Payments Tab */}
-            {activeTab === "payments" && (
-              <motion.div key="payments" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold font-display text-foreground">Payment Methods</h2>
-                  <Button size="sm" onClick={openAddPayment} className="rounded-xl gap-1.5"><Plus className="w-4 h-4" /> Add Method</Button>
-                </div>
-                {paymentMethods.length === 0 && (
-                  <div className="glass-strong rounded-3xl p-10 text-center">
-                    <CreditCard className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-muted-foreground mb-3">No payment methods saved</p>
-                    <Button onClick={openAddPayment} variant="outline" className="rounded-xl gap-1.5"><Plus className="w-4 h-4" /> Add Payment Method</Button>
-                  </div>
-                )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {paymentMethods.map((pm) => (
-                    <div key={pm.id} className={`glass rounded-2xl p-5 relative transition-all ${pm.isDefault ? "border-primary/50 ring-1 ring-primary/20" : "hover:border-primary/20"}`}>
-                      {pm.isDefault && <Badge className="absolute top-3 right-3 text-[10px]">Default</Badge>}
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                          {pm.type === "card" ? <CreditCard className="w-5 h-5 text-primary" /> :
-                           pm.type === "bank" ? <Building2 className="w-5 h-5 text-primary" /> :
-                           pm.type === "wallet" ? <Wallet className="w-5 h-5 text-primary" /> :
-                           <Package className="w-5 h-5 text-primary" />}
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">{pm.label || pm.type.toUpperCase()}</p>
-                          {pm.lastFour && <p className="text-xs text-muted-foreground">•••• {pm.lastFour}</p>}
-                          {pm.expiryDate && <p className="text-xs text-muted-foreground">Expires {pm.expiryDate}</p>}
-                        </div>
-                      </div>
-                      {pm.details && <p className="text-xs text-muted-foreground">{pm.details}</p>}
-                      <div className="flex gap-2 mt-4 pt-3 border-t border-border">
-                        <Button size="sm" variant="ghost" onClick={() => openEditPayment(pm)} className="rounded-lg text-xs h-8 gap-1"><Edit3 className="w-3 h-3" /> Edit</Button>
-                        {!pm.isDefault && <Button size="sm" variant="ghost" onClick={() => setDefaultPayment(pm.id)} className="rounded-lg text-xs h-8 gap-1"><CheckCircle2 className="w-3 h-3" /> Set Default</Button>}
-                        <Button size="sm" variant="ghost" onClick={() => deletePayment(pm.id)} className="rounded-lg text-xs h-8 gap-1 text-destructive hover:text-destructive"><Trash2 className="w-3 h-3" /> Delete</Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
+            {activeTab === "payments" && <PaymentMethodsTab key="payments" />}
 
             {/* Orders Tab */}
             {activeTab === "orders" && (
@@ -584,58 +547,6 @@ const ProfilePage: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Payment Dialog */}
-      <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{editingPayment ? "Edit Payment Method" : "Add Payment Method"}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Type</Label>
-                <Select value={paymentForm.type} onValueChange={(v) => setPaymentForm({ ...paymentForm, type: v as PaymentMethod["type"] })}>
-                  <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="card">💳 Credit/Debit Card</SelectItem>
-                    <SelectItem value="bank">🏦 Bank Account</SelectItem>
-                    <SelectItem value="wallet">👛 Digital Wallet</SelectItem>
-                    <SelectItem value="cod">📦 Cash on Delivery</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Label</Label>
-                <Input value={paymentForm.label} onChange={(e) => setPaymentForm({ ...paymentForm, label: e.target.value })} placeholder="e.g. Visa Personal" className="rounded-xl" />
-              </div>
-            </div>
-            {paymentForm.type === "card" && (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label>Last 4 Digits</Label>
-                  <Input value={paymentForm.lastFour} onChange={(e) => setPaymentForm({ ...paymentForm, lastFour: e.target.value.replace(/\D/g, "").slice(0, 4) })} placeholder="1234" maxLength={4} className="rounded-xl" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Expiry Date</Label>
-                  <Input value={paymentForm.expiryDate} onChange={(e) => setPaymentForm({ ...paymentForm, expiryDate: e.target.value })} placeholder="MM/YY" className="rounded-xl" />
-                </div>
-              </div>
-            )}
-            <div className="space-y-1.5">
-              <Label>Additional Details</Label>
-              <Input value={paymentForm.details} onChange={(e) => setPaymentForm({ ...paymentForm, details: e.target.value })} placeholder="Any notes about this payment method" className="rounded-xl" />
-            </div>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={paymentForm.isDefault} onChange={(e) => setPaymentForm({ ...paymentForm, isDefault: e.target.checked })} className="rounded" />
-              <span className="text-sm text-foreground">Set as default payment method</span>
-            </label>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPaymentDialogOpen(false)} className="rounded-xl">Cancel</Button>
-            <Button onClick={savePayment} className="rounded-xl">{editingPayment ? "Save Changes" : "Add Method"}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

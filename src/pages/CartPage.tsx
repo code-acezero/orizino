@@ -9,6 +9,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "@/lib/app-toast";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ const CartPage: React.FC = () => {
   useSeoMeta("cart", "Cart | Store");
   const { user } = useAuth();
   const { formatPrice, currency, setCurrency, enabledCurrencies, config } = useCurrency();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
 
   const [couponCode, setCouponCode] = useState("");
@@ -154,9 +156,9 @@ const CartPage: React.FC = () => {
       <div className="min-h-screen pb-20 lg:pb-0">
           <div className="container mx-auto px-4 py-20 text-center">
           <ShoppingBag className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-          <h1 className="text-2xl font-bold font-display text-foreground mb-2">Your Cart</h1>
+          <h1 className="text-2xl font-bold font-display text-foreground mb-2">{t("nav.cart")}</h1>
           <p className="text-muted-foreground mb-6">Please sign in to view your cart</p>
-          <Link to="/auth" className="btn-pill bg-gradient-primary text-primary-foreground font-semibold px-8 py-3 inline-flex items-center gap-2">Sign In <ArrowRight className="w-4 h-4" /></Link>
+          <Link to="/auth" className="btn-pill bg-gradient-primary text-primary-foreground font-semibold px-8 py-3 inline-flex items-center gap-2">{t("nav.signIn")} <ArrowRight className="w-4 h-4" /></Link>
         </div>
       </div>
     );
@@ -187,8 +189,8 @@ const CartPage: React.FC = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold font-display text-foreground">Shopping Cart</h1>
-            <p className="text-sm text-muted-foreground mt-1">{itemCount} item{itemCount !== 1 ? "s" : ""} in your cart</p>
+            <h1 className="text-3xl font-bold font-display text-foreground">{t("nav.cart")}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{itemCount} item{itemCount !== 1 ? "s" : ""}</p>
           </div>
         </div>
 
@@ -197,8 +199,8 @@ const CartPage: React.FC = () => {
         ) : !cartItems || cartItems.length === 0 ? (
           <div className="text-center py-20">
             <ShoppingBag className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <p className="text-lg text-muted-foreground">Your cart is empty</p>
-            <Link to="/shop" className="btn-pill bg-gradient-primary text-primary-foreground font-semibold px-8 py-3 mt-6 inline-flex items-center gap-2">Start Shopping <ArrowRight className="w-4 h-4" /></Link>
+            <p className="text-lg text-muted-foreground">{t("cart.empty")}</p>
+            <Link to="/shop" className="btn-pill bg-gradient-primary text-primary-foreground font-semibold px-8 py-3 mt-6 inline-flex items-center gap-2">{t("cart.continueShopping")} <ArrowRight className="w-4 h-4" /></Link>
           </div>
         ) : (
           <div className="grid lg:grid-cols-3 gap-8">
@@ -369,14 +371,14 @@ const CartPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Subtotal ({itemCount} items)</span><span className="text-foreground">{formatPrice(subtotal)}</span></div>
-                  {couponDiscount > 0 && <div className="flex justify-between text-green-500"><span>Coupon Discount</span><span>-{formatPrice(couponDiscount)}</span></div>}
-                  <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span className="text-foreground">{shippingFee === 0 ? <Badge variant="secondary" className="text-[10px]">Free</Badge> : formatPrice(shippingFee)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("checkout.subtotal")} ({itemCount})</span><span className="text-foreground">{formatPrice(subtotal)}</span></div>
+                  {couponDiscount > 0 && <div className="flex justify-between text-green-500"><span>{t("checkout.discount")}</span><span>-{formatPrice(couponDiscount)}</span></div>}
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("checkout.shipping")}</span><span className="text-foreground">{shippingFee === 0 ? <Badge variant="secondary" className="text-[10px]">Free</Badge> : formatPrice(shippingFee)}</span></div>
                   {giftWrap && <div className="flex justify-between"><span className="text-muted-foreground">Gift Wrap</span><span className="text-foreground">{formatPrice(giftWrapFee)}</span></div>}
                 </div>
 
                 <div className="border-t border-border pt-4 flex justify-between font-bold text-foreground text-lg">
-                  <span>Total</span><span>{formatPrice(total)}</span>
+                  <span>{t("checkout.orderTotal")}</span><span>{formatPrice(total)}</span>
                 </div>
 
                 {/* Currency converter */}
