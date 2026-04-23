@@ -312,6 +312,7 @@ const CheckoutPage: React.FC = () => {
         pickup_hub_id: hubPickup ? selectedHubId : null,
         shipping_fee_override: courierFee,
         loyalty_discount: loyaltyDiscount,
+        loyalty_points_used: safePointsRedeemed,
       },
     });
 
@@ -540,6 +541,45 @@ const CheckoutPage: React.FC = () => {
                   <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Special instructions..." rows={2}
                     className="w-full px-4 py-3 rounded-2xl bg-secondary/50 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none text-sm" />
                 </div>
+
+                {/* Loyalty Points Redemption */}
+                {pointsBalance > 0 && maxRedeemable > 0 && (
+                  <div className="glass-strong rounded-3xl p-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
+                        <Award className="w-5 h-5 text-amber-500" /> Redeem Points
+                      </h3>
+                      <Badge variant="secondary" className="text-[10px]">
+                        Balance: {pointsBalance.toLocaleString()}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">1 point = {formatPrice(1)}. You can redeem up to {maxRedeemable.toLocaleString()} points.</p>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min={0}
+                        max={maxRedeemable}
+                        value={pointsToRedeem || ""}
+                        onChange={(e) => setPointsToRedeem(Math.min(maxRedeemable, Math.max(0, parseInt(e.target.value || "0", 10))))}
+                        placeholder="0"
+                        className="rounded-xl flex-1"
+                      />
+                      <Button type="button" size="sm" variant="outline" onClick={() => setPointsToRedeem(maxRedeemable)} className="rounded-xl">
+                        Max
+                      </Button>
+                      {pointsToRedeem > 0 && (
+                        <Button type="button" size="sm" variant="ghost" onClick={() => setPointsToRedeem(0)} className="rounded-xl">
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+                    {safePointsRedeemed > 0 && (
+                      <p className="text-xs text-amber-500">
+                        Saving {formatPrice(pointsDiscount)} with {safePointsRedeemed.toLocaleString()} points
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div className="flex gap-3">
                   <Button type="button" variant="outline" onClick={() => setStep(1)} className="flex-1 rounded-xl h-12">Back</Button>
