@@ -51,6 +51,7 @@ const CheckoutPage: React.FC = () => {
   const [hubPickup, setHubPickup] = useState(false);
   const [selectedHubId, setSelectedHubId] = useState<string | null>(null);
   const [courierFee, setCourierFee] = useState<number | null>(null);
+  const [pointsToRedeem, setPointsToRedeem] = useState(0);
 
   // Fetch payment gateway config
   const { data: paymentConfig } = useQuery({
@@ -264,7 +265,17 @@ const CheckoutPage: React.FC = () => {
   const { data: loyaltyTiers } = useLoyaltyTiers();
   const tierInfo = computeTierProgress(userLoyalty, loyaltyTiers);
   const tierDiscountPct = Number(tierInfo?.current?.discount_percentage || 0);
-  const loyaltyDiscount = tierDiscountPct > 0 ? (subtotal - couponDiscount) * (tierDiscountPct / 100) : 0;
+  const tierDiscount = tierDiscountPct > 0 ? (subtotal - couponDiscount) * (tierDiscountPct / 100) : 0;
+
+  // Loyalty points redemption (1 point = 1 BDT)
+  const pointsBalance = Number(userLoyalty?.points_balance || 0);
+  const maxRedeemable = Math.min(
+    pointsBalance,
+    Math.max(0, Math.floor(subtotal - couponDiscount - tierDiscount))
+  );
+  const safePointsRedeemed = Math.min(Math.max(0, Math.floor(pointsToRedeem)), maxRedeemable);
+  const pointsDiscount = safePointsRedeemed;
+  const loyaltyDiscount = tierDiscount + pointsDiscount;
 
   const total = Math.max(0, subtotal - couponDiscount - loyaltyDiscount + shippingFee + giftWrapFee);
 
