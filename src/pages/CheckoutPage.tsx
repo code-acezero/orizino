@@ -19,6 +19,8 @@ import MFSPaymentProof from "@/components/checkout/MFSPaymentProof";
 import CourierSelector from "@/components/checkout/CourierSelector";
 import type { CourierProvider } from "@/hooks/use-courier-pricing";
 import { useUserAddresses } from "@/hooks/use-user-addresses";
+import { useUserLoyalty, useLoyaltyTiers, computeTierProgress } from "@/hooks/use-loyalty";
+import { Award } from "lucide-react";
 
 const MFS_METHODS = ["bkash", "nagad", "upay", "rocket"];
 
@@ -256,7 +258,15 @@ const CheckoutPage: React.FC = () => {
 
   const shippingFee = Math.max(0, baseShippingFee - deliveryDiscount);
   const giftWrapFee = giftWrap ? 50 : 0;
-  const total = Math.max(0, subtotal - couponDiscount + shippingFee + giftWrapFee);
+
+  // Loyalty tier auto-discount
+  const { data: userLoyalty } = useUserLoyalty();
+  const { data: loyaltyTiers } = useLoyaltyTiers();
+  const tierInfo = computeTierProgress(userLoyalty, loyaltyTiers);
+  const tierDiscountPct = Number(tierInfo?.current?.discount_percentage || 0);
+  const loyaltyDiscount = tierDiscountPct > 0 ? (subtotal - couponDiscount) * (tierDiscountPct / 100) : 0;
+
+  const total = Math.max(0, subtotal - couponDiscount - loyaltyDiscount + shippingFee + giftWrapFee);
 
   const canProceedToReview = () => {
     if (isMFSMethod && !mfsProofData) return false;
@@ -620,6 +630,12 @@ const CheckoutPage: React.FC = () => {
                   <div className="flex justify-between text-green-500">
                     <span className="flex items-center gap-1 text-xs"><Truck className="w-3 h-3" /> {appliedDeliveryOffer?.title || "Delivery Offer"}</span>
                     <span>-{formatPrice(deliveryDiscount)}</span>
+                  </div>
+                )}
+                {loyaltyDiscount > 0 && (
+                  <div className="flex justify-between text-amber-500">
+                    <span className="flex items-center gap-1 text-xs"><Award className="w-3 h-3" /> {tierInfo?.current.name} Tier ({tierDiscountPct}%)</span>
+                    <span>-{formatPrice(loyaltyDiscount)}</span>
                   </div>
                 )}
                 {giftWrap && <div className="flex justify-between"><span className="text-muted-foreground">Gift Wrap</span><span className="text-foreground">{formatPrice(giftWrapFee)}</span></div>}
