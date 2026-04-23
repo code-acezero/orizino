@@ -241,6 +241,9 @@ const ProfilePage: React.FC = () => {
 
   const unreadCount = notifications?.filter((n) => !n.is_read).length || 0;
   const memberSince = user?.created_at ? new Date(user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "";
+  const { data: userLoyalty } = useUserLoyalty();
+  const { data: loyaltyTiers } = useLoyaltyTiers();
+  const tierInfo = computeTierProgress(userLoyalty, loyaltyTiers);
 
   return (
     <div className="min-h-screen pb-20 lg:pb-0">
