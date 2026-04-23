@@ -300,6 +300,7 @@ const CheckoutPage: React.FC = () => {
         hub_pickup: hubPickup,
         pickup_hub_id: hubPickup ? selectedHubId : null,
         shipping_fee_override: courierFee,
+        loyalty_discount: loyaltyDiscount,
       },
     });
 
