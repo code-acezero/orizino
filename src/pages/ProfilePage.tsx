@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import RewardsTab from "@/components/profile/RewardsTab";
 import AddressBookTab from "@/components/profile/AddressBookTab";
+import { useUserLoyalty, useLoyaltyTiers, computeTierProgress } from "@/hooks/use-loyalty";
 
 interface Address {
   id: string;
@@ -240,6 +241,9 @@ const ProfilePage: React.FC = () => {
 
   const unreadCount = notifications?.filter((n) => !n.is_read).length || 0;
   const memberSince = user?.created_at ? new Date(user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "";
+  const { data: userLoyalty } = useUserLoyalty();
+  const { data: loyaltyTiers } = useLoyaltyTiers();
+  const tierInfo = computeTierProgress(userLoyalty, loyaltyTiers);
 
   return (
     <div className="min-h-screen pb-20 lg:pb-0">
@@ -283,6 +287,19 @@ const ProfilePage: React.FC = () => {
                 <div className="flex items-center gap-3 justify-center sm:justify-start mt-2 flex-wrap">
                   <Badge variant="secondary" className="text-xs gap-1"><Calendar className="w-3 h-3" /> Member since {memberSince}</Badge>
                   <Badge variant="secondary" className="text-xs gap-1"><Shield className="w-3 h-3" /> Verified</Badge>
+                  {tierInfo && (
+                    <button
+                      onClick={() => setActiveTab("rewards")}
+                      className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-md font-semibold transition-transform hover:scale-105"
+                      style={{
+                        background: `${tierInfo.current.badge_color}33`,
+                        color: tierInfo.current.badge_color,
+                        border: `1px solid ${tierInfo.current.badge_color}66`,
+                      }}
+                    >
+                      <Award className="w-3 h-3" /> {tierInfo.current.name}
+                    </button>
+                  )}
                 </div>
               </div>
               <div className="flex gap-2 flex-shrink-0">

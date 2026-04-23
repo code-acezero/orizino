@@ -60,6 +60,7 @@ Deno.serve(async (req) => {
       hub_pickup,
       pickup_hub_id,
       shipping_fee_override,
+      loyalty_discount,
     } = body as {
       shipping_address: Record<string, string>;
       notes?: string;
@@ -74,6 +75,7 @@ Deno.serve(async (req) => {
       hub_pickup?: boolean;
       pickup_hub_id?: string | null;
       shipping_fee_override?: number | null;
+      loyalty_discount?: number;
     };
 
     if (!shipping_address?.full_name || !shipping_address?.phone || !shipping_address?.street || !shipping_address?.city) {
@@ -286,7 +288,8 @@ Deno.serve(async (req) => {
     }
 
     const giftWrapFee = gift_wrap ? 50 : 0;
-    const total = Math.max(0, subtotal - validatedCouponDiscount + shippingFee + giftWrapFee);
+    const safeLoyaltyDiscount = Math.max(0, Number(loyalty_discount) || 0);
+    const total = Math.max(0, subtotal - validatedCouponDiscount - safeLoyaltyDiscount + shippingFee + giftWrapFee);
     const orderNumber = `ZM-${Date.now().toString(36).toUpperCase()}`;
 
     const { data: order, error: orderError } = await supabase
@@ -309,6 +312,7 @@ Deno.serve(async (req) => {
         preferred_courier: preferred_courier || null,
         hub_pickup: hub_pickup || false,
         pickup_hub_id: pickup_hub_id || null,
+        loyalty_discount: safeLoyaltyDiscount,
       })
       .select("id, order_number")
       .single();
