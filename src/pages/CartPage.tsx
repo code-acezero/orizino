@@ -9,6 +9,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "@/lib/app-toast";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ const CartPage: React.FC = () => {
   useSeoMeta("cart", "Cart | Store");
   const { user } = useAuth();
   const { formatPrice, currency, setCurrency, enabledCurrencies, config } = useCurrency();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
 
   const [couponCode, setCouponCode] = useState("");
