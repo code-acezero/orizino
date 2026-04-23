@@ -684,10 +684,16 @@ const CheckoutPage: React.FC = () => {
                     <span>-{formatPrice(deliveryDiscount)}</span>
                   </div>
                 )}
-                {loyaltyDiscount > 0 && (
+                {tierDiscount > 0 && (
                   <div className="flex justify-between text-amber-500">
                     <span className="flex items-center gap-1 text-xs"><Award className="w-3 h-3" /> {tierInfo?.current.name} Tier ({tierDiscountPct}%)</span>
-                    <span>-{formatPrice(loyaltyDiscount)}</span>
+                    <span>-{formatPrice(tierDiscount)}</span>
+                  </div>
+                )}
+                {pointsDiscount > 0 && (
+                  <div className="flex justify-between text-amber-500">
+                    <span className="flex items-center gap-1 text-xs"><Award className="w-3 h-3" /> Points ({safePointsRedeemed.toLocaleString()})</span>
+                    <span>-{formatPrice(pointsDiscount)}</span>
                   </div>
                 )}
                 {giftWrap && <div className="flex justify-between"><span className="text-muted-foreground">Gift Wrap</span><span className="text-foreground">{formatPrice(giftWrapFee)}</span></div>}
