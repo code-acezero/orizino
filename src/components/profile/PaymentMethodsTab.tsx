@@ -22,13 +22,13 @@ interface PaymentMethodRow {
 }
 
 const PROVIDERS = [
-  { id: "bkash", label: "bKash", icon: Smartphone, color: "text-pink-500" },
-  { id: "nagad", label: "Nagad", icon: Smartphone, color: "text-orange-500" },
-  { id: "upay", label: "Upay", icon: Smartphone, color: "text-blue-500" },
-  { id: "rocket", label: "Rocket", icon: Smartphone, color: "text-purple-500" },
-  { id: "card", label: "Card", icon: CreditCard, color: "text-primary" },
-  { id: "bank", label: "Bank Account", icon: Building2, color: "text-emerald-500" },
-  { id: "wallet", label: "Wallet", icon: Wallet, color: "text-amber-500" },
+  { id: "bkash", label: "bKash", icon: Smartphone, color: "text-pink-500", numericOnly: true, minLen: 11, maxLen: 11 },
+  { id: "nagad", label: "Nagad", icon: Smartphone, color: "text-orange-500", numericOnly: true, minLen: 11, maxLen: 11 },
+  { id: "upay", label: "Upay", icon: Smartphone, color: "text-blue-500", numericOnly: true, minLen: 11, maxLen: 11 },
+  { id: "rocket", label: "Rocket", icon: Smartphone, color: "text-purple-500", numericOnly: true, minLen: 11, maxLen: 12 },
+  { id: "card", label: "Card", icon: CreditCard, color: "text-primary", numericOnly: true, minLen: 13, maxLen: 19 },
+  { id: "bank", label: "Bank Account", icon: Building2, color: "text-emerald-500", numericOnly: true, minLen: 6, maxLen: 20 },
+  { id: "wallet", label: "Wallet", icon: Wallet, color: "text-amber-500", numericOnly: false, minLen: 3, maxLen: 64 },
 ];
 
 const PaymentMethodsTab: React.FC = () => {
@@ -83,16 +83,33 @@ const PaymentMethodsTab: React.FC = () => {
 
   const handleSave = async () => {
     if (!user) return;
-    if (!label.trim()) { toast({ title: "Label is required", variant: "destructive" }); return; }
+    if (!label.trim()) { toast({ title: t("payment.labelRequired"), variant: "destructive" }); return; }
+
+    const def = PROVIDERS.find((p) => p.id === provider) || PROVIDERS[0];
+    const trimmed = accountNumber.replace(/\s+/g, "");
+    if (trimmed) {
+      if (def.numericOnly && !/^\d+$/.test(trimmed)) {
+        toast({ title: t("payment.numberDigitsOnly"), variant: "destructive" });
+        return;
+      }
+      if (trimmed.length < def.minLen || trimmed.length > def.maxLen) {
+        toast({ title: t("payment.numberLength"), description: `${def.label}: ${def.minLen}-${def.maxLen} chars`, variant: "destructive" });
+        return;
+      }
+    } else {
+      // require account number for known providers
+      toast({ title: t("payment.invalidNumber"), variant: "destructive" });
+      return;
+    }
+
     const payload = {
       user_id: user.id,
       provider,
-      account_label: label.trim(),
-      account_number_masked: maskAccount(accountNumber),
+      account_label: label.trim().slice(0, 100),
+      account_number_masked: maskAccount(trimmed),
       is_default: isDefault,
     };
     if (isDefault) {
-      // unset previous defaults
       await supabase.from("user_payment_methods" as any).update({ is_default: false }).eq("user_id", user.id);
     }
     if (editing) {
@@ -134,7 +151,7 @@ const PaymentMethodsTab: React.FC = () => {
       {methods.length === 0 && (
         <div className="glass-strong rounded-3xl p-10 text-center">
           <CreditCard className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground mb-3">No payment methods saved</p>
+          <p className="text-muted-foreground mb-3">{t("payment.noMethods")}</p>
           <Button onClick={openAdd} variant="outline" className="rounded-xl gap-1.5"><Plus className="w-4 h-4" /> {t("common.add")}</Button>
         </div>
       )}
@@ -173,8 +190,8 @@ const PaymentMethodsTab: React.FC = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Provider</Label>
-              <Select value={provider} onValueChange={setProvider}>
+              <Label>{t("payment.provider")}</Label>
+              <Select value={provider} onValueChange={(v) => { setProvider(v); setAccountNumber(""); }}>
                 <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {PROVIDERS.map((p) => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}
@@ -182,17 +199,35 @@ const PaymentMethodsTab: React.FC = () => {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Label</Label>
-              <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="e.g. Personal bKash" className="rounded-xl" />
+              <Label>{t("payment.label")}</Label>
+              <Input value={label} onChange={(e) => setLabel(e.target.value.slice(0, 100))} maxLength={100} placeholder="e.g. Personal bKash" className="rounded-xl" />
             </div>
             <div className="space-y-1.5">
-              <Label>Account Number (we'll mask it)</Label>
-              <Input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} placeholder="01XXXXXXXXX" className="rounded-xl" />
-              {accountNumber && <p className="text-xs text-muted-foreground">Saved as: {maskAccount(accountNumber)}</p>}
+              {(() => {
+                const def = PROVIDERS.find((p) => p.id === provider) || PROVIDERS[0];
+                return (
+                  <>
+                    <Label>{t("payment.accountNumber")} ({def.minLen}-{def.maxLen} {def.numericOnly ? "digits" : "chars"})</Label>
+                    <Input
+                      value={accountNumber}
+                      inputMode={def.numericOnly ? "numeric" : "text"}
+                      maxLength={def.maxLen}
+                      onChange={(e) => {
+                        let v = e.target.value;
+                        if (def.numericOnly) v = v.replace(/\D+/g, "");
+                        setAccountNumber(v.slice(0, def.maxLen));
+                      }}
+                      placeholder={def.numericOnly ? "01XXXXXXXXX" : "account identifier"}
+                      className="rounded-xl"
+                    />
+                    {accountNumber && <p className="text-xs text-muted-foreground">{t("payment.savedAs")}: {maskAccount(accountNumber)}</p>}
+                  </>
+                );
+              })()}
             </div>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} className="rounded" />
-              <span className="text-sm text-foreground">Set as default</span>
+              <span className="text-sm text-foreground">{t("payment.setDefault")}</span>
             </label>
           </div>
           <DialogFooter>

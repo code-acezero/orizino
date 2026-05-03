@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/lib/app-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ const CheckoutPage: React.FC = () => {
   useSeoMeta("checkout", "Checkout");
   const { user } = useAuth();
   const { formatPrice } = useCurrency();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const cartState = location.state as any || {};
@@ -100,6 +102,32 @@ const CheckoutPage: React.FC = () => {
       setPaymentMethod(availableGateways[0].id);
     }
   }, [availableGateways, paymentMethod]);
+
+  // Load user's saved payment methods to auto-pick default at step 2
+  const { data: savedPaymentMethods = [] } = useQuery({
+    queryKey: ["user_payment_methods", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await supabase
+        .from("user_payment_methods" as any)
+        .select("provider, is_default")
+        .eq("user_id", user.id)
+        .order("is_default", { ascending: false });
+      return (data || []) as unknown as Array<{ provider: string; is_default: boolean }>;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const [paymentAutoPicked, setPaymentAutoPicked] = useState(false);
+  useEffect(() => {
+    if (step !== 2 || paymentAutoPicked || availableGateways.length === 0 || savedPaymentMethods.length === 0) return;
+    const def = savedPaymentMethods.find((m) => m.is_default) || savedPaymentMethods[0];
+    if (def && availableGateways.find((g) => g.id === def.provider)) {
+      setPaymentMethod(def.provider);
+    }
+    setPaymentAutoPicked(true);
+  }, [step, savedPaymentMethods, availableGateways, paymentAutoPicked]);
 
   const isMFSMethod = MFS_METHODS.includes(paymentMethod);
   const mfsAccountInfo = paymentConfig?.[`personal_${paymentMethod}`] as any;
@@ -543,43 +571,52 @@ const CheckoutPage: React.FC = () => {
                 </div>
 
                 {/* Loyalty Points Redemption */}
-                {pointsBalance > 0 && maxRedeemable > 0 && (
-                  <div className="glass-strong rounded-3xl p-5 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
-                        <Award className="w-5 h-5 text-amber-500" /> Redeem Points
-                      </h3>
-                      <Badge variant="secondary" className="text-[10px]">
-                        Balance: {pointsBalance.toLocaleString()}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground">1 point = {formatPrice(1)}. You can redeem up to {maxRedeemable.toLocaleString()} points.</p>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        min={0}
-                        max={maxRedeemable}
-                        value={pointsToRedeem || ""}
-                        onChange={(e) => setPointsToRedeem(Math.min(maxRedeemable, Math.max(0, parseInt(e.target.value || "0", 10))))}
-                        placeholder="0"
-                        className="rounded-xl flex-1"
-                      />
-                      <Button type="button" size="sm" variant="outline" onClick={() => setPointsToRedeem(maxRedeemable)} className="rounded-xl">
-                        Max
-                      </Button>
-                      {pointsToRedeem > 0 && (
-                        <Button type="button" size="sm" variant="ghost" onClick={() => setPointsToRedeem(0)} className="rounded-xl">
-                          Clear
-                        </Button>
-                      )}
-                    </div>
-                    {safePointsRedeemed > 0 && (
-                      <p className="text-xs text-amber-500">
-                        Saving {formatPrice(pointsDiscount)} with {safePointsRedeemed.toLocaleString()} points
-                      </p>
-                    )}
+                <div className="glass-strong rounded-3xl p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
+                      <Award className="w-5 h-5 text-amber-500" /> {t("loyalty.redeemPoints")}
+                    </h3>
+                    <Badge variant="secondary" className="text-[10px]">
+                      {t("loyalty.balance")}: {pointsBalance.toLocaleString()}
+                    </Badge>
                   </div>
-                )}
+                  {pointsBalance === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      {t("loyalty.noPoints")} — {t("loyalty.earnByOrdering")}.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-xs text-muted-foreground">
+                        {t("loyalty.pointEquivalent")} = {formatPrice(1)}. {t("loyalty.redeemUpTo")} {maxRedeemable.toLocaleString()} {t("loyalty.points")}.
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min={0}
+                          max={maxRedeemable}
+                          disabled={maxRedeemable === 0}
+                          value={pointsToRedeem || ""}
+                          onChange={(e) => setPointsToRedeem(Math.min(maxRedeemable, Math.max(0, parseInt(e.target.value || "0", 10))))}
+                          placeholder="0"
+                          className="rounded-xl flex-1"
+                        />
+                        <Button type="button" size="sm" variant="outline" disabled={maxRedeemable === 0} onClick={() => setPointsToRedeem(maxRedeemable)} className="rounded-xl">
+                          {t("loyalty.max")}
+                        </Button>
+                        {pointsToRedeem > 0 && (
+                          <Button type="button" size="sm" variant="ghost" onClick={() => setPointsToRedeem(0)} className="rounded-xl">
+                            {t("loyalty.clear")}
+                          </Button>
+                        )}
+                      </div>
+                      {safePointsRedeemed > 0 && (
+                        <p className="text-xs text-amber-500">
+                          {t("loyalty.saving")} {formatPrice(pointsDiscount)} — {safePointsRedeemed.toLocaleString()} {t("loyalty.points")}
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
 
                 <div className="flex gap-3">
                   <Button type="button" variant="outline" onClick={() => setStep(1)} className="flex-1 rounded-xl h-12">Back</Button>
@@ -651,7 +688,7 @@ const CheckoutPage: React.FC = () => {
           {/* Order Summary Sidebar */}
           <div className="md:col-span-2">
             <div className="glass-strong rounded-3xl p-5 sticky top-24 space-y-4">
-              <h3 className="font-display font-semibold text-foreground text-lg">Order Summary</h3>
+              <h3 className="font-display font-semibold text-foreground text-lg">{t("checkout.orderSummary")}</h3>
 
               <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
                 {cartItems?.map((item) => {
@@ -675,32 +712,32 @@ const CheckoutPage: React.FC = () => {
               </div>
 
               <div className="border-t border-border pt-3 space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="text-foreground">{formatPrice(subtotal)}</span></div>
-                {couponDiscount > 0 && <div className="flex justify-between text-green-500"><span>Discount</span><span>-{formatPrice(couponDiscount)}</span></div>}
-                <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span className="text-foreground">{baseShippingFee === 0 ? <Badge variant="secondary" className="text-[10px]">Free</Badge> : formatPrice(baseShippingFee)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("checkout.subtotal")}</span><span className="text-foreground">{formatPrice(subtotal)}</span></div>
+                {couponDiscount > 0 && <div className="flex justify-between text-green-500"><span>{t("checkout.discount")}</span><span>-{formatPrice(couponDiscount)}</span></div>}
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("checkout.shipping")}</span><span className="text-foreground">{baseShippingFee === 0 ? <Badge variant="secondary" className="text-[10px]">Free</Badge> : formatPrice(baseShippingFee)}</span></div>
                 {deliveryDiscount > 0 && (
                   <div className="flex justify-between text-green-500">
-                    <span className="flex items-center gap-1 text-xs"><Truck className="w-3 h-3" /> {appliedDeliveryOffer?.title || "Delivery Offer"}</span>
+                    <span className="flex items-center gap-1 text-xs"><Truck className="w-3 h-3" /> {appliedDeliveryOffer?.title || t("checkout.deliveryOffer")}</span>
                     <span>-{formatPrice(deliveryDiscount)}</span>
                   </div>
                 )}
                 {tierDiscount > 0 && (
                   <div className="flex justify-between text-amber-500">
-                    <span className="flex items-center gap-1 text-xs"><Award className="w-3 h-3" /> {tierInfo?.current.name} Tier ({tierDiscountPct}%)</span>
+                    <span className="flex items-center gap-1 text-xs"><Award className="w-3 h-3" /> {tierInfo?.current.name} {t("checkout.tierDiscount")} ({tierDiscountPct}%)</span>
                     <span>-{formatPrice(tierDiscount)}</span>
                   </div>
                 )}
                 {pointsDiscount > 0 && (
                   <div className="flex justify-between text-amber-500">
-                    <span className="flex items-center gap-1 text-xs"><Award className="w-3 h-3" /> Points ({safePointsRedeemed.toLocaleString()})</span>
+                    <span className="flex items-center gap-1 text-xs"><Award className="w-3 h-3" /> {t("checkout.points")} ({safePointsRedeemed.toLocaleString()})</span>
                     <span>-{formatPrice(pointsDiscount)}</span>
                   </div>
                 )}
-                {giftWrap && <div className="flex justify-between"><span className="text-muted-foreground">Gift Wrap</span><span className="text-foreground">{formatPrice(giftWrapFee)}</span></div>}
+                {giftWrap && <div className="flex justify-between"><span className="text-muted-foreground">{t("checkout.giftWrap")}</span><span className="text-foreground">{formatPrice(giftWrapFee)}</span></div>}
               </div>
 
               <div className="border-t border-border pt-3 flex justify-between font-bold text-foreground text-lg">
-                <span>Total</span><span>{formatPrice(total)}</span>
+                <span>{t("checkout.orderTotal")}</span><span>{formatPrice(total)}</span>
               </div>
             </div>
           </div>

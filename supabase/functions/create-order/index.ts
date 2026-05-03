@@ -291,7 +291,27 @@ Deno.serve(async (req) => {
 
     const giftWrapFee = gift_wrap ? 50 : 0;
     const safeLoyaltyDiscount = Math.max(0, Number(loyalty_discount) || 0);
-    const safePointsUsed = Math.max(0, Math.floor(Number(loyalty_points_used) || 0));
+    let safePointsUsed = Math.max(0, Math.floor(Number(loyalty_points_used) || 0));
+
+    // Validate loyalty points: never exceed user's available balance
+    if (safePointsUsed > 0) {
+      const { data: loyaltyRow } = await supabase
+        .from("user_loyalty")
+        .select("points_balance")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const available = Math.max(0, Number(loyaltyRow?.points_balance ?? 0));
+      if (safePointsUsed > available) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: `You only have ${available} points available, cannot redeem ${safePointsUsed}.`,
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
     const total = Math.max(0, subtotal - validatedCouponDiscount - safeLoyaltyDiscount + shippingFee + giftWrapFee);
     const orderNumber = `ZM-${Date.now().toString(36).toUpperCase()}`;
 
