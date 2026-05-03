@@ -688,7 +688,7 @@ const CheckoutPage: React.FC = () => {
           {/* Order Summary Sidebar */}
           <div className="md:col-span-2">
             <div className="glass-strong rounded-3xl p-5 sticky top-24 space-y-4">
-              <h3 className="font-display font-semibold text-foreground text-lg">Order Summary</h3>
+              <h3 className="font-display font-semibold text-foreground text-lg">{t("checkout.orderSummary")}</h3>
 
               <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
                 {cartItems?.map((item) => {
@@ -712,32 +712,32 @@ const CheckoutPage: React.FC = () => {
               </div>
 
               <div className="border-t border-border pt-3 space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="text-foreground">{formatPrice(subtotal)}</span></div>
-                {couponDiscount > 0 && <div className="flex justify-between text-green-500"><span>Discount</span><span>-{formatPrice(couponDiscount)}</span></div>}
-                <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span className="text-foreground">{baseShippingFee === 0 ? <Badge variant="secondary" className="text-[10px]">Free</Badge> : formatPrice(baseShippingFee)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("checkout.subtotal")}</span><span className="text-foreground">{formatPrice(subtotal)}</span></div>
+                {couponDiscount > 0 && <div className="flex justify-between text-green-500"><span>{t("checkout.discount")}</span><span>-{formatPrice(couponDiscount)}</span></div>}
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("checkout.shipping")}</span><span className="text-foreground">{baseShippingFee === 0 ? <Badge variant="secondary" className="text-[10px]">Free</Badge> : formatPrice(baseShippingFee)}</span></div>
                 {deliveryDiscount > 0 && (
                   <div className="flex justify-between text-green-500">
-                    <span className="flex items-center gap-1 text-xs"><Truck className="w-3 h-3" /> {appliedDeliveryOffer?.title || "Delivery Offer"}</span>
+                    <span className="flex items-center gap-1 text-xs"><Truck className="w-3 h-3" /> {appliedDeliveryOffer?.title || t("checkout.deliveryOffer")}</span>
                     <span>-{formatPrice(deliveryDiscount)}</span>
                   </div>
                 )}
                 {tierDiscount > 0 && (
                   <div className="flex justify-between text-amber-500">
-                    <span className="flex items-center gap-1 text-xs"><Award className="w-3 h-3" /> {tierInfo?.current.name} Tier ({tierDiscountPct}%)</span>
+                    <span className="flex items-center gap-1 text-xs"><Award className="w-3 h-3" /> {tierInfo?.current.name} {t("checkout.tierDiscount")} ({tierDiscountPct}%)</span>
                     <span>-{formatPrice(tierDiscount)}</span>
                   </div>
                 )}
                 {pointsDiscount > 0 && (
                   <div className="flex justify-between text-amber-500">
-                    <span className="flex items-center gap-1 text-xs"><Award className="w-3 h-3" /> Points ({safePointsRedeemed.toLocaleString()})</span>
+                    <span className="flex items-center gap-1 text-xs"><Award className="w-3 h-3" /> {t("checkout.points")} ({safePointsRedeemed.toLocaleString()})</span>
                     <span>-{formatPrice(pointsDiscount)}</span>
                   </div>
                 )}
-                {giftWrap && <div className="flex justify-between"><span className="text-muted-foreground">Gift Wrap</span><span className="text-foreground">{formatPrice(giftWrapFee)}</span></div>}
+                {giftWrap && <div className="flex justify-between"><span className="text-muted-foreground">{t("checkout.giftWrap")}</span><span className="text-foreground">{formatPrice(giftWrapFee)}</span></div>}
               </div>
 
               <div className="border-t border-border pt-3 flex justify-between font-bold text-foreground text-lg">
-                <span>Total</span><span>{formatPrice(total)}</span>
+                <span>{t("checkout.orderTotal")}</span><span>{formatPrice(total)}</span>
               </div>
             </div>
           </div>
