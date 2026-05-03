@@ -374,7 +374,7 @@ const CartPage: React.FC = () => {
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("checkout.subtotal")} ({itemCount})</span><span className="text-foreground">{formatPrice(subtotal)}</span></div>
                   {couponDiscount > 0 && <div className="flex justify-between text-green-500"><span>{t("checkout.discount")}</span><span>-{formatPrice(couponDiscount)}</span></div>}
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("checkout.shipping")}</span><span className="text-foreground">{shippingFee === 0 ? <Badge variant="secondary" className="text-[10px]">Free</Badge> : formatPrice(shippingFee)}</span></div>
-                  {giftWrap && <div className="flex justify-between"><span className="text-muted-foreground">Gift Wrap</span><span className="text-foreground">{formatPrice(giftWrapFee)}</span></div>}
+                  {giftWrap && <div className="flex justify-between"><span className="text-muted-foreground">{t("checkout.giftWrap")}</span><span className="text-foreground">{formatPrice(giftWrapFee)}</span></div>}
                 </div>
 
                 <div className="border-t border-border pt-4 flex justify-between font-bold text-foreground text-lg">
