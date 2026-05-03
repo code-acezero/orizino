@@ -571,43 +571,52 @@ const CheckoutPage: React.FC = () => {
                 </div>
 
                 {/* Loyalty Points Redemption */}
-                {pointsBalance > 0 && maxRedeemable > 0 && (
-                  <div className="glass-strong rounded-3xl p-5 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
-                        <Award className="w-5 h-5 text-amber-500" /> Redeem Points
-                      </h3>
-                      <Badge variant="secondary" className="text-[10px]">
-                        Balance: {pointsBalance.toLocaleString()}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground">1 point = {formatPrice(1)}. You can redeem up to {maxRedeemable.toLocaleString()} points.</p>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        min={0}
-                        max={maxRedeemable}
-                        value={pointsToRedeem || ""}
-                        onChange={(e) => setPointsToRedeem(Math.min(maxRedeemable, Math.max(0, parseInt(e.target.value || "0", 10))))}
-                        placeholder="0"
-                        className="rounded-xl flex-1"
-                      />
-                      <Button type="button" size="sm" variant="outline" onClick={() => setPointsToRedeem(maxRedeemable)} className="rounded-xl">
-                        Max
-                      </Button>
-                      {pointsToRedeem > 0 && (
-                        <Button type="button" size="sm" variant="ghost" onClick={() => setPointsToRedeem(0)} className="rounded-xl">
-                          Clear
-                        </Button>
-                      )}
-                    </div>
-                    {safePointsRedeemed > 0 && (
-                      <p className="text-xs text-amber-500">
-                        Saving {formatPrice(pointsDiscount)} with {safePointsRedeemed.toLocaleString()} points
-                      </p>
-                    )}
+                <div className="glass-strong rounded-3xl p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
+                      <Award className="w-5 h-5 text-amber-500" /> {t("loyalty.redeemPoints")}
+                    </h3>
+                    <Badge variant="secondary" className="text-[10px]">
+                      {t("loyalty.balance")}: {pointsBalance.toLocaleString()}
+                    </Badge>
                   </div>
-                )}
+                  {pointsBalance === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      {t("loyalty.noPoints")} — {t("loyalty.earnByOrdering")}.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-xs text-muted-foreground">
+                        {t("loyalty.pointEquivalent")} = {formatPrice(1)}. {t("loyalty.redeemUpTo")} {maxRedeemable.toLocaleString()} {t("loyalty.points")}.
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min={0}
+                          max={maxRedeemable}
+                          disabled={maxRedeemable === 0}
+                          value={pointsToRedeem || ""}
+                          onChange={(e) => setPointsToRedeem(Math.min(maxRedeemable, Math.max(0, parseInt(e.target.value || "0", 10))))}
+                          placeholder="0"
+                          className="rounded-xl flex-1"
+                        />
+                        <Button type="button" size="sm" variant="outline" disabled={maxRedeemable === 0} onClick={() => setPointsToRedeem(maxRedeemable)} className="rounded-xl">
+                          {t("loyalty.max")}
+                        </Button>
+                        {pointsToRedeem > 0 && (
+                          <Button type="button" size="sm" variant="ghost" onClick={() => setPointsToRedeem(0)} className="rounded-xl">
+                            {t("loyalty.clear")}
+                          </Button>
+                        )}
+                      </div>
+                      {safePointsRedeemed > 0 && (
+                        <p className="text-xs text-amber-500">
+                          {t("loyalty.saving")} {formatPrice(pointsDiscount)} — {safePointsRedeemed.toLocaleString()} {t("loyalty.points")}
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
 
                 <div className="flex gap-3">
                   <Button type="button" variant="outline" onClick={() => setStep(1)} className="flex-1 rounded-xl h-12">Back</Button>
