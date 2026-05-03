@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/lib/app-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ const CheckoutPage: React.FC = () => {
   useSeoMeta("checkout", "Checkout");
   const { user } = useAuth();
   const { formatPrice } = useCurrency();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const cartState = location.state as any || {};
