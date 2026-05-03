@@ -83,16 +83,33 @@ const PaymentMethodsTab: React.FC = () => {
 
   const handleSave = async () => {
     if (!user) return;
-    if (!label.trim()) { toast({ title: "Label is required", variant: "destructive" }); return; }
+    if (!label.trim()) { toast({ title: t("payment.labelRequired"), variant: "destructive" }); return; }
+
+    const def = PROVIDERS.find((p) => p.id === provider) || PROVIDERS[0];
+    const trimmed = accountNumber.replace(/\s+/g, "");
+    if (trimmed) {
+      if (def.numericOnly && !/^\d+$/.test(trimmed)) {
+        toast({ title: t("payment.numberDigitsOnly"), variant: "destructive" });
+        return;
+      }
+      if (trimmed.length < def.minLen || trimmed.length > def.maxLen) {
+        toast({ title: t("payment.numberLength"), description: `${def.label}: ${def.minLen}-${def.maxLen} chars`, variant: "destructive" });
+        return;
+      }
+    } else {
+      // require account number for known providers
+      toast({ title: t("payment.invalidNumber"), variant: "destructive" });
+      return;
+    }
+
     const payload = {
       user_id: user.id,
       provider,
-      account_label: label.trim(),
-      account_number_masked: maskAccount(accountNumber),
+      account_label: label.trim().slice(0, 100),
+      account_number_masked: maskAccount(trimmed),
       is_default: isDefault,
     };
     if (isDefault) {
-      // unset previous defaults
       await supabase.from("user_payment_methods" as any).update({ is_default: false }).eq("user_id", user.id);
     }
     if (editing) {
