@@ -103,6 +103,32 @@ const CheckoutPage: React.FC = () => {
     }
   }, [availableGateways, paymentMethod]);
 
+  // Load user's saved payment methods to auto-pick default at step 2
+  const { data: savedPaymentMethods = [] } = useQuery({
+    queryKey: ["user_payment_methods", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await supabase
+        .from("user_payment_methods" as any)
+        .select("provider, is_default")
+        .eq("user_id", user.id)
+        .order("is_default", { ascending: false });
+      return (data || []) as unknown as Array<{ provider: string; is_default: boolean }>;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const [paymentAutoPicked, setPaymentAutoPicked] = useState(false);
+  useEffect(() => {
+    if (step !== 2 || paymentAutoPicked || availableGateways.length === 0 || savedPaymentMethods.length === 0) return;
+    const def = savedPaymentMethods.find((m) => m.is_default) || savedPaymentMethods[0];
+    if (def && availableGateways.find((g) => g.id === def.provider)) {
+      setPaymentMethod(def.provider);
+    }
+    setPaymentAutoPicked(true);
+  }, [step, savedPaymentMethods, availableGateways, paymentAutoPicked]);
+
   const isMFSMethod = MFS_METHODS.includes(paymentMethod);
   const mfsAccountInfo = paymentConfig?.[`personal_${paymentMethod}`] as any;
 
