@@ -22,13 +22,13 @@ interface PaymentMethodRow {
 }
 
 const PROVIDERS = [
-  { id: "bkash", label: "bKash", icon: Smartphone, color: "text-pink-500" },
-  { id: "nagad", label: "Nagad", icon: Smartphone, color: "text-orange-500" },
-  { id: "upay", label: "Upay", icon: Smartphone, color: "text-blue-500" },
-  { id: "rocket", label: "Rocket", icon: Smartphone, color: "text-purple-500" },
-  { id: "card", label: "Card", icon: CreditCard, color: "text-primary" },
-  { id: "bank", label: "Bank Account", icon: Building2, color: "text-emerald-500" },
-  { id: "wallet", label: "Wallet", icon: Wallet, color: "text-amber-500" },
+  { id: "bkash", label: "bKash", icon: Smartphone, color: "text-pink-500", numericOnly: true, minLen: 11, maxLen: 11 },
+  { id: "nagad", label: "Nagad", icon: Smartphone, color: "text-orange-500", numericOnly: true, minLen: 11, maxLen: 11 },
+  { id: "upay", label: "Upay", icon: Smartphone, color: "text-blue-500", numericOnly: true, minLen: 11, maxLen: 11 },
+  { id: "rocket", label: "Rocket", icon: Smartphone, color: "text-purple-500", numericOnly: true, minLen: 11, maxLen: 12 },
+  { id: "card", label: "Card", icon: CreditCard, color: "text-primary", numericOnly: true, minLen: 13, maxLen: 19 },
+  { id: "bank", label: "Bank Account", icon: Building2, color: "text-emerald-500", numericOnly: true, minLen: 6, maxLen: 20 },
+  { id: "wallet", label: "Wallet", icon: Wallet, color: "text-amber-500", numericOnly: false, minLen: 3, maxLen: 64 },
 ];
 
 const PaymentMethodsTab: React.FC = () => {
