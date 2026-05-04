@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import ReactMarkdown from "react-markdown";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { playRingtone, stopRingtone } from "@/lib/sounds";
+import { getRTCConfiguration } from "@/lib/ice-servers";
 
 interface Msg {
   role: "user" | "assistant";
@@ -202,12 +203,9 @@ const SupportPage: React.FC = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       localStreamRef.current = stream;
 
-      const pc = new RTCPeerConnection({
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:19302" },
-        ],
-      });
+      const rtcConfig = await getRTCConfiguration();
+      console.log("[User Call] RTC config:", rtcConfig);
+      const pc = new RTCPeerConnection(rtcConfig);
       peerRef.current = pc;
 
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
