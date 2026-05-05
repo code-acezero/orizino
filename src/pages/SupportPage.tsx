@@ -125,6 +125,32 @@ const SupportPage: React.FC = () => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const callChannelRef = useRef<any>(null);
   const pendingOfferRef = useRef<string | null>(null);
+  const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
+
+  const processPendingOffer = async () => {
+    const pc = peerRef.current;
+    const sdp = pendingOfferRef.current;
+    if (!pc || !sdp) return;
+    if (pc.signalingState !== "stable") return;
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription({ type: "offer", sdp }));
+      pendingOfferRef.current = null;
+      // Drain queued ICE candidates
+      for (const c of pendingCandidatesRef.current) {
+        try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch (e) { console.warn("ICE add failed", e); }
+      }
+      pendingCandidatesRef.current = [];
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      callChannelRef.current?.send({
+        type: "broadcast",
+        event: "call-signal",
+        payload: { type: "answer", sdp: answer.sdp, from: "user" },
+      });
+    } catch (e) {
+      console.error("processPendingOffer failed", e);
+    }
+  };
 
   const { data: aiConfig } = useQuery({
     queryKey: ["ai-agent-config"],
