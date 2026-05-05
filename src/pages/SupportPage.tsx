@@ -198,9 +198,19 @@ const SupportPage: React.FC = () => {
     channel.on("broadcast", { event: "call-signal" }, async ({ payload }) => {
       if (payload.type === "offer" && payload.from === "admin") {
         pendingOfferRef.current = payload.sdp;
+        // If peer already exists (user accepted first), process immediately
+        if (peerRef.current) {
+          await processPendingOffer();
+        }
       }
-      if (payload.type === "ice-candidate" && payload.from === "admin" && peerRef.current) {
-        await peerRef.current.addIceCandidate(new RTCIceCandidate(payload.candidate));
+      if (payload.type === "ice-candidate" && payload.from === "admin") {
+        const pc = peerRef.current;
+        if (pc && pc.remoteDescription) {
+          try { await pc.addIceCandidate(new RTCIceCandidate(payload.candidate)); } catch (e) { console.warn("ICE add failed", e); }
+        } else {
+          // Queue until remote description is set
+          pendingCandidatesRef.current.push(payload.candidate);
+        }
       }
       if (payload.type === "hangup") {
         hangupCall();
