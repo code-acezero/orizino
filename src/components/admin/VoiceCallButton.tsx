@@ -33,6 +33,7 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const channelRef = useRef<any>(null);
+  const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
   const callLogIdRef = useRef<string | null>(null);
 
   const formatDuration = (s: number) => {
