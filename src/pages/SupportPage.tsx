@@ -273,17 +273,9 @@ const SupportPage: React.FC = () => {
         }
       };
 
-      // If we have a pending offer, set it
+      // Process pending offer if it already arrived; otherwise the broadcast handler will run it
       if (pendingOfferRef.current) {
-        await pc.setRemoteDescription(new RTCSessionDescription({ type: "offer", sdp: pendingOfferRef.current }));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-
-        callChannelRef.current?.send({
-          type: "broadcast",
-          event: "call-signal",
-          payload: { type: "answer", sdp: answer.sdp, from: "user" },
-        });
+        await processPendingOffer();
       }
 
       setCallActive(true);
