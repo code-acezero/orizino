@@ -33,6 +33,7 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const channelRef = useRef<any>(null);
+  const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
   const callLogIdRef = useRef<string | null>(null);
 
   const formatDuration = (s: number) => {
@@ -66,9 +67,21 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
       if (!pc) return;
 
       if (payload.type === "answer" && payload.sdp) {
-        await pc.setRemoteDescription(new RTCSessionDescription({ type: "answer", sdp: payload.sdp }));
+        try {
+          await pc.setRemoteDescription(new RTCSessionDescription({ type: "answer", sdp: payload.sdp }));
+          for (const c of pendingCandidatesRef.current) {
+            try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch (e) { console.warn("ICE add failed", e); }
+          }
+          pendingCandidatesRef.current = [];
+        } catch (e) {
+          console.error("setRemoteDescription(answer) failed", e);
+        }
       } else if (payload.type === "ice-candidate" && payload.candidate) {
-        await pc.addIceCandidate(new RTCIceCandidate(payload.candidate));
+        if (pc.remoteDescription) {
+          try { await pc.addIceCandidate(new RTCIceCandidate(payload.candidate)); } catch (e) { console.warn("ICE add failed", e); }
+        } else {
+          pendingCandidatesRef.current.push(payload.candidate);
+        }
       }
     });
 

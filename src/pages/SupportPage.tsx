@@ -125,6 +125,32 @@ const SupportPage: React.FC = () => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const callChannelRef = useRef<any>(null);
   const pendingOfferRef = useRef<string | null>(null);
+  const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
+
+  const processPendingOffer = async () => {
+    const pc = peerRef.current;
+    const sdp = pendingOfferRef.current;
+    if (!pc || !sdp) return;
+    if (pc.signalingState !== "stable") return;
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription({ type: "offer", sdp }));
+      pendingOfferRef.current = null;
+      // Drain queued ICE candidates
+      for (const c of pendingCandidatesRef.current) {
+        try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch (e) { console.warn("ICE add failed", e); }
+      }
+      pendingCandidatesRef.current = [];
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      callChannelRef.current?.send({
+        type: "broadcast",
+        event: "call-signal",
+        payload: { type: "answer", sdp: answer.sdp, from: "user" },
+      });
+    } catch (e) {
+      console.error("processPendingOffer failed", e);
+    }
+  };
 
   const { data: aiConfig } = useQuery({
     queryKey: ["ai-agent-config"],
@@ -172,9 +198,19 @@ const SupportPage: React.FC = () => {
     channel.on("broadcast", { event: "call-signal" }, async ({ payload }) => {
       if (payload.type === "offer" && payload.from === "admin") {
         pendingOfferRef.current = payload.sdp;
+        // If peer already exists (user accepted first), process immediately
+        if (peerRef.current) {
+          await processPendingOffer();
+        }
       }
-      if (payload.type === "ice-candidate" && payload.from === "admin" && peerRef.current) {
-        await peerRef.current.addIceCandidate(new RTCIceCandidate(payload.candidate));
+      if (payload.type === "ice-candidate" && payload.from === "admin") {
+        const pc = peerRef.current;
+        if (pc && pc.remoteDescription) {
+          try { await pc.addIceCandidate(new RTCIceCandidate(payload.candidate)); } catch (e) { console.warn("ICE add failed", e); }
+        } else {
+          // Queue until remote description is set
+          pendingCandidatesRef.current.push(payload.candidate);
+        }
       }
       if (payload.type === "hangup") {
         hangupCall();
@@ -237,17 +273,9 @@ const SupportPage: React.FC = () => {
         }
       };
 
-      // If we have a pending offer, set it
+      // Process pending offer if it already arrived; otherwise the broadcast handler will run it
       if (pendingOfferRef.current) {
-        await pc.setRemoteDescription(new RTCSessionDescription({ type: "offer", sdp: pendingOfferRef.current }));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-
-        callChannelRef.current?.send({
-          type: "broadcast",
-          event: "call-signal",
-          payload: { type: "answer", sdp: answer.sdp, from: "user" },
-        });
+        await processPendingOffer();
       }
 
       setCallActive(true);
