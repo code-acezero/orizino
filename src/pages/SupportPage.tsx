@@ -535,6 +535,7 @@ const SupportPage: React.FC = () => {
             <CallHistoryList limit={50} />
           </div>
         )}
+      </main>
     </div>
   );
 };
