@@ -451,7 +451,8 @@ const SupportPage: React.FC = () => {
           )}
         </AnimatePresence>
 
-        <div className="glass-strong rounded-3xl overflow-hidden flex flex-col" style={{ height: "calc(100vh - 280px)", minHeight: "400px" }}>
+        {tab === "chat" ? (
+        <div className="glass-strong rounded-3xl overflow-hidden flex flex-col" style={{ height: "calc(100vh - 320px)", minHeight: "400px" }}>
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4">
             {messages.map((msg, i) => (
               <motion.div
