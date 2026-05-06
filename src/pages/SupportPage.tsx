@@ -521,7 +521,20 @@ const SupportPage: React.FC = () => {
             </div>
           </div>
         </div>
-      </main>
+        ) : (
+          <div className="glass-strong rounded-3xl p-5 sm:p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <History className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold font-display text-foreground">Call History</h2>
+                <p className="text-xs text-muted-foreground">Your recent voice calls with support</p>
+              </div>
+            </div>
+            <CallHistoryList limit={50} />
+          </div>
+        )}
     </div>
   );
 };
