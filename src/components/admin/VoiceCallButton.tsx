@@ -187,6 +187,20 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
       link_url: "/support",
     });
 
+    // Fire web push so the user's device rings even if the tab is closed
+    supabase.functions.invoke("send-push", {
+      body: {
+        user_id: userId,
+        payload: {
+          type: "call",
+          title: "Incoming support call",
+          body: "Tap to answer",
+          url: "/support",
+          tag: "incoming-call",
+        },
+      },
+    }).catch((e) => console.warn("send-push failed", e));
+
     // Timeout after 30s
     setTimeout(() => {
       if (callStateRef.current === "requesting") {

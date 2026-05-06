@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, Send, User, Headphones, ArrowLeft, Phone, PhoneOff, Mic, MicOff } from "lucide-react";
+import { Bot, Send, User, Headphones, ArrowLeft, Phone, PhoneOff, Mic, MicOff, MessageSquare, History, BellRing, BellOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +11,9 @@ import ReactMarkdown from "react-markdown";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { playRingtone, stopRingtone } from "@/lib/sounds";
 import { getRTCConfiguration } from "@/lib/ice-servers";
+import CallHistoryList from "@/components/CallHistoryList";
+import { pushSupported, subscribeToPush } from "@/lib/push";
+import { toast } from "@/lib/app-toast";
 
 interface Msg {
   role: "user" | "assistant";
@@ -107,6 +110,34 @@ const SupportPage: React.FC = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [tab, setTab] = useState<"chat" | "history">("chat");
+  const [pushEnabled, setPushEnabled] = useState<boolean>(
+    typeof Notification !== "undefined" && Notification.permission === "granted"
+  );
+  const [pushBusy, setPushBusy] = useState(false);
+
+  // Auto-subscribe on mount if user already granted permission
+  useEffect(() => {
+    if (!user || !pushSupported() || Notification.permission !== "granted") return;
+    subscribeToPush(user.id).catch(() => {});
+  }, [user]);
+
+  const handleEnablePush = async () => {
+    if (!user) return;
+    if (!pushSupported()) {
+      toast({ title: "Not supported", description: "Push isn't available in this browser.", variant: "destructive" });
+      return;
+    }
+    setPushBusy(true);
+    const ok = await subscribeToPush(user.id);
+    setPushBusy(false);
+    if (ok) {
+      setPushEnabled(true);
+      toast({ title: "Notifications enabled", description: "You'll get a ring even when this tab is closed." });
+    } else {
+      toast({ title: "Permission denied", description: "Allow notifications in your browser settings.", variant: "destructive" });
+    }
+  };
 
   // Call state
   const [incomingCall, setIncomingCall] = useState(false);
@@ -371,13 +402,42 @@ const SupportPage: React.FC = () => {
                 {aiConfig?.avatar_emoji ? <span className="text-xl">{aiConfig.avatar_emoji}</span> : <Bot className="w-6 h-6 text-primary" />}
               </div>
             )}
-            <div>
+            <div className="flex-1">
               <h1 className="text-2xl font-bold font-display text-foreground">
                 {agentName ? `Support (${agentName})` : t("nav.support")}
               </h1>
               <p className="text-sm text-muted-foreground">{t("nav.support")}</p>
             </div>
           </div>
+          <div className="ml-auto">
+            <Button
+              size="sm"
+              variant={pushEnabled ? "secondary" : "outline"}
+              onClick={handleEnablePush}
+              disabled={pushBusy || pushEnabled}
+              className="rounded-xl gap-1.5"
+              title={pushEnabled ? "Push notifications enabled" : "Enable push so calls ring even when this tab is closed"}
+            >
+              {pushEnabled ? <BellRing className="w-4 h-4 text-green-500" /> : <BellOff className="w-4 h-4" />}
+              <span className="hidden sm:inline text-xs">{pushEnabled ? "Notifications on" : "Enable alerts"}</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Tabs: Chat / Call History */}
+        <div className="flex gap-1 p-1 rounded-2xl bg-secondary/30 mb-4 w-fit">
+          <button
+            onClick={() => setTab("chat")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all ${tab === "chat" ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <MessageSquare className="w-4 h-4" /> Chat
+          </button>
+          <button
+            onClick={() => setTab("history")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all ${tab === "history" ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <History className="w-4 h-4" /> Call History
+          </button>
         </div>
 
         <AnimatePresence>
@@ -391,7 +451,8 @@ const SupportPage: React.FC = () => {
           )}
         </AnimatePresence>
 
-        <div className="glass-strong rounded-3xl overflow-hidden flex flex-col" style={{ height: "calc(100vh - 280px)", minHeight: "400px" }}>
+        {tab === "chat" ? (
+        <div className="glass-strong rounded-3xl overflow-hidden flex flex-col" style={{ height: "calc(100vh - 320px)", minHeight: "400px" }}>
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4">
             {messages.map((msg, i) => (
               <motion.div
@@ -460,6 +521,20 @@ const SupportPage: React.FC = () => {
             </div>
           </div>
         </div>
+        ) : (
+          <div className="glass-strong rounded-3xl p-5 sm:p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <History className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold font-display text-foreground">Call History</h2>
+                <p className="text-xs text-muted-foreground">Your recent voice calls with support</p>
+              </div>
+            </div>
+            <CallHistoryList limit={50} />
+          </div>
+        )}
       </main>
     </div>
   );

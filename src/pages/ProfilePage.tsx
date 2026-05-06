@@ -5,8 +5,9 @@ import {
   User, Phone, MapPin, Save, LogOut, ShoppingCart, Package, Star, Bell,
   Settings, ChevronRight, Camera, Plus, Trash2, Home, Building2, MapPinned,
   CreditCard, Wallet, Edit3, CheckCircle2, Shield, Clock, Eye, EyeOff,
-  Mail, Calendar, Award, TrendingUp, Heart
+  Mail, Calendar, Award, TrendingUp, Heart, PhoneCall
 } from "lucide-react";
+import CallHistoryList from "@/components/CallHistoryList";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -239,6 +240,7 @@ const ProfilePage: React.FC = () => {
     { id: "payments", icon: CreditCard, label: t("profile.payments") },
     { id: "orders", icon: Package, label: t("profile.myOrders") },
     { id: "reviews", icon: Star, label: t("profile.reviews") },
+    { id: "calls", icon: PhoneCall, label: "Calls" },
     { id: "notifications", icon: Bell, label: "Alerts" },
   ];
 
@@ -446,6 +448,23 @@ const ProfilePage: React.FC = () => {
                     {review.comment && <p className="text-sm text-muted-foreground mt-1">{review.comment}</p>}
                   </div>
                 ))}
+              </motion.div>
+            )}
+
+            {/* Calls Tab */}
+            {activeTab === "calls" && (
+              <motion.div key="calls" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                className="glass-strong rounded-3xl p-5 sm:p-6">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <PhoneCall className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold font-display text-foreground">Call History</h2>
+                    <p className="text-xs text-muted-foreground">Your recent calls with our support team</p>
+                  </div>
+                </div>
+                <CallHistoryList limit={50} />
               </motion.div>
             )}
 
