@@ -402,13 +402,42 @@ const SupportPage: React.FC = () => {
                 {aiConfig?.avatar_emoji ? <span className="text-xl">{aiConfig.avatar_emoji}</span> : <Bot className="w-6 h-6 text-primary" />}
               </div>
             )}
-            <div>
+            <div className="flex-1">
               <h1 className="text-2xl font-bold font-display text-foreground">
                 {agentName ? `Support (${agentName})` : t("nav.support")}
               </h1>
               <p className="text-sm text-muted-foreground">{t("nav.support")}</p>
             </div>
           </div>
+          <div className="ml-auto">
+            <Button
+              size="sm"
+              variant={pushEnabled ? "secondary" : "outline"}
+              onClick={handleEnablePush}
+              disabled={pushBusy || pushEnabled}
+              className="rounded-xl gap-1.5"
+              title={pushEnabled ? "Push notifications enabled" : "Enable push so calls ring even when this tab is closed"}
+            >
+              {pushEnabled ? <BellRing className="w-4 h-4 text-green-500" /> : <BellOff className="w-4 h-4" />}
+              <span className="hidden sm:inline text-xs">{pushEnabled ? "Notifications on" : "Enable alerts"}</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Tabs: Chat / Call History */}
+        <div className="flex gap-1 p-1 rounded-2xl bg-secondary/30 mb-4 w-fit">
+          <button
+            onClick={() => setTab("chat")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all ${tab === "chat" ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <MessageSquare className="w-4 h-4" /> Chat
+          </button>
+          <button
+            onClick={() => setTab("history")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all ${tab === "history" ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <History className="w-4 h-4" /> Call History
+          </button>
         </div>
 
         <AnimatePresence>
