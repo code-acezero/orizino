@@ -110,6 +110,34 @@ const SupportPage: React.FC = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [tab, setTab] = useState<"chat" | "history">("chat");
+  const [pushEnabled, setPushEnabled] = useState<boolean>(
+    typeof Notification !== "undefined" && Notification.permission === "granted"
+  );
+  const [pushBusy, setPushBusy] = useState(false);
+
+  // Auto-subscribe on mount if user already granted permission
+  useEffect(() => {
+    if (!user || !pushSupported() || Notification.permission !== "granted") return;
+    subscribeToPush(user.id).catch(() => {});
+  }, [user]);
+
+  const handleEnablePush = async () => {
+    if (!user) return;
+    if (!pushSupported()) {
+      toast({ title: "Not supported", description: "Push isn't available in this browser.", variant: "destructive" });
+      return;
+    }
+    setPushBusy(true);
+    const ok = await subscribeToPush(user.id);
+    setPushBusy(false);
+    if (ok) {
+      setPushEnabled(true);
+      toast({ title: "Notifications enabled", description: "You'll get a ring even when this tab is closed." });
+    } else {
+      toast({ title: "Permission denied", description: "Allow notifications in your browser settings.", variant: "destructive" });
+    }
+  };
 
   // Call state
   const [incomingCall, setIncomingCall] = useState(false);
