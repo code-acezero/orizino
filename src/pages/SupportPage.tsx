@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, Send, User, Headphones, ArrowLeft, Phone, PhoneOff, Mic, MicOff } from "lucide-react";
+import { Bot, Send, User, Headphones, ArrowLeft, Phone, PhoneOff, Mic, MicOff, MessageSquare, History, BellRing, BellOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +11,9 @@ import ReactMarkdown from "react-markdown";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { playRingtone, stopRingtone } from "@/lib/sounds";
 import { getRTCConfiguration } from "@/lib/ice-servers";
+import CallHistoryList from "@/components/CallHistoryList";
+import { pushSupported, subscribeToPush } from "@/lib/push";
+import { toast } from "@/lib/app-toast";
 
 interface Msg {
   role: "user" | "assistant";
