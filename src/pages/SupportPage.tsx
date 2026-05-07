@@ -306,6 +306,7 @@ const SupportPage: React.FC = () => {
         if (remoteAudioRef.current) {
           remoteAudioRef.current.srcObject = event.streams[0];
           remoteAudioRef.current.play().catch(() => {});
+          applyAudioOutput(speakerOn);
         }
       };
 
