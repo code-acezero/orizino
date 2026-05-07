@@ -470,7 +470,9 @@ const SupportPage: React.FC = () => {
             <ActiveCallBar
               duration={callDuration}
               muted={callMuted}
+              speakerOn={speakerOn}
               onToggleMute={toggleCallMute}
+              onToggleSpeaker={toggleSpeaker}
               onHangup={hangupCall}
             />
           )}
