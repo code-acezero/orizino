@@ -130,12 +130,12 @@ const SupportPage: React.FC = () => {
     if (typeof Notification !== "undefined") setPushPermission(Notification.permission);
     const { data } = await supabase
       .from("push_subscriptions")
-      .select("last_used_at, updated_at, created_at")
+      .select("last_used_at, created_at")
       .eq("user_id", user.id)
       .order("last_used_at", { ascending: false, nullsFirst: false })
       .limit(1)
       .maybeSingle();
-    setLastPushUpdate((data?.last_used_at as string) || (data?.updated_at as string) || (data?.created_at as string) || null);
+    setLastPushUpdate((data?.last_used_at as string) || (data?.created_at as string) || null);
   }, [user]);
 
   useEffect(() => { refreshPushStatus(); }, [refreshPushStatus, pushEnabled]);
