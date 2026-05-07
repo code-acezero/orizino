@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, Send, User, Headphones, ArrowLeft, Phone, PhoneOff, Mic, MicOff, MessageSquare, History, BellRing, BellOff } from "lucide-react";
+import { Bot, Send, User, Headphones, ArrowLeft, Phone, PhoneOff, Mic, MicOff, MessageSquare, History, BellRing, BellOff, Volume2, Speaker } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -74,9 +74,11 @@ const IncomingCallOverlay: React.FC<{
 const ActiveCallBar: React.FC<{
   duration: number;
   muted: boolean;
+  speakerOn: boolean;
   onToggleMute: () => void;
+  onToggleSpeaker: () => void;
   onHangup: () => void;
-}> = ({ duration, muted, onToggleMute, onHangup }) => {
+}> = ({ duration, muted, speakerOn, onToggleMute, onToggleSpeaker, onHangup }) => {
   const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
   return (
     <motion.div
@@ -91,6 +93,9 @@ const ActiveCallBar: React.FC<{
         <span className="text-xs text-muted-foreground font-mono">{fmt(duration)}</span>
       </div>
       <div className="flex items-center gap-2">
+        <Button size="sm" variant="ghost" onClick={onToggleSpeaker} className="h-8 w-8 p-0 rounded-full" title={speakerOn ? "Switch to earpiece" : "Switch to speaker"}>
+          {speakerOn ? <Volume2 className="w-4 h-4 text-green-500" /> : <Speaker className="w-4 h-4 text-muted-foreground" />}
+        </Button>
         <Button size="sm" variant="ghost" onClick={onToggleMute} className="h-8 w-8 p-0 rounded-full">
           {muted ? <MicOff className="w-4 h-4 text-destructive" /> : <Mic className="w-4 h-4 text-green-500" />}
         </Button>
@@ -150,6 +155,7 @@ const SupportPage: React.FC = () => {
   const [callActive, setCallActive] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [callMuted, setCallMuted] = useState(false);
+  const [speakerOn, setSpeakerOn] = useState(false); // default: earpiece
   const peerRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -157,6 +163,25 @@ const SupportPage: React.FC = () => {
   const callChannelRef = useRef<any>(null);
   const pendingOfferRef = useRef<string | null>(null);
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
+
+  // Apply audio output: earpiece (default/communications) vs speaker
+  const applyAudioOutput = useCallback(async (useSpeaker: boolean) => {
+    const el = remoteAudioRef.current as any;
+    if (!el) return;
+    el.volume = 1;
+    // Try to set sinkId where supported (Chromium desktop / some Android)
+    if (typeof el.setSinkId === "function") {
+      try {
+        await el.setSinkId(useSpeaker ? "default" : "communications");
+      } catch (e) {
+        // ignore — many mobile browsers don't allow this
+      }
+    }
+  }, []);
+
+  useEffect(() => { if (callActive) applyAudioOutput(speakerOn); }, [speakerOn, callActive, applyAudioOutput]);
+
+  const toggleSpeaker = () => setSpeakerOn((v) => !v);
 
   const processPendingOffer = async () => {
     const pc = peerRef.current;
