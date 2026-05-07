@@ -291,7 +291,7 @@ const ParallaxSlider: React.FC = () => {
 
       <motion.div
         ref={containerRef}
-        className="parallax-slider-root relative w-full overflow-hidden h-[35vh] md:h-[40vh] lg:h-[50vh] max-h-[400px] md:max-h-[480px] lg:max-h-[580px] rounded-2xl md:rounded-3xl"
+        className="parallax-slider-root relative w-full overflow-hidden h-[42vh] sm:h-[40vh] md:h-[44vh] lg:h-[50vh] max-h-[420px] md:max-h-[480px] lg:max-h-[580px] rounded-2xl md:rounded-3xl"
         style={{
           minHeight: "200px",
           perspective: "1200px",
@@ -357,7 +357,7 @@ const ParallaxSlider: React.FC = () => {
           }`}
           style={isMobile ? {} : { x: textX, y: textY, transformStyle: "preserve-3d" }}
         >
-          <div className={`container mx-auto px-4 md:px-8 lg:px-16 pb-10 md:pb-14 lg:pb-18 ${
+          <div className={`container mx-auto px-4 md:px-8 lg:px-16 pb-16 md:pb-16 lg:pb-18 ${
             currentSlide.textAlign === "center" ? "text-center flex flex-col items-center" : currentSlide.textAlign === "right" ? "text-right flex flex-col items-end" : ""
           }`}>
             <AnimatePresence mode="wait" initial={false}>

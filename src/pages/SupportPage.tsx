@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, Send, User, Headphones, ArrowLeft, Phone, PhoneOff, Mic, MicOff, MessageSquare, History, BellRing, BellOff } from "lucide-react";
+import { Bot, Send, User, Headphones, ArrowLeft, Phone, PhoneOff, Mic, MicOff, MessageSquare, History, BellRing, BellOff, Volume2, Speaker } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -74,9 +74,11 @@ const IncomingCallOverlay: React.FC<{
 const ActiveCallBar: React.FC<{
   duration: number;
   muted: boolean;
+  speakerOn: boolean;
   onToggleMute: () => void;
+  onToggleSpeaker: () => void;
   onHangup: () => void;
-}> = ({ duration, muted, onToggleMute, onHangup }) => {
+}> = ({ duration, muted, speakerOn, onToggleMute, onToggleSpeaker, onHangup }) => {
   const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
   return (
     <motion.div
@@ -91,6 +93,9 @@ const ActiveCallBar: React.FC<{
         <span className="text-xs text-muted-foreground font-mono">{fmt(duration)}</span>
       </div>
       <div className="flex items-center gap-2">
+        <Button size="sm" variant="ghost" onClick={onToggleSpeaker} className="h-8 w-8 p-0 rounded-full" title={speakerOn ? "Switch to earpiece" : "Switch to speaker"}>
+          {speakerOn ? <Volume2 className="w-4 h-4 text-green-500" /> : <Speaker className="w-4 h-4 text-muted-foreground" />}
+        </Button>
         <Button size="sm" variant="ghost" onClick={onToggleMute} className="h-8 w-8 p-0 rounded-full">
           {muted ? <MicOff className="w-4 h-4 text-destructive" /> : <Mic className="w-4 h-4 text-green-500" />}
         </Button>
@@ -115,6 +120,25 @@ const SupportPage: React.FC = () => {
     typeof Notification !== "undefined" && Notification.permission === "granted"
   );
   const [pushBusy, setPushBusy] = useState(false);
+  const [pushPermission, setPushPermission] = useState<NotificationPermission | "unsupported">(
+    typeof Notification === "undefined" ? "unsupported" : Notification.permission
+  );
+  const [lastPushUpdate, setLastPushUpdate] = useState<string | null>(null);
+
+  const refreshPushStatus = useCallback(async () => {
+    if (!user) return;
+    if (typeof Notification !== "undefined") setPushPermission(Notification.permission);
+    const { data } = await supabase
+      .from("push_subscriptions")
+      .select("last_used_at, created_at")
+      .eq("user_id", user.id)
+      .order("last_used_at", { ascending: false, nullsFirst: false })
+      .limit(1)
+      .maybeSingle();
+    setLastPushUpdate((data?.last_used_at as string) || (data?.created_at as string) || null);
+  }, [user]);
+
+  useEffect(() => { refreshPushStatus(); }, [refreshPushStatus, pushEnabled]);
 
   // Auto-subscribe on mount if user already granted permission
   useEffect(() => {
@@ -150,6 +174,7 @@ const SupportPage: React.FC = () => {
   const [callActive, setCallActive] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [callMuted, setCallMuted] = useState(false);
+  const [speakerOn, setSpeakerOn] = useState(false); // default: earpiece
   const peerRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -157,6 +182,25 @@ const SupportPage: React.FC = () => {
   const callChannelRef = useRef<any>(null);
   const pendingOfferRef = useRef<string | null>(null);
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
+
+  // Apply audio output: earpiece (default/communications) vs speaker
+  const applyAudioOutput = useCallback(async (useSpeaker: boolean) => {
+    const el = remoteAudioRef.current as any;
+    if (!el) return;
+    el.volume = 1;
+    // Try to set sinkId where supported (Chromium desktop / some Android)
+    if (typeof el.setSinkId === "function") {
+      try {
+        await el.setSinkId(useSpeaker ? "default" : "communications");
+      } catch (e) {
+        // ignore — many mobile browsers don't allow this
+      }
+    }
+  }, []);
+
+  useEffect(() => { if (callActive) applyAudioOutput(speakerOn); }, [speakerOn, callActive, applyAudioOutput]);
+
+  const toggleSpeaker = () => setSpeakerOn((v) => !v);
 
   const processPendingOffer = async () => {
     const pc = peerRef.current;
@@ -281,6 +325,7 @@ const SupportPage: React.FC = () => {
         if (remoteAudioRef.current) {
           remoteAudioRef.current.srcObject = event.streams[0];
           remoteAudioRef.current.play().catch(() => {});
+          applyAudioOutput(speakerOn);
         }
       };
 
@@ -440,12 +485,36 @@ const SupportPage: React.FC = () => {
           </button>
         </div>
 
+        {/* Push notification status */}
+        <div className="mb-4 p-3.5 rounded-2xl bg-secondary/30 border border-border/40 flex items-center gap-3">
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${pushPermission === "granted" ? "bg-green-500/15 text-green-500" : pushPermission === "denied" ? "bg-destructive/15 text-destructive" : "bg-amber-500/15 text-amber-500"}`}>
+            {pushPermission === "granted" ? <BellRing className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground truncate">
+              {pushPermission === "granted" ? "Push notifications enabled" :
+                pushPermission === "denied" ? "Notifications blocked" :
+                pushPermission === "unsupported" ? "Push not supported in this browser" : "Notifications not enabled"}
+            </p>
+            <p className="text-[11px] text-muted-foreground truncate">
+              {lastPushUpdate ? `Last subscribed ${new Date(lastPushUpdate).toLocaleString()}` : "No device subscribed yet"}
+            </p>
+          </div>
+          {pushPermission !== "granted" && pushPermission !== "unsupported" && (
+            <Button size="sm" variant="outline" onClick={handleEnablePush} disabled={pushBusy} className="rounded-xl text-xs">
+              {pushBusy ? "..." : "Enable"}
+            </Button>
+          )}
+        </div>
+
         <AnimatePresence>
           {callActive && (
             <ActiveCallBar
               duration={callDuration}
               muted={callMuted}
+              speakerOn={speakerOn}
               onToggleMute={toggleCallMute}
+              onToggleSpeaker={toggleSpeaker}
               onHangup={hangupCall}
             />
           )}

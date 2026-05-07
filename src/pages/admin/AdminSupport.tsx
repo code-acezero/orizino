@@ -9,6 +9,7 @@ import { toast } from "@/lib/app-toast";
 import { Send, MessageCircle, User, Clock, CheckCircle2, UserCheck, PhoneCall, ExternalLink, Trash2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import VoiceCallButton from "@/components/admin/VoiceCallButton";
+import TestPushButton from "@/components/admin/TestPushButton";
 import { format } from "date-fns";
 
 const AdminSupport = () => {
@@ -295,11 +296,14 @@ const AdminSupport = () => {
                     <CheckCircle2 className="w-4 h-4" /> Close
                   </Button>
                   {isClaimedByMe && selectedConvData?.status === "open" && (
-                    <VoiceCallButton
-                      conversationId={selectedConv}
-                      userId={selectedConvData.user_id}
-                      adminId={user!.id}
-                    />
+                    <>
+                      <TestPushButton userId={selectedConvData.user_id} />
+                      <VoiceCallButton
+                        conversationId={selectedConv}
+                        userId={selectedConvData.user_id}
+                        adminId={user!.id}
+                      />
+                    </>
                   )}
                 </div>
               </div>

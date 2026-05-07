@@ -1,5 +1,5 @@
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Phone, PhoneIncoming, PhoneMissed, PhoneOff, CheckCircle2, Clock } from "lucide-react";
@@ -24,6 +24,7 @@ interface Props {
 
 const CallHistoryList: React.FC<Props> = ({ limit = 25, compact = false }) => {
   const { user } = useAuth();
+  const qc = useQueryClient();
 
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ["user-call-logs", user?.id, limit],
@@ -37,8 +38,26 @@ const CallHistoryList: React.FC<Props> = ({ limit = 25, compact = false }) => {
       return data || [];
     },
     enabled: !!user,
-    refetchInterval: 20000,
   });
+
+  // Realtime: refresh on any call_logs change involving this user
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel(`call-logs-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "call_logs", filter: `caller_id=eq.${user.id}` },
+        () => qc.invalidateQueries({ queryKey: ["user-call-logs", user.id] })
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "call_logs", filter: `receiver_id=eq.${user.id}` },
+        () => qc.invalidateQueries({ queryKey: ["user-call-logs", user.id] })
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id, qc]);
 
   if (isLoading) {
     return (
