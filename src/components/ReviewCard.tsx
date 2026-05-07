@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 
-const IMGBB_API_KEY = "ba66301b5419800417d1bfa691117307";
+const IMGBB_API_KEY = (import.meta.env.VITE_IMGBB_API_KEY as string) || "ba66301b5419800417d1bfa691117307";
 const IMGBB_UPLOAD_URL = "https://api.imgbb.com/1/upload";
 const MAX_IMAGES = 5;
 
