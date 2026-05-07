@@ -120,6 +120,25 @@ const SupportPage: React.FC = () => {
     typeof Notification !== "undefined" && Notification.permission === "granted"
   );
   const [pushBusy, setPushBusy] = useState(false);
+  const [pushPermission, setPushPermission] = useState<NotificationPermission | "unsupported">(
+    typeof Notification === "undefined" ? "unsupported" : Notification.permission
+  );
+  const [lastPushUpdate, setLastPushUpdate] = useState<string | null>(null);
+
+  const refreshPushStatus = useCallback(async () => {
+    if (!user) return;
+    if (typeof Notification !== "undefined") setPushPermission(Notification.permission);
+    const { data } = await supabase
+      .from("push_subscriptions")
+      .select("last_used_at, updated_at, created_at")
+      .eq("user_id", user.id)
+      .order("last_used_at", { ascending: false, nullsFirst: false })
+      .limit(1)
+      .maybeSingle();
+    setLastPushUpdate((data?.last_used_at as string) || (data?.updated_at as string) || (data?.created_at as string) || null);
+  }, [user]);
+
+  useEffect(() => { refreshPushStatus(); }, [refreshPushStatus, pushEnabled]);
 
   // Auto-subscribe on mount if user already granted permission
   useEffect(() => {
@@ -464,6 +483,28 @@ const SupportPage: React.FC = () => {
           >
             <History className="w-4 h-4" /> Call History
           </button>
+        </div>
+
+        {/* Push notification status */}
+        <div className="mb-4 p-3.5 rounded-2xl bg-secondary/30 border border-border/40 flex items-center gap-3">
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${pushPermission === "granted" ? "bg-green-500/15 text-green-500" : pushPermission === "denied" ? "bg-destructive/15 text-destructive" : "bg-amber-500/15 text-amber-500"}`}>
+            {pushPermission === "granted" ? <BellRing className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground truncate">
+              {pushPermission === "granted" ? "Push notifications enabled" :
+                pushPermission === "denied" ? "Notifications blocked" :
+                pushPermission === "unsupported" ? "Push not supported in this browser" : "Notifications not enabled"}
+            </p>
+            <p className="text-[11px] text-muted-foreground truncate">
+              {lastPushUpdate ? `Last subscribed ${new Date(lastPushUpdate).toLocaleString()}` : "No device subscribed yet"}
+            </p>
+          </div>
+          {pushPermission !== "granted" && pushPermission !== "unsupported" && (
+            <Button size="sm" variant="outline" onClick={handleEnablePush} disabled={pushBusy} className="rounded-xl text-xs">
+              {pushBusy ? "..." : "Enable"}
+            </Button>
+          )}
         </div>
 
         <AnimatePresence>
