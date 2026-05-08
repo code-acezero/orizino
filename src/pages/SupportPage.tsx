@@ -186,6 +186,8 @@ const SupportPage: React.FC = () => {
   const callChannelRef = useRef<any>(null);
   const pendingOfferRef = useRef<string | null>(null);
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
+  const callLogIdRef = useRef<string | null>(null);
+  const recorderRef = useRef<CallRecorder | null>(null);
 
   // Apply audio output: earpiece (default/communications) vs speaker
   const applyAudioOutput = useCallback(async (useSpeaker: boolean) => {
