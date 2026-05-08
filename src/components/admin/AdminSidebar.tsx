@@ -24,6 +24,7 @@ import {
   Smartphone,
   Phone,
   Building2,
+  Bug,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
