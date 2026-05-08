@@ -173,6 +173,7 @@ const App = () => {
               <Route path="coupons" element={<Suspense fallback={<PageFallback />}><AdminCoupons /></Suspense>} />
               <Route path="shipping" element={<Suspense fallback={<PageFallback />}><AdminShipping /></Suspense>} />
               <Route path="support" element={<Suspense fallback={<PageFallback />}><AdminSupport /></Suspense>} />
+              <Route path="debug" element={<Suspense fallback={<PageFallback />}><AdminDebug /></Suspense>} />
               <Route path="couriers" element={<Suspense fallback={<PageFallback />}><AdminCouriers /></Suspense>} />
               <Route path="courier-management" element={<Suspense fallback={<PageFallback />}><AdminCourierManagement /></Suspense>} />
               <Route path="ai-settings" element={<Suspense fallback={<PageFallback />}><AdminAISettings /></Suspense>} />
