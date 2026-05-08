@@ -205,7 +205,14 @@ const SettingsPage: React.FC = () => {
             <TabsContent value="notifications" className="space-y-4">
               <div className="glass-strong rounded-3xl p-6 space-y-1">
                 <h2 className="text-lg font-semibold font-display text-foreground mb-3">Channels</h2>
-                <ToggleRow icon={<BellRing className="w-5 h-5 text-primary" />} label="Push Notifications" desc="In-app alerts" checked={notifPrefs.push} onChange={() => updateNotifPref("push")} />
+                <ToggleRow
+                  icon={<BellRing className="w-5 h-5 text-primary" />}
+                  label={pushBusy ? "Updating…" : "Push Notifications"}
+                  desc={pushSubscribed ? `Enabled · last device sync ${pushLastUsed ? new Date(pushLastUsed).toLocaleString() : "just now"}` : "Get rings & alerts even when this tab is closed"}
+                  checked={pushSubscribed}
+                  onChange={togglePushSubscription}
+                />
+                <ToggleRow icon={<Bell className="w-5 h-5 text-primary" />} label="In-app Notifications" desc="Notifications inside the app" checked={notifPrefs.push} onChange={() => updateNotifPref("push")} />
                 <ToggleRow icon={<Mail className="w-5 h-5 text-primary" />} label="Email Notifications" desc="Get updates via email" checked={notifPrefs.email} onChange={() => updateNotifPref("email")} />
                 <ToggleRow icon={notifPrefs.sound ? <Volume2 className="w-5 h-5 text-primary" /> : <VolumeX className="w-5 h-5 text-primary" />} label="Sound" desc="Notification sounds" checked={notifPrefs.sound} onChange={() => updateNotifPref("sound")} />
               </div>
