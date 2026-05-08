@@ -67,6 +67,7 @@ const AdminFooter = lazy(() => import("./pages/admin/AdminFooter"));
 const AdminPaymentGateways = lazy(() => import("./pages/admin/AdminPaymentGateways"));
 const AdminReturns = lazy(() => import("./pages/admin/AdminReturns"));
 const AdminTracking = lazy(() => import("./pages/admin/AdminTracking"));
+const AdminDebug = lazy(() => import("./pages/admin/AdminDebug"));
 
 
 const queryClient = new QueryClient({
