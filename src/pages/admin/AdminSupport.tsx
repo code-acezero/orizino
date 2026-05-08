@@ -297,7 +297,7 @@ const AdminSupport = () => {
                   </Button>
                   {isClaimedByMe && selectedConvData?.status === "open" && (
                     <>
-                      <TestPushButton userId={selectedConvData.user_id} />
+                      {/* Test push moved to /origin/debug */}
                       <VoiceCallButton
                         conversationId={selectedConv}
                         userId={selectedConvData.user_id}
