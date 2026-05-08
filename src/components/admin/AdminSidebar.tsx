@@ -92,6 +92,7 @@ const systemItems: MenuItem[] = [
   { title: "Mobile UI", url: "/origin/mobile-ui", icon: Smartphone, adminOnly: true },
   
   { title: "Settings", url: "/origin/settings", icon: Settings, adminOnly: true },
+  { title: "Developer Debug", url: "/origin/debug", icon: Bug, adminOnly: true },
 ];
 
 export function AdminSidebar() {
