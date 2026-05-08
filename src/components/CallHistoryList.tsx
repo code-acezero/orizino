@@ -113,6 +113,10 @@ const CallHistoryList: React.FC<Props> = ({ limit = 25, compact = false }) => {
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Recording — prefer the user's own copy, fall back to admin's */}
+              {(log.recording_user_url || log.recording_admin_url) && (
+                <RecordingButton path={log.recording_user_url || log.recording_admin_url} />
+              )}
               <Badge variant="outline" className={`text-[10px] ${cfg.color} border-current/30`}>
                 {cfg.label}
               </Badge>
