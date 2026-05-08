@@ -129,4 +129,30 @@ const CallHistoryList: React.FC<Props> = ({ limit = 25, compact = false }) => {
   );
 };
 
+const RecordingButton: React.FC<{ path: string }> = ({ path }) => {
+  const [busy, setBusy] = useState(false);
+  const open = async () => {
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.storage.from("call-recordings").createSignedUrl(path, 60 * 60);
+      if (error || !data?.signedUrl) throw error || new Error("No URL");
+      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    } catch (e: any) {
+      toast({ title: "Recording unavailable", description: e?.message || "Try again", variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <button
+      onClick={open}
+      disabled={busy}
+      title="Open recording"
+      className="h-7 w-7 rounded-lg flex items-center justify-center bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50"
+    >
+      {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+    </button>
+  );
+};
+
 export default CallHistoryList;
