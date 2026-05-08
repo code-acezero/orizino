@@ -36,6 +36,7 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
   const channelRef = useRef<any>(null);
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
   const callLogIdRef = useRef<string | null>(null);
+  const recorderRef = useRef<CallRecorder | null>(null);
 
   const formatDuration = (s: number) => {
     const m = Math.floor(s / 60);
