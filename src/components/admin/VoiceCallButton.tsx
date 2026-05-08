@@ -101,6 +101,12 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       localStreamRef.current = stream;
 
+      // Start local recording (admin side)
+      try {
+        const rec = new CallRecorder();
+        if (rec.start(stream)) recorderRef.current = rec;
+      } catch (e) { console.warn("[admin call] recorder start failed", e); }
+
       const rtcConfig = await getRTCConfiguration();
       console.log("[Admin Call] RTC config:", rtcConfig);
 
