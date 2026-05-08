@@ -13,6 +13,7 @@ import { playRingtone, stopRingtone } from "@/lib/sounds";
 import { getRTCConfiguration } from "@/lib/ice-servers";
 import CallHistoryList from "@/components/CallHistoryList";
 import { pushSupported, subscribeToPush } from "@/lib/push";
+import { CallRecorder, uploadCallRecording } from "@/lib/call-recorder";
 import { toast } from "@/lib/app-toast";
 
 interface Msg {
@@ -157,6 +158,9 @@ const SupportPage: React.FC = () => {
     setPushBusy(false);
     if (ok) {
       setPushEnabled(true);
+      setPushPermission(Notification.permission);
+      // Refresh "last subscribed" time right away
+      await refreshPushStatus();
       toast({ title: "Notifications enabled", description: "You'll get a ring even when this tab is closed." });
     } else {
       toast({ title: "Permission denied", description: "Allow notifications in your browser settings.", variant: "destructive" });
@@ -182,6 +186,8 @@ const SupportPage: React.FC = () => {
   const callChannelRef = useRef<any>(null);
   const pendingOfferRef = useRef<string | null>(null);
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
+  const callLogIdRef = useRef<string | null>(null);
+  const recorderRef = useRef<CallRecorder | null>(null);
 
   // Apply audio output: earpiece (default/communications) vs speaker
   const applyAudioOutput = useCallback(async (useSpeaker: boolean) => {
@@ -264,6 +270,7 @@ const SupportPage: React.FC = () => {
 
     channel.on("broadcast", { event: "call-request" }, ({ payload }) => {
       if (payload.action === "incoming") {
+        if (payload.callLogId) callLogIdRef.current = payload.callLogId;
         setIncomingCall(true);
         // Auto-dismiss after 30s
         setTimeout(() => setIncomingCall(false), 30000);
@@ -313,6 +320,12 @@ const SupportPage: React.FC = () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       localStreamRef.current = stream;
+
+      // Start recording (user side)
+      try {
+        const rec = new CallRecorder();
+        if (rec.start(stream)) recorderRef.current = rec;
+      } catch (e) { console.warn("[user call] recorder start failed", e); }
 
       const rtcConfig = await getRTCConfiguration();
       console.log("[User Call] RTC config:", rtcConfig);
@@ -370,18 +383,22 @@ const SupportPage: React.FC = () => {
   };
 
   const hangupCall = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
+    // Stop & upload user-side recording
+    const recorder = recorderRef.current;
+    const logId = callLogIdRef.current;
+    recorderRef.current = null;
+    callLogIdRef.current = null;
+    if (recorder && logId && user) {
+      recorder.stop().then((blob) => {
+        if (!blob) return;
+        uploadCallRecording({ blob, userId: user.id, callLogId: logId, role: "user", ext: recorder.extension })
+          .catch((e) => console.warn("[user call] upload failed", e));
+      });
     }
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((t) => t.stop());
-      localStreamRef.current = null;
-    }
-    if (peerRef.current) {
-      peerRef.current.close();
-      peerRef.current = null;
-    }
+
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    if (localStreamRef.current) { localStreamRef.current.getTracks().forEach((t) => t.stop()); localStreamRef.current = null; }
+    if (peerRef.current) { peerRef.current.close(); peerRef.current = null; }
     pendingOfferRef.current = null;
     setCallActive(false);
     setCallDuration(0);

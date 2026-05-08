@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { pushSupported, subscribeToPush, unsubscribeFromPush, getPushStatus } from "@/lib/push";
 
 import { themePalettes } from "@/lib/theme-palettes";
 
@@ -101,6 +102,47 @@ const SettingsPage: React.FC = () => {
     savePrefs({ theme: t });
   };
 
+  const [pushSubscribed, setPushSubscribed] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushLastUsed, setPushLastUsed] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    getPushStatus(user.id).then((s) => {
+      setPushSubscribed(s.subscribed);
+      setPushLastUsed(s.lastUsedAt);
+    });
+  }, [user]);
+
+  const togglePushSubscription = async () => {
+    if (!user || pushBusy) return;
+    if (!pushSupported()) {
+      toast({ title: "Not supported", description: "Push isn't available in this browser.", variant: "destructive" });
+      return;
+    }
+    setPushBusy(true);
+    try {
+      if (pushSubscribed) {
+        await unsubscribeFromPush(user.id);
+        setPushSubscribed(false);
+        setPushLastUsed(null);
+        toast({ title: "Push notifications disabled" });
+      } else {
+        const ok = await subscribeToPush(user.id);
+        if (ok) {
+          const s = await getPushStatus(user.id);
+          setPushSubscribed(s.subscribed);
+          setPushLastUsed(s.lastUsedAt);
+          toast({ title: "Push notifications enabled", description: "You'll receive alerts on this device." });
+        } else {
+          toast({ title: "Permission denied", description: "Allow notifications in your browser settings.", variant: "destructive" });
+        }
+      }
+    } finally {
+      setPushBusy(false);
+    }
+  };
+
   const updateNotifPref = (key: keyof NotifPrefs) => {
     const updated = { ...notifPrefs, [key]: !notifPrefs[key] };
     setNotifPrefs(updated);
@@ -163,7 +205,14 @@ const SettingsPage: React.FC = () => {
             <TabsContent value="notifications" className="space-y-4">
               <div className="glass-strong rounded-3xl p-6 space-y-1">
                 <h2 className="text-lg font-semibold font-display text-foreground mb-3">Channels</h2>
-                <ToggleRow icon={<BellRing className="w-5 h-5 text-primary" />} label="Push Notifications" desc="In-app alerts" checked={notifPrefs.push} onChange={() => updateNotifPref("push")} />
+                <ToggleRow
+                  icon={<BellRing className="w-5 h-5 text-primary" />}
+                  label={pushBusy ? "Updating…" : "Push Notifications"}
+                  desc={pushSubscribed ? `Enabled · last device sync ${pushLastUsed ? new Date(pushLastUsed).toLocaleString() : "just now"}` : "Get rings & alerts even when this tab is closed"}
+                  checked={pushSubscribed}
+                  onChange={togglePushSubscription}
+                />
+                <ToggleRow icon={<Bell className="w-5 h-5 text-primary" />} label="In-app Notifications" desc="Notifications inside the app" checked={notifPrefs.push} onChange={() => updateNotifPref("push")} />
                 <ToggleRow icon={<Mail className="w-5 h-5 text-primary" />} label="Email Notifications" desc="Get updates via email" checked={notifPrefs.email} onChange={() => updateNotifPref("email")} />
                 <ToggleRow icon={notifPrefs.sound ? <Volume2 className="w-5 h-5 text-primary" /> : <VolumeX className="w-5 h-5 text-primary" />} label="Sound" desc="Notification sounds" checked={notifPrefs.sound} onChange={() => updateNotifPref("sound")} />
               </div>

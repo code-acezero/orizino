@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { getRTCConfiguration } from "@/lib/ice-servers";
+import { CallRecorder, uploadCallRecording } from "@/lib/call-recorder";
 
 interface VoiceCallButtonProps {
   conversationId: string;
@@ -35,6 +36,7 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
   const channelRef = useRef<any>(null);
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
   const callLogIdRef = useRef<string | null>(null);
+  const recorderRef = useRef<CallRecorder | null>(null);
 
   const formatDuration = (s: number) => {
     const m = Math.floor(s / 60);
@@ -98,6 +100,12 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       localStreamRef.current = stream;
+
+      // Start local recording (admin side)
+      try {
+        const rec = new CallRecorder();
+        if (rec.start(stream)) recorderRef.current = rec;
+      } catch (e) { console.warn("[admin call] recorder start failed", e); }
 
       const rtcConfig = await getRTCConfiguration();
       console.log("[Admin Call] RTC config:", rtcConfig);
@@ -166,7 +174,7 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
     }).select("id").single();
     if (logData) callLogIdRef.current = logData.id;
 
-    // Send call request to customer via broadcast
+    // Send call request to customer via broadcast (include log id so user can record + tag uploads)
     channelRef.current?.send({
       type: "broadcast",
       event: "call-request",
@@ -174,6 +182,7 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
         from: adminId,
         conversationId,
         action: "incoming",
+        callLogId: callLogIdRef.current,
       },
     });
 
@@ -215,29 +224,38 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
   }, [conversationId, adminId, userId, callState]);
 
   const endCall = useCallback(() => {
-    // Log call end
-    if (callLogIdRef.current) {
-      const finalStatus = callState === "connected" ? "completed" : callState === "rejected" ? "rejected" : "missed";
+    const logId = callLogIdRef.current;
+    const finalStatus = callState === "connected" ? "completed" : callState === "rejected" ? "rejected" : "missed";
+
+    // Stop & upload recording (admin side), then trigger Drive sync
+    const recorder = recorderRef.current;
+    recorderRef.current = null;
+    if (recorder && logId) {
+      recorder.stop().then(async (blob) => {
+        if (!blob) return;
+        const path = await uploadCallRecording({
+          blob, userId: adminId, callLogId: logId, role: "admin", ext: recorder.extension,
+        });
+        if (path) {
+          supabase.functions.invoke("sync-recording-to-drive", {
+            body: { call_log_id: logId },
+          }).catch((e) => console.warn("[drive-sync] failed", e));
+        }
+      });
+    }
+
+    if (logId) {
       supabase.from("call_logs").update({
         status: finalStatus,
         duration_seconds: duration,
         ended_at: new Date().toISOString(),
-      }).eq("id", callLogIdRef.current).then(() => {});
+      }).eq("id", logId).then(() => {});
       callLogIdRef.current = null;
     }
 
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((t) => t.stop());
-      localStreamRef.current = null;
-    }
-    if (peerRef.current) {
-      peerRef.current.close();
-      peerRef.current = null;
-    }
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    if (localStreamRef.current) { localStreamRef.current.getTracks().forEach((t) => t.stop()); localStreamRef.current = null; }
+    if (peerRef.current) { peerRef.current.close(); peerRef.current = null; }
 
     channelRef.current?.send({
       type: "broadcast",
@@ -248,7 +266,7 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
     setCallState("idle");
     setDuration(0);
     setMuted(false);
-  }, [callState, duration]);
+  }, [callState, duration, adminId]);
 
   const toggleMute = useCallback(() => {
     if (localStreamRef.current) {

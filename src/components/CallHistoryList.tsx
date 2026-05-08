@@ -1,11 +1,12 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Phone, PhoneIncoming, PhoneMissed, PhoneOff, CheckCircle2, Clock } from "lucide-react";
+import { Phone, PhoneIncoming, PhoneMissed, PhoneOff, CheckCircle2, Clock, Download, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
+import { toast } from "@/lib/app-toast";
 
 const statusConfig: Record<string, { icon: any; color: string; bg: string; label: string }> = {
   initiated: { icon: PhoneIncoming, color: "text-amber-500", bg: "bg-amber-500/10", label: "Initiated" },
@@ -31,7 +32,7 @@ const CallHistoryList: React.FC<Props> = ({ limit = 25, compact = false }) => {
     queryFn: async () => {
       const { data } = await supabase
         .from("call_logs")
-        .select("id, status, duration_seconds, created_at, started_at, caller_id, receiver_id")
+        .select("id, status, duration_seconds, created_at, started_at, caller_id, receiver_id, recording_user_url, recording_admin_url")
         .or(`caller_id.eq.${user!.id},receiver_id.eq.${user!.id}`)
         .order("created_at", { ascending: false })
         .limit(limit);
@@ -112,6 +113,10 @@ const CallHistoryList: React.FC<Props> = ({ limit = 25, compact = false }) => {
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Recording — prefer the user's own copy, fall back to admin's */}
+              {(log.recording_user_url || log.recording_admin_url) && (
+                <RecordingButton path={log.recording_user_url || log.recording_admin_url} />
+              )}
               <Badge variant="outline" className={`text-[10px] ${cfg.color} border-current/30`}>
                 {cfg.label}
               </Badge>
@@ -121,6 +126,32 @@ const CallHistoryList: React.FC<Props> = ({ limit = 25, compact = false }) => {
         );
       })}
     </div>
+  );
+};
+
+const RecordingButton: React.FC<{ path: string }> = ({ path }) => {
+  const [busy, setBusy] = useState(false);
+  const open = async () => {
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.storage.from("call-recordings").createSignedUrl(path, 60 * 60);
+      if (error || !data?.signedUrl) throw error || new Error("No URL");
+      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    } catch (e: any) {
+      toast({ title: "Recording unavailable", description: e?.message || "Try again", variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <button
+      onClick={open}
+      disabled={busy}
+      title="Open recording"
+      className="h-7 w-7 rounded-lg flex items-center justify-center bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50"
+    >
+      {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+    </button>
   );
 };
 
