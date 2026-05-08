@@ -270,6 +270,7 @@ const SupportPage: React.FC = () => {
 
     channel.on("broadcast", { event: "call-request" }, ({ payload }) => {
       if (payload.action === "incoming") {
+        if (payload.callLogId) callLogIdRef.current = payload.callLogId;
         setIncomingCall(true);
         // Auto-dismiss after 30s
         setTimeout(() => setIncomingCall(false), 30000);
