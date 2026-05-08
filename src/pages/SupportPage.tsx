@@ -321,6 +321,12 @@ const SupportPage: React.FC = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       localStreamRef.current = stream;
 
+      // Start recording (user side)
+      try {
+        const rec = new CallRecorder();
+        if (rec.start(stream)) recorderRef.current = rec;
+      } catch (e) { console.warn("[user call] recorder start failed", e); }
+
       const rtcConfig = await getRTCConfiguration();
       console.log("[User Call] RTC config:", rtcConfig);
       const pc = new RTCPeerConnection(rtcConfig);
