@@ -73,6 +73,47 @@ export async function subscribeToPush(userId: string): Promise<boolean> {
   return true;
 }
 
+export async function unsubscribeFromPush(userId: string): Promise<boolean> {
+  if (!pushSupported()) return false;
+  try {
+    const reg = await navigator.serviceWorker.getRegistration("/sw.js");
+    const sub = await reg?.pushManager.getSubscription();
+    if (sub) {
+      const endpoint = sub.endpoint;
+      try { await sub.unsubscribe(); } catch { /* noop */ }
+      await supabase.from("push_subscriptions").delete().eq("user_id", userId).eq("endpoint", endpoint);
+    }
+    return true;
+  } catch (e) {
+    console.warn("[push] unsubscribe failed", e);
+    return false;
+  }
+}
+
+export async function getPushStatus(userId: string): Promise<{
+  permission: NotificationPermission | "unsupported";
+  subscribed: boolean;
+  lastUsedAt: string | null;
+  deviceCount: number;
+}> {
+  if (!pushSupported()) {
+    return { permission: "unsupported", subscribed: false, lastUsedAt: null, deviceCount: 0 };
+  }
+  const permission = Notification.permission;
+  const { data } = await supabase
+    .from("push_subscriptions")
+    .select("last_used_at, created_at")
+    .eq("user_id", userId)
+    .order("last_used_at", { ascending: false, nullsFirst: false });
+  const rows = data || [];
+  return {
+    permission,
+    subscribed: rows.length > 0 && permission === "granted",
+    lastUsedAt: (rows[0]?.last_used_at as string) || (rows[0]?.created_at as string) || null,
+    deviceCount: rows.length,
+  };
+}
+
 export async function sendPush(
   userId: string,
   payload: { title: string; body?: string; type?: "call" | "general"; url?: string; tag?: string; data?: any }
