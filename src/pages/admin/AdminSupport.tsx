@@ -9,7 +9,7 @@ import { toast } from "@/lib/app-toast";
 import { Send, MessageCircle, User, Clock, CheckCircle2, UserCheck, PhoneCall, ExternalLink, Trash2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import VoiceCallButton from "@/components/admin/VoiceCallButton";
-import TestPushButton from "@/components/admin/TestPushButton";
+// TestPushButton moved to Developer Debug (/origin/debug)
 import { format } from "date-fns";
 
 const AdminSupport = () => {
