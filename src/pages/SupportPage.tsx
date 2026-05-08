@@ -13,6 +13,7 @@ import { playRingtone, stopRingtone } from "@/lib/sounds";
 import { getRTCConfiguration } from "@/lib/ice-servers";
 import CallHistoryList from "@/components/CallHistoryList";
 import { pushSupported, subscribeToPush } from "@/lib/push";
+import { CallRecorder, uploadCallRecording } from "@/lib/call-recorder";
 import { toast } from "@/lib/app-toast";
 
 interface Msg {
