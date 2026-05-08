@@ -157,6 +157,9 @@ const SupportPage: React.FC = () => {
     setPushBusy(false);
     if (ok) {
       setPushEnabled(true);
+      setPushPermission(Notification.permission);
+      // Refresh "last subscribed" time right away
+      await refreshPushStatus();
       toast({ title: "Notifications enabled", description: "You'll get a ring even when this tab is closed." });
     } else {
       toast({ title: "Permission denied", description: "Allow notifications in your browser settings.", variant: "destructive" });
