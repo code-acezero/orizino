@@ -1,11 +1,12 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Phone, PhoneIncoming, PhoneMissed, PhoneOff, CheckCircle2, Clock } from "lucide-react";
+import { Phone, PhoneIncoming, PhoneMissed, PhoneOff, CheckCircle2, Clock, Download, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
+import { toast } from "@/lib/app-toast";
 
 const statusConfig: Record<string, { icon: any; color: string; bg: string; label: string }> = {
   initiated: { icon: PhoneIncoming, color: "text-amber-500", bg: "bg-amber-500/10", label: "Initiated" },
