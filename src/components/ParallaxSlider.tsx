@@ -357,7 +357,7 @@ const ParallaxSlider: React.FC = () => {
           }`}
           style={isMobile ? {} : { x: textX, y: textY, transformStyle: "preserve-3d" }}
         >
-          <div className={`container mx-auto px-4 md:px-8 lg:px-16 pb-16 md:pb-16 lg:pb-18 ${
+          <div className={`container mx-auto px-4 md:px-8 lg:px-16 pb-24 md:pb-20 lg:pb-24 ${
             currentSlide.textAlign === "center" ? "text-center flex flex-col items-center" : currentSlide.textAlign === "right" ? "text-right flex flex-col items-end" : ""
           }`}>
             <AnimatePresence mode="wait" initial={false}>
