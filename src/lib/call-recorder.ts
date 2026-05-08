@@ -91,8 +91,10 @@ export async function uploadCallRecording(opts: {
   }
 
   // Persist the storage path on the call log for later signed-URL playback.
-  const column = role === "admin" ? "recording_admin_url" : "recording_user_url";
-  await supabase.from("call_logs").update({ [column]: path }).eq("id", callLogId);
+  const update = role === "admin"
+    ? { recording_admin_url: path }
+    : { recording_user_url: path };
+  await supabase.from("call_logs").update(update).eq("id", callLogId);
 
   return path;
 }
