@@ -383,18 +383,22 @@ const SupportPage: React.FC = () => {
   };
 
   const hangupCall = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
+    // Stop & upload user-side recording
+    const recorder = recorderRef.current;
+    const logId = callLogIdRef.current;
+    recorderRef.current = null;
+    callLogIdRef.current = null;
+    if (recorder && logId && user) {
+      recorder.stop().then((blob) => {
+        if (!blob) return;
+        uploadCallRecording({ blob, userId: user.id, callLogId: logId, role: "user", ext: recorder.extension })
+          .catch((e) => console.warn("[user call] upload failed", e));
+      });
     }
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((t) => t.stop());
-      localStreamRef.current = null;
-    }
-    if (peerRef.current) {
-      peerRef.current.close();
-      peerRef.current = null;
-    }
+
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    if (localStreamRef.current) { localStreamRef.current.getTracks().forEach((t) => t.stop()); localStreamRef.current = null; }
+    if (peerRef.current) { peerRef.current.close(); peerRef.current = null; }
     pendingOfferRef.current = null;
     setCallActive(false);
     setCallDuration(0);
