@@ -174,7 +174,7 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
     }).select("id").single();
     if (logData) callLogIdRef.current = logData.id;
 
-    // Send call request to customer via broadcast
+    // Send call request to customer via broadcast (include log id so user can record + tag uploads)
     channelRef.current?.send({
       type: "broadcast",
       event: "call-request",
@@ -182,6 +182,7 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
         from: adminId,
         conversationId,
         action: "incoming",
+        callLogId: callLogIdRef.current,
       },
     });
 
