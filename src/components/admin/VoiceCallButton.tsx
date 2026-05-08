@@ -224,29 +224,38 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
   }, [conversationId, adminId, userId, callState]);
 
   const endCall = useCallback(() => {
-    // Log call end
-    if (callLogIdRef.current) {
-      const finalStatus = callState === "connected" ? "completed" : callState === "rejected" ? "rejected" : "missed";
+    const logId = callLogIdRef.current;
+    const finalStatus = callState === "connected" ? "completed" : callState === "rejected" ? "rejected" : "missed";
+
+    // Stop & upload recording (admin side), then trigger Drive sync
+    const recorder = recorderRef.current;
+    recorderRef.current = null;
+    if (recorder && logId) {
+      recorder.stop().then(async (blob) => {
+        if (!blob) return;
+        const path = await uploadCallRecording({
+          blob, userId: adminId, callLogId: logId, role: "admin", ext: recorder.extension,
+        });
+        if (path) {
+          supabase.functions.invoke("sync-recording-to-drive", {
+            body: { call_log_id: logId },
+          }).catch((e) => console.warn("[drive-sync] failed", e));
+        }
+      });
+    }
+
+    if (logId) {
       supabase.from("call_logs").update({
         status: finalStatus,
         duration_seconds: duration,
         ended_at: new Date().toISOString(),
-      }).eq("id", callLogIdRef.current).then(() => {});
+      }).eq("id", logId).then(() => {});
       callLogIdRef.current = null;
     }
 
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((t) => t.stop());
-      localStreamRef.current = null;
-    }
-    if (peerRef.current) {
-      peerRef.current.close();
-      peerRef.current = null;
-    }
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    if (localStreamRef.current) { localStreamRef.current.getTracks().forEach((t) => t.stop()); localStreamRef.current = null; }
+    if (peerRef.current) { peerRef.current.close(); peerRef.current = null; }
 
     channelRef.current?.send({
       type: "broadcast",
@@ -257,7 +266,7 @@ const VoiceCallButton: React.FC<VoiceCallButtonProps> = ({
     setCallState("idle");
     setDuration(0);
     setMuted(false);
-  }, [callState, duration]);
+  }, [callState, duration, adminId]);
 
   const toggleMute = useCallback(() => {
     if (localStreamRef.current) {
