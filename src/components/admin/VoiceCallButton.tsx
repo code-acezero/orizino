@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { getRTCConfiguration } from "@/lib/ice-servers";
+import { CallRecorder, uploadCallRecording } from "@/lib/call-recorder";
 
 interface VoiceCallButtonProps {
   conversationId: string;
