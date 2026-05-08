@@ -102,6 +102,47 @@ const SettingsPage: React.FC = () => {
     savePrefs({ theme: t });
   };
 
+  const [pushSubscribed, setPushSubscribed] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushLastUsed, setPushLastUsed] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    getPushStatus(user.id).then((s) => {
+      setPushSubscribed(s.subscribed);
+      setPushLastUsed(s.lastUsedAt);
+    });
+  }, [user]);
+
+  const togglePushSubscription = async () => {
+    if (!user || pushBusy) return;
+    if (!pushSupported()) {
+      toast({ title: "Not supported", description: "Push isn't available in this browser.", variant: "destructive" });
+      return;
+    }
+    setPushBusy(true);
+    try {
+      if (pushSubscribed) {
+        await unsubscribeFromPush(user.id);
+        setPushSubscribed(false);
+        setPushLastUsed(null);
+        toast({ title: "Push notifications disabled" });
+      } else {
+        const ok = await subscribeToPush(user.id);
+        if (ok) {
+          const s = await getPushStatus(user.id);
+          setPushSubscribed(s.subscribed);
+          setPushLastUsed(s.lastUsedAt);
+          toast({ title: "Push notifications enabled", description: "You'll receive alerts on this device." });
+        } else {
+          toast({ title: "Permission denied", description: "Allow notifications in your browser settings.", variant: "destructive" });
+        }
+      }
+    } finally {
+      setPushBusy(false);
+    }
+  };
+
   const updateNotifPref = (key: keyof NotifPrefs) => {
     const updated = { ...notifPrefs, [key]: !notifPrefs[key] };
     setNotifPrefs(updated);
