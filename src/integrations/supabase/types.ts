@@ -61,10 +61,14 @@ export type Database = {
           caller_id: string
           conversation_id: string | null
           created_at: string
+          drive_file_id: string | null
+          drive_synced_at: string | null
           duration_seconds: number | null
           ended_at: string | null
           id: string
           receiver_id: string
+          recording_admin_url: string | null
+          recording_user_url: string | null
           started_at: string
           status: string
         }
@@ -72,10 +76,14 @@ export type Database = {
           caller_id: string
           conversation_id?: string | null
           created_at?: string
+          drive_file_id?: string | null
+          drive_synced_at?: string | null
           duration_seconds?: number | null
           ended_at?: string | null
           id?: string
           receiver_id: string
+          recording_admin_url?: string | null
+          recording_user_url?: string | null
           started_at?: string
           status?: string
         }
@@ -83,10 +91,14 @@ export type Database = {
           caller_id?: string
           conversation_id?: string | null
           created_at?: string
+          drive_file_id?: string | null
+          drive_synced_at?: string | null
           duration_seconds?: number | null
           ended_at?: string | null
           id?: string
           receiver_id?: string
+          recording_admin_url?: string | null
+          recording_user_url?: string | null
           started_at?: string
           status?: string
         }
