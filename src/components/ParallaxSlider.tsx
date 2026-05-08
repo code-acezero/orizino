@@ -396,7 +396,7 @@ const ParallaxSlider: React.FC = () => {
 
         {/* Navigation controls */}
         {slides.length > 1 && (cfg.show_arrows || cfg.show_dots) && (
-          <div className="absolute bottom-2 md:bottom-4 lg:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 md:gap-3 lg:gap-4 z-30">
+          <div className="absolute bottom-3 md:bottom-5 lg:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 md:gap-3 lg:gap-4 z-30 px-3 py-1.5 rounded-full bg-background/30 backdrop-blur-md border border-foreground/5">
             {cfg.show_arrows && (
               <motion.button onClick={goPrev} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                 className="w-7 h-7 md:w-9 md:h-9 lg:w-10 lg:h-10 rounded-full bg-foreground/10 backdrop-blur-sm border border-foreground/10 flex items-center justify-center text-white hover:bg-foreground/20 transition-colors">
