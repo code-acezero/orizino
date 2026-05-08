@@ -32,7 +32,7 @@ const CallHistoryList: React.FC<Props> = ({ limit = 25, compact = false }) => {
     queryFn: async () => {
       const { data } = await supabase
         .from("call_logs")
-        .select("id, status, duration_seconds, created_at, started_at, caller_id, receiver_id")
+        .select("id, status, duration_seconds, created_at, started_at, caller_id, receiver_id, recording_user_url, recording_admin_url")
         .or(`caller_id.eq.${user!.id},receiver_id.eq.${user!.id}`)
         .order("created_at", { ascending: false })
         .limit(limit);
